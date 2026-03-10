@@ -4,6 +4,7 @@ parse_reviews.py
 Extract and normalise text from raw human-review files.
 
 Supported input formats
+  - ReviewCritique JSONL     (one paper per line, review#1..N keys)
   - OpenReview JSON exports  (list of review dicts with 'content' field)
   - Plain-text / PDF         (PDF → text via pypdf)
 
@@ -12,8 +13,15 @@ Output: data/processed/reviews_parsed.json
     "<paper_id>": {
       "title": str,
       "abstract": str,
+      "full_text": str,
+      "decision": str,
       "reviews": [
-        {"reviewer": str, "rating": int|None, "text": str},
+        {
+          "reviewer": str,
+          "rating": int|None,       # Recommendation score normalised to 1-5
+          "text": str,              # concatenated segment_text values
+          "scores": dict            # raw score fields from the source
+        },
         ...
       ]
     },
@@ -102,6 +110,100 @@ def _parse_rating(raw: str) -> int | None:
     return int(match.group()) if match else None
 
 
+# ── ReviewCritique JSONL parser ────────────────────────────────────────────────
+
+def _normalise_score(raw: str) -> int | None:
+    """Parse a score string like ' 8' and return an int, or None on failure."""
+    try:
+        return int(str(raw).strip())
+    except (ValueError, TypeError):
+        return None
+
+
+def _recommendation_to_rating(raw: str) -> int | None:
+    """Convert Recommendation (1-10 scale) to 1-5 by halving and rounding."""
+    val = _normalise_score(raw)
+    if val is None:
+        return None
+    return max(1, min(5, round(val / 2)))
+
+
+def parse_jsonl(jsonl_path: str, output_path: str) -> dict[str, Any]:
+    """
+    Parse ReviewCritique.jsonl into the standard reviews_parsed.json format.
+
+    Each line has: decision, title, body_text, review#1 .. review#N
+    Each review#N has:
+      - review: list of {segment_text, topic_class_1, ...}
+      - score:  {Correctness, Technical Novelty And Significance,
+                 Empirical Novelty And Significance, Flag For Ethics Review,
+                 Recommendation, Confidence}
+
+    paper_id is assigned as 'paper_NNNN' (1-indexed line number) to avoid
+    collisions from title slugification.
+    """
+    all_papers: dict[str, Any] = {}
+    paper_count = 0
+
+    with open(jsonl_path) as f:
+        for line_num, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue
+
+            try:
+                entry = json.loads(line)
+            except json.JSONDecodeError as exc:
+                print(f"  [WARN] Skipping malformed JSON on line {line_num}: {exc}")
+                continue
+
+            paper_count += 1
+            paper_id = f"paper_{paper_count:04d}"
+
+            # Collect review#N keys dynamically (handles 3, 4, or 5 reviews)
+            review_keys = sorted(k for k in entry if k.startswith("review#"))
+            reviews = []
+            for rk in review_keys:
+                r = entry[rk]
+
+                # Join all non-empty segment_text values into one review string
+                segments = r.get("review", [])
+                text = "\n".join(
+                    seg["segment_text"]
+                    for seg in segments
+                    if isinstance(seg.get("segment_text"), str)
+                    and seg["segment_text"].strip()
+                )
+
+                raw_scores: dict = r.get("score", {})
+                rating = _recommendation_to_rating(raw_scores.get("Recommendation", ""))
+
+                reviews.append({
+                    "reviewer": rk,
+                    "rating": rating,
+                    "text": text,
+                    "scores": {k: str(v).strip() for k, v in raw_scores.items()},
+                })
+
+            all_papers[paper_id] = {
+                "title": entry.get("title", "").strip(),
+                "abstract": "",          # not separately available in JSONL
+                "full_text": entry.get("body_text", ""),
+                "decision": entry.get("decision", "").strip(),
+                "reviews": reviews,
+            }
+
+            print(f"  [OK] {paper_id}  '{entry.get('title', '')[:50]}'  "
+                  f"({len(reviews)} reviews, decision={entry.get('decision', '?')})")
+
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(all_papers, f, indent=2)
+
+    print(f"\nSaved {len(all_papers)} papers → {output_path}")
+    return all_papers
+
+
 # ── Main parsing pipeline ──────────────────────────────────────────────────────
 
 def parse_all_reviews(raw_dir: str, output_path: str) -> dict[str, Any]:
@@ -145,8 +247,23 @@ def parse_all_reviews(raw_dir: str, output_path: str) -> dict[str, Any]:
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import sys
     cfg = load_config()
-    parse_all_reviews(
-        raw_dir=cfg["data"]["raw_dir"],
-        output_path=cfg["data"]["reviews_file"],
-    )
+
+    # If a .jsonl file is passed as argument, use the JSONL parser.
+    # Otherwise fall back to the OpenReview JSON / PDF parser.
+    if len(sys.argv) > 1 and sys.argv[1].endswith(".jsonl"):
+        parse_jsonl(
+            jsonl_path=sys.argv[1],
+            output_path=cfg["data"]["reviews_file"],
+        )
+    elif Path(cfg["data"].get("jsonl_file", "")).exists():
+        parse_jsonl(
+            jsonl_path=cfg["data"]["jsonl_file"],
+            output_path=cfg["data"]["reviews_file"],
+        )
+    else:
+        parse_all_reviews(
+            raw_dir=cfg["data"]["raw_dir"],
+            output_path=cfg["data"]["reviews_file"],
+        )

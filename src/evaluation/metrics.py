@@ -53,6 +53,8 @@ def coverage_curve(
     # Pre-load all matched paper pairs
     paper_pairs: list[tuple[dict, dict]] = []
     for result_file in sorted(results_path.glob("*.json")):
+        if result_file.stem in ("scores", "judge_scores"):
+            continue
         paper_id = result_file.stem
         gt_file = gt_path / f"{paper_id}.json"
         if not gt_file.exists():
@@ -96,6 +98,7 @@ def print_summary_table(baseline_scores: dict, agent_scores: dict) -> None:
         ("mean_precision", "Precision"),
         ("mean_recall", "Recall"),
         ("mean_f1", "F1"),
+        ("mean_latency_seconds", "Latency (s)"),
     ]:
         bv = b.get(metric, float("nan"))
         av = a.get(metric, float("nan"))
@@ -142,6 +145,78 @@ def plot_comparison(
     plt.close(fig)
 
 
+# ── Latency chart ─────────────────────────────────────────────────────────────
+
+def plot_latency(
+    baseline_scores: dict,
+    agent_scores: dict,
+    output_path: str = "results/latency_comparison.png",
+) -> None:
+    """Bar chart comparing mean latency between baseline and agent."""
+    b_lat = baseline_scores.get("aggregate", {}).get("mean_latency_seconds")
+    a_lat = agent_scores.get("aggregate", {}).get("mean_latency_seconds")
+
+    if b_lat is None and a_lat is None:
+        print("No latency data available — skipping latency plot.")
+        return
+
+    labels, vals = [], []
+    if b_lat is not None:
+        labels.append("Baseline")
+        vals.append(b_lat)
+    if a_lat is not None:
+        labels.append("Agent")
+        vals.append(a_lat)
+
+    fig, ax = plt.subplots(figsize=(5, 4))
+    bars = ax.bar(labels, vals, color=["#4C72B0", "#DD8452"][:len(labels)], width=0.5)
+    ax.set_ylabel("Mean latency (seconds)")
+    ax.set_title("Latency Comparison")
+    ax.bar_label(bars, fmt="%.1f", padding=3)
+    fig.tight_layout()
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150)
+    print(f"Latency plot saved → {output_path}")
+    plt.close(fig)
+
+
+# ── LLM-judge chart ──────────────────────────────────────────────────────────
+
+def plot_judge_comparison(
+    baseline_judge: dict,
+    agent_judge: dict,
+    output_path: str = "results/judge_comparison.png",
+) -> None:
+    """Bar chart comparing LLM-as-judge scores across dimensions."""
+    dims = ["mean_coverage", "mean_specificity", "mean_grounding", "mean_overall"]
+    labels = ["Coverage", "Specificity", "Grounding", "Overall"]
+
+    b_vals = [baseline_judge.get("aggregate", {}).get(d, 0) for d in dims]
+    a_vals = [agent_judge.get("aggregate", {}).get(d, 0) for d in dims]
+
+    x = np.arange(len(labels))
+    width = 0.35
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    bars_b = ax.bar(x - width / 2, b_vals, width, label="Baseline", color="#4C72B0")
+    bars_a = ax.bar(x + width / 2, a_vals, width, label="Agent", color="#DD8452")
+
+    ax.set_ylabel("Score (1-5)")
+    ax.set_title("LLM-as-Judge: Baseline vs. Agent")
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylim(0, 5.5)
+    ax.legend()
+    ax.bar_label(bars_b, fmt="%.2f", padding=3)
+    ax.bar_label(bars_a, fmt="%.2f", padding=3)
+
+    fig.tight_layout()
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_path, dpi=150)
+    print(f"Judge comparison plot saved → {output_path}")
+    plt.close(fig)
+
+
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
@@ -161,3 +236,15 @@ if __name__ == "__main__":
 
     print_summary_table(baseline_scores, agent_scores)
     plot_comparison(baseline_scores, agent_scores)
+    plot_latency(baseline_scores, agent_scores)
+
+    # LLM-judge comparison (if judge_scores.json files exist)
+    baseline_judge_file = Path(cfg["results"]["baseline_dir"]) / "judge_scores.json"
+    agent_judge_file = Path(cfg["results"]["agents_dir"]) / "judge_scores.json"
+
+    if baseline_judge_file.exists() and agent_judge_file.exists():
+        with open(baseline_judge_file) as f:
+            baseline_judge = json.load(f)
+        with open(agent_judge_file) as f:
+            agent_judge = json.load(f)
+        plot_judge_comparison(baseline_judge, agent_judge)

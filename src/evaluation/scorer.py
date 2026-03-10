@@ -116,6 +116,8 @@ def score_all(
     per_paper: dict[str, Any] = {}
 
     for result_file in sorted(results_path.glob("*.json")):
+        if result_file.stem in ("scores", "judge_scores"):
+            continue
         paper_id = result_file.stem
         gt_file = gt_path / f"{paper_id}.json"
 
@@ -123,13 +125,38 @@ def score_all(
             print(f"  [SKIP] No ground-truth for {paper_id}")
             continue
 
-        with open(result_file) as f:
-            result = json.load(f)
-        with open(gt_file) as f:
-            ground_truth = json.load(f)
+        try:
+            with open(result_file) as f:
+                result = json.load(f)
+            with open(gt_file) as f:
+                ground_truth = json.load(f)
+        except (json.JSONDecodeError, OSError) as exc:
+            print(f"  [ERROR] Failed to load files for {paper_id}: {exc}")
+            continue
 
-        generated = result.get("critique_points", {})
+        # Prefer structured weaknesses if available, fall back to flat critique_points
+        structured = result.get("structured", {})
+        if structured.get("weaknesses"):
+            generated = {}
+            for i, item in enumerate(structured["weaknesses"], 1):
+                if isinstance(item, str):
+                    full = item
+                elif isinstance(item, dict):
+                    point_text = item.get("point", "")
+                    evidence = item.get("evidence", "")
+                    full = f"{point_text}. {evidence}".strip(" .") if evidence else point_text
+                else:
+                    continue
+                generated[f"point_{i:03d}"] = full
+        else:
+            generated = result.get("critique_points", {})
+
         scores = score_paper(generated, ground_truth, threshold, embedder)
+
+        # Include latency if available
+        if result.get("latency_seconds") is not None:
+            scores["latency_seconds"] = result["latency_seconds"]
+
         per_paper[paper_id] = scores
         print(f"  {paper_id}: P={scores['precision']:.3f}  R={scores['recall']:.3f}  F1={scores['f1']:.3f}")
 
@@ -147,8 +174,15 @@ def score_all(
         "n_papers": len(per_paper),
     }
 
+    # Include mean latency if available
+    latencies = [v["latency_seconds"] for v in per_paper.values() if v.get("latency_seconds") is not None]
+    if latencies:
+        aggregate["mean_latency_seconds"] = round(float(np.mean(latencies)), 2)
+
     print(f"\n  Aggregate: P={aggregate['mean_precision']:.3f}  "
           f"R={aggregate['mean_recall']:.3f}  F1={aggregate['mean_f1']:.3f}")
+    if latencies:
+        print(f"  Mean latency: {aggregate['mean_latency_seconds']:.1f}s")
 
     return {"per_paper": per_paper, "aggregate": aggregate}
 

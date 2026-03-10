@@ -12,6 +12,7 @@ max_tokens: 4096
 # ── Data ───────────────────────────────────────────────────────────────────────
 data:
   raw_dir: "data/raw"
+  jsonl_file: "data/ReviewCritique.jsonl"
   processed_dir: "data/processed"
   reviews_file: "data/processed/reviews_parsed.json"
   critique_dicts_dir: "data/processed/critique_dicts"
@@ -24,7 +25,20 @@ critique_dict:
 
 # ── Agentic loop ───────────────────────────────────────────────────────────────
 agent:
-  max_rounds: 5                # maximum debate rounds between Critic and Auditor
+  max_rounds: 3                # debate rounds between Critic and Auditor
+  truncate_body_chars: 12000   # truncate full paper text fed to Reader
+  use_tools: true              # toggle tool-use for Critic/Auditor (false for ablation)
+  max_tool_calls: 5            # hard cap on tool calls per agent turn
+  early_stop_phrases:
+    - "no further concerns"
+    - "i am satisfied"
+    - "well-supported"
+    - "approve"
+  model_map:
+    reader: "claude-haiku-4-5-20251001"     # cheap — just reads and summarises
+    critic: "claude-sonnet-4-6"             # main reasoning
+    auditor: "claude-haiku-4-5-20251001"    # cheaper challenger
+    summariser: "claude-sonnet-4-6"         # output quality matters
   roles:
     - Reader
     - Critic
@@ -33,7 +47,7 @@ agent:
 
 # ── Evaluation ─────────────────────────────────────────────────────────────────
 evaluation:
-  similarity_threshold: 0.75   # cosine sim to count a point as "covered"
+  similarity_threshold: 0.55   # cosine sim to count a point as "covered" (lower for long-form critiques)
   embedding_model: "all-MiniLM-L6-v2"
 
 # ── Results ────────────────────────────────────────────────────────────────────

@@ -59,11 +59,11 @@ Produce a JSON critique dictionary of the paper's weaknesses.
 """
 
 
-def format_user_message(title: str, abstract: str, full_text: str = "") -> str:
+def format_user_message(title: str, abstract: str, full_text: str = "",
+                        truncate_chars: int = 12000) -> str:
     full_text_section = ""
     if full_text:
-        # Truncate to avoid exceeding context limits
-        truncated = full_text[:8000]
+        truncated = full_text[:truncate_chars]
         full_text_section = f"Full text (truncated):\n{truncated}\n"
     return USER_TEMPLATE.format(
         title=title,
@@ -83,6 +83,7 @@ def critique_paper(
 ) -> dict:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     model = cfg["models"]["baseline"]
+    truncate_chars = cfg.get("agent", {}).get("truncate_body_chars", 12000)
 
     response = client.messages.create(
         model=model,
@@ -90,7 +91,8 @@ def critique_paper(
         temperature=cfg["temperature"],
         system=SYSTEM_PROMPT,
         messages=[
-            {"role": "user", "content": format_user_message(title, abstract, full_text)}
+            {"role": "user", "content": format_user_message(title, abstract, full_text,
+                                                            truncate_chars=truncate_chars)}
         ],
     )
 
@@ -129,12 +131,17 @@ def run_baseline(reviews_path: str, output_dir: str, cfg: dict) -> None:
             continue
 
         print(f"  [RUN ] {paper_id} …")
-        result = critique_paper(
-            paper_id=paper_id,
-            title=paper.get("title", paper_id),
-            abstract=paper.get("abstract", ""),
-            cfg=cfg,
-        )
+        try:
+            result = critique_paper(
+                paper_id=paper_id,
+                title=paper.get("title", paper_id),
+                abstract=paper.get("abstract", ""),
+                full_text=paper.get("full_text", ""),
+                cfg=cfg,
+            )
+        except Exception as exc:
+            print(f"  [ERROR] {paper_id} failed: {exc}")
+            continue
 
         with open(out_file, "w") as f:
             json.dump(result, f, indent=2)
