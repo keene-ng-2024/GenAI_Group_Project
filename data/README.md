@@ -1,56 +1,27 @@
-# Data
+# Dataset Preparation and Reviewer Agreement Metrics
 
-## Directory layout
+## Overview
+This directory contains the prepared dataset splits and baseline metrics for the AI Research Paper Critique project, fulfilling the Phase 1 responsibilities of the Data & Dataset Lead.
 
-```
-data/
-├── raw/                     # original review files — place them here
-│   ├── <paper_id>.json      # OpenReview JSON export (preferred)
-│   └── <paper_id>.pdf       # or raw PDF
-│
-└── processed/
-    ├── reviews_parsed.json  # output of parse_reviews.py
-    └── critique_dicts/
-        └── <paper_id>.json  # output of build_critique_dict.py
-```
+## Dataset Splits
+* **Development Set (`dev_split.jsonl`):** Contains 5 papers used for active system development and prompt tuning.
+* **Evaluation Set (`eval_split.jsonl`):** Contains 15 papers reserved for the final, unbiased evaluation of the multi-agent system.
 
-## How to obtain data
+## Reviewer Agreement Statistics
+To establish a quantitative baseline for human variance, we computed the reviewer agreement based on the "Recommendation" score provided by multiple human reviewers per paper.
 
-### Option A — OpenReview (recommended)
+* **Average Reviewer Score Variance:** 2.04
+* **Standard Deviation:** 1.43 points
 
-1. Browse to a paper on [openreview.net](https://openreview.net).
-2. Use the OpenReview API or the bulk-download tool:
-   ```bash
-   pip install openreview-py
-   python - <<'EOF'
-   import openreview, json, pathlib
+### Formulas
+The sample variance for each paper's scores was calculated using the following mathematical formulation:
+$$s^2 = \frac{\sum_{i=1}^{n} (x_i - \bar{x})^2}{n - 1}$$
+Where $x_i$ is each reviewer's score, $\bar{x}$ is the average score for that paper, and $n$ is the number of reviewers.
 
-   client = openreview.api.OpenReviewClient(baseurl='https://api2.openreview.net')
-   # Replace with your venue / paper IDs
-   notes = client.get_notes(forum='<forum_id>', details='replies')
-   pathlib.Path('data/raw/<paper_id>.json').write_text(
-       json.dumps([n.to_json() for n in notes], indent=2)
-   )
-   EOF
-   ```
+The standard deviation is the square root of the variance:
+$$s = \sqrt{s^2}$$
 
-### Option B — Manual PDF
+### Interpretation and Application
+A variance of 2.04 translates to a standard deviation of approximately 1.43. This indicates that human reviewers evaluating the exact same research paper typically disagree by about 1.43 points on their final recommendation. 
 
-Place peer-review PDFs into `data/raw/` named `<paper_id>.pdf`.  The parser
-will extract text with pypdf (lower quality than structured JSON).
-
-## Running the pipeline
-
-```bash
-# 1. Parse raw files → reviews_parsed.json
-python -m src.data_processing.parse_reviews
-
-# 2. Distil reviews → critique dicts (requires ANTHROPIC_API_KEY)
-python -m src.data_processing.build_critique_dict
-```
-
-## Notes
-
-- Files in `data/raw/` and `data/processed/` are **gitignored** to avoid
-  committing potentially sensitive review content.
-- The `critique_dicts/` sub-directory is the ground truth used by the scorer.
+During Phase 3 (Evaluation & Experiments), when the multi-agent system generates its outputs, the system will calculate a reviewer similarity score. This 1.43-point margin establishes the statistical threshold for human-level consensus. If the AI's scores fall within this standard deviation from the human average, the system's performance is demonstrably aligned with expert reviewers.
