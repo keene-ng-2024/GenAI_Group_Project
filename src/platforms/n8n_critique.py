@@ -163,7 +163,7 @@ def critique_paper_via_n8n(
         "paper_id": paper_id,
         "title": title,
         "platform": "n8n",
-        "model": "gpt-4o-mini/gpt-4o",
+        "model": "gpt-4o",
         "latency_seconds": latency_seconds,
         "structured": structured,
         "critique_points": critique_points,
