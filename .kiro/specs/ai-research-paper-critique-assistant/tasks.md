@@ -4,15 +4,15 @@
 
 ### 1.1 Agent Role Definitions
 
-- [ ] 1.1.1 Create `src/agents/personas.py` with Vertex AI client initialization using `google-cloud-vertexai` (FR-1.1.4, IR-4.1.1)
-- [ ] 1.1.2 Define `AgentRole` enum (READER, CRITIC, AUDITOR, SUMMARIZER) in `src/agents/personas.py` (FR-1.1.1)
-- [ ] 1.1.3 Update `BaseAgent` class to support configurable models per role with Vertex AI integration (FR-1.1.4)
-- [ ] 1.1.4 Add `AgentMessage` dataclass with role, content, timestamp, tool_calls, tool_results fields (FR-1.5.4)
-- [ ] 1.1.5 Add `AgentRole` field to `BaseAgent` for role identification in transcript tracking (FR-1.1.3)
+- [x] 1.1.1 Create `src/agents/personas.py` with Vertex AI client initialization using `google-cloud-vertexai` (FR-1.1.4, IR-4.1.1)
+- [x] 1.1.2 Define `AgentRole` enum (READER, CRITIC, AUDITOR, SUMMARIZER) in `src/agents/personas.py` (FR-1.1.1)
+- [x] 1.1.3 Update `BaseAgent` class to support configurable models per role with Vertex AI integration (FR-1.1.4)
+- [x] 1.1.4 Add `AgentMessage` dataclass with role, content, timestamp, tool_calls, tool_results fields (FR-1.5.4)
+- [x] 1.1.5 Add `AgentRole` field to `BaseAgent` for role identification in transcript tracking (FR-1.1.3)
 
 ### 1.2 Data Structures
 
-- [ ] 1.2.1 Create `src/agents/data_models.py` with core dataclasses (FR-1.2.1, DR-3.1.1)
+- [-] 1.2.1 Create `src/agents/data_models.py` with core dataclasses (FR-1.2.1, DR-3.1.1)
 - [ ] 1.2.2 Define `Paper` dataclass with paper_id, title, abstract, full_text, reviews fields (FR-1.2.1, DR-3.1.1)
 - [ ] 1.2.3 Define `CritiquePoint` dataclass with point, evidence, low_confidence fields (FR-1.5.2)
 - [ ] 1.2.4 Define `StructuredReview` dataclass with summary, strengths, weaknesses, questions, scores (FR-1.5.1)
