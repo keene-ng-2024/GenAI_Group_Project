@@ -199,6 +199,7 @@ if __name__ == "__main__":
         "baseline": cfg["results"]["baseline_dir"],
         "agents": cfg["results"]["agents_dir"],
         "n8n": cfg["results"]["n8n_dir"],
+        "langgraph": cfg["results"]["langgraph_dir"],
     }.get(mode, cfg["results"]["agents_dir"])
 
     scores = score_all(
