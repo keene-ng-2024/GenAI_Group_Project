@@ -1,24 +1,18 @@
 """
 langgraph_critique.py
 ---------------------
-LangGraph-based multi-agent critique workflow.
+LangGraph-based multi-agent critique workflow with ablation support.
 
 Architecture
   Uses LangGraph's StateGraph to orchestrate the same
   Reader → Critic ↔ Auditor → Summariser pipeline as the other platforms,
-  with conditional edges for the debate loop and early stopping.
+  with three loop modes for controlled ablation:
 
-  ┌────────┐      ┌────────┐      ┌─────────┐
-  │ Reader │─────►│ Critic │─────►│ Auditor │
-  └────────┘      └────────┘      └─────────┘
-                       ▲               │
-                       └───────────────┘  (conditional: continue or stop)
-                                       │
-                                  ┌────▼──────┐
-                                  │Summariser │──► END
-                                  └───────────┘
+  - none:    Reader → Critic → Summariser  (no debate)
+  - fixed:   Reader → Critic → (Auditor → Critic) × N → Summariser  (no early exit)
+  - dynamic: Reader → Critic ↔ Auditor → Summariser  (conditional early exit)
 
-Output per paper: results/langgraph/<paper_id>.json  (same schema as other platforms)
+Output per paper: results/langgraph_{mode}/<paper_id>.json
 """
 
 from __future__ import annotations
@@ -128,7 +122,11 @@ SUMMARISER_SYSTEM = (
 )
 
 
-# ── LLM helper ────────────────────────────────────────────────────────────────
+# ── LLM helper with retry ───────────────────────────────────────────────────
+
+_MAX_RETRIES = 3
+_BASE_DELAY = 2.0  # seconds
+
 
 def _call_llm(
     system_prompt: str,
@@ -137,22 +135,32 @@ def _call_llm(
     temperature: float = 0.2,
     max_tokens: int = 4096,
 ) -> tuple[str, int, int]:
-    """Call the LLM and return (text, input_tokens, output_tokens)."""
+    """Call the LLM with exponential backoff retry. Returns (text, input_tokens, output_tokens)."""
     llm = ChatOpenAI(
         model=model,
         temperature=temperature,
         max_tokens=max_tokens,
     )
-    response = llm.invoke([
-        SystemMessage(content=system_prompt),
-        HumanMessage(content=user_message),
-    ])
-    usage = response.usage_metadata or {}
-    return (
-        response.content,
-        usage.get("input_tokens", 0),
-        usage.get("output_tokens", 0),
-    )
+    last_exc = None
+    for attempt in range(_MAX_RETRIES):
+        try:
+            response = llm.invoke([
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_message),
+            ])
+            usage = response.usage_metadata or {}
+            return (
+                response.content,
+                usage.get("input_tokens", 0),
+                usage.get("output_tokens", 0),
+            )
+        except Exception as exc:
+            last_exc = exc
+            if attempt < _MAX_RETRIES - 1:
+                delay = _BASE_DELAY * (2 ** attempt)
+                print(f"    [RETRY] Attempt {attempt + 1} failed: {exc}. Retrying in {delay}s...")
+                time.sleep(delay)
+    raise RuntimeError(f"LLM call failed after {_MAX_RETRIES} attempts: {last_exc}") from last_exc
 
 
 def _add_tokens(state: CritiqueState, input_t: int, output_t: int) -> dict[str, int]:
@@ -164,99 +172,104 @@ def _add_tokens(state: CritiqueState, input_t: int, output_t: int) -> dict[str, 
     }
 
 
-# ── Node functions ─────────────────────────────────────────────────────────────
+# ── Node factory functions ───────────────────────────────────────────────────
+# Models are passed via closures (not state) to keep CritiqueState clean.
 
-def reader_node(state: CritiqueState) -> dict:
-    """Reader: summarise the paper."""
-    text, in_t, out_t = _call_llm(
-        system_prompt=READER_SYSTEM,
-        user_message=f"Please summarise the following paper:\n\nTitle: {state['title']}\n\n{state['paper_text']}",
-        model=state.get("_model_reader", "gpt-4o-mini"),
-    )
-    print(f"    [Reader] {text[:200]}{'…' if len(text) > 200 else ''}")
-    return {
-        "summary": text,
-        "transcript": state["transcript"] + [{"role": "Reader", "content": text}],
-        "token_usage": _add_tokens(state, in_t, out_t),
-    }
-
-
-def critic_node(state: CritiqueState) -> dict:
-    """Critic: generate initial critique or revise based on auditor feedback."""
-    if state["round_num"] == 0:
-        user_msg = (
-            f"Here is the paper summary:\n\n{state['summary']}\n\n"
-            "Now list your critique points."
+def make_reader_node(model: str):
+    def reader_node(state: CritiqueState) -> dict:
+        text, in_t, out_t = _call_llm(
+            system_prompt=READER_SYSTEM,
+            user_message=f"Please summarise the following paper:\n\nTitle: {state['title']}\n\n{state['paper_text']}",
+            model=model,
         )
-        role_label = "Critic (initial)"
-    else:
-        user_msg = (
-            f"The Auditor has challenged some of your points:\n\n{state['audit_feedback']}\n\n"
-            "Revise or defend your critique points accordingly."
+        print(f"    [Reader] {text[:200]}{'…' if len(text) > 200 else ''}")
+        return {
+            "summary": text,
+            "transcript": state["transcript"] + [{"role": "Reader", "content": text}],
+            "token_usage": _add_tokens(state, in_t, out_t),
+        }
+    return reader_node
+
+
+def make_critic_node(model: str):
+    def critic_node(state: CritiqueState) -> dict:
+        if state["round_num"] == 0:
+            user_msg = (
+                f"Here is the paper summary:\n\n{state['summary']}\n\n"
+                "Now list your critique points."
+            )
+            role_label = "Critic (initial)"
+        else:
+            user_msg = (
+                f"The Auditor has challenged some of your points:\n\n{state['audit_feedback']}\n\n"
+                "Revise or defend your critique points accordingly."
+            )
+            role_label = f"Critic (round {state['round_num']})"
+
+        text, in_t, out_t = _call_llm(
+            system_prompt=CRITIC_SYSTEM,
+            user_message=user_msg,
+            model=model,
         )
-        role_label = f"Critic (round {state['round_num']})"
-
-    text, in_t, out_t = _call_llm(
-        system_prompt=CRITIC_SYSTEM,
-        user_message=user_msg,
-        model=state.get("_model_critic", "gpt-4o"),
-    )
-    print(f"    [{role_label}] {text[:200]}{'…' if len(text) > 200 else ''}")
-    return {
-        "critique": text,
-        "transcript": state["transcript"] + [{"role": role_label, "content": text}],
-        "token_usage": _add_tokens(state, in_t, out_t),
-    }
+        print(f"    [{role_label}] {text[:200]}{'…' if len(text) > 200 else ''}")
+        return {
+            "critique": text,
+            "transcript": state["transcript"] + [{"role": role_label, "content": text}],
+            "token_usage": _add_tokens(state, in_t, out_t),
+        }
+    return critic_node
 
 
-def auditor_node(state: CritiqueState) -> dict:
-    """Auditor: challenge the critic's points."""
-    round_num = state["round_num"] + 1
-    user_msg = (
-        f"Paper summary:\n{state['summary']}\n\n"
-        f"Critic's points:\n{state['critique']}\n\n"
-        "Challenge weak points and identify anything important that was missed."
-    )
-    text, in_t, out_t = _call_llm(
-        system_prompt=AUDITOR_SYSTEM,
-        user_message=user_msg,
-        model=state.get("_model_auditor", "gpt-4o-mini"),
-    )
-    print(f"    [Auditor (round {round_num})] {text[:200]}{'…' if len(text) > 200 else ''}")
-    return {
-        "audit_feedback": text,
-        "round_num": round_num,
-        "transcript": state["transcript"] + [
-            {"role": f"Auditor (round {round_num})", "content": text}
-        ],
-        "token_usage": _add_tokens(state, in_t, out_t),
-    }
+def make_auditor_node(model: str):
+    def auditor_node(state: CritiqueState) -> dict:
+        round_num = state["round_num"] + 1
+        user_msg = (
+            f"Paper summary:\n{state['summary']}\n\n"
+            f"Critic's points:\n{state['critique']}\n\n"
+            "Challenge weak points and identify anything important that was missed."
+        )
+        text, in_t, out_t = _call_llm(
+            system_prompt=AUDITOR_SYSTEM,
+            user_message=user_msg,
+            model=model,
+        )
+        print(f"    [Auditor (round {round_num})] {text[:200]}{'…' if len(text) > 200 else ''}")
+        return {
+            "audit_feedback": text,
+            "round_num": round_num,
+            "transcript": state["transcript"] + [
+                {"role": f"Auditor (round {round_num})", "content": text}
+            ],
+            "token_usage": _add_tokens(state, in_t, out_t),
+        }
+    return auditor_node
 
 
-def summariser_node(state: CritiqueState) -> dict:
-    """Summariser: consolidate the debate into structured JSON."""
-    full_debate = "\n\n".join(
-        f"=== {entry['role']} ===\n{entry['content']}" for entry in state["transcript"]
-    )
-    text, in_t, out_t = _call_llm(
-        system_prompt=SUMMARISER_SYSTEM,
-        user_message=(
-            f"Here is the full debate transcript:\n\n{full_debate}\n\n"
-            "Produce the final structured review JSON."
-        ),
-        model=state.get("_model_summariser", "gpt-4o"),
-    )
-    print(f"    [Summariser] {text[:200]}{'…' if len(text) > 200 else ''}")
+def make_summariser_node(model: str):
+    def summariser_node(state: CritiqueState) -> dict:
+        full_debate = "\n\n".join(
+            f"=== {entry['role']} ===\n{entry['content']}" for entry in state["transcript"]
+        )
+        text, in_t, out_t = _call_llm(
+            system_prompt=SUMMARISER_SYSTEM,
+            user_message=(
+                f"Here is the full debate transcript:\n\n{full_debate}\n\n"
+                "Produce the final structured review JSON."
+            ),
+            model=model,
+        )
+        print(f"    [Summariser] {text[:200]}{'…' if len(text) > 200 else ''}")
 
-    structured = _parse_structured_output(text)
-    critique_points = _flatten_to_critique_points(structured)
+        structured = _parse_structured_output(text)
+        critique_points = _flatten_to_critique_points(structured)
 
-    return {
-        "structured": structured,
-        "critique_points": critique_points,
-        "transcript": state["transcript"] + [{"role": "Summariser", "content": text}],
-        "token_usage": _add_tokens(state, in_t, out_t),
-    }
+        return {
+            "structured": structured,
+            "critique_points": critique_points,
+            "transcript": state["transcript"] + [{"role": "Summariser", "content": text}],
+            "token_usage": _add_tokens(state, in_t, out_t),
+        }
+    return summariser_node
 
 
 # ── Conditional edge: should the debate continue? ─────────────────────────────
@@ -269,31 +282,73 @@ def should_continue(state: CritiqueState) -> str:
 
     feedback_lower = state["audit_feedback"].lower()
     for phrase in state.get("early_stop_phrases", []):
-        idx = feedback_lower.find(phrase)
-        if idx >= 0:
-            prefix = feedback_lower[max(0, idx - 15):idx]
-            if not any(neg in prefix for neg in ["not ", "no ", "don't ", "isn't ", "hardly "]):
+        phrase_lower = phrase.lower()
+        # Check every occurrence of the phrase, not just the first
+        start = 0
+        while True:
+            idx = feedback_lower.find(phrase_lower, start)
+            if idx < 0:
+                break
+            # Extract the full sentence containing this phrase for negation check
+            sent_start = max(
+                feedback_lower.rfind(".", 0, idx) + 1,
+                feedback_lower.rfind("!", 0, idx) + 1,
+                feedback_lower.rfind("?", 0, idx) + 1,
+                0,
+            )
+            sentence = feedback_lower[sent_start:idx]
+            negations = ["not ", "no ", "don't ", "doesn't ", "isn't ", "aren't ",
+                         "hardly ", "never ", "cannot ", "can't ", "won't "]
+            if not any(neg in sentence for neg in negations):
                 print(f"    [STOP] Auditor satisfied ('{phrase}') after round {state['round_num']}.")
                 return "summariser"
+            start = idx + 1
 
+    return "critic"
+
+
+def _always_summariser(state: CritiqueState) -> str:
+    """Fixed-loop routing: always go back to critic until max_rounds, then summarise."""
+    if state["round_num"] >= state["max_rounds"]:
+        print(f"    [STOP] Fixed rounds ({state['max_rounds']}) completed.")
+        return "summariser"
     return "critic"
 
 
 # ── Build the graph ────────────────────────────────────────────────────────────
 
-def build_graph() -> StateGraph:
-    """Construct and compile the LangGraph critique workflow."""
+def build_graph(
+    loop_mode: str,
+    models: dict[str, str],
+) -> StateGraph:
+    """Construct and compile the LangGraph critique workflow.
+
+    Args:
+        loop_mode: One of "none", "fixed", "dynamic".
+        models: Dict with keys reader, critic, auditor, summariser mapping to model names.
+    """
     graph = StateGraph(CritiqueState)
 
-    graph.add_node("reader", reader_node)
-    graph.add_node("critic", critic_node)
-    graph.add_node("auditor", auditor_node)
-    graph.add_node("summariser", summariser_node)
+    graph.add_node("reader", make_reader_node(models["reader"]))
+    graph.add_node("critic", make_critic_node(models["critic"]))
+    graph.add_node("summariser", make_summariser_node(models["summariser"]))
 
     graph.add_edge(START, "reader")
     graph.add_edge("reader", "critic")
-    graph.add_edge("critic", "auditor")
-    graph.add_conditional_edges("auditor", should_continue)
+
+    if loop_mode == "none":
+        # No auditor at all: Reader → Critic → Summariser
+        graph.add_edge("critic", "summariser")
+    else:
+        # Both fixed and dynamic use the auditor
+        graph.add_node("auditor", make_auditor_node(models["auditor"]))
+        graph.add_edge("critic", "auditor")
+
+        if loop_mode == "fixed":
+            graph.add_conditional_edges("auditor", _always_summariser)
+        else:  # dynamic
+            graph.add_conditional_edges("auditor", should_continue)
+
     graph.add_edge("summariser", END)
 
     return graph.compile()
@@ -361,8 +416,10 @@ def critique_paper(
     paper_id: str,
     paper: dict,
     cfg: dict,
+    app,
+    loop_mode: str,
 ) -> dict:
-    """Run the LangGraph critique workflow for one paper."""
+    """Run the LangGraph critique workflow for one paper using a pre-compiled graph."""
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
     title = paper.get("title", paper_id)
     full_text = paper.get("full_text", "")
@@ -370,7 +427,6 @@ def critique_paper(
 
     lg_cfg = cfg.get("langgraph", {})
 
-    app = build_graph()
     start_time = time.perf_counter()
 
     result = app.invoke({
@@ -382,16 +438,12 @@ def critique_paper(
         "audit_feedback": "",
         "transcript": [],
         "round_num": 0,
-        "max_rounds": cfg["agent"]["max_rounds"],
-        "early_stop_phrases": cfg["agent"].get("early_stop_phrases", []),
+        "max_rounds": cfg["agent"]["max_rounds"] if loop_mode != "none" else 0,
+        "early_stop_phrases": lg_cfg.get("early_stop_phrases",
+                                          cfg["agent"].get("early_stop_phrases", [])),
         "structured": {},
         "critique_points": {},
         "token_usage": {"input": 0, "output": 0},
-        # Model config from langgraph section of config.yaml
-        "_model_reader": lg_cfg.get("reader_model", "gpt-4o-mini"),
-        "_model_critic": lg_cfg.get("critic_model", "gpt-4o"),
-        "_model_auditor": lg_cfg.get("auditor_model", "gpt-4o-mini"),
-        "_model_summariser": lg_cfg.get("summariser_model", "gpt-4o"),
     })
 
     latency_seconds = round(time.perf_counter() - start_time, 2)
@@ -400,6 +452,7 @@ def critique_paper(
         "paper_id": paper_id,
         "title": title,
         "platform": "langgraph",
+        "loop_mode": loop_mode,
         "model": lg_cfg.get("critic_model", "gpt-4o"),
         "rounds": result["round_num"],
         "latency_seconds": latency_seconds,
@@ -412,9 +465,25 @@ def critique_paper(
 
 # ── Batch pipeline ─────────────────────────────────────────────────────────────
 
-def run_all_papers(reviews_path: str, output_dir: str, cfg: dict) -> None:
+def run_all_papers(
+    reviews_path: str,
+    output_dir: str,
+    cfg: dict,
+    loop_mode: str,
+) -> None:
     with open(reviews_path) as f:
         all_papers: dict = json.load(f)
+
+    lg_cfg = cfg.get("langgraph", {})
+    models = {
+        "reader": lg_cfg.get("reader_model", "gpt-4o-mini"),
+        "critic": lg_cfg.get("critic_model", "gpt-4o"),
+        "auditor": lg_cfg.get("auditor_model", "gpt-4o-mini"),
+        "summariser": lg_cfg.get("summariser_model", "gpt-4o"),
+    }
+
+    # Compile graph ONCE and reuse for all papers
+    app = build_graph(loop_mode=loop_mode, models=models)
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -432,6 +501,8 @@ def run_all_papers(reviews_path: str, output_dir: str, cfg: dict) -> None:
                 paper_id=paper_id,
                 paper=paper,
                 cfg=cfg,
+                app=app,
+                loop_mode=loop_mode,
             )
         except Exception as exc:
             print(f"\n  [ERROR] {paper_id} failed: {exc}")
@@ -450,9 +521,38 @@ def run_all_papers(reviews_path: str, output_dir: str, cfg: dict) -> None:
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    cfg = load_config()
-    run_all_papers(
-        reviews_path=cfg["data"]["reviews_file"],
-        output_dir=cfg["results"]["langgraph_dir"],
-        cfg=cfg,
+    import argparse
+
+    parser = argparse.ArgumentParser(description="LangGraph critique pipeline")
+    parser.add_argument(
+        "--mode",
+        choices=["none", "fixed", "dynamic", "all"],
+        default=None,
+        help="Loop mode to run. 'all' runs all three. Defaults to config.yaml langgraph.loop_mode.",
     )
+    args = parser.parse_args()
+
+    cfg = load_config()
+    lg_cfg = cfg.get("langgraph", {})
+
+    if args.mode == "all":
+        modes = ["none", "fixed", "dynamic"]
+    elif args.mode:
+        modes = [args.mode]
+    else:
+        modes = [lg_cfg.get("loop_mode", "dynamic")]
+
+    for mode in modes:
+        out_dir = cfg["results"].get(f"langgraph_{mode}_dir",
+                                     f"results/langgraph_{mode}")
+        print(f"\n{'#'*60}")
+        print(f"  Running LangGraph ablation: loop_mode={mode}")
+        print(f"  Output → {out_dir}")
+        print(f"{'#'*60}")
+
+        run_all_papers(
+            reviews_path=cfg["data"]["reviews_file"],
+            output_dir=out_dir,
+            cfg=cfg,
+            loop_mode=mode,
+        )
