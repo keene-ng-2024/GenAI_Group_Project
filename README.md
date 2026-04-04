@@ -41,12 +41,146 @@ structure as the independent variable.
 
 ### Agent prompts
 
-| Agent | Role |
-|-------|------|
-| **Reader** | "You are a careful academic reader. Produce a structured summary with sections: Problem & Motivation, Proposed Method, Methods, Results, Claimed Contributions. Be factual and concise. Include specific numbers from experiments." |
-| **Critic** | "You are a rigorous peer reviewer for a top-tier ML/AI venue. Identify substantive weaknesses in: novelty, methodology, evaluation, clarity, and reproducibility. For each point give: (a) the issue, (b) why it matters, (c) evidence from the paper." |
-| **Auditor** | "You are a senior programme committee member auditing a peer review. Challenge poorly-supported critique points, ask for concrete evidence, flag over-interpretations, and identify issues the Critic missed. Be constructive but demanding." |
-| **Summariser** | "You are a senior editor. Synthesise the Critic–Auditor debate into a final structured review. Output valid JSON only: summary, strengths, weaknesses, questions, scores." |
+All prompts are identical across every platform. Variables in `{curly braces}` are filled in at runtime.
+
+---
+
+**Reader**
+
+*System:*
+```
+You are a Reader agent. Read the following paper and produce a structured summary. Cover:
+Problem & Motivation, Proposed Method, Results, Claimed Contributions.
+```
+
+*User:*
+```
+Paper:
+{paper_text}
+```
+
+---
+
+**Critic — Round 1 (initial)**
+
+*System:*
+```
+You are a Critic agent reviewing an AI/ML research paper.
+```
+
+*User:*
+```
+Paper summary:
+{summary}
+
+Generate 12-15 specific critique points.
+
+For each point you MUST:
+- Be concrete and specific, not generic
+- Reference specific sections, tables, or claims from the paper
+- Focus on ONE issue per point
+
+Cover ALL of these dimensions:
+- Novelty: what prior work is missing or inadequately compared?
+- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?
+- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?
+- Reproducibility: what implementation details are missing?
+- Clarity: what is confusing or poorly explained in the paper?
+- Limitations: what does the method fail to address or acknowledge?
+- Generalisability: does it work beyond the tested settings?
+
+IMPORTANT: Only critique what is actually in the paper.
+Do NOT invent references, section numbers, or claims not explicitly stated.
+```
+
+---
+
+**Auditor**
+
+*System:*
+```
+You are an Auditor agent. Your job is to make the Critic's review stronger.
+```
+
+*User:*
+```
+Paper summary:
+{summary}
+
+Critic response:
+{critique}
+
+For each critique point:
+1. Is it specific enough or too generic? Push for concrete details.
+2. Is it supported by evidence from the paper?
+3. What important issues did the Critic completely miss?
+
+Be aggressive — a weak vague point is worse than no point.
+Explicitly list 3-5 issues the Critic missed.
+
+Do NOT suggest ethical implications or bias points unless
+the paper explicitly makes claims in these areas.
+```
+
+---
+
+**Critic — Round 2 (revision)**
+
+*System:*
+```
+You are the Critic agent revising your review based on Auditor feedback.
+```
+
+*User:*
+```
+Original paper summary:
+{summary}
+
+Your original critique:
+{critique}
+
+Auditor feedback:
+{audit_feedback}
+
+Now produce an improved critique that:
+- Fixes all weak or vague points the Auditor flagged
+- Adds the missing issues the Auditor identified
+- Keeps all strong original points
+- Generates 12-15 total points
+
+For each point you MUST:
+- Be concrete and specific, not generic
+- Reference specific sections, tables, or claims from the paper
+- Focus on ONE issue per point
+
+Cover ALL of these dimensions:
+- Novelty: what prior work is missing or inadequately compared?
+- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?
+- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?
+- Reproducibility: what implementation details are missing?
+- Clarity: what is confusing or poorly explained in the paper?
+- Limitations: what does the method fail to address or acknowledge?
+- Generalisability: does it work beyond the tested settings?
+```
+
+---
+
+**Summariser**
+
+*System:*
+```
+You are a Summariser agent. Consolidate the critique into a final structured review.
+Output ONLY valid JSON, no other text, no markdown code fences.
+```
+
+*User:*
+```
+Critic2 output:
+{critic2_output}
+
+Reader summary:
+{summary}
+```
 
 ### Model assignment
 
@@ -217,8 +351,9 @@ Key settings in [config.yaml](config.yaml):
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `models.strong` | `claude-sonnet-4-6` | Agent / dict-builder model |
-| `models.fast` | `claude-haiku-4-5-20251001` | Cheap sub-calls |
-| `agent.max_rounds` | `5` | Max Critic ↔ Auditor debate rounds |
-| `evaluation.similarity_threshold` | `0.75` | Cosine sim for "covered" |
+| `models.strong` | `gpt-4.1-mini` | Agent / dict-builder model |
+| `models.fast` | `gpt-4.1-mini` | Cheap sub-calls |
+| `agent.max_rounds` | `3` | Max Critic ↔ Auditor debate rounds |
+| `langgraph.loop_mode` | `dynamic` | `none` / `fixed` / `dynamic` |
+| `evaluation.similarity_threshold` | `0.50` | Cosine sim for "covered" |
 | `temperature` | `0.2` | Generation temperature |
