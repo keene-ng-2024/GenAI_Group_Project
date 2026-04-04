@@ -1,11 +1,77 @@
 # Paper Critique Agent Study
 
 Comparing **single-call LLM baselines** against **multi-agent agentic loops**
-for generating peer-review-style critiques of ML/AI papers.
+for generating peer-review-style critiques of ML/AI papers, across six
+orchestration platforms.
 
 The ground truth is a deduplicated dictionary of critique points distilled
 from real human reviews.  We measure how well each system *covers* those points
 using semantic-similarity recall / precision.
+
+---
+
+## Platform Overview
+
+Six platforms implement the same 4-agent pipeline under controlled conditions.
+**Prompts are identical across all platforms.** The only dimensions that vary
+are workflow structure and model.
+
+| Platform | Workflow | Loop type | Model |
+|----------|----------|-----------|-------|
+| Baseline | Single call | None | GPT-4.1-mini |
+| n8n | Visual DAG | Fixed rounds | GPT-4.1-mini |
+| Dify | Visual DAG | Fixed rounds | GPT-4.1-mini |
+| Vertex AI | Python (google-genai SDK) | Dynamic conditional | Gemini 2.5 Flash* |
+| LangGraph | StateGraph (code-first) | Dynamic conditional | GPT-4.1-mini |
+| CrewAI | Role-based sequential | Fixed rounds | GPT-4.1-mini |
+
+*Vertex AI uses Gemini 2.5 Flash due to platform model lock-in.
+
+**Loop types explained:**
+- **None** — single LLM call, no debate
+- **Fixed rounds** — Critic → Auditor unrolled N times (hardcoded, no early exit); used by platforms that cannot express conditional cycles (n8n, Dify, CrewAI)
+- **Dynamic conditional** — Critic ↔ Auditor loop with early exit when Auditor is satisfied; native to LangGraph and implemented in Python for Vertex AI
+
+---
+
+## Fixed Constants
+
+The following are held constant across all platforms to isolate workflow
+structure as the independent variable.
+
+### Agent prompts
+
+| Agent | Role |
+|-------|------|
+| **Reader** | "You are a careful academic reader. Produce a structured summary with sections: Problem & Motivation, Proposed Method, Methods, Results, Claimed Contributions. Be factual and concise. Include specific numbers from experiments." |
+| **Critic** | "You are a rigorous peer reviewer for a top-tier ML/AI venue. Identify substantive weaknesses in: novelty, methodology, evaluation, clarity, and reproducibility. For each point give: (a) the issue, (b) why it matters, (c) evidence from the paper." |
+| **Auditor** | "You are a senior programme committee member auditing a peer review. Challenge poorly-supported critique points, ask for concrete evidence, flag over-interpretations, and identify issues the Critic missed. Be constructive but demanding." |
+| **Summariser** | "You are a senior editor. Synthesise the Critic–Auditor debate into a final structured review. Output valid JSON only: summary, strengths, weaknesses, questions, scores." |
+
+### Model assignment
+
+All agents on all platforms use `gpt-4.1-mini` — best cost:performance ratio
+for language tasks, and keeps the controlled experiment clean (one model,
+one variable: workflow structure).
+
+> Vertex AI is the only exception due to platform model lock-in (Gemini 2.5 Flash).
+> This is treated as a platform constraint and noted as a limitation in the report.
+
+---
+
+## LangGraph Ablation
+
+LangGraph additionally runs all three loop conditions with the same model and
+prompts, isolating loop structure as the sole variable:
+
+| Condition | Config | Description |
+|-----------|--------|-------------|
+| `loop_mode: none` | Reader → Critic → Summariser | No debate, single-pass |
+| `loop_mode: fixed` | Reader → Critic → Auditor × N → Summariser | Fixed rounds, no early exit |
+| `loop_mode: dynamic` | Reader → Critic ↔ Auditor → Summariser | Conditional early exit |
+
+Results stored in `results/langgraph_none/`, `results/langgraph_fixed/`,
+`results/langgraph_dynamic/`.
 
 ---
 
