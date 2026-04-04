@@ -49,25 +49,25 @@
 ### 3.1 Main Orchestrator
 
 - [x] 3.1.1 Create `src/agents/state.py` with `AgentState` TypedDict and state management (FR-1.1.2)
-- [-] 3.1.2 Implement `run_pipeline(paper_id, paper_text)` function as main entry point (IR-4.3.1)
-- [ ] 3.1.3 Implement iterative debate loop with configurable max_rounds=5 (FR-1.3.2)
-- [ ] 3.1.4 Implement early stopping detection with configurable phrases (FR-1.3.3, FR-1.3.4)
-- [ ] 3.1.5 Integrate grounding verification into debate loop (FR-1.4.3)
+- [x] 3.1.2 Implement `run_pipeline(paper_id, paper_text)` function as main entry point (IR-4.3.1)
+- [x] 3.1.3 Implement iterative debate loop with configurable max_rounds=5 (FR-1.3.2)
+- [x] 3.1.4 Implement early stopping detection with configurable phrases (FR-1.3.3, FR-1.3.4)
+- [x] 3.1.5 Integrate grounding verification into debate loop (FR-1.4.3)
 
 ### 3.2 Output Generation
 
-- [ ] 3.2.1 Implement `parse_structured_output(raw_text)` with JSON schema validation (FR-1.5.1)
-- [ ] 3.2.2 Implement `flatten_to_critique_points(structured)` for evaluation compatibility (FR-1.5.3)
-- [ ] 3.2.3 Implement `build_debate_context(transcript, config)` for Summarizer input (FR-1.1.3)
-- [ ] 3.2.4 Implement `save_result(result, output_dir)` to `results/agents/<paper_id>.json` (FR-1.6.1)
-- [ ] 3.2.5 Implement `log_run_metadata(metadata, output_dir)` with latency_ms (FR-1.6.2)
+- [x] 3.2.1 Implement `parse_structured_output(raw_text)` with JSON schema validation (FR-1.5.1)
+- [x] 3.2.2 Implement `flatten_to_critique_points(structured)` for evaluation compatibility (FR-1.5.3)
+- [x] 3.2.3 Implement `build_debate_context(transcript, config)` for Summarizer input (FR-1.1.3)
+- [x] 3.2.4 Implement `save_result(result, output_dir)` to `results/agents/<paper_id>.json` (FR-1.6.1)
+- [x] 3.2.5 Implement `log_run_metadata(metadata, output_dir)` with latency_ms (FR-1.6.2)
 
 ### 3.3 Baseline Integration
 
-- [ ] 3.3.1 Update `src/baseline/baseline_critique.py` to use Vertex AI (IR-4.1.1)
-- [ ] 3.3.2 Ensure baseline output matches agentic output schema (FR-1.7.1)
-- [ ] 3.3.3 Add compatibility layer for evaluation metrics (IR-4.2.1)
-- [ ] 3.3.4 Implement `compare_with_baseline(agentic_result, baseline_result)` (FR-1.7.2)
+- [x] 3.3.1 Update `src/baseline/baseline_critique.py` to use Vertex AI (IR-4.1.1)
+- [x] 3.3.2 Ensure baseline output matches agentic output schema (FR-1.7.1)
+- [x] 3.3.3 Add compatibility layer for evaluation metrics (IR-4.2.1)
+- [x] 3.3.4 Implement `compare_with_baseline(agentic_result, baseline_result)` (FR-1.7.2)
 
 ## Phase 4: Testing
 
