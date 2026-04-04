@@ -10,7 +10,7 @@ dictionary of unique critique points:
     ...
   }
 
-Each dict is saved as  data/processed/critique_dicts/<paper_id>.json
+Uses OpenAI model for distillation.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import json
 import os
 from pathlib import Path
 
-import anthropic
+import openai
 import yaml
 from dotenv import load_dotenv
 
@@ -76,7 +76,7 @@ def distil_critique_points(
     reviews: list[dict],
     cfg: dict,
 ) -> dict[str, str]:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
     min_p = cfg["critique_dict"]["min_points"]
     max_p = cfg["critique_dict"]["max_points"]
@@ -87,15 +87,17 @@ def distil_critique_points(
         reviews_block=build_reviews_block(reviews),
     )
 
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=cfg["models"]["strong"],
         max_tokens=cfg["max_tokens"],
         temperature=cfg["temperature"],
-        system=system,
-        messages=[{"role": "user", "content": user}],
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
     )
 
-    raw = response.content[0].text.strip()
+    raw = response.choices[0].message.content.strip()
 
     # Strip markdown code fences if present
     if raw.startswith("```"):
