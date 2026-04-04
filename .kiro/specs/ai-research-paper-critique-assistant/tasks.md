@@ -164,7 +164,7 @@
 - [ ] 7.3.2 Set up error tracking with Sentry or similar (NFR-2.2.4)
 - [ ] 7.3.3 Set up performance monitoring with latency metrics (NFR-2.1.1)
 - [ ] 7.3.4 Set up cost tracking per paper (C-5.2.1)
-- [x] 7.3.5 Set up alerting for failures (NFR-2.2.3)
+- [ ] 7.3.5 Set up alerting for failures (NFR-2.2.3)
 
 ## Tasks Summary
 
