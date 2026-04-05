@@ -192,23 +192,14 @@ def run_all_papers(mode: str, cfg: dict) -> None:
             "Set n8n.webhook_url (1round) or n8n.webhook_url_noloop (noloop)."
         )
 
-    reviews_path = cfg["data"]["reviews_file"]
-    with open(reviews_path) as f:
-        all_papers: dict = json.load(f)
-
-    # Only run eval split
-    eval_ids = set()
-    eval_path = cfg["data"].get("eval_split", "data/eval_split.jsonl")
-    if Path(eval_path).exists():
-        with open(eval_path) as f:
-            for line in f:
-                row = json.loads(line)
-                eval_ids.add(row.get("paper_id", ""))
-        papers_to_run = {k: v for k, v in all_papers.items() if k in eval_ids}
-        print(f"  [INFO] Running {len(papers_to_run)} eval papers (mode={mode})")
-    else:
-        papers_to_run = all_papers
-        print(f"  [INFO] eval_split.jsonl not found, running all {len(papers_to_run)} papers")
+    full_path = cfg["data"].get("jsonl_file", "data/ReviewCritique.jsonl")
+    papers_to_run = {}
+    with open(full_path) as f:
+        for i, line in enumerate(f, start=1):
+            row = json.loads(line)
+            paper_id = f"paper_{i:04d}"
+            papers_to_run[paper_id] = row
+    print(f"  [INFO] Running {len(papers_to_run)} papers (mode={mode})")
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
