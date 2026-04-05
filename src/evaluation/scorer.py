@@ -195,11 +195,10 @@ if __name__ == "__main__":
     cfg = load_config()
     mode = sys.argv[1] if len(sys.argv) > 1 else "baseline"
 
-    results_dir = {
-        "baseline": cfg["results"]["baseline_dir"],
-        "agents": cfg["results"]["agents_dir"],
-        "n8n": cfg["results"]["n8n_dir"],
-    }.get(mode, cfg["results"]["agents_dir"])
+    results_dir = cfg["results"].get(f"{mode}_dir")
+    if not results_dir:
+        print(f"Unknown mode '{mode}'. Available: {[k.replace('_dir','') for k in cfg['results'] if k.endswith('_dir')]}")
+        sys.exit(1)
 
     scores = score_all(
         results_dir=results_dir,
