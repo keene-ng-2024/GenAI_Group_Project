@@ -340,7 +340,7 @@ Paper text
 
 Each generated critique point is embedded with `sentence-transformers`.
 A ground-truth point is considered *covered* if at least one generated point
-has cosine similarity ≥ threshold (default 0.75).
+has cosine similarity ≥ threshold (default 0.50).
 
 | Metric    | Definition                                      |
 |-----------|-------------------------------------------------|
