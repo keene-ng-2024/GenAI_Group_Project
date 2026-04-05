@@ -1,8 +1,8 @@
 # ── Model configuration ────────────────────────────────────────────────────────
 models:
-  strong: "gpt-4o"                  # used for agentic loop & critique-dict building
-  fast:   "gpt-4o"                  # used for cheap sub-calls (summarise, verify)
-  baseline: "gpt-4o"                # OpenAI 4o baseline
+  strong: "gpt-4.1-mini"   # used for agentic loop & critique-dict building
+  fast:   "gpt-4.1-mini"   # used for cheap sub-calls (same model, best cost:perf ratio)
+  baseline: "gpt-4.1-mini" # single-call baseline
 
 # ── Reproducibility ────────────────────────────────────────────────────────────
 seed: 42
@@ -35,10 +35,10 @@ agent:
     - "well-supported"
     - "approve"
   model_map:
-    reader: "claude-haiku-4-5-20251001"     # cheap — just reads and summarises
-    critic: "claude-sonnet-4-6"             # main reasoning
-    auditor: "claude-haiku-4-5-20251001"    # cheaper challenger
-    summariser: "claude-sonnet-4-6"         # output quality matters
+    reader: "gpt-4.1-mini"
+    critic: "gpt-4.1-mini"
+    auditor: "gpt-4.1-mini"
+    summariser: "gpt-4.1-mini"
   roles:
     - Reader
     - Critic
@@ -53,34 +53,42 @@ evaluation:
 # ── n8n platform ───────────────────────────────────────────────────────────────
 n8n:
   webhook_url: "http://localhost:5678/webhook/paper-critique"  # update if using cloud n8n
-  # models used inside the n8n workflow (OpenRouter format)
-  reader_model: "google/gemini-flash-1.5"
-  critic_model: "google/gemini-pro-1.5"
-  auditor_model: "google/gemini-flash-1.5"
-  summariser_model: "google/gemini-pro-1.5"
+  reader_model: "gpt-4.1-mini"
+  critic_model: "gpt-4.1-mini"
+  auditor_model: "gpt-4.1-mini"
+  summariser_model: "gpt-4.1-mini"
 
-# ── Vertex AI platform ─────────────────────────────────────────────────────────
-vertex_ai:
-  project: "genai-vertexai-492302"      # update with your GCP project ID
-  location: "asia-southeast1"         # update with your preferred location
-  # models used in Vertex AI (Gemini format)
-  reader_model: "gemini-1.5-flash"
-  critic_model: "gemini-1.5-pro"
-  auditor_model: "gemini-1.5-flash"
-  summariser_model: "gemini-1.5-pro"
-  # grounding verifier settings
-  grounding_verifier:
-    model: "gemini-1.5-flash"
-    max_tokens: 1024
-    early_stop_phrases:
-      - "no further concerns"
-      - "i am satisfied"
-      - "well-supported"
-      - "approve"
+# ── LangGraph platform ─────────────────────────────────────────────────────────
+langgraph:
+  reader_model: "gpt-4.1-mini"
+  critic_model: "gpt-4.1-mini"
+  auditor_model: "gpt-4.1-mini"
+  summariser_model: "gpt-4.1-mini"
+  loop_mode: "dynamic"   # none | fixed | dynamic
+
+# ── Dify platform ──────────────────────────────────────────────────────────────
+dify:
+  reader_model: "gpt-4.1-mini"
+  critic_model: "gpt-4.1-mini"
+  auditor_model: "gpt-4.1-mini"
+  summariser_model: "gpt-4.1-mini"
+
+# ── CrewAI platform ────────────────────────────────────────────────────────────
+crewai:
+  reader_model: "gpt-4.1-mini"
+  critic_model: "gpt-4.1-mini"
+  auditor_model: "gpt-4.1-mini"
+  summariser_model: "gpt-4.1-mini"
 
 # ── Results ────────────────────────────────────────────────────────────────────
 results:
   baseline_dir: "results/baseline"
   agents_dir: "results/agents"
   n8n_dir: "results/n8n"
+  langgraph_dir: "results/langgraph"
+  langgraph_none_dir: "results/langgraph_none"
+  langgraph_fixed_dir: "results/langgraph_fixed"
+  langgraph_dynamic_dir: "results/langgraph_dynamic"
   vertexai_dir: "results/vertexai"
+  dify_dir: "results/dify"
+  crewai_dir: "results/crewai"
