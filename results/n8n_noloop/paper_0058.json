@@ -1,0 +1,114 @@
+{
+  "paper_id": "paper_0058",
+  "title": "Recursion of Thought: Divide and Conquer Reasoning with Language Models",
+  "platform": "n8n_noloop",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 22.2,
+  "structured": {
+    "summary": "The paper proposes Recursion of Thought (RoT), a novel framework enabling large language models to perform recursive, divide-and-conquer reasoning by decomposing complex problems into simpler subproblems, solving them independently, and aggregating solutions. Experiments on arithmetic, logical, and symbolic reasoning tasks show improved accuracy and scalability over single-pass and basic chain-of-thought baselines.",
+    "strengths": [
+      {
+        "point": "Novel recursive, divide-and-conquer reasoning framework",
+        "evidence": "RoT enables LLMs to break down complex problems recursively and solve subproblems independently, mimicking human problem-solving."
+      },
+      {
+        "point": "Improved reasoning accuracy on multiple benchmarks",
+        "evidence": "Experiments demonstrate RoT outperforms single-pass and chain-of-thought prompting on arithmetic, logical reasoning, and symbolic manipulation tasks."
+      },
+      {
+        "point": "Potential for better scalability and reduced error propagation",
+        "evidence": "RoT\u2019s modular approach allows handling longer and more complex problems with less error accumulation compared to monolithic reasoning."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to related recursive or hierarchical prompting methods",
+        "evidence": "The paper lacks empirical baselines and literature discussion on recent recursive reasoning approaches like self-ask or tree-of-thought prompting."
+      },
+      {
+        "point": "No ablation study on decomposition quality and its impact",
+        "evidence": "There is no analysis of how errors in subproblem decomposition affect overall performance or sensitivity to decomposition strategies."
+      },
+      {
+        "point": "Unclear implementation and evaluation of parallelism",
+        "evidence": "The paper mentions independent subproblem solving but does not detail parallel execution or analyze runtime and efficiency trade-offs."
+      },
+      {
+        "point": "Baselines omit strong chain-of-thought variants with self-consistency",
+        "evidence": "Comparisons exclude recent competitive chain-of-thought methods that could challenge claims of superiority."
+      },
+      {
+        "point": "Evaluation focuses on accuracy without reporting efficiency metrics",
+        "evidence": "No measurements of computational cost, inference time, or token usage are provided despite recursive calls potentially increasing overhead."
+      },
+      {
+        "point": "Lack of reproducibility details and code release",
+        "evidence": "Prompt templates, temperature settings, stopping criteria, and decomposition heuristics are not sufficiently described; no code or checkpoints are shared."
+      },
+      {
+        "point": "Ambiguous description of solution aggregation and recursion termination",
+        "evidence": "The method for combining subproblem answers and criteria for recursion depth are not clearly specified or exemplified."
+      },
+      {
+        "point": "Limited evaluation scope and generalizability",
+        "evidence": "Experiments are restricted to a single LLM architecture and symbolic reasoning tasks, with no tests on open-domain, language understanding, or multimodal reasoning."
+      },
+      {
+        "point": "No analysis of robustness to ambiguous or ill-formed problems",
+        "evidence": "The approach assumes clean decomposability without exploring performance on noisy or incomplete inputs."
+      },
+      {
+        "point": "Presentation could be improved with visual aids and pseudocode",
+        "evidence": "The recursive decomposition and aggregation process is described abstractly, lacking diagrams or algorithmic details to aid comprehension."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does RoT compare empirically to recent recursive prompting methods like self-ask or tree-of-thought?",
+        "motivation": "To clarify the novelty and relative performance gains of RoT over existing recursive reasoning approaches."
+      },
+      {
+        "question": "What is the impact of decomposition quality on final reasoning accuracy?",
+        "motivation": "Understanding sensitivity to subproblem generation is critical to assess robustness and guide improvements."
+      },
+      {
+        "question": "How is parallelism implemented and what are the runtime and efficiency trade-offs?",
+        "motivation": "Evaluating practical benefits of independent subproblem solving requires detailed analysis of computational costs."
+      },
+      {
+        "question": "Can RoT generalize to other LLM architectures and more diverse reasoning tasks?",
+        "motivation": "Testing across models and domains is necessary to validate broad applicability."
+      },
+      {
+        "question": "How does RoT handle ambiguous, incomplete, or noisy problems in practice?",
+        "motivation": "Real-world reasoning often involves imperfect inputs; robustness is important for practical deployment."
+      },
+      {
+        "question": "Are there plans to release code, prompts, and model checkpoints to facilitate reproducibility?",
+        "motivation": "Availability of resources is essential for community adoption and further research."
+      }
+    ],
+    "scores": {
+      "correctness": 4,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 4
+    }
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to related recursive or hierarchical prompting methods. The paper lacks empirical baselines and literature discussion on recent recursive reasoning approaches like self-ask or tree-of-thought prompting.",
+    "point_002": "No ablation study on decomposition quality and its impact. There is no analysis of how errors in subproblem decomposition affect overall performance or sensitivity to decomposition strategies.",
+    "point_003": "Unclear implementation and evaluation of parallelism. The paper mentions independent subproblem solving but does not detail parallel execution or analyze runtime and efficiency trade-offs.",
+    "point_004": "Baselines omit strong chain-of-thought variants with self-consistency. Comparisons exclude recent competitive chain-of-thought methods that could challenge claims of superiority.",
+    "point_005": "Evaluation focuses on accuracy without reporting efficiency metrics. No measurements of computational cost, inference time, or token usage are provided despite recursive calls potentially increasing overhead.",
+    "point_006": "Lack of reproducibility details and code release. Prompt templates, temperature settings, stopping criteria, and decomposition heuristics are not sufficiently described; no code or checkpoints are shared.",
+    "point_007": "Ambiguous description of solution aggregation and recursion termination. The method for combining subproblem answers and criteria for recursion depth are not clearly specified or exemplified.",
+    "point_008": "Limited evaluation scope and generalizability. Experiments are restricted to a single LLM architecture and symbolic reasoning tasks, with no tests on open-domain, language understanding, or multimodal reasoning.",
+    "point_009": "No analysis of robustness to ambiguous or ill-formed problems. The approach assumes clean decomposability without exploring performance on noisy or incomplete inputs.",
+    "point_010": "Presentation could be improved with visual aids and pseudocode. The recursive decomposition and aggregation process is described abstractly, lacking diagrams or algorithmic details to aid comprehension."
+  },
+  "transcript": {
+    "reader": "**Problem & Motivation:**  \nLarge language models (LLMs) have demonstrated impressive reasoning capabilities, but their performance often degrades on complex problems requiring multi-step reasoning. Traditional approaches typically process the entire problem in a single forward pass, which can be inefficient and prone to errors accumulating over long reasoning chains. There is a need for methods that enable LLMs to handle complex reasoning tasks more effectively by breaking down problems into manageable subproblems.\n\n**Proposed Method:**  \nThe paper introduces \"Recursion of Thought\" (RoT), a novel reasoning framework that enables LLMs to perform divide-and-conquer style reasoning. RoT recursively decomposes a complex problem into simpler subproblems, solves each subproblem independently, and then combines the solutions to form the final answer. This approach mimics human problem-solving strategies and leverages the LLM\u2019s capabilities more efficiently by focusing on smaller, more tractable reasoning steps. The method involves:  \n- Recursive problem decomposition guided by the model itself.  \n- Independent reasoning on subproblems, potentially in parallel.  \n- Aggregation of subproblem solutions to construct the overall solution.\n\n**Results:**  \nExperiments demonstrate that RoT significantly improves the reasoning performance of LLMs on various challenging tasks, including arithmetic, logical reasoning, and symbolic manipulation problems. The approach outperforms baseline methods that rely on single-pass reasoning or chain-of-thought prompting. Key findings include:  \n- Enhanced accuracy on multi-step reasoning benchmarks.  \n- Better scalability to longer and more complex problems.  \n- Reduced error propagation due to modular problem solving.\n\n**Claimed Contributions:**  \n1. Introduction of the Recursion of Thought framework that enables LLMs to perform recursive, divide-and-conquer reasoning.  \n2. Demonstration that recursive decomposition leads to improved reasoning accuracy and efficiency compared to traditional single-pass methods.  \n3. Empirical validation across diverse reasoning tasks, showcasing the generality and effectiveness of the approach.  \n4. A conceptual advancement in how language models can be guided to mimic human-like problem-solving strategies through recursion and modularity.",
+    "critic": "1. **Novelty - Missing Comparison to Related Recursive Reasoning Methods:**  \nThe paper claims novelty in introducing recursive, divide-and-conquer reasoning for LLMs but does not adequately compare RoT to prior work on recursive prompting or hierarchical decomposition methods (e.g., recent works on self-ask or tree-of-thought prompting). A more thorough literature comparison and empirical baseline including these methods would clarify the true novelty and performance gains (see Problem & Motivation and Proposed Method sections).\n\n2. **Methodology - Lack of Ablation on Decomposition Quality:**  \nWhile RoT relies on the model to recursively decompose problems, the paper does not provide ablation studies analyzing how decomposition quality affects final performance. It remains unclear whether errors in subproblem generation propagate or how sensitive the method is to decomposition strategies (Proposed Method, Results).\n\n3. **Methodology - Unclear How Parallelism Is Implemented and Its Impact:**  \nThe paper mentions that subproblems can be solved independently and potentially in parallel but does not detail how parallelism is implemented or evaluated. There is no analysis of runtime improvements or trade-offs between sequential and parallel processing (Proposed Method, Results).\n\n4. **Evaluation - Baselines Lack Strong Chain-of-Thought Variants:**  \nThe baselines mainly include single-pass reasoning and basic chain-of-thought prompting. However, recent strong chain-of-thought variants with self-consistency or majority voting are not included, which may provide more competitive baselines. This omission weakens claims of superiority (Results).\n\n5. **Evaluation - Metrics Focus Solely on Accuracy Without Efficiency Measures:**  \nThe evaluation emphasizes accuracy improvements but does not report computational cost, inference time, or token usage. Since RoT involves multiple recursive calls, it is important to assess efficiency trade-offs compared to single-pass methods (Results).\n\n6. **Reproducibility - Missing Details on Model Prompting and Decomposition Heuristics:**  \nThe paper does not provide sufficient details on how the model is prompted to perform recursive decomposition, such as prompt templates, temperature settings, or stopping criteria. This hinders reproducibility of the recursive reasoning process (Proposed Method).\n\n7. **Reproducibility - No Public Code or Model Checkpoints Provided:**  \nThere is no mention of releasing code, scripts, or model checkpoints used in experiments, which limits the ability of others to replicate or build upon the work (General).\n\n8. **Clarity - Ambiguous Description of Solution Aggregation Step:**  \nThe aggregation of subproblem solutions is described only at a high level without concrete algorithmic details or examples. It is unclear how conflicting or partial subproblem answers are reconciled to form the final solution (Proposed Method).\n\n9. **Clarity - Insufficient Explanation of Recursive Termination Conditions:**  \nThe paper does not clearly specify how the recursion depth or termination conditions are determined, which is critical to avoid infinite recursion or overly deep reasoning chains (Proposed Method).\n\n10. **Limitations - No Discussion on Applicability to Open-Domain or Real-World Tasks:**  \nThe experiments focus on arithmetic, logical reasoning, and symbolic manipulation benchmarks but do not address whether RoT generalizes to more open-ended or ambiguous real-world tasks, limiting understanding of practical applicability (Results, Claimed Contributions).\n\n11. **Limitations - Potential Error Accumulation in Subproblem Solutions Not Addressed:**  \nAlthough RoT aims to reduce error propagation, the paper does not analyze scenarios where errors in subproblems might compound or how robust the aggregation step is to such errors (Results).\n\n12. **Generalisability - Experiments Limited to a Single LLM Architecture:**  \nAll experiments appear to be conducted on one LLM model without testing across different architectures or sizes. This raises questions about whether RoT\u2019s benefits generalize across models (Results).\n\n13. **Generalisability - No Evaluation on Language or Multimodal Reasoning Tasks:**  \nThe paper\u2019s evaluation is restricted to symbolic and logical tasks; it does not explore whether RoT can improve reasoning in natural language understanding or multimodal contexts, which limits claims of generality (Results).\n\n14. **Methodology - No Analysis of How RoT Handles Ambiguous or Ill-Formed Problems:**  \nThe method assumes problems can be cleanly decomposed, but there is no discussion or experiments on how RoT performs when problems are ambiguous, incomplete, or noisy (Proposed Method, Results).\n\n15. **Clarity - Lack of Visual Illustrations or Pseudocode for RoT Framework:**  \nThe paper would benefit from diagrams or pseudocode to clarify the recursive decomposition and aggregation process, as the current textual description is abstract and may confuse readers (Proposed Method)."
+  }
+}
