@@ -113,7 +113,7 @@ def critique_paper_via_n8n(
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
     title = paper.get("title", paper_id)
     full_text = paper.get("full_text", "")
-    paper_text = full_text[:truncate_chars] if full_text else paper.get("abstract", title)
+    paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", title)
 
     payload = {
         "paper_id": paper_id,
