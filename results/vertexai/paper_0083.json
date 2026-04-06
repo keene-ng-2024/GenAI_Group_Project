@@ -32,18 +32,97 @@
     }
   ],
   "structured": {
-    "summary": "",
-    "strengths": [],
-    "weaknesses": [],
-    "questions": [],
+    "summary": "This paper proposes HIRE, an enhancement module that adaptively extracts complementary information from all hidden layers of a pre-trained Transformer encoder, and a subsequent fusion network. The goal is to refine language representations for downstream Natural Language Understanding (NLU) tasks, moving beyond the traditional approach of using only the final layer's output. The method claims to improve performance on various GLUE benchmarks and achieve state-of-the-art results on SST-2.",
+    "strengths": [
+      {
+        "point": "The core motivation for leveraging intermediate layers is sound and well-articulated.",
+        "evidence": "The 'Problem & Motivation' section clearly argues that 'relying solely on the last layer's output may not be optimal for downstream task performance' and that 'intermediate layers might contain complementary information'."
+      },
+      {
+        "point": "HIRE presents a novel approach for aggregating information from hidden layers, featuring a specific Bi-GRU based layer summarization and adaptive weighting.",
+        "evidence": "The paper claims HIRE as a 'novel component that dynamically extracts complementary representations from all hidden layers'."
+      },
+      {
+        "point": "The adaptive mechanism for assigning importance scores to different layers within HIRE is crucial and outperforms fixed strategies.",
+        "evidence": "Ablation on adaptive importance scores shows that fixed strategies (e.g., using only the first 6 or last 6 layers) hurt performance compared to the dynamic mechanism. Claimed Contributions: 'Dynamic Layer Importance: Showcased that HIRE's adaptive mechanism... is crucial and outperforms fixed strategies'."
+      },
+      {
+        "point": "The method demonstrates performance gains over baseline RoBERTa on several GLUE tasks.",
+        "evidence": "RoBERTa+HIRE consistently outperforms the baseline RoBERTa on 4 out of 9 tasks... boosting RoBERTa's performance on CoLA (+0.8 points), SST-2 (+0.4 points), MRPC (+0.7/+0.9 points), STS-B (+0.2/+0.1 points), MNLI-mm (+0.2 points), and QNLI (+0.1 points)."
+      },
+      {
+        "point": "The model achieves state-of-the-art results on the SST-2 dataset.",
+        "evidence": "The model achieves state-of-the-art results on the SST-2 dataset with a score of 97.1."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "The ablation study for the Fusion Network yields contradictory results, showing performance *improvements* when removed on certain tasks, directly undermining its claimed importance.",
+        "evidence": "Removing the fusion network results in gains of 1.5 points on CoLA and 0.2 points on STS-B, indicating its importance in combining information. This juxtaposition is highlighted by the Critic as a 'contradictory results and interpretation' and by the Auditor as a 'significant internal contradiction' and 'major red flag'."
+      },
+      {
+        "point": "The evaluation lacks comprehensive comparisons against other established multi-layer representation fusion techniques from the literature.",
+        "evidence": "The primary and often sole comparison presented is against the 'baseline RoBERTa.' There is no mention of comparison with any other multi-layer aggregation or fusion techniques published previously, despite the 'Problem & Motivation' implicitly acknowledging prior research."
+      },
+      {
+        "point": "The HIRE module, particularly the use of a Bi-GRU for each layer, introduces substantial computational overhead that is not adequately discussed, quantified, or justified in relation to the reported performance gains.",
+        "evidence": "Each hidden state $H_i$ is summarized into a fixed-size vector $u_i \\in \\mathbb{R}^{4d}$ by concatenating the final states of each layer and direction of a 2-layer Bidirectional GRU. The Critic notes this 'likely leads to a significant increase in training and inference time' which is 'not discussed or justified'."
+      },
+      {
+        "point": "Many reported performance improvements are small and lack any indication of statistical significance or robustness through multiple runs.",
+        "evidence": "The 'Results' section lists various improvements such as 'SST-2 (+0.4 points), MNLI (+0.5 points), and QNLI (+0.2 points)' on the development set... The summary provides only single-point estimates for performance metrics without any mention of statistical tests, confidence intervals, or standard deviations across multiple runs."
+      },
+      {
+        "point": "The description of how the 'initial combined representation M' is formed within the Fusion Network is ambiguous and difficult to interpret.",
+        "evidence": "An initial combined representation $M$ is formed by element-wise multiplication ($R \\circ A$) and concatenation ($[R; A]$). The Critic states this 'does not clearly specify the exact sequence of operations or how these two distinct results are integrated into a single M'."
+      },
+      {
+        "point": "The paper provides insufficient detail regarding crucial hyperparameters, specific training setup, and computational resources, hindering reproducibility.",
+        "evidence": "The 'Training' section broadly states: 'Standard cross-entropy loss... and mean squared error... are used to train the model. The entire model, including HIRE and the fusion network, is fine-tuned.' No specific hyperparameter values or training setup details are provided."
+      },
+      {
+        "point": "The empirical validation of HIRE's 'complementarity' and the meaning of its 'adaptive importance scores' is limited, lacking deeper analysis or visualization.",
+        "evidence": "The paper claims HIRE extracts 'complementary' information... The Auditor challenges: 'How is this 'complementarity' defined or empirically demonstrated?' Also, for adaptive scores: 'what do these learned importance scores ($\\alpha_i$) *actually look like* across different tasks or even examples?'"
+      }
+    ],
+    "questions": [
+      {
+        "question": "Given that removing the fusion network leads to performance improvements on CoLA and STS-B, how do the authors justify its design, inclusion, and claimed 'importance' in the model?",
+        "motivation": "This is a critical contradiction in the ablation study that fundamentally questions the design and contribution of the fusion network. A detailed explanation is needed for its varying impact across tasks."
+      },
+      {
+        "question": "Please provide a detailed analysis and quantification of the computational overhead (e.g., training/inference time, FLOPS, parameter count) introduced by HIRE and the fusion network. Are the observed, often incremental, performance gains truly proportionate and justified by this overhead?",
+        "motivation": "To assess the practical applicability and efficiency of the proposed method for real-world deployment, a clear understanding of the trade-off between performance and computational cost is essential."
+      },
+      {
+        "question": "Please compare HIRE's performance against specific, established multi-layer representation fusion techniques from the existing literature (e.g., weighted sums, attention over layers). How does HIRE differentiate itself empirically and conceptually from these methods?",
+        "motivation": "To establish the true novelty and competitive effectiveness of HIRE within the broader research landscape of leveraging intermediate layers, it must be benchmarked against relevant prior art, not just the base encoder."
+      },
+      {
+        "question": "Please report performance metrics (mean and standard deviation) averaged over multiple random seeds (e.g., 3-5 runs) for all GLUE tasks, and conduct statistical significance tests.",
+        "motivation": "To ensure the robustness and reliability of the reported results, especially for small performance gains, demonstrating statistical significance and reproducibility across multiple runs is crucial."
+      },
+      {
+        "question": "Could the authors precisely clarify how the 'initial combined representation M' is formed within the fusion network? Specifically, how are the element-wise multiplication ($R \\circ A$) and concatenation ($[R; A]$) integrated into a single M, and what is its final dimension?",
+        "motivation": "The current description is ambiguous and hinders a clear understanding of the model's architecture, which is vital for critical assessment and potential reproduction."
+      }
+    ],
     "scores": {
-      "correctness": 3,
+      "correctness": 2,
       "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 1
+      "recommendation": "reject",
+      "confidence": 4
     }
   },
-  "critique_points": {},
+  "critique_points": {
+    "point_001": "The ablation study for the Fusion Network yields contradictory results, showing performance *improvements* when removed on certain tasks, directly undermining its claimed importance.. Removing the fusion network results in gains of 1.5 points on CoLA and 0.2 points on STS-B, indicating its importance in combining information. This juxtaposition is highlighted by the Critic as a 'contradictory results and interpretation' and by the Auditor as a 'significant internal contradiction' and 'major red flag'.",
+    "point_002": "The evaluation lacks comprehensive comparisons against other established multi-layer representation fusion techniques from the literature.. The primary and often sole comparison presented is against the 'baseline RoBERTa.' There is no mention of comparison with any other multi-layer aggregation or fusion techniques published previously, despite the 'Problem & Motivation' implicitly acknowledging prior research.",
+    "point_003": "The HIRE module, particularly the use of a Bi-GRU for each layer, introduces substantial computational overhead that is not adequately discussed, quantified, or justified in relation to the reported performance gains.. Each hidden state $H_i$ is summarized into a fixed-size vector $u_i \\in \\mathbb{R}^{4d}$ by concatenating the final states of each layer and direction of a 2-layer Bidirectional GRU. The Critic notes this 'likely leads to a significant increase in training and inference time' which is 'not discussed or justified'.",
+    "point_004": "Many reported performance improvements are small and lack any indication of statistical significance or robustness through multiple runs.. The 'Results' section lists various improvements such as 'SST-2 (+0.4 points), MNLI (+0.5 points), and QNLI (+0.2 points)' on the development set... The summary provides only single-point estimates for performance metrics without any mention of statistical tests, confidence intervals, or standard deviations across multiple runs.",
+    "point_005": "The description of how the 'initial combined representation M' is formed within the Fusion Network is ambiguous and difficult to interpret.. An initial combined representation $M$ is formed by element-wise multiplication ($R \\circ A$) and concatenation ($[R; A]$). The Critic states this 'does not clearly specify the exact sequence of operations or how these two distinct results are integrated into a single M'.",
+    "point_006": "The paper provides insufficient detail regarding crucial hyperparameters, specific training setup, and computational resources, hindering reproducibility.. The 'Training' section broadly states: 'Standard cross-entropy loss... and mean squared error... are used to train the model. The entire model, including HIRE and the fusion network, is fine-tuned.' No specific hyperparameter values or training setup details are provided.",
+    "point_007": "The empirical validation of HIRE's 'complementarity' and the meaning of its 'adaptive importance scores' is limited, lacking deeper analysis or visualization.. The paper claims HIRE extracts 'complementary' information... The Auditor challenges: 'How is this 'complementarity' defined or empirically demonstrated?' Also, for adaptive scores: 'what do these learned importance scores ($\\alpha_i$) *actually look like* across different tasks or even examples?'"
+  },
   "grounding_verifier_scores": {
     "avg_confidence": 0.0,
     "grounding_rate": 0.0,
