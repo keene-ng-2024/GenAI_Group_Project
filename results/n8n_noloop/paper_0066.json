@@ -3,77 +3,121 @@
   "title": "Self-Consistency Improves Chain of Thought Reasoning in Language Models",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 24.59,
+  "latency_seconds": 28.75,
   "structured": {
-    "summary": "The paper proposes a self-consistency decoding strategy for chain-of-thought reasoning in large language models, which samples multiple reasoning paths and selects the most frequent final answer to improve accuracy. Experiments on arithmetic, commonsense, and symbolic reasoning benchmarks demonstrate consistent performance gains over standard chain-of-thought prompting and majority-vote baselines without additional training or model modifications.",
+    "summary": "The paper proposes Self-Consistency, a decoding strategy for large language models that samples multiple chain-of-thought reasoning paths and selects the final answer by majority voting over candidate answers. This approach aims to improve reasoning accuracy by leveraging the consistency of correct answers across diverse reasoning chains. Experiments on arithmetic, commonsense, and symbolic reasoning benchmarks show significant accuracy gains over standard single-chain prompting methods without additional training.",
     "strengths": [
       {
-        "point": "Improves reasoning accuracy by aggregating multiple reasoning paths",
-        "evidence": "Experiments show significant accuracy gains on GSM8K, CSQA, and symbolic reasoning tasks compared to single-path chain-of-thought prompting."
+        "point": "Addresses inconsistency in chain-of-thought reasoning",
+        "evidence": "Identifies variability in single-chain CoT outputs as a source of errors and proposes sampling multiple chains to mitigate this."
       },
       {
-        "point": "Simple and general method applicable across different models and tasks",
-        "evidence": "The approach requires no additional training or architectural changes and works across various model sizes and reasoning domains."
+        "point": "Simple yet effective method requiring no additional training",
+        "evidence": "Self-consistency uses majority voting over sampled reasoning chains without modifying model weights or requiring fine-tuning."
       },
       {
-        "point": "Demonstrates the value of reasoning path aggregation over final answer voting",
-        "evidence": "Self-consistency outperforms majority voting on final answers without reasoning chains, highlighting the benefit of aggregating reasoning chains."
+        "point": "Demonstrated improvements across multiple reasoning benchmarks",
+        "evidence": "Experiments show consistent accuracy gains on arithmetic, commonsense, and symbolic reasoning tasks across different model sizes."
+      },
+      {
+        "point": "Leverages stochasticity of LLMs to improve reliability",
+        "evidence": "By sampling diverse reasoning chains, the method harnesses inherent randomness to identify more reliable answers."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to prior work on diverse decoding and ensemble methods",
-        "evidence": "The paper lacks discussion and empirical comparison to existing diverse beam search or ensemble approaches for robust reasoning."
+        "point": "Lack of comparison to prior ensemble or voting-based decoding methods",
+        "evidence": "No discussion or empirical comparison to existing ensemble methods like diverse beam search or model averaging to contextualize novelty."
       },
       {
-        "point": "Missing ablation studies on number of samples and decoding parameters",
-        "evidence": "No analysis on how varying the number of sampled reasoning chains or temperature values affects performance and computational cost."
+        "point": "No ablation study on the number of sampled reasoning chains",
+        "evidence": "Missing analysis on how performance scales with the number of samples and the computational trade-offs involved."
       },
       {
-        "point": "Limited benchmark diversity and evaluation metrics",
-        "evidence": "Experiments focus on a narrow set of reasoning tasks and report only accuracy, omitting other metrics like calibration or reasoning chain quality."
+        "point": "No quantification or analysis of diversity among reasoning chains",
+        "evidence": "The paper does not measure or illustrate how diverse the sampled chains are, leaving unclear whether improvements stem from genuine reasoning variety."
       },
       {
-        "point": "Reproducibility concerns due to missing implementation details and code release",
-        "evidence": "Key parameters such as sampling temperature, number of samples, decoding algorithms, and tie-breaking rules are not fully specified, and no code is provided."
+        "point": "Baselines do not include strong multi-sample or voting-based competitors",
+        "evidence": "Comparisons are limited to single-chain CoT or standard prompting, lacking baselines that also leverage multiple outputs or voting."
       },
       {
-        "point": "Lack of discussion on computational overhead and failure cases",
-        "evidence": "The increased inference cost from multiple sampling and scenarios where self-consistency might fail are not addressed."
+        "point": "Evaluation metrics focus solely on accuracy",
+        "evidence": "No consideration of confidence calibration, answer diversity, or reasoning chain quality metrics to provide a fuller evaluation."
       },
       {
-        "point": "Unclear definitions and explanations reduce clarity",
-        "evidence": "Terms like 'most consistent answer' are not formally defined, and the exact procedure for sampling reasoning paths is ambiguous."
+        "point": "Insufficient details on sampling hyperparameters",
+        "evidence": "Key parameters like temperature, top-k, or top-p used for chain generation are not specified, hindering reproducibility."
+      },
+      {
+        "point": "No pseudocode or algorithmic description provided",
+        "evidence": "Lacks clear procedural details on candidate answer extraction and tie-breaking in majority voting."
+      },
+      {
+        "point": "Ambiguous definition of candidate answer extraction",
+        "evidence": "Unclear whether the final token, sentence, or span is used to determine candidate answers from reasoning chains."
+      },
+      {
+        "point": "Lacks theoretical or empirical analysis explaining why majority voting reduces errors",
+        "evidence": "No deeper discussion or error analysis to justify the effectiveness of the self-consistency approach."
+      },
+      {
+        "point": "No discussion of computational overhead or runtime costs",
+        "evidence": "Increased inference time due to multiple chain sampling is not addressed or quantified."
+      },
+      {
+        "point": "Potential failure cases not acknowledged",
+        "evidence": "Does not consider scenarios where the model consistently outputs incorrect but similar chains leading to majority voting on wrong answers."
       },
       {
         "point": "Limited generalizability evaluation",
-        "evidence": "No experiments on smaller models, non-English or multilingual tasks, limiting claims about broad applicability."
+        "evidence": "Experiments restricted to reasoning benchmarks; no tests on other NLP tasks or smaller/non-LLM models."
+      },
+      {
+        "point": "No handling of answer ambiguity or multiple correct answers",
+        "evidence": "Majority voting assumes a single correct answer, ignoring tasks with multiple valid solutions."
+      },
+      {
+        "point": "No statistical significance testing reported",
+        "evidence": "Accuracy improvements lack confidence intervals or hypothesis tests to assess robustness."
       }
     ],
     "questions": [
       {
-        "question": "How does the number of sampled reasoning chains affect accuracy and computational cost?",
-        "motivation": "Understanding the trade-off between performance gains and inference overhead is critical for practical deployment."
+        "question": "How does self-consistency compare empirically to existing ensemble or voting-based decoding methods?",
+        "motivation": "To clarify the novelty and relative effectiveness of the proposed approach against prior ensemble strategies."
       },
       {
-        "question": "How sensitive is the method to decoding parameters such as temperature or sampling strategy?",
-        "motivation": "Clarifying these effects would help optimize the approach and improve reproducibility."
+        "question": "What is the impact of varying the number of sampled reasoning chains on accuracy and computational cost?",
+        "motivation": "To understand trade-offs and identify optimal sampling strategies for practical deployment."
       },
       {
-        "question": "How are ties handled when multiple answers have the same frequency in aggregation?",
-        "motivation": "Tie-breaking rules impact robustness and should be explicitly described."
+        "question": "How diverse are the sampled reasoning chains, and how does diversity correlate with accuracy improvements?",
+        "motivation": "To verify that improvements arise from genuinely different reasoning paths rather than minor variations."
       },
       {
-        "question": "How does self-consistency perform on more diverse reasoning tasks, including multi-hop or real-world datasets?",
-        "motivation": "Evaluating broader benchmarks would strengthen claims of general applicability."
+        "question": "How are candidate answers extracted from reasoning chains, and how are ties in majority voting resolved?",
+        "motivation": "To clarify implementation details critical for reproducibility and understanding the voting mechanism."
       },
       {
-        "question": "Can the method be effectively applied to smaller models or non-English languages?",
-        "motivation": "Exploring these settings would assess the method's versatility beyond large English-only LLMs."
+        "question": "Can self-consistency handle tasks with multiple valid answers or ambiguous solutions?",
+        "motivation": "To assess applicability to a broader range of reasoning tasks beyond single-answer scenarios."
       },
       {
-        "question": "Are there scenarios where self-consistency fails, such as converging on incorrect but consistent answers?",
-        "motivation": "Identifying failure modes is important for understanding limitations and guiding future improvements."
+        "question": "What is the computational overhead introduced by sampling multiple chains, and is it practical for real-world use?",
+        "motivation": "To evaluate the method's feasibility considering increased inference time and resource consumption."
+      },
+      {
+        "question": "Are the reported accuracy gains statistically significant?",
+        "motivation": "To confirm that improvements are robust and not due to chance given stochastic sampling."
+      },
+      {
+        "question": "Does self-consistency improve reasoning in smaller or fine-tuned models, or only large LLMs?",
+        "motivation": "To understand the method's generalizability across model sizes and types."
+      },
+      {
+        "question": "Could the authors provide pseudocode or algorithmic details for the self-consistency decoding procedure?",
+        "motivation": "To facilitate reproducibility and clearer understanding of the method."
       }
     ],
     "scores": {
@@ -84,16 +128,23 @@
     }
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to prior work on diverse decoding and ensemble methods. The paper lacks discussion and empirical comparison to existing diverse beam search or ensemble approaches for robust reasoning.",
-    "point_002": "Missing ablation studies on number of samples and decoding parameters. No analysis on how varying the number of sampled reasoning chains or temperature values affects performance and computational cost.",
-    "point_003": "Limited benchmark diversity and evaluation metrics. Experiments focus on a narrow set of reasoning tasks and report only accuracy, omitting other metrics like calibration or reasoning chain quality.",
-    "point_004": "Reproducibility concerns due to missing implementation details and code release. Key parameters such as sampling temperature, number of samples, decoding algorithms, and tie-breaking rules are not fully specified, and no code is provided.",
-    "point_005": "Lack of discussion on computational overhead and failure cases. The increased inference cost from multiple sampling and scenarios where self-consistency might fail are not addressed.",
-    "point_006": "Unclear definitions and explanations reduce clarity. Terms like 'most consistent answer' are not formally defined, and the exact procedure for sampling reasoning paths is ambiguous.",
-    "point_007": "Limited generalizability evaluation. No experiments on smaller models, non-English or multilingual tasks, limiting claims about broad applicability."
+    "point_001": "Lack of comparison to prior ensemble or voting-based decoding methods. No discussion or empirical comparison to existing ensemble methods like diverse beam search or model averaging to contextualize novelty.",
+    "point_002": "No ablation study on the number of sampled reasoning chains. Missing analysis on how performance scales with the number of samples and the computational trade-offs involved.",
+    "point_003": "No quantification or analysis of diversity among reasoning chains. The paper does not measure or illustrate how diverse the sampled chains are, leaving unclear whether improvements stem from genuine reasoning variety.",
+    "point_004": "Baselines do not include strong multi-sample or voting-based competitors. Comparisons are limited to single-chain CoT or standard prompting, lacking baselines that also leverage multiple outputs or voting.",
+    "point_005": "Evaluation metrics focus solely on accuracy. No consideration of confidence calibration, answer diversity, or reasoning chain quality metrics to provide a fuller evaluation.",
+    "point_006": "Insufficient details on sampling hyperparameters. Key parameters like temperature, top-k, or top-p used for chain generation are not specified, hindering reproducibility.",
+    "point_007": "No pseudocode or algorithmic description provided. Lacks clear procedural details on candidate answer extraction and tie-breaking in majority voting.",
+    "point_008": "Ambiguous definition of candidate answer extraction. Unclear whether the final token, sentence, or span is used to determine candidate answers from reasoning chains.",
+    "point_009": "Lacks theoretical or empirical analysis explaining why majority voting reduces errors. No deeper discussion or error analysis to justify the effectiveness of the self-consistency approach.",
+    "point_010": "No discussion of computational overhead or runtime costs. Increased inference time due to multiple chain sampling is not addressed or quantified.",
+    "point_011": "Potential failure cases not acknowledged. Does not consider scenarios where the model consistently outputs incorrect but similar chains leading to majority voting on wrong answers.",
+    "point_012": "Limited generalizability evaluation. Experiments restricted to reasoning benchmarks; no tests on other NLP tasks or smaller/non-LLM models.",
+    "point_013": "No handling of answer ambiguity or multiple correct answers. Majority voting assumes a single correct answer, ignoring tasks with multiple valid solutions.",
+    "point_014": "No statistical significance testing reported. Accuracy improvements lack confidence intervals or hypothesis tests to assess robustness."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nLarge language models (LLMs) have demonstrated impressive reasoning capabilities when prompted with chain-of-thought (CoT) explanations, which break down complex problems into intermediate reasoning steps. However, the standard CoT approach typically generates a single reasoning path, which may be incorrect or suboptimal due to the inherent uncertainty and variability in language model outputs. This can limit the reliability and accuracy of reasoning tasks such as arithmetic, commonsense, and symbolic reasoning. The motivation is to improve the robustness and correctness of CoT reasoning by addressing the variability and uncertainty in generated reasoning chains.\n\n**Proposed Method:**  \nThe paper introduces a method called *Self-Consistency* to enhance chain-of-thought reasoning. Instead of generating a single reasoning path, the model samples multiple diverse reasoning paths (chains of thought) for the same question by using temperature sampling or other stochastic decoding methods. Each sampled chain produces a final answer. The method then aggregates these multiple answers by selecting the most consistent answer\u2014the one that appears most frequently among the sampled outputs. This approach leverages the intuition that the correct answer is more likely to be supported by multiple independent reasoning paths, thereby improving the overall accuracy without requiring additional training or model modifications.\n\n**Results:**  \nExperiments were conducted on several challenging reasoning benchmarks, including arithmetic reasoning (GSM8K), commonsense reasoning (CSQA), and symbolic reasoning tasks. The self-consistency method consistently improved performance over standard chain-of-thought prompting and majority-vote baselines. For example, on GSM8K, self-consistency improved accuracy significantly compared to single-path CoT prompting. The method also outperformed majority voting on final answers without reasoning chains, demonstrating the value of aggregating reasoning paths rather than just final answers. The improvements were observed across different model sizes and types, indicating the method\u2019s general applicability.\n\n**Claimed Contributions:**  \n1. Identification of the limitation in standard chain-of-thought prompting due to reliance on a single reasoning path.  \n2. Proposal of the self-consistency decoding strategy that samples multiple reasoning paths and selects the most consistent final answer.  \n3. Empirical demonstration that self-consistency substantially improves reasoning accuracy across diverse tasks and models without additional training or architectural changes.  \n4. Providing a simple, effective, and general technique to enhance the reliability of chain-of-thought reasoning in large language models.",
-    "critic": "1. **Novelty - Missing Comparison to Diverse Reasoning Sampling Prior Work:**  \nThe paper proposes sampling multiple reasoning paths and aggregating answers, but it does not sufficiently compare to prior work on diverse decoding strategies or ensemble methods in LLM reasoning (e.g., diverse beam search or voting over multiple outputs). This omission weakens the novelty claim in Section \"Proposed Method,\" as the idea of sampling multiple outputs for robustness is not entirely new.\n\n2. **Methodology - Lack of Ablation on Number of Samples:**  \nWhile the method relies on sampling multiple reasoning chains, the paper does not provide an ablation study on how the number of sampled chains affects performance. It is unclear whether accuracy saturates or continues to improve with more samples, which is critical for understanding the trade-off between computational cost and gains (see \"Results\" section).\n\n3. **Methodology - No Analysis of Sampling Temperature or Decoding Strategy:**  \nThe paper mentions using temperature sampling or stochastic decoding but does not analyze how different temperature values or decoding methods impact the diversity and correctness of reasoning chains. This design choice is not justified or explored, leaving a gap in understanding the method\u2019s sensitivity.\n\n4. **Evaluation - Majority Vote Baseline on Final Answers May Not Be Strong Enough:**  \nThe comparison to majority voting on final answers without reasoning chains is presented as a baseline, but the paper does not clarify whether this baseline uses the same number of samples or decoding parameters. Without ensuring equal sampling effort, the comparison may be unfairly favorable to self-consistency (see \"Results\").\n\n5. **Evaluation - Limited Benchmark Diversity:**  \nThe experiments focus on arithmetic (GSM8K), commonsense (CSQA), and symbolic reasoning tasks, but do not include other reasoning domains such as multi-hop question answering or real-world reasoning datasets. This limits claims about general applicability (see \"Results\").\n\n6. **Evaluation - Metrics Focus Solely on Accuracy:**  \nThe paper reports improvements in accuracy but does not consider other relevant metrics such as calibration, confidence, or reasoning chain quality. These could provide deeper insights into how self-consistency affects model reliability beyond final answer correctness.\n\n7. **Reproducibility - Missing Details on Sampling Parameters:**  \nKey implementation details such as the exact temperature values, number of samples per question, and decoding algorithms used are not fully specified. This omission hinders reproducibility of the self-consistency method (see \"Proposed Method\").\n\n8. **Reproducibility - No Code or Hyperparameter Settings Provided:**  \nThe paper does not mention releasing code or detailed hyperparameter settings, which are essential for replicating the experiments and validating claims.\n\n9. **Clarity - Ambiguous Definition of \"Consistency\":**  \nThe term \"most consistent answer\" is used throughout but is not formally defined. It appears to mean the most frequent final answer among samples, but this should be explicitly stated to avoid confusion (see \"Proposed Method\").\n\n10. **Clarity - Insufficient Explanation of How Reasoning Paths Are Sampled:**  \nThe paper states that multiple reasoning paths are sampled but does not clarify whether the entire chain-of-thought is generated anew each time or if partial reuse occurs. This detail affects understanding of the method\u2019s novelty and implementation.\n\n11. **Limitations - Does Not Address Computational Overhead:**  \nSampling multiple reasoning chains increases inference cost, but the paper does not discuss this trade-off or provide efficiency analysis. This is a practical limitation for deployment scenarios (see \"Results\").\n\n12. **Limitations - Potential Failure Cases Not Discussed:**  \nThe paper does not analyze or acknowledge scenarios where self-consistency might fail, such as when multiple sampled chains converge on the same incorrect answer, limiting robustness.\n\n13. **Generalisability - No Experiments on Smaller or Non-LLM Models:**  \nThe method is tested on large language models only; it is unclear if self-consistency would benefit smaller models or other architectures, which limits claims of general applicability (see \"Results\").\n\n14. **Generalisability - No Evaluation on Non-English or Multilingual Tasks:**  \nAll benchmarks appear to be English-only. The paper does not explore whether self-consistency holds for multilingual reasoning tasks, which would strengthen generality claims.\n\n15. **Methodology - No Discussion on Handling Ties in Majority Voting:**  \nThe paper does not specify how ties in the frequency of final answers are resolved during aggregation, which is an important detail for the robustness of the method (see \"Proposed Method\")."
+    "reader": "**Problem & Motivation:**  \nLarge language models (LLMs) have demonstrated impressive reasoning abilities when prompted with chain-of-thought (CoT) explanations, which break down complex problems into intermediate reasoning steps. However, the standard CoT approach typically generates a single reasoning path, which can be error-prone and sensitive to the specific sampled chain. This leads to inconsistent or incorrect final answers. The motivation is to improve the reliability and accuracy of reasoning in LLMs by addressing the variability and uncertainty inherent in single-chain CoT outputs.\n\n**Proposed Method:**  \nThe paper introduces a method called **Self-Consistency** to enhance chain-of-thought reasoning. Instead of generating a single reasoning path, the model samples multiple diverse reasoning chains (i.e., multiple CoT explanations) for the same question. Each chain produces a candidate answer. The final answer is then determined by a majority vote over these candidate answers, selecting the most consistent answer across multiple reasoning paths. This approach leverages the intuition that correct answers are more likely to appear consistently across diverse reasoning chains, while errors tend to be more random and less frequent.\n\n**Results:**  \nExperiments conducted on several challenging reasoning benchmarks (including arithmetic, commonsense, and symbolic reasoning tasks) demonstrate that self-consistency significantly improves accuracy compared to standard single-chain CoT prompting. The method consistently outperforms prior CoT approaches and other baseline methods without requiring additional training or model modifications. The improvements are observed across different model sizes and types, indicating robustness and general applicability.\n\n**Claimed Contributions:**  \n1. Identification of the inconsistency problem in chain-of-thought reasoning with LLMs and its impact on answer accuracy.  \n2. Proposal of the self-consistency decoding strategy that samples multiple reasoning paths and aggregates answers via majority voting.  \n3. Empirical validation showing that self-consistency substantially boosts reasoning accuracy on diverse benchmarks without extra training or fine-tuning.  \n4. Demonstration that leveraging multiple reasoning chains can effectively harness the inherent stochasticity of LLMs to improve reliability and correctness in complex reasoning tasks.",
+    "critic": "1. **Novelty - Missing Comparison to Ensemble Decoding Methods:**  \nWhile the paper proposes self-consistency as a majority-vote over multiple sampled reasoning chains, it does not adequately compare or discuss prior ensemble or voting-based decoding strategies in LLMs or related NLP tasks. For example, methods like diverse beam search or ensemble model averaging have been explored to improve output robustness. The paper should explicitly position self-consistency relative to these prior approaches to clarify its novelty (see \"Proposed Method\" section).\n\n2. **Methodology - Lack of Ablation on Number of Samples:**  \nThe paper does not provide an ablation study on how the number of sampled reasoning chains affects performance. It is unclear whether there is a diminishing return or an optimal number of chains for majority voting. This is critical since sampling many chains increases computational cost. Including such analysis would strengthen the methodological rigor (refer to \"Results\" section).\n\n3. **Methodology - No Analysis of Diversity Among Reasoning Chains:**  \nThe approach relies on sampling multiple reasoning paths, but the paper does not quantify or analyze the diversity of these chains. Without measuring diversity, it is unclear if the improvements come from genuinely different reasoning or just minor variations. A metric or qualitative examples illustrating chain diversity would clarify this point (see \"Proposed Method\").\n\n4. **Evaluation - Baselines Lack Strong Competitors Using Multiple Chains:**  \nThe baselines compared against appear to be single-chain CoT or standard prompting methods. The paper does not compare to other multi-sample or voting-based baselines that might also improve accuracy, such as majority voting over multiple independent model outputs or temperature sampling without CoT. This raises concerns about the fairness and completeness of the evaluation (see \"Results\" tables).\n\n5. **Evaluation - Metrics Focus Solely on Accuracy:**  \nThe evaluation uses accuracy as the primary metric but does not consider other relevant metrics such as confidence calibration, answer diversity, or reasoning chain quality. Including such metrics could provide a more nuanced understanding of how self-consistency improves reasoning beyond just final answer correctness (refer to \"Results\").\n\n6. **Reproducibility - Missing Details on Sampling Parameters:**  \nThe paper does not specify key sampling parameters such as temperature, top-k, or top-p values used to generate multiple reasoning chains. These hyperparameters can significantly affect output diversity and quality. Without this information, reproducing the self-consistency method is difficult (see \"Proposed Method\").\n\n7. **Reproducibility - No Code or Pseudocode Provided:**  \nThere is no pseudocode or algorithmic description of the self-consistency decoding procedure. Including this would clarify implementation details such as how candidate answers are extracted from chains and how ties in majority voting are resolved (refer to \"Proposed Method\").\n\n8. **Clarity - Ambiguous Definition of \"Candidate Answer\":**  \nThe paper does not clearly define how candidate answers are extracted from the reasoning chains. For example, is the final token, last sentence, or a specific answer span used? This ambiguity makes it hard to understand the voting mechanism and could affect reproducibility (see \"Proposed Method\").\n\n9. **Clarity - Insufficient Explanation of Why Majority Voting Works:**  \nWhile the intuition that correct answers appear more consistently is stated, the paper lacks a theoretical or empirical analysis explaining why majority voting over reasoning chains reduces errors. A deeper discussion or error analysis would improve clarity and strengthen the argument (refer to \"Problem & Motivation\").\n\n10. **Limitations - No Discussion of Computational Overhead:**  \nSampling multiple reasoning chains and performing majority voting increases inference time and computational cost, but the paper does not discuss this trade-off or provide runtime comparisons. This omission limits understanding of practical applicability (see \"Results\").\n\n11. **Limitations - Potential Failure Cases Not Addressed:**  \nThe paper does not discuss scenarios where self-consistency might fail, such as when the model consistently generates incorrect but similar reasoning chains leading to majority voting on wrong answers. Acknowledging such limitations would provide a more balanced view (refer to \"Claimed Contributions\").\n\n12. **Generalisability - Limited to Reasoning Benchmarks Only:**  \nExperiments are conducted only on arithmetic, commonsense, and symbolic reasoning tasks. It is unclear if self-consistency would benefit other NLP tasks requiring reasoning, such as question answering with open-domain knowledge or multi-hop retrieval. The paper should discuss or test broader applicability (see \"Results\").\n\n13. **Generalisability - No Evaluation on Smaller or Non-LLM Models:**  \nThe method is tested on large language models but not on smaller or fine-tuned models. It remains unclear whether self-consistency is effective when model capacity or pretraining data is limited. This gap limits claims about robustness across model types (refer to \"Results\").\n\n14. **Methodology - No Consideration of Answer Ambiguity or Multiple Correct Answers:**  \nThe majority voting assumes a single correct answer per question, but some reasoning tasks may have multiple valid answers or ambiguous solutions. The paper does not address how self-consistency handles such cases, which could bias results (see \"Proposed Method\").\n\n15. **Evaluation - Lack of Statistical Significance Testing:**  \nThe reported accuracy improvements lack statistical significance analysis. Without confidence intervals or hypothesis testing, it is difficult to assess whether gains are robust or due to chance, especially given stochastic sampling in self-consistency (refer to \"Results\")."
   }
 }

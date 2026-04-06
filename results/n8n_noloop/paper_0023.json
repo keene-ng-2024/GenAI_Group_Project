@@ -3,97 +3,89 @@
   "title": "Later Span Adaptation for Language Understanding",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 23.08,
+  "latency_seconds": 31.67,
   "structured": {
-    "summary": "The paper proposes Later Span Adaptation, a method that inserts lightweight adapter modules into the later layers of transformer models to improve span-based language understanding tasks such as question answering and named entity recognition. Experiments show competitive or superior accuracy and F1 scores compared to full fine-tuning and some adapter baselines, with reduced parameter counts and training time. The work emphasizes the importance of focusing adaptation on later layers to better capture span-level representations.",
+    "summary": "The paper proposes Later Span Adaptation (LSA), a parameter-efficient method that inserts lightweight adaptation modules into the later layers of pre-trained language models to improve span-based language understanding tasks such as question answering and named entity recognition. By freezing most of the model and fine-tuning only these modules, LSA aims to reduce computational cost while maintaining or improving span prediction accuracy. Experiments demonstrate competitive performance against full fine-tuning and some parameter-efficient baselines on English benchmarks.",
     "strengths": [
       {
-        "point": "Focus on later layers for span adaptation",
-        "evidence": "Ablation studies demonstrate improved performance when adapters are placed in later transformer layers."
+        "point": "Focus on later layers for span-based adaptation",
+        "evidence": "The method targets later layers where span boundary representations are refined, which is a novel focus compared to prior work that adapts early or intermediate layers."
       },
       {
-        "point": "Competitive performance with fewer parameters",
-        "evidence": "Experiments show that the method achieves comparable or better accuracy and F1 scores while requiring fewer trainable parameters and less training time than full fine-tuning."
+        "point": "Parameter efficiency and reduced computational cost",
+        "evidence": "LSA freezes most PLM parameters and fine-tunes only lightweight modules, resulting in fewer trainable parameters and claimed training time reductions."
       },
       {
-        "point": "Empirical validation across multiple span-based tasks",
-        "evidence": "The approach is evaluated on several benchmark datasets for question answering and named entity recognition, showing consistent improvements."
+        "point": "Empirical validation on multiple span-based tasks",
+        "evidence": "Experiments on question answering and named entity recognition datasets show LSA achieves competitive or superior span prediction accuracy compared to full fine-tuning and some baselines."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to recent span-specific adaptation methods",
-        "evidence": "No experiments compare against recent span-focused adapters using span boundary supervision or span pooling techniques, weakening the novelty claim."
+        "point": "Lack of comparison to recent layer-wise adaptation methods",
+        "evidence": "The paper does not compare LSA against recent dynamic layer selection or layer-wise adaptation techniques, leaving unclear if focusing on later layers is truly superior."
       },
       {
-        "point": "Insufficient theoretical or empirical justification for focusing on later layers",
-        "evidence": "The paper provides only empirical performance results without deeper analysis or visualization explaining why earlier layers are less suitable."
+        "point": "Insufficient justification and ablation of adaptation module design",
+        "evidence": "No ablation studies vary module size, activation functions, or placement to justify architectural choices for the inserted modules."
       },
       {
-        "point": "Missing ablation on adapter architecture design",
-        "evidence": "No experiments vary adapter parameters such as bottleneck size or activation functions to isolate the effect of adapter design."
+        "point": "No analysis of freezing early layers impact",
+        "evidence": "The effect of freezing early layers on adaptation capability is not explored, missing potential trade-offs or benefits of partial fine-tuning."
       },
       {
-        "point": "Baselines omit recent parameter-efficient tuning methods",
-        "evidence": "Comparisons exclude strong baselines like LoRA or prefix-tuning, limiting conclusions about efficiency and effectiveness."
+        "point": "Evaluation lacks strong parameter-efficient baselines and comprehensive metrics",
+        "evidence": "Comparisons omit recent competitive methods like prefix-tuning or adapter fusion; evaluation metrics focus only on span accuracy without reporting F1, exact match, or calibration."
       },
       {
-        "point": "Evaluation metrics limited to accuracy and F1",
-        "evidence": "Metrics like exact match or entity-level precision/recall are not reported, restricting insight into error types."
+        "point": "Incomplete reporting of training time and hardware details",
+        "evidence": "Training speedup claims lack detailed breakdowns or hardware specifications, limiting assessment of computational benefits."
       },
       {
-        "point": "Incomplete reporting of training time and parameter counts",
-        "evidence": "Detailed runtime benchmarks and parameter counts for all baselines are missing, hindering assessment of practical efficiency."
+        "point": "Reproducibility concerns due to missing hyperparameters and code",
+        "evidence": "Key hyperparameters are not fully specified and no code or pseudocode is provided to facilitate replication."
       },
       {
-        "point": "Reproducibility concerns due to missing hyperparameter details and code",
-        "evidence": "Key hyperparameters are not fully specified and no code or pseudocode is provided."
+        "point": "Clarity issues in describing span boundary refinement and freezing strategy",
+        "evidence": "The mechanism by which adaptation modules refine span boundaries is vague, and it is unclear which parameters (e.g., layer norms, embeddings) are frozen."
       },
       {
-        "point": "Ambiguity in description of span-specific features and adapter integration",
-        "evidence": "The paper does not clearly define the span-specific features used or how adapters integrate with transformer layers."
-      },
-      {
-        "point": "Limited discussion of limitations and generalizability",
-        "evidence": "No analysis on overfitting risks, applicability beyond span tasks, multilingual or larger model settings, or robustness to domain shifts."
+        "point": "Limited discussion on broader applicability and potential limitations",
+        "evidence": "No exploration of extending LSA beyond span tasks, risk of overfitting to boundaries, or generalization to multilingual, longer context, or diverse PLM architectures."
       }
     ],
     "questions": [
       {
-        "question": "How do Later Span Adaptation modules compare to recent span-focused adapter methods that use span boundary supervision or span pooling?",
-        "motivation": "To clarify the novelty and relative effectiveness of the proposed approach against state-of-the-art span-centric adaptations."
+        "question": "How does LSA compare to recent dynamic or layer-wise adaptation methods that select layers based on task importance?",
+        "motivation": "To understand if focusing on later layers is truly advantageous or if more flexible layer selection methods outperform LSA."
       },
       {
-        "question": "Can the authors provide theoretical or representational analysis explaining why later layers are more suitable for span adaptation?",
-        "motivation": "To strengthen the rationale behind the design choice beyond empirical performance."
+        "question": "What is the impact of partially fine-tuning early layers instead of freezing them completely?",
+        "motivation": "To assess whether freezing early layers limits adaptation capacity or if some early layer tuning improves performance."
       },
       {
-        "question": "What is the impact of varying adapter architecture parameters such as bottleneck size or activation functions on performance?",
-        "motivation": "To understand whether gains come from adapter placement or specific design choices."
+        "question": "Can the authors provide ablation results varying the adaptation module architecture (size, activation, placement)?",
+        "motivation": "To justify design choices and identify optimal configurations for span boundary refinement."
       },
       {
-        "question": "How does Later Span Adaptation perform compared to recent parameter-efficient fine-tuning methods like LoRA or prefix-tuning?",
-        "motivation": "To position the method within the current landscape of efficient adaptation techniques."
+        "question": "What are the detailed training time metrics (per epoch, total) and hardware used for experiments?",
+        "motivation": "To verify the claimed computational efficiency and enable fair comparison."
       },
       {
-        "question": "Can the authors provide more detailed training time, parameter counts, and hyperparameter settings to facilitate reproducibility and practical assessment?",
-        "motivation": "To enable replication and better evaluate efficiency claims."
+        "question": "Are there plans to release code or pseudocode to facilitate reproducibility?",
+        "motivation": "To enable the community to replicate and build upon the proposed method."
       },
       {
-        "question": "Are there plans to release code or pseudocode for the Later Span Adaptation modules?",
-        "motivation": "To support adoption and further research."
+        "question": "How does LSA perform on multilingual, low-resource, or longer document-level span tasks?",
+        "motivation": "To evaluate the method's generalizability beyond English sentence-level benchmarks."
       },
       {
-        "question": "How do the proposed adapters handle residual connections and layer normalization within transformer layers?",
-        "motivation": "To clarify integration details critical for implementation."
+        "question": "Does focusing adaptation on span boundaries risk overfitting to boundary cues at the expense of internal span semantics?",
+        "motivation": "To understand potential limitations and robustness of the approach."
       },
       {
-        "question": "Has the method been evaluated on non-English datasets, larger models, or under domain shift conditions?",
-        "motivation": "To assess generalizability and robustness."
-      },
-      {
-        "question": "Is there any analysis on potential overfitting risks when applying adapters only in later layers, especially on small datasets?",
-        "motivation": "To understand limitations and guide practical use."
+        "question": "Is LSA applicable or adaptable to non-span tasks such as text classification or sequence generation?",
+        "motivation": "To explore broader utility of the adaptation strategy."
       }
     ],
     "scores": {
@@ -104,18 +96,17 @@
     }
   },
   "critique_points": {
-    "point_001": "Lack of comparison to recent span-specific adaptation methods. No experiments compare against recent span-focused adapters using span boundary supervision or span pooling techniques, weakening the novelty claim.",
-    "point_002": "Insufficient theoretical or empirical justification for focusing on later layers. The paper provides only empirical performance results without deeper analysis or visualization explaining why earlier layers are less suitable.",
-    "point_003": "Missing ablation on adapter architecture design. No experiments vary adapter parameters such as bottleneck size or activation functions to isolate the effect of adapter design.",
-    "point_004": "Baselines omit recent parameter-efficient tuning methods. Comparisons exclude strong baselines like LoRA or prefix-tuning, limiting conclusions about efficiency and effectiveness.",
-    "point_005": "Evaluation metrics limited to accuracy and F1. Metrics like exact match or entity-level precision/recall are not reported, restricting insight into error types.",
-    "point_006": "Incomplete reporting of training time and parameter counts. Detailed runtime benchmarks and parameter counts for all baselines are missing, hindering assessment of practical efficiency.",
-    "point_007": "Reproducibility concerns due to missing hyperparameter details and code. Key hyperparameters are not fully specified and no code or pseudocode is provided.",
-    "point_008": "Ambiguity in description of span-specific features and adapter integration. The paper does not clearly define the span-specific features used or how adapters integrate with transformer layers.",
-    "point_009": "Limited discussion of limitations and generalizability. No analysis on overfitting risks, applicability beyond span tasks, multilingual or larger model settings, or robustness to domain shifts."
+    "point_001": "Lack of comparison to recent layer-wise adaptation methods. The paper does not compare LSA against recent dynamic layer selection or layer-wise adaptation techniques, leaving unclear if focusing on later layers is truly superior.",
+    "point_002": "Insufficient justification and ablation of adaptation module design. No ablation studies vary module size, activation functions, or placement to justify architectural choices for the inserted modules.",
+    "point_003": "No analysis of freezing early layers impact. The effect of freezing early layers on adaptation capability is not explored, missing potential trade-offs or benefits of partial fine-tuning.",
+    "point_004": "Evaluation lacks strong parameter-efficient baselines and comprehensive metrics. Comparisons omit recent competitive methods like prefix-tuning or adapter fusion; evaluation metrics focus only on span accuracy without reporting F1, exact match, or calibration.",
+    "point_005": "Incomplete reporting of training time and hardware details. Training speedup claims lack detailed breakdowns or hardware specifications, limiting assessment of computational benefits.",
+    "point_006": "Reproducibility concerns due to missing hyperparameters and code. Key hyperparameters are not fully specified and no code or pseudocode is provided to facilitate replication.",
+    "point_007": "Clarity issues in describing span boundary refinement and freezing strategy. The mechanism by which adaptation modules refine span boundaries is vague, and it is unclear which parameters (e.g., layer norms, embeddings) are frozen.",
+    "point_008": "Limited discussion on broader applicability and potential limitations. No exploration of extending LSA beyond span tasks, risk of overfitting to boundaries, or generalization to multilingual, longer context, or diverse PLM architectures."
   },
   "transcript": {
-    "reader": "**Title:** Later Span Adaptation for Language Understanding\n\n**Problem & Motivation:**  \nThe paper addresses the challenge of adapting pre-trained language models for downstream language understanding tasks, particularly focusing on span-based tasks such as question answering and named entity recognition. Traditional adaptation methods often involve fine-tuning the entire model or adding adapters early in the network, which can be computationally expensive and may not optimally leverage the model\u2019s capacity for span representations. The motivation is to develop a more efficient and effective adaptation technique that better captures span-level information without extensive retraining.\n\n**Proposed Method:**  \nThe authors propose \"Later Span Adaptation,\" a novel approach that introduces adaptation modules specifically designed to operate at later layers of the transformer model, closer to the output representations. These modules focus on refining span representations by integrating span-specific features and contextual information. The method involves inserting lightweight adapter layers that adapt the model\u2019s later-stage hidden states, enabling better span extraction and classification with minimal additional parameters and computational overhead.\n\n**Results:**  \nExperiments conducted on multiple benchmark datasets for span-based language understanding tasks demonstrate that Later Span Adaptation achieves competitive or superior performance compared to full fine-tuning and other adapter-based methods. The approach shows improvements in accuracy and F1 scores on tasks such as question answering and named entity recognition, while requiring fewer trainable parameters and less training time. Ablation studies confirm the effectiveness of placing adaptation modules in later layers and the importance of span-focused design.\n\n**Claimed Contributions:**  \n1. Introduction of Later Span Adaptation, a novel adapter-based method targeting later transformer layers for span-level adaptation.  \n2. Demonstration that focusing adaptation on later layers improves span representation and task performance with reduced computational cost.  \n3. Empirical validation across multiple span-based language understanding benchmarks showing competitive or improved results over existing adaptation techniques.  \n4. Analysis and insights into the role of layer placement and span-specific design in adapter modules for language model adaptation.",
-    "critic": "1. **Novelty - Missing Comparison to Recent Span-Specific Adaptation Methods:**  \nWhile the paper claims novelty in focusing adaptation modules on later layers for span tasks, it does not compare against recent span-focused adapter methods such as those incorporating span boundary supervision or span pooling techniques (e.g., SpanBERT-style adaptations). This omission weakens the novelty claim since prior work has explored span-centric adaptations, albeit differently.\n\n2. **Methodology - Lack of Justification for Choice of Later Layers:**  \nThe paper asserts that placing adapters in later layers is beneficial (Section 4.3, Ablation Studies), but does not provide a theoretical or empirical rationale for why earlier layers are less suitable beyond empirical performance. A deeper analysis or visualization of layer-wise span representation quality would strengthen this design choice.\n\n3. **Methodology - Missing Ablation on Adapter Module Architecture:**  \nThe proposed adapter modules are described as lightweight but the paper lacks ablation on the adapter architecture itself (e.g., number of parameters, activation functions, or bottleneck size). It is unclear if the performance gains stem from the placement or the specific adapter design.\n\n4. **Evaluation - Baselines Lack Parameter-Efficient Fine-Tuning Methods:**  \nThe experiments compare against full fine-tuning and some adapter baselines but omit recent parameter-efficient tuning methods such as LoRA or prefix-tuning, which have shown strong performance on span tasks. This limits the conclusiveness of the claimed efficiency and effectiveness improvements.\n\n5. **Evaluation - Metrics Focus Solely on Accuracy and F1:**  \nThe evaluation uses accuracy and F1 scores but does not report other relevant metrics for span tasks such as exact match (EM) for QA or entity-level precision/recall breakdowns. This limits understanding of the method\u2019s impact on different error types.\n\n6. **Evaluation - Training Time and Parameter Counts Not Fully Detailed:**  \nThough the paper claims reduced training time and fewer parameters (Section 5), it does not provide detailed runtime benchmarks or parameter counts for all baselines, making it difficult to assess the practical efficiency gains.\n\n7. **Reproducibility - Missing Hyperparameter Details:**  \nKey hyperparameters such as learning rates, adapter bottleneck sizes, and training epochs are not fully specified in the main text or appendix, hindering reproducibility.\n\n8. **Reproducibility - Lack of Code Release or Pseudocode:**  \nThe paper does not mention releasing code or provide pseudocode for the Later Span Adaptation modules, which would aid replication and adoption.\n\n9. **Clarity - Ambiguous Description of Span-Specific Features:**  \nThe paper mentions integrating \"span-specific features\" into the adapter modules but does not clearly define what these features are or how they are computed, leaving the reader uncertain about the exact input to the adapters.\n\n10. **Clarity - Insufficient Explanation of Adapter Integration:**  \nIt is unclear whether the adapter modules replace or augment existing transformer layers\u2019 outputs, and how residual connections or layer normalization are handled, which are important for understanding the method\u2019s integration.\n\n11. **Limitations - No Discussion of Applicability Beyond Span Tasks:**  \nThe paper focuses exclusively on span-based tasks but does not discuss whether Later Span Adaptation could generalize to other language understanding tasks such as sequence classification or generation, limiting the scope of the contribution.\n\n12. **Limitations - Potential Overfitting on Small Datasets Not Addressed:**  \nSince adapter modules are added near the output, there is a risk of overfitting on small datasets, but the paper does not analyze or discuss this potential limitation.\n\n13. **Generalisability - Experiments Limited to English Benchmarks:**  \nAll reported experiments are on English datasets; the paper does not evaluate or discuss performance on other languages or multilingual settings, which is important for broader applicability.\n\n14. **Generalisability - No Evaluation on Larger or More Diverse Models:**  \nThe experiments appear limited to base-sized transformer models; it is unclear if Later Span Adaptation scales effectively to larger models like RoBERTa-large or GPT variants.\n\n15. **Generalisability - Lack of Analysis on Robustness to Domain Shift:**  \nThe paper does not evaluate how well the adapted models perform under domain shift or noisy inputs, which is critical for real-world language understanding applications."
+    "reader": "**Title:** Later Span Adaptation for Language Understanding\n\n**Problem & Motivation:**  \nPre-trained language models (PLMs) have achieved remarkable success in various language understanding tasks. However, adapting these large models to specific downstream tasks often requires fine-tuning all parameters, which is computationally expensive and storage-intensive. Existing parameter-efficient adaptation methods typically focus on early or intermediate layers, but the potential of adapting later layers, especially for span-based tasks (e.g., question answering, named entity recognition), remains underexplored. The motivation is to develop a more efficient adaptation technique that leverages the importance of later layers in span prediction without incurring the full cost of fine-tuning the entire model.\n\n**Proposed Method:**  \nThe paper introduces \"Later Span Adaptation\" (LSA), a parameter-efficient adaptation approach targeting the later layers of PLMs for span-based language understanding tasks. The key idea is to insert lightweight adaptation modules specifically designed to enhance span representations in the upper layers of the model. These modules focus on refining the span boundary representations and improving the model's ability to predict accurate spans. LSA freezes the majority of the PLM parameters and only fine-tunes these added modules in the later layers, significantly reducing the number of trainable parameters and computational overhead.\n\n**Results:**  \nExperiments conducted on multiple span-based language understanding benchmarks, including question answering and named entity recognition datasets, demonstrate that LSA achieves competitive or superior performance compared to full fine-tuning and other parameter-efficient methods. The approach consistently improves span prediction accuracy while requiring fewer trainable parameters and less training time. Ablation studies confirm the effectiveness of adapting later layers and the design of the span-specific adaptation modules.\n\n**Claimed Contributions:**  \n1. Identification of the importance of later layers in PLMs for span-based language understanding tasks and the benefits of focusing adaptation efforts there.  \n2. Proposal of the Later Span Adaptation method, a novel parameter-efficient adaptation technique that inserts lightweight modules in the later layers to enhance span prediction.  \n3. Empirical validation showing that LSA achieves strong performance with significantly reduced parameter updates and computational cost compared to full fine-tuning and existing efficient adaptation methods.  \n4. Providing insights into the design of adaptation modules tailored for span boundary representation refinement in large pre-trained models.",
+    "critic": "1. **Novelty - Missing Comparison to Layer-wise Adaptation Methods:**  \nThe paper claims novelty in focusing adaptation on later layers for span-based tasks but does not compare against recent layer-wise adaptation techniques that dynamically select layers for fine-tuning (e.g., methods that adapt a subset of layers based on task importance). Without such comparisons, it is unclear if LSA\u2019s focus on later layers is truly superior or just a simpler heuristic.\n\n2. **Methodology - Lack of Justification for Module Design Choices:**  \nSection describing the adaptation modules does not sufficiently justify the architectural choices (e.g., module size, activation functions, or placement within the layer). An ablation varying these design parameters would clarify why the chosen configuration is optimal for span boundary refinement.\n\n3. **Methodology - No Analysis of Impact on Early Layers:**  \nWhile LSA freezes early layers, the paper does not analyze whether freezing these layers limits the model\u2019s ability to adapt to certain span-based phenomena that may require lower-level feature adjustments. An ablation allowing partial fine-tuning of early layers could reveal potential trade-offs.\n\n4. **Evaluation - Baselines Lack Strong Parameter-Efficient Methods:**  \nThe experiments compare LSA mainly against full fine-tuning and a few parameter-efficient baselines but omit recent competitive methods such as prefix-tuning or adapter fusion tailored for span tasks. This omission weakens the claim of superior performance.\n\n5. **Evaluation - Metrics Focus Solely on Span Accuracy:**  \nThe evaluation uses span prediction accuracy but does not report other relevant metrics such as F1 score, exact match, or calibration measures that are standard in QA and NER benchmarks. This limits understanding of the method\u2019s practical effectiveness.\n\n6. **Evaluation - Training Time Reporting Is Incomplete:**  \nThe paper claims reduced training time but provides no detailed breakdown of training speedups (e.g., per epoch or total wall-clock time) or hardware used. This makes it difficult to assess the real computational benefits of LSA.\n\n7. **Reproducibility - Missing Hyperparameter Details:**  \nKey hyperparameters for training the adaptation modules, such as learning rates, batch sizes, and number of training epochs, are not fully specified. This omission hinders reproducibility and fair comparison.\n\n8. **Reproducibility - No Code or Pseudocode Provided:**  \nThe paper does not include pseudocode or link to an implementation repository, which would be valuable for replicating the insertion and training of the adaptation modules in later layers.\n\n9. **Clarity - Ambiguous Description of Span Boundary Refinement:**  \nThe explanation of how the adaptation modules specifically refine span boundary representations is vague. It is unclear whether the modules operate on token embeddings, attention scores, or other intermediate representations.\n\n10. **Clarity - Insufficient Explanation of Freezing Strategy:**  \nThe paper states that the majority of PLM parameters are frozen but does not clarify whether this includes layer normalization parameters or embeddings, which can impact adaptation effectiveness.\n\n11. **Limitations - No Discussion of Applicability Beyond Span Tasks:**  \nThe paper does not discuss whether LSA could be extended or adapted for non-span-based tasks such as text classification or sequence generation, limiting understanding of its broader utility.\n\n12. **Limitations - Potential Overfitting to Span Boundaries Not Addressed:**  \nFocusing adaptation exclusively on span boundaries might cause the model to overfit to boundary cues and neglect internal span semantics, but this risk is not acknowledged or analyzed.\n\n13. **Generalisability - Experiments Limited to English Benchmarks:**  \nAll reported experiments are on English datasets; the paper does not evaluate or discuss performance on multilingual or low-resource languages, raising questions about generalizability.\n\n14. **Generalisability - No Evaluation on Longer Contexts or Document-Level Tasks:**  \nThe tested benchmarks appear to be sentence- or paragraph-level; the method\u2019s effectiveness on longer documents or multi-span prediction scenarios is not explored.\n\n15. **Generalisability - Impact on Different PLM Architectures Not Explored:**  \nThe experiments focus on a single PLM architecture; it remains unclear whether LSA\u2019s benefits hold across diverse models such as encoder-decoder transformers or smaller PLMs."
   }
 }

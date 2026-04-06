@@ -3,97 +3,113 @@
   "title": "LoRA: Low-Rank Adaptation of Large Language Models",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 21.87,
+  "latency_seconds": 33.5,
   "structured": {
-    "summary": "The paper proposes LoRA, a parameter-efficient fine-tuning method for large language models that freezes the original weights and injects trainable low-rank matrices into Transformer layers. This approach reduces the number of trainable parameters and storage costs while maintaining or improving task performance on various NLP benchmarks. Experimental results demonstrate LoRA's efficiency and effectiveness compared to full fine-tuning and some parameter-efficient baselines.",
+    "summary": "The paper proposes LoRA, a low-rank adaptation method for efficient fine-tuning of large language models by freezing pre-trained weights and injecting trainable low-rank matrices into Transformer layers. LoRA achieves comparable or superior performance to full fine-tuning and other parameter-efficient methods while drastically reducing trainable parameters and storage costs. The approach is empirically validated on multiple NLP benchmarks, demonstrating improved efficiency in training and deployment.",
     "strengths": [
       {
-        "point": "Parameter efficiency with competitive performance",
-        "evidence": "LoRA reduces trainable parameters by up to 10x while matching or exceeding full fine-tuning accuracy on multiple NLP tasks."
+        "point": "Significant reduction in trainable parameters",
+        "evidence": "LoRA represents weight updates as products of low-rank matrices, reducing trainable parameters by orders of magnitude compared to full fine-tuning."
       },
       {
-        "point": "Compatibility with existing architectures",
-        "evidence": "The method can be integrated into Transformer-based models without modifying the original weights, facilitating practical deployment."
+        "point": "Competitive or superior performance to full fine-tuning and other parameter-efficient methods",
+        "evidence": "Empirical results show LoRA matches or surpasses full fine-tuning and methods like adapters and prefix tuning on several NLP benchmarks."
       },
       {
-        "point": "Enables faster training and easier model sharing",
-        "evidence": "Only low-rank updates need to be stored and distributed, reducing storage and potentially speeding up adaptation."
+        "point": "Practical and modular approach facilitating scalable adaptation",
+        "evidence": "By freezing original weights and only storing low-rank matrices per task, LoRA enables efficient model sharing and deployment."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to adapter-based methods",
-        "evidence": "The paper does not benchmark against well-known adapter approaches like Houlsby et al. (2019) or Pfeiffer et al. (2020), weakening novelty claims."
+        "point": "Insufficient comparison to prior low-rank parameterization methods",
+        "evidence": "The paper lacks discussion and empirical comparison to existing low-rank techniques in neural network fine-tuning or compression literature."
       },
       {
-        "point": "Insufficient justification for low-rank parameterization",
-        "evidence": "No ablation studies explore different ranks or alternative parameterizations, leaving unclear why low-rank updates are optimal."
+        "point": "No ablation study on the choice of low-rank dimension",
+        "evidence": "The sensitivity of performance and parameter efficiency to the rank hyperparameter is not analyzed."
       },
       {
-        "point": "Missing analysis of partial fine-tuning combinations",
-        "evidence": "The paper does not investigate combining LoRA with partial fine-tuning of biases or layer norms, which might improve trade-offs."
+        "point": "Assumption that freezing pre-trained weights is always optimal",
+        "evidence": "The method does not consider scenarios requiring substantial model adaptation or domain shifts where frozen weights may be suboptimal."
       },
       {
-        "point": "Unclear training budget matching for baselines",
-        "evidence": "Baseline methods' training epochs, batch sizes, and learning rates are not clearly matched, potentially biasing speed and performance comparisons."
+        "point": "Baseline methods may not be fully hyperparameter-tuned",
+        "evidence": "Comparisons to adapters and prefix tuning do not clarify if baselines were optimized, potentially overstating LoRA's gains."
       },
       {
-        "point": "Limited evaluation metrics",
-        "evidence": "Focus is primarily on accuracy; metrics like inference latency, memory usage, and energy consumption are not reported."
+        "point": "Evaluation metrics limited to accuracy-focused measures",
+        "evidence": "No analysis of inference latency, memory footprint during training, or energy consumption is provided."
       },
       {
-        "point": "No statistical significance or variance reporting",
-        "evidence": "Performance tables lack standard deviations or confidence intervals, making it unclear if improvements are statistically meaningful."
+        "point": "Limited downstream task diversity in evaluation",
+        "evidence": "Experiments focus on standard NLP tasks without testing on generation, summarization, or multi-modal tasks."
       },
       {
-        "point": "Insufficient reproducibility details",
-        "evidence": "Hyperparameter settings such as rank per layer, learning rates, and optimizer details are missing; no code or checkpoints are released."
+        "point": "Insufficient implementation details hindering reproducibility",
+        "evidence": "Key details such as initialization schemes, optimizer settings, and training schedules are not fully described."
       },
       {
-        "point": "Ambiguous method description",
-        "evidence": "Integration of low-rank matrices into Transformer layers lacks clear diagrams or equations; terminology is inconsistent."
+        "point": "No public release of code or model checkpoints",
+        "evidence": "The paper does not mention releasing code or pre-trained adapters, limiting community verification and adoption."
       },
       {
-        "point": "Limited scope of experiments",
-        "evidence": "Experiments are restricted to NLP tasks and Transformer architectures; no exploration of other domains or model types."
+        "point": "Ambiguous description of integration into Transformer layers",
+        "evidence": "Lacks diagrams or pseudocode clarifying how low-rank matrices modify the forward pass."
       },
       {
-        "point": "No discussion on robustness or scaling behavior",
-        "evidence": "Potential effects on model robustness to distribution shifts or adversarial attacks are not studied; scaling with model size is unexamined."
+        "point": "Terminology inconsistency regarding 'low-rank'",
+        "evidence": "The paper does not formally define what constitutes low rank relative to original weight dimensions."
+      },
+      {
+        "point": "No discussion or experiments on performance under large domain shifts",
+        "evidence": "Potential degradation when frozen weights plus low-rank updates are insufficient is not addressed."
+      },
+      {
+        "point": "Storage savings may diminish with multiple tasks",
+        "evidence": "Cumulative storage costs of multiple low-rank matrices for many tasks are not analyzed."
+      },
+      {
+        "point": "Generalisability limited to Transformer-based models",
+        "evidence": "No experiments on other architectures like convolutional networks or non-Transformer models."
+      },
+      {
+        "point": "Lack of evaluation on very large models (>10B parameters)",
+        "evidence": "Scalability and performance on very large-scale models remain unclear."
+      },
+      {
+        "point": "No analysis on multi-task or continual learning scenarios",
+        "evidence": "The method's applicability to these important settings is not investigated."
       }
     ],
     "questions": [
       {
-        "question": "How does LoRA compare to adapter-based methods in terms of parameter efficiency and performance?",
-        "motivation": "Adapters are a strong baseline for parameter-efficient tuning; direct comparison is needed to establish novelty and effectiveness."
+        "question": "How sensitive is LoRA's performance to the choice of the low-rank dimension across different tasks and model sizes?",
+        "motivation": "Understanding rank sensitivity is crucial for practical tuning and generalization."
       },
       {
-        "question": "What is the impact of varying the rank of the low-rank matrices on performance and parameter count?",
-        "motivation": "Understanding sensitivity to rank choice can clarify the method's flexibility and optimal configurations."
+        "question": "Can LoRA handle tasks with significant domain shifts or novel vocabulary where freezing pre-trained weights may be suboptimal?",
+        "motivation": "Evaluating robustness to domain shifts would clarify method limitations."
       },
       {
-        "question": "Can LoRA be effectively combined with partial fine-tuning of biases or layer norms?",
-        "motivation": "Such combinations might yield better trade-offs between efficiency and accuracy."
+        "question": "Were baseline methods like adapters and prefix tuning fully optimized for fair comparison?",
+        "motivation": "Ensuring fair baselines is necessary to validate claimed performance gains."
       },
       {
-        "question": "Are the reported training speedups and accuracy gains statistically significant under matched training budgets?",
-        "motivation": "Ensuring fair comparisons is critical to validate claimed efficiency improvements."
+        "question": "What are the inference latency and memory usage implications of LoRA compared to other fine-tuning methods?",
+        "motivation": "Practical deployment requires understanding computational and resource efficiency beyond accuracy."
       },
       {
-        "question": "How does LoRA affect inference latency and memory usage during both training and deployment?",
-        "motivation": "Practical efficiency gains depend on these metrics beyond accuracy."
+        "question": "Is LoRA applicable and effective for non-Transformer architectures or very large-scale models (>10B parameters)?",
+        "motivation": "Assessing generalizability to other architectures and scales would broaden impact."
       },
       {
-        "question": "Is the method applicable to non-Transformer architectures or other domains like vision or speech?",
-        "motivation": "Broader applicability would strengthen the impact and generalizability claims."
+        "question": "Will the cumulative storage cost of multiple low-rank matrices for many tasks offset the parameter efficiency benefits?",
+        "motivation": "Storage scalability is important for multi-task and continual learning applications."
       },
       {
-        "question": "Does freezing the base model and updating only low-rank matrices impact robustness to distribution shifts or adversarial attacks?",
-        "motivation": "Robustness is important for real-world deployment and safety."
-      },
-      {
-        "question": "Will the authors release code and pretrained LoRA adapters to facilitate reproducibility?",
-        "motivation": "Community adoption and verification depend on accessible implementations."
+        "question": "Are there plans to release code and pre-trained adapters to facilitate reproducibility and community adoption?",
+        "motivation": "Public resources are critical for verifying and building upon the work."
       }
     ],
     "scores": {
@@ -104,19 +120,24 @@
     }
   },
   "critique_points": {
-    "point_001": "Lack of comparison to adapter-based methods. The paper does not benchmark against well-known adapter approaches like Houlsby et al. (2019) or Pfeiffer et al. (2020), weakening novelty claims.",
-    "point_002": "Insufficient justification for low-rank parameterization. No ablation studies explore different ranks or alternative parameterizations, leaving unclear why low-rank updates are optimal.",
-    "point_003": "Missing analysis of partial fine-tuning combinations. The paper does not investigate combining LoRA with partial fine-tuning of biases or layer norms, which might improve trade-offs.",
-    "point_004": "Unclear training budget matching for baselines. Baseline methods' training epochs, batch sizes, and learning rates are not clearly matched, potentially biasing speed and performance comparisons.",
-    "point_005": "Limited evaluation metrics. Focus is primarily on accuracy; metrics like inference latency, memory usage, and energy consumption are not reported.",
-    "point_006": "No statistical significance or variance reporting. Performance tables lack standard deviations or confidence intervals, making it unclear if improvements are statistically meaningful.",
-    "point_007": "Insufficient reproducibility details. Hyperparameter settings such as rank per layer, learning rates, and optimizer details are missing; no code or checkpoints are released.",
-    "point_008": "Ambiguous method description. Integration of low-rank matrices into Transformer layers lacks clear diagrams or equations; terminology is inconsistent.",
-    "point_009": "Limited scope of experiments. Experiments are restricted to NLP tasks and Transformer architectures; no exploration of other domains or model types.",
-    "point_010": "No discussion on robustness or scaling behavior. Potential effects on model robustness to distribution shifts or adversarial attacks are not studied; scaling with model size is unexamined."
+    "point_001": "Insufficient comparison to prior low-rank parameterization methods. The paper lacks discussion and empirical comparison to existing low-rank techniques in neural network fine-tuning or compression literature.",
+    "point_002": "No ablation study on the choice of low-rank dimension. The sensitivity of performance and parameter efficiency to the rank hyperparameter is not analyzed.",
+    "point_003": "Assumption that freezing pre-trained weights is always optimal. The method does not consider scenarios requiring substantial model adaptation or domain shifts where frozen weights may be suboptimal.",
+    "point_004": "Baseline methods may not be fully hyperparameter-tuned. Comparisons to adapters and prefix tuning do not clarify if baselines were optimized, potentially overstating LoRA's gains.",
+    "point_005": "Evaluation metrics limited to accuracy-focused measures. No analysis of inference latency, memory footprint during training, or energy consumption is provided.",
+    "point_006": "Limited downstream task diversity in evaluation. Experiments focus on standard NLP tasks without testing on generation, summarization, or multi-modal tasks.",
+    "point_007": "Insufficient implementation details hindering reproducibility. Key details such as initialization schemes, optimizer settings, and training schedules are not fully described.",
+    "point_008": "No public release of code or model checkpoints. The paper does not mention releasing code or pre-trained adapters, limiting community verification and adoption.",
+    "point_009": "Ambiguous description of integration into Transformer layers. Lacks diagrams or pseudocode clarifying how low-rank matrices modify the forward pass.",
+    "point_010": "Terminology inconsistency regarding 'low-rank'. The paper does not formally define what constitutes low rank relative to original weight dimensions.",
+    "point_011": "No discussion or experiments on performance under large domain shifts. Potential degradation when frozen weights plus low-rank updates are insufficient is not addressed.",
+    "point_012": "Storage savings may diminish with multiple tasks. Cumulative storage costs of multiple low-rank matrices for many tasks are not analyzed.",
+    "point_013": "Generalisability limited to Transformer-based models. No experiments on other architectures like convolutional networks or non-Transformer models.",
+    "point_014": "Lack of evaluation on very large models (>10B parameters). Scalability and performance on very large-scale models remain unclear.",
+    "point_015": "No analysis on multi-task or continual learning scenarios. The method's applicability to these important settings is not investigated."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nFine-tuning large language models (LLMs) for downstream tasks is computationally expensive and storage-intensive due to the massive number of parameters. Traditional full fine-tuning requires updating and storing a complete copy of the model for each task, which is inefficient and limits scalability. There is a need for parameter-efficient adaptation methods that reduce computational and storage costs while maintaining performance.\n\n**Proposed Method:**  \nThe paper introduces LoRA (Low-Rank Adaptation), a technique that freezes the pre-trained model weights and injects trainable low-rank decomposition matrices into each layer of the Transformer architecture. Instead of updating the full weight matrices, LoRA learns low-rank updates that approximate the necessary changes for adaptation. This approach significantly reduces the number of trainable parameters and storage requirements. LoRA can be combined with existing fine-tuning methods and is compatible with various model architectures.\n\n**Results:**  \nExperiments demonstrate that LoRA achieves comparable or better performance than full fine-tuning and other parameter-efficient methods on multiple natural language processing tasks, including language modeling and question answering. LoRA reduces the number of trainable parameters by up to 10x or more while maintaining accuracy. It also enables faster training and easier model sharing since only the low-rank updates need to be stored and distributed.\n\n**Claimed Contributions:**  \n- Introduction of LoRA, a novel low-rank adaptation method for efficient fine-tuning of large language models.  \n- Demonstration that freezing the original model weights and learning low-rank updates can match or exceed full fine-tuning performance.  \n- Significant reduction in trainable parameters and storage costs, facilitating scalable and practical deployment of LLMs for multiple tasks.  \n- Empirical validation across diverse NLP benchmarks showing effectiveness and efficiency of LoRA.",
-    "critic": "1. **Novelty - Missing Comparison to Adapter-Based Methods:**  \nWhile the paper compares LoRA to full fine-tuning and some parameter-efficient methods, it lacks a thorough comparison to adapter-based approaches such as Houlsby et al. (2019) or Pfeiffer et al. (2020), which also freeze the base model and add small trainable modules. This omission weakens the novelty claim since adapters are a well-established baseline for parameter-efficient tuning.\n\n2. **Methodology - Justification for Low-Rank Choice:**  \nThe paper does not sufficiently justify why low-rank decomposition is the optimal choice for adaptation matrices. There is no ablation exploring different ranks or alternative parameterizations (e.g., sparse updates or structured pruning), leaving unclear whether low-rank is uniquely effective or simply convenient.\n\n3. **Methodology - Lack of Ablation on Freezing vs. Partial Fine-Tuning:**  \nThe method freezes all original weights and only trains low-rank matrices. However, the paper does not investigate partial fine-tuning schemes (e.g., fine-tuning only layer norms or biases) combined with LoRA, which might yield better trade-offs between parameter efficiency and performance.\n\n4. **Evaluation - Baselines Not Fully Matched in Training Budget:**  \nThe paper claims faster training with LoRA but does not clarify whether baseline methods (full fine-tuning and other parameter-efficient methods) were trained with the same number of epochs, batch sizes, or learning rates. Without matching training budgets, the speed and performance comparisons may be unfair.\n\n5. **Evaluation - Limited Metrics Focused on Accuracy Only:**  \nResults focus primarily on accuracy or task-specific performance metrics but do not report other important metrics such as inference latency, memory footprint during training, or energy consumption, which are critical to assess practical efficiency gains.\n\n6. **Evaluation - Missing Statistical Significance or Variance Reporting:**  \nTables reporting performance improvements lack standard deviations or confidence intervals. Without variance measures, it is unclear whether observed gains are statistically significant or within noise margins.\n\n7. **Reproducibility - Insufficient Details on Hyperparameter Selection:**  \nThe paper does not provide detailed hyperparameter settings for LoRA, such as the exact rank values used per layer, learning rates, or optimizer configurations. This omission hinders reproducibility and practical adoption.\n\n8. **Reproducibility - No Public Code or Model Checkpoints Mentioned:**  \nThere is no mention of releasing code or pretrained LoRA adapters, which limits the community\u2019s ability to verify results or build upon the work.\n\n9. **Clarity - Ambiguous Description of Integration with Transformer Layers:**  \nThe explanation of how low-rank matrices are injected into Transformer layers is somewhat vague, lacking clear diagrams or equations that show the exact parameter update mechanism, making it difficult to fully grasp the method.\n\n10. **Clarity - Terminology Inconsistency Regarding \"Low-Rank Updates\":**  \nThe paper uses terms like \"low-rank updates,\" \"low-rank decomposition matrices,\" and \"trainable adapters\" interchangeably without precise definitions, which may confuse readers about the exact nature of the learned parameters.\n\n11. **Limitations - No Discussion on Applicability to Non-Transformer Architectures:**  \nAlthough the paper claims compatibility with various architectures, experiments are limited to Transformer-based LLMs. There is no discussion or evidence on whether LoRA would be effective for CNNs, RNNs, or other model types.\n\n12. **Limitations - Potential Impact on Model Robustness Not Addressed:**  \nThe paper does not investigate whether freezing the base model and only updating low-rank matrices affects model robustness to distribution shifts or adversarial examples, which is important for deployment.\n\n13. **Generalisability - Experiments Limited to NLP Tasks Only:**  \nAll evaluations are conducted on NLP benchmarks. The paper does not explore or discuss LoRA\u2019s applicability to other domains such as vision or speech, limiting claims about broad generalizability.\n\n14. **Generalisability - No Analysis on Scaling Behavior with Model Size:**  \nWhile the method targets large models, the paper does not analyze how LoRA\u2019s effectiveness or parameter savings scale with increasing model size, leaving open questions about its utility for extremely large or small models.\n\n15. **Methodology - No Exploration of Interaction with Pretraining Objectives:**  \nThe paper does not consider whether LoRA\u2019s low-rank updates interact differently with models pretrained under different objectives (e.g., masked language modeling vs. autoregressive), which could affect adaptation quality."
+    "reader": "**Problem & Motivation:**  \nFine-tuning large language models (LLMs) for specific tasks is computationally expensive and storage-intensive due to the massive number of parameters involved. Traditional full fine-tuning requires updating and storing a complete copy of the model weights for each task, which is impractical for deployment and scalability. There is a need for efficient adaptation methods that reduce the number of trainable parameters and storage costs while maintaining or improving performance.\n\n**Proposed Method:**  \nThe paper introduces LoRA (Low-Rank Adaptation), a parameter-efficient fine-tuning technique for LLMs. Instead of updating the full weight matrices during fine-tuning, LoRA freezes the pre-trained weights and injects trainable low-rank decomposition matrices into each layer of the Transformer architecture. Specifically, it represents the weight update as a product of two low-rank matrices, significantly reducing the number of trainable parameters. This approach allows for efficient adaptation by learning only these low-rank matrices while keeping the original model weights fixed.\n\n**Results:**  \nLoRA achieves comparable or better performance than full fine-tuning and other parameter-efficient methods (such as adapters and prefix tuning) on various natural language processing benchmarks. It drastically reduces the number of trainable parameters\u2014often by orders of magnitude\u2014leading to lower computational costs and storage requirements. The method also enables easy model sharing and deployment since only the low-rank matrices need to be stored and loaded for each task.\n\n**Claimed Contributions:**  \n1. Introduction of a novel low-rank adaptation method (LoRA) for efficient fine-tuning of large language models.  \n2. Demonstration that LoRA can match or surpass full fine-tuning performance with significantly fewer trainable parameters.  \n3. Empirical validation across multiple tasks and models, showing improved efficiency in training and storage.  \n4. Provision of a practical approach that facilitates scalable and modular adaptation of large pre-trained models without compromising their original capabilities.",
+    "critic": "1. **Novelty - Missing Comparison to Related Low-Rank Methods:**  \nWhile the paper claims novelty in introducing low-rank adaptation, it does not sufficiently compare LoRA to prior low-rank parameterization techniques used in neural network fine-tuning or compression literature. For example, matrix factorization methods or low-rank updates in continual learning are not discussed or empirically contrasted, which weakens the claim of novelty (see \u201cProposed Method\u201d section).\n\n2. **Methodology - Lack of Ablation on Rank Selection:**  \nThe paper does not provide an ablation study on the choice of the low-rank dimension (rank) for the decomposition matrices. It is unclear how sensitive performance and parameter efficiency are to this hyperparameter, and whether a single rank value generalizes across tasks and model sizes (refer to \u201cResults\u201d section).\n\n3. **Methodology - Freezing Pre-trained Weights Assumption:**  \nLoRA freezes the original weights entirely, assuming that the pre-trained weights are optimal and only low-rank updates are needed. The paper does not discuss scenarios where this assumption might fail, such as tasks requiring substantial model adaptation or domain shifts (see \u201cProposed Method\u201d).\n\n4. **Evaluation - Baselines Lack Full Hyperparameter Tuning:**  \nThe comparison to other parameter-efficient methods like adapters and prefix tuning does not clarify whether these baselines were tuned to their optimal hyperparameters. Without ensuring fair tuning, the performance gains of LoRA might be overstated (see \u201cResults\u201d).\n\n5. **Evaluation - Limited Metrics Focused on Accuracy Only:**  \nThe evaluation primarily reports task accuracy or similar performance metrics but lacks analysis of other important factors such as inference latency, memory footprint during training, or energy consumption, which are critical for practical deployment (refer to \u201cResults\u201d).\n\n6. **Evaluation - Missing Evaluation on Downstream Task Diversity:**  \nThe benchmarks used are mostly standard NLP tasks; however, the paper does not evaluate LoRA on diverse downstream tasks such as generation, summarization, or multi-modal tasks, limiting claims about broad applicability (see \u201cResults\u201d).\n\n7. **Reproducibility - Insufficient Implementation Details:**  \nKey implementation details such as initialization schemes for the low-rank matrices, optimizer settings, and training schedules are not fully described, which could hinder reproducibility of the reported results (refer to \u201cProposed Method\u201d and \u201cResults\u201d).\n\n8. **Reproducibility - No Public Code or Model Checkpoints Provided:**  \nThe paper does not mention releasing code or pre-trained LoRA adapters, which would be essential for the community to verify and build upon the work (general observation).\n\n9. **Clarity - Ambiguous Description of Integration into Transformer Layers:**  \nThe explanation of how the low-rank matrices are injected into each Transformer layer is somewhat vague, lacking diagrams or pseudocode that would clarify the exact modification to the forward pass (see \u201cProposed Method\u201d).\n\n10. **Clarity - Terminology Inconsistency Regarding \u201cLow-Rank\u201d:**  \nThe paper uses \u201clow-rank\u201d loosely without formally defining what rank values are considered low relative to the original weight dimensions, which can confuse readers about the scale of parameter reduction (refer to \u201cProposed Method\u201d).\n\n11. **Limitations - No Discussion on Potential Degradation for Large Domain Shifts:**  \nThe paper does not acknowledge or experimentally investigate whether LoRA\u2019s frozen weights plus low-rank updates can handle tasks with significant domain shifts or novel vocabulary, which might require more flexible adaptation.\n\n12. **Limitations - Storage Savings May Be Offset by Multiple Low-Rank Matrices:**  \nWhile LoRA reduces trainable parameters, the paper does not analyze cumulative storage costs when adapting to many tasks, where multiple low-rank matrices must be stored. This could diminish the claimed storage benefits (see \u201cResults\u201d).\n\n13. **Generalisability - Experiments Limited to Transformer-based LLMs:**  \nAll experiments focus on Transformer architectures; the paper does not explore whether LoRA applies effectively to other model types (e.g., convolutional networks or non-Transformer architectures), limiting generalizability claims.\n\n14. **Generalisability - Lack of Evaluation on Very Large Models (>10B Parameters):**  \nThe largest models tested are not clearly stated to be in the very large scale regime (e.g., 10B+ parameters). It remains unclear if LoRA scales efficiently and maintains performance at such scales (refer to \u201cResults\u201d).\n\n15. **Generalisability - No Analysis on Multi-Task or Continual Learning Settings:**  \nThe paper does not investigate whether LoRA can be used for multi-task learning or continual learning scenarios, where parameter-efficient adaptation is particularly valuable, leaving a gap in understanding its broader applicability."
   }
 }

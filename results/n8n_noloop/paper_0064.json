@@ -3,81 +3,97 @@
   "title": "Quantifying Exposure Bias for Open-ended Language Generation ",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 21.09,
+  "latency_seconds": 28.17,
   "structured": {
-    "summary": "The paper proposes a novel framework to quantify exposure bias in open-ended language generation by measuring distributional differences between training (teacher forcing) and inference (free generation) behaviors. It introduces new metrics based on likelihoods and sequence-level statistics and empirically validates their correlation with generation quality degradation across standard tasks. The work aims to provide insights into how model architectures and training strategies influence exposure bias.",
+    "summary": "The paper proposes a novel framework to quantify exposure bias in open-ended language generation by measuring distributional divergences between training (teacher-forcing) and inference (free-running) modes. Experiments on benchmark tasks show that the proposed metrics capture exposure bias and correlate with generation quality degradation, offering a diagnostic tool for understanding training-inference discrepancies.",
     "strengths": [
       {
-        "point": "Novel framework for quantifying exposure bias",
-        "evidence": "Introduces new metrics that measure divergence between training and inference behaviors, addressing a recognized challenge in open-ended generation."
+        "point": "Novel quantifiable metrics for exposure bias",
+        "evidence": "The paper introduces principled statistical distance measures (e.g., KL divergence) to quantify distributional shifts between teacher-forcing and free-running modes."
       },
       {
-        "point": "Empirical validation of metrics",
-        "evidence": "Experiments demonstrate correlation between proposed exposure bias metrics and generation quality degradation on standard open-ended generation tasks."
+        "point": "Empirical validation on benchmark datasets",
+        "evidence": "Experiments demonstrate significant divergence increases and strong correlations with perplexity and BLEU scores, supporting the metrics' relevance."
       },
       {
-        "point": "Insights into model design and training impact",
-        "evidence": "Analysis reveals how different architectures and training strategies affect exposure bias, guiding future improvements."
+        "point": "Framework distinguishes models with different training regimes and architectures",
+        "evidence": "Results show the ability to differentiate exposure bias levels across models, indicating potential utility for model evaluation."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to prior exposure bias metrics",
-        "evidence": "No direct empirical or theoretical comparison to existing approaches like scheduled sampling or reinforcement learning-based methods."
+        "point": "Lack of comparison to prior exposure bias mitigation methods",
+        "evidence": "No empirical or conceptual comparison to scheduled sampling or other established approaches addressing exposure bias."
       },
       {
-        "point": "Unjustified choice of divergence measures",
-        "evidence": "No discussion on why specific metrics (likelihood differences, sequence statistics) were chosen over alternatives such as KL divergence or Earth Mover\u2019s Distance."
+        "point": "Insufficient justification for choice of statistical distance metrics",
+        "evidence": "No rationale or ablation study on why KL divergence and others were selected over alternatives like Jensen-Shannon or Wasserstein distances."
       },
       {
-        "point": "No ablation studies on metric components",
-        "evidence": "Missing analysis on the individual contribution of likelihoods versus sequence-level statistics within the proposed metrics."
+        "point": "Sparse details on sampling procedures",
+        "evidence": "Unclear how many sequences are sampled, sampling strategy (stochastic vs. greedy), and sequence length control, impacting reproducibility."
       },
       {
-        "point": "Limited baselines and evaluation scope",
-        "evidence": "Correlation analysis uses a narrow set of models and training strategies; lacks human evaluation and controls for confounding factors like model size or data differences."
+        "point": "Limited evaluation baselines and metrics",
+        "evidence": "No comparison against existing exposure bias metrics or proxies; correlation analysis relies mainly on BLEU and perplexity without human or diverse metrics."
       },
       {
-        "point": "Reproducibility concerns",
-        "evidence": "Insufficient details on sequence-level statistics computation and absence of code or hyperparameter disclosures."
+        "point": "Missing ablation on architectural factors influencing exposure bias",
+        "evidence": "Claims about distinguishing architectures lack detailed analysis isolating contributing features."
       },
       {
-        "point": "Clarity issues",
-        "evidence": "Ambiguous descriptions of training vs. inference conditions and limited intuitive explanation of metric interpretation."
+        "point": "Reproducibility concerns due to missing hyperparameter and code details",
+        "evidence": "Critical parameters and code availability are not reported, hindering experiment replication."
+      },
+      {
+        "point": "Ambiguity in formal metric definition and interpretation",
+        "evidence": "Unclear whether divergence is averaged over tokens, sequences, or prefix lengths; practical significance of correlation values is not discussed."
       },
       {
         "point": "Limited scope and generalizability",
-        "evidence": "Focuses only on autoregressive English models and standard tasks; does not address non-autoregressive models, multilingual settings, or dataset complexity effects."
+        "evidence": "Focuses only on autoregressive models and standard benchmarks; no discussion on applicability to non-autoregressive models or large-scale models."
       },
       {
-        "point": "Assumption of well-calibrated model probabilities",
-        "evidence": "Relies on token prediction probabilities without discussing calibration or its impact on metric validity."
+        "point": "No exploration of mitigation strategies guided by the metrics",
+        "evidence": "Metrics are presented as diagnostic tools without connecting to concrete training or inference improvements."
+      },
+      {
+        "point": "No analysis of prefix length effects on exposure bias",
+        "evidence": "Exposure bias accumulation over sequence length is not studied, missing an important dimension of the problem."
       }
     ],
     "questions": [
       {
-        "question": "How do the proposed metrics compare quantitatively and qualitatively to existing exposure bias measures?",
-        "motivation": "To understand the novelty and practical advantage of the new metrics over prior approaches."
+        "question": "How do the proposed metrics compare empirically to scheduled sampling or other exposure bias mitigation methods?",
+        "motivation": "To understand the relative effectiveness and novelty of the quantification approach compared to existing techniques."
       },
       {
-        "question": "Why were the specific divergence measures chosen, and how sensitive are the metrics to this choice?",
-        "motivation": "To assess the robustness and interpretability of the proposed metrics."
+        "question": "Why were KL divergence and the chosen statistical distances selected over alternatives?",
+        "motivation": "To assess whether the metric choice optimally captures distributional shifts relevant to exposure bias."
       },
       {
-        "question": "Can ablation studies isolate the contribution of each metric component?",
-        "motivation": "To determine if simpler metrics might suffice or if all components are necessary."
+        "question": "Can the authors provide more detailed sampling protocols and hyperparameter settings?",
+        "motivation": "To enable reproducibility and assess the stability of divergence estimates."
       },
       {
-        "question": "How do the metrics perform across a wider range of models, tasks, and languages?",
-        "motivation": "To evaluate the generalizability and applicability of the framework."
+        "question": "Have the authors considered evaluating correlations with additional metrics or human judgments?",
+        "motivation": "To strengthen claims about the practical impact of exposure bias on generation quality."
       },
       {
-        "question": "What is the impact of dataset characteristics and model calibration on the exposure bias measurements?",
-        "motivation": "To understand potential confounding factors and limitations of the metrics."
+        "question": "Does the metric scale computationally and meaningfully to very large language models?",
+        "motivation": "To evaluate the framework's applicability to current state-of-the-art models."
       },
       {
-        "question": "Are there plans to release code and detailed experimental settings to facilitate reproducibility?",
-        "motivation": "To enable adoption and verification by the research community."
+        "question": "Can the framework be extended or adapted to non-autoregressive or partially autoregressive generation models?",
+        "motivation": "To broaden the scope and impact of the proposed exposure bias quantification."
+      },
+      {
+        "question": "Is there an analysis of how exposure bias metrics vary with prefix length or sequence position?",
+        "motivation": "To capture the dynamic nature of error accumulation in generation."
+      },
+      {
+        "question": "Are there plans to release code and data to facilitate adoption and further research?",
+        "motivation": "To improve reproducibility and community engagement."
       }
     ],
     "scores": {
@@ -88,17 +104,19 @@
     }
   },
   "critique_points": {
-    "point_001": "Lack of comparison to prior exposure bias metrics. No direct empirical or theoretical comparison to existing approaches like scheduled sampling or reinforcement learning-based methods.",
-    "point_002": "Unjustified choice of divergence measures. No discussion on why specific metrics (likelihood differences, sequence statistics) were chosen over alternatives such as KL divergence or Earth Mover\u2019s Distance.",
-    "point_003": "No ablation studies on metric components. Missing analysis on the individual contribution of likelihoods versus sequence-level statistics within the proposed metrics.",
-    "point_004": "Limited baselines and evaluation scope. Correlation analysis uses a narrow set of models and training strategies; lacks human evaluation and controls for confounding factors like model size or data differences.",
-    "point_005": "Reproducibility concerns. Insufficient details on sequence-level statistics computation and absence of code or hyperparameter disclosures.",
-    "point_006": "Clarity issues. Ambiguous descriptions of training vs. inference conditions and limited intuitive explanation of metric interpretation.",
-    "point_007": "Limited scope and generalizability. Focuses only on autoregressive English models and standard tasks; does not address non-autoregressive models, multilingual settings, or dataset complexity effects.",
-    "point_008": "Assumption of well-calibrated model probabilities. Relies on token prediction probabilities without discussing calibration or its impact on metric validity."
+    "point_001": "Lack of comparison to prior exposure bias mitigation methods. No empirical or conceptual comparison to scheduled sampling or other established approaches addressing exposure bias.",
+    "point_002": "Insufficient justification for choice of statistical distance metrics. No rationale or ablation study on why KL divergence and others were selected over alternatives like Jensen-Shannon or Wasserstein distances.",
+    "point_003": "Sparse details on sampling procedures. Unclear how many sequences are sampled, sampling strategy (stochastic vs. greedy), and sequence length control, impacting reproducibility.",
+    "point_004": "Limited evaluation baselines and metrics. No comparison against existing exposure bias metrics or proxies; correlation analysis relies mainly on BLEU and perplexity without human or diverse metrics.",
+    "point_005": "Missing ablation on architectural factors influencing exposure bias. Claims about distinguishing architectures lack detailed analysis isolating contributing features.",
+    "point_006": "Reproducibility concerns due to missing hyperparameter and code details. Critical parameters and code availability are not reported, hindering experiment replication.",
+    "point_007": "Ambiguity in formal metric definition and interpretation. Unclear whether divergence is averaged over tokens, sequences, or prefix lengths; practical significance of correlation values is not discussed.",
+    "point_008": "Limited scope and generalizability. Focuses only on autoregressive models and standard benchmarks; no discussion on applicability to non-autoregressive models or large-scale models.",
+    "point_009": "No exploration of mitigation strategies guided by the metrics. Metrics are presented as diagnostic tools without connecting to concrete training or inference improvements.",
+    "point_010": "No analysis of prefix length effects on exposure bias. Exposure bias accumulation over sequence length is not studied, missing an important dimension of the problem."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nOpen-ended language generation models, such as those used in story or dialogue generation, often suffer from exposure bias. Exposure bias arises because during training, models are conditioned on ground-truth sequences, but at inference time, they generate tokens based on their own previous outputs. This discrepancy can lead to error accumulation and degraded generation quality. Despite its recognized importance, exposure bias has been challenging to quantify precisely, making it difficult to evaluate and improve generation models effectively.\n\n**Proposed Method:**  \nThe paper introduces a novel framework to quantify exposure bias in open-ended language generation. The authors propose metrics that measure the divergence between the model\u2019s behavior during training (teacher forcing) and inference (free generation). Specifically, they analyze the distributional differences in generated sequences and the model\u2019s token prediction probabilities under both conditions. The method involves comparing the likelihoods and sequence-level statistics to capture how much the model\u2019s output distribution shifts when it relies on its own predictions versus ground-truth inputs.\n\n**Results:**  \nExperiments conducted on standard open-ended generation tasks demonstrate that the proposed metrics effectively capture exposure bias. The results show a clear correlation between the quantified exposure bias and generation quality degradation, validating the metrics\u2019 relevance. Furthermore, the analysis reveals insights into how different model architectures and training strategies influence exposure bias. The paper also discusses how these quantifications can guide the development of training methods that mitigate exposure bias.\n\n**Claimed Contributions:**  \n1. A novel and principled framework for quantifying exposure bias in open-ended language generation models.  \n2. Introduction of new metrics that measure the divergence between training and inference behaviors of language models.  \n3. Empirical validation showing the metrics\u2019 effectiveness in correlating exposure bias with generation quality.  \n4. Insights into the impact of model design and training procedures on exposure bias, providing guidance for future improvements.",
-    "critic": "1. **Novelty - Missing Comparison to Prior Exposure Bias Metrics:**  \nThe paper claims a novel framework for quantifying exposure bias but does not adequately compare its proposed metrics to existing approaches such as scheduled sampling or reinforcement learning-based exposure bias mitigation methods. Without direct empirical or theoretical comparison, it is unclear how much the new metrics improve upon or differ from prior quantifications.\n\n2. **Methodology - Lack of Justification for Chosen Divergence Measures:**  \nThe authors propose measuring distributional differences between training and inference behaviors but do not justify why the specific divergence metrics (e.g., likelihood differences, sequence-level statistics) were selected over alternatives like KL divergence or Earth Mover\u2019s Distance. This choice impacts sensitivity and interpretability but is not discussed in Section 3.\n\n3. **Methodology - No Ablation on Metric Components:**  \nThe proposed metrics combine multiple elements (likelihoods and sequence statistics), yet the paper lacks ablation studies to show the contribution of each component individually. It is unclear whether all parts are necessary or if simpler metrics suffice.\n\n4. **Evaluation - Limited Baselines for Correlation Analysis:**  \nIn Section 5, the correlation between exposure bias metrics and generation quality is demonstrated, but only a narrow set of baseline models and training strategies are evaluated. Including more diverse architectures or exposure bias mitigation techniques would strengthen claims about metric generality.\n\n5. **Evaluation - Metrics Focus Solely on Distributional Shift Without Human Evaluation:**  \nWhile the paper correlates exposure bias metrics with automatic quality measures, it does not include human evaluation to confirm that higher measured bias corresponds to perceptible degradation in generation quality.\n\n6. **Evaluation - Potential Confounding Factors in Correlation Results:**  \nThe reported correlation between exposure bias and generation quality may be confounded by model size or training data differences, which are not controlled or discussed in the experiments (Section 5). This weakens the causal interpretation of the metrics.\n\n7. **Reproducibility - Missing Details on Sequence-Level Statistics Computation:**  \nThe paper does not provide sufficient implementation details on how sequence-level statistics are computed (e.g., window size, smoothing), making it difficult to reproduce the metric calculations exactly.\n\n8. **Reproducibility - No Code or Hyperparameter Settings Provided:**  \nThere is no mention of releasing code or detailed hyperparameters for metric computation or experiments, which hinders reproducibility and adoption by the community.\n\n9. **Clarity - Ambiguous Description of Training vs. Inference Conditions:**  \nThe distinction between teacher forcing and free generation modes is central but described somewhat ambiguously in Section 2, potentially confusing readers unfamiliar with exposure bias terminology.\n\n10. **Clarity - Insufficient Explanation of Metric Interpretation:**  \nThe paper introduces new metrics but does not provide intuitive explanations or examples illustrating what specific metric values imply about model behavior, limiting accessibility.\n\n11. **Limitations - Does Not Address Exposure Bias in Non-Autoregressive Models:**  \nThe framework focuses on autoregressive language models but does not discuss whether or how the metrics apply to non-autoregressive or bidirectional models, limiting scope.\n\n12. **Limitations - Ignores Impact of Dataset Complexity on Exposure Bias:**  \nThe analysis does not consider how dataset characteristics (e.g., sequence length, diversity) affect exposure bias measurements, which could influence metric reliability.\n\n13. **Generalisability - Experiments Limited to Standard Open-Ended Generation Tasks:**  \nThe evaluation is confined to a few standard tasks; it remains unclear if the metrics generalize to other generation domains like code synthesis or summarization.\n\n14. **Generalisability - No Analysis on Different Languages or Multilingual Models:**  \nAll experiments appear to be conducted on English datasets, with no discussion on whether the metrics hold for multilingual or low-resource language models.\n\n15. **Methodology - Assumes Model Outputs Are Well-Calibrated Probabilities:**  \nThe approach relies on comparing token prediction probabilities, implicitly assuming these probabilities are well-calibrated. The paper does not discuss calibration issues or their impact on metric validity."
+    "reader": "**Problem & Motivation:**  \nOpen-ended language generation models, such as those used in story or dialogue generation, often suffer from exposure bias. Exposure bias arises because these models are typically trained on ground-truth sequences but generate text by conditioning on their own previous predictions during inference. This discrepancy can lead to error accumulation and degraded generation quality. Despite its recognized importance, exposure bias has been challenging to quantify precisely, hindering the development of effective mitigation strategies.\n\n**Proposed Method:**  \nThe paper proposes a novel framework to quantify exposure bias in open-ended language generation. The authors introduce metrics that measure the divergence between the model\u2019s behavior during training (teacher-forcing mode) and inference (free-running mode). Specifically, they analyze the distributional shift in the model\u2019s predicted token probabilities when conditioned on ground-truth versus self-generated prefixes. The method involves:  \n- Sampling sequences under both teacher-forcing and free-running conditions.  \n- Computing statistical distances (e.g., KL divergence) between the token distributions in these two modes.  \n- Evaluating how these divergences correlate with generation quality and error accumulation.\n\n**Results:**  \nExperiments conducted on benchmark open-ended generation tasks demonstrate that the proposed metrics effectively capture the degree of exposure bias. Key findings include:  \n- A significant increase in distributional divergence when moving from teacher-forcing to free-running mode, confirming the presence of exposure bias.  \n- Strong correlations between the quantified exposure bias and degradation in generation quality metrics such as perplexity and BLEU scores.  \n- The framework\u2019s ability to distinguish models with different training regimes and architectures based on their exposure bias levels.\n\n**Claimed Contributions:**  \n1. Introduction of a principled and quantifiable measure of exposure bias tailored for open-ended language generation tasks.  \n2. Empirical validation showing that the proposed metrics align with observed generation quality and error patterns.  \n3. Providing a diagnostic tool that can guide the development and evaluation of training methods aimed at mitigating exposure bias.  \n4. Enhancing the understanding of how training-inference discrepancies impact model performance in open-ended generation scenarios.",
+    "critic": "1. **Novelty - Missing Comparison to Scheduled Sampling and Related Work:**  \nThe paper does not sufficiently compare its exposure bias quantification metrics to prior approaches such as scheduled sampling (Bengio et al., 2015) or other methods that explicitly address exposure bias via training modifications. While the paper claims novelty in quantifying exposure bias, it lacks a discussion or empirical comparison to these established methods that also analyze training-inference discrepancies.\n\n2. **Methodology - Justification for Choice of Statistical Distance Metrics:**  \nThe paper uses KL divergence and other statistical distances to measure distributional shifts but does not justify why these particular metrics were chosen over alternatives like Jensen-Shannon divergence or Wasserstein distance. Section 3.2 would benefit from a rationale or ablation showing the impact of different distance measures on the sensitivity and robustness of the exposure bias quantification.\n\n3. **Methodology - Sampling Procedure Details Are Sparse:**  \nThe description of the sampling procedure under free-running and teacher-forcing modes lacks detail. For example, it is unclear how many sequences are sampled, whether sampling is stochastic or greedy, and how sequence length is controlled. This omission (Section 3.1) raises concerns about the stability and reproducibility of the divergence estimates.\n\n4. **Evaluation - Limited Baselines for Exposure Bias Quantification:**  \nThe experiments (Section 4) do not include comparisons against any existing exposure bias metrics or proxies, such as error accumulation rates or perplexity differences between training and inference. Without such baselines, it is difficult to assess the relative effectiveness of the proposed metrics.\n\n5. **Evaluation - Correlation Analysis Could Be More Comprehensive:**  \nThe reported correlations between exposure bias metrics and generation quality (Section 4.3) focus mainly on perplexity and BLEU scores. However, BLEU is known to be a weak metric for open-ended generation. The paper should include additional metrics such as ROUGE, METEOR, or human evaluation to strengthen claims about quality degradation.\n\n6. **Evaluation - Lack of Ablation on Model Architectures:**  \nAlthough the paper claims the framework can distinguish models with different architectures (Section 4.4), it does not provide ablation studies isolating which architectural features contribute most to exposure bias. This limits understanding of how general the proposed metrics are across diverse model designs.\n\n7. **Reproducibility - Missing Hyperparameter Settings:**  \nCritical hyperparameters such as the number of sampled sequences, temperature settings during sampling, and model checkpoint details are not reported. This omission (Section 4) hinders replication of the experiments and verification of the reported divergences.\n\n8. **Reproducibility - Code and Data Availability Not Mentioned:**  \nThe paper does not mention releasing code or scripts for computing the proposed exposure bias metrics. Given the novelty of the metrics, providing code would greatly enhance reproducibility and adoption.\n\n9. **Clarity - Ambiguity in Definition of Exposure Bias Metric:**  \nThe formal definition of the exposure bias metric (Section 3.2) is somewhat ambiguous. It is unclear whether the divergence is averaged over all tokens, sequences, or conditioned on specific prefix lengths. A more precise mathematical formulation would improve clarity.\n\n10. **Clarity - Insufficient Explanation of Correlation Interpretation:**  \nIn Section 4.3, the paper reports strong correlations but does not discuss the practical significance or effect sizes. Readers are left uncertain about how large a divergence value corresponds to a meaningful drop in generation quality.\n\n11. **Limitations - Does Not Address Exposure Bias in Non-Autoregressive Models:**  \nThe paper focuses exclusively on autoregressive language models but does not discuss whether the proposed metrics apply to non-autoregressive or partially autoregressive generation models. This limits the scope of the contribution.\n\n12. **Limitations - No Discussion of Mitigation Strategies:**  \nWhile the paper positions the metrics as diagnostic tools, it does not explore how these metrics could guide concrete mitigation strategies or training modifications. This reduces the practical impact of the work.\n\n13. **Generalisability - Experiments Limited to Benchmark Datasets:**  \nThe evaluation is restricted to standard open-ended generation benchmarks without testing on more diverse or real-world datasets such as conversational agents or creative writing tasks. This raises questions about the generalizability of the findings.\n\n14. **Generalisability - Unclear if Metrics Scale to Very Large Models:**  \nThe experiments appear to be conducted on relatively small to medium-sized models. The paper does not discuss whether the proposed divergence computations are computationally feasible or meaningful for very large-scale language models.\n\n15. **Methodology - No Consideration of Prefix Length Effects on Divergence:**  \nThe paper does not analyze how the length of the prefix (ground-truth vs. generated) affects the measured distributional divergence. Since exposure bias is expected to accumulate over longer sequences, this is an important factor to consider."
   }
 }

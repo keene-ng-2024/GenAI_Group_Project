@@ -107,13 +107,13 @@ def critique_paper_via_n8n(
     webhook_url: str,
     mode: str,
     cfg: dict,
-    timeout: int = 300,
+    timeout: int = 1000,
 ) -> dict:
     """POST a paper to the n8n webhook and return the structured result."""
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
     title = paper.get("title", paper_id)
     full_text = paper.get("full_text", "")
-    paper_text = full_text[:truncate_chars] if full_text else paper.get("abstract", title)
+    paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", title)
 
     payload = {
         "paper_id": paper_id,

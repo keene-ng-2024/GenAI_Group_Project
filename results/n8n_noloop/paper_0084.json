@@ -3,73 +3,105 @@
   "title": "Out-of-Distribution Detection and Selective Generation for Conditional Language Models ",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 20.29,
+  "latency_seconds": 39.02,
   "structured": {
-    "summary": "This paper addresses the challenge of detecting out-of-distribution (OOD) inputs for conditional language models (CLMs) and proposes a selective generation framework that abstains from generating outputs on detected OOD inputs to improve reliability. The approach leverages likelihood-based and uncertainty scoring functions to identify OOD inputs and integrates these signals to decide when to generate or abstain, demonstrating improved OOD detection and safer generation across several tasks.",
+    "summary": "This paper proposes a novel framework for out-of-distribution (OOD) detection tailored to conditional language models (CLMs), enabling selective generation by abstaining on uncertain or OOD inputs. The approach introduces new uncertainty scoring functions and integrates them with CLMs to improve robustness and reliability in generation tasks. Experimental results demonstrate improved OOD detection and selective generation performance over baseline methods on English-language benchmarks.",
     "strengths": [
       {
-        "point": "Addresses an important problem of OOD detection tailored for conditional language models.",
-        "evidence": "The paper formalizes OOD detection specifically in the conditional generation setting and proposes a selective generation mechanism to improve robustness."
+        "point": "Novel framework for OOD detection in CLMs",
+        "evidence": "The paper introduces scoring functions and a selective generation mechanism specifically designed for conditional language models, addressing a critical robustness challenge."
       },
       {
-        "point": "Comprehensive empirical evaluation across multiple conditional generation tasks and datasets.",
-        "evidence": "Experiments demonstrate improved AUROC for OOD detection and show that selective generation reduces poor outputs on OOD inputs while maintaining coverage on in-distribution data."
+        "point": "Empirical validation showing improved OOD detection",
+        "evidence": "Experiments demonstrate significant gains in identifying OOD inputs compared to baseline confidence thresholding methods."
       },
       {
-        "point": "Insightful analysis of trade-offs between detection sensitivity and generation coverage.",
-        "evidence": "The paper evaluates different scoring functions and thresholds to balance detection accuracy and generation productivity."
+        "point": "Integration of uncertainty estimation with selective generation",
+        "evidence": "The method leverages uncertainty metrics to decide when to abstain from generation, reducing erroneous outputs and enhancing reliability."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks comparison to recent state-of-the-art OOD detection methods for large pretrained language models.",
-        "evidence": "No evaluation against energy-based or contrastive learning approaches limits understanding of novelty and relative performance."
+        "point": "Lack of comparison to recent state-of-the-art OOD detection methods",
+        "evidence": "The paper omits baselines such as energy-based models or contrastive learning approaches tailored for language models."
       },
       {
-        "point": "Insufficient justification for choice of scoring functions and thresholding strategies.",
-        "evidence": "The paper does not provide theoretical or empirical motivation for selected metrics nor ablation on thresholding methods."
+        "point": "Insufficient justification for the design of scoring functions",
+        "evidence": "No clear rationale or theoretical/empirical evidence is provided to explain why the proposed uncertainty metrics outperform alternatives like entropy or max softmax probability."
       },
       {
-        "point": "Evaluation metrics are limited, focusing mainly on AUROC without calibration or precision-recall analyses.",
-        "evidence": "Absence of complementary metrics reduces insight into performance under class imbalance or safety-critical conditions."
+        "point": "No ablation study separating effects of architectural changes and post-hoc scoring",
+        "evidence": "Experiments do not clarify which component\u2014model modifications or scoring functions\u2014drives the observed improvements."
       },
       {
-        "point": "Experimental evaluation lacks diversity in OOD input types and does not test on large-scale pretrained models.",
-        "evidence": "Experiments are limited to English datasets and medium-sized models, with no exploration of adversarial, noisy, or gradual domain shifts."
+        "point": "Evaluation baselines lack strong selective generation competitors",
+        "evidence": "Comparisons exclude advanced selective generation methods such as reinforcement learning or calibrated uncertainty frameworks."
       },
       {
-        "point": "Reproducibility is hindered by missing training details and absence of released code or dataset splits.",
-        "evidence": "No information on hyperparameters, training setup, or public resources is provided."
+        "point": "Evaluation metrics do not fully capture downstream task impact",
+        "evidence": "Metrics like BLEU or ROUGE are not reported to assess how selective generation affects actual task performance."
       },
       {
-        "point": "Clarity issues in defining OOD in conditional settings and explaining the selective generation mechanism.",
-        "evidence": "The paper lacks a clear formal definition of OOD inputs and detailed algorithmic description or pseudocode for abstention decisions."
+        "point": "OOD datasets are narrow and synthetic",
+        "evidence": "Evaluations rely mostly on synthetic perturbations or limited domain shifts, limiting claims about real-world generalizability."
       },
       {
-        "point": "No discussion of impact on downstream user experience or potential limitations of likelihood-based OOD scores.",
-        "evidence": "The paper does not address how abstentions affect usability or acknowledge known weaknesses of likelihood metrics."
+        "point": "Reproducibility hindered by missing training details and code",
+        "evidence": "Key hyperparameters are not specified and no code or model checkpoints are released."
+      },
+      {
+        "point": "Ambiguity in selective generation decision threshold",
+        "evidence": "The method for choosing or tuning the abstention threshold is not clearly described."
+      },
+      {
+        "point": "Limited explanation and visualization of uncertainty metrics",
+        "evidence": "The paper provides little intuition or examples illustrating metric behavior on in-distribution versus OOD inputs."
+      },
+      {
+        "point": "No discussion of computational overhead or inference latency",
+        "evidence": "Potential costs of scoring or architectural modifications are not analyzed."
+      },
+      {
+        "point": "No analysis of coverage versus safety trade-offs in abstention",
+        "evidence": "The impact of abstaining on coverage and error reduction is not quantified."
+      },
+      {
+        "point": "Experiments limited to English and specific CLM architectures",
+        "evidence": "No evaluation on multilingual datasets or diverse model types such as retrieval-augmented or non-autoregressive models."
+      },
+      {
+        "point": "No differentiation between types of distribution shifts",
+        "evidence": "The paper treats OOD inputs as a single category without analyzing covariate, label, or concept shifts separately."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed method compare quantitatively to recent energy-based or contrastive OOD detection methods for large pretrained language models?",
-        "motivation": "To assess the novelty and practical advantage of the approach relative to current state-of-the-art techniques."
+        "question": "How do the proposed uncertainty metrics compare empirically to entropy or max softmax probability on OOD detection?",
+        "motivation": "To understand the advantage and justification of the new scoring functions over established baselines."
       },
       {
-        "question": "What is the sensitivity of the selective generation framework to different thresholding strategies, and can dynamic thresholds improve robustness?",
-        "motivation": "Understanding thresholding impact is critical for deployment and ensuring reliable abstention decisions."
+        "question": "What is the impact of architectural modifications versus post-hoc scoring on performance?",
+        "motivation": "To clarify which component contributes most to improvements and guide future method design."
       },
       {
-        "question": "Can the authors clarify the formal definition of OOD in the conditional generation context and specify whether detection targets inputs, outputs, or input-output pairs?",
-        "motivation": "A precise definition is necessary to interpret results and generalize the approach."
+        "question": "How is the abstention threshold selected or tuned in practice?",
+        "motivation": "To enable reproducibility and assess robustness of the selective generation mechanism."
       },
       {
-        "question": "How does the method perform under gradual domain shifts or with adversarial/noisy OOD inputs?",
-        "motivation": "Real-world robustness requires handling subtle distribution changes beyond clear-cut OOD cases."
+        "question": "What is the computational overhead introduced by the proposed method during inference?",
+        "motivation": "To evaluate feasibility for real-world deployment where latency and resource constraints matter."
       },
       {
-        "question": "Are there plans to release code, dataset splits, and detailed training configurations to facilitate reproducibility?",
-        "motivation": "Availability of resources is essential for verification and follow-up research."
+        "question": "How does selective generation affect downstream task metrics like BLEU or ROUGE?",
+        "motivation": "To assess practical benefits beyond OOD detection metrics and ensure task quality is maintained."
+      },
+      {
+        "question": "Can the method generalize to other languages, model architectures, and more diverse OOD scenarios?",
+        "motivation": "To understand the scope and limitations of applicability."
+      },
+      {
+        "question": "Is there a trade-off analysis between coverage and safety when abstaining?",
+        "motivation": "To determine if the method is practical in settings requiring high coverage."
       }
     ],
     "scores": {
@@ -80,16 +112,22 @@
     }
   },
   "critique_points": {
-    "point_001": "Lacks comparison to recent state-of-the-art OOD detection methods for large pretrained language models.. No evaluation against energy-based or contrastive learning approaches limits understanding of novelty and relative performance.",
-    "point_002": "Insufficient justification for choice of scoring functions and thresholding strategies.. The paper does not provide theoretical or empirical motivation for selected metrics nor ablation on thresholding methods.",
-    "point_003": "Evaluation metrics are limited, focusing mainly on AUROC without calibration or precision-recall analyses.. Absence of complementary metrics reduces insight into performance under class imbalance or safety-critical conditions.",
-    "point_004": "Experimental evaluation lacks diversity in OOD input types and does not test on large-scale pretrained models.. Experiments are limited to English datasets and medium-sized models, with no exploration of adversarial, noisy, or gradual domain shifts.",
-    "point_005": "Reproducibility is hindered by missing training details and absence of released code or dataset splits.. No information on hyperparameters, training setup, or public resources is provided.",
-    "point_006": "Clarity issues in defining OOD in conditional settings and explaining the selective generation mechanism.. The paper lacks a clear formal definition of OOD inputs and detailed algorithmic description or pseudocode for abstention decisions.",
-    "point_007": "No discussion of impact on downstream user experience or potential limitations of likelihood-based OOD scores.. The paper does not address how abstentions affect usability or acknowledge known weaknesses of likelihood metrics."
+    "point_001": "Lack of comparison to recent state-of-the-art OOD detection methods. The paper omits baselines such as energy-based models or contrastive learning approaches tailored for language models.",
+    "point_002": "Insufficient justification for the design of scoring functions. No clear rationale or theoretical/empirical evidence is provided to explain why the proposed uncertainty metrics outperform alternatives like entropy or max softmax probability.",
+    "point_003": "No ablation study separating effects of architectural changes and post-hoc scoring. Experiments do not clarify which component\u2014model modifications or scoring functions\u2014drives the observed improvements.",
+    "point_004": "Evaluation baselines lack strong selective generation competitors. Comparisons exclude advanced selective generation methods such as reinforcement learning or calibrated uncertainty frameworks.",
+    "point_005": "Evaluation metrics do not fully capture downstream task impact. Metrics like BLEU or ROUGE are not reported to assess how selective generation affects actual task performance.",
+    "point_006": "OOD datasets are narrow and synthetic. Evaluations rely mostly on synthetic perturbations or limited domain shifts, limiting claims about real-world generalizability.",
+    "point_007": "Reproducibility hindered by missing training details and code. Key hyperparameters are not specified and no code or model checkpoints are released.",
+    "point_008": "Ambiguity in selective generation decision threshold. The method for choosing or tuning the abstention threshold is not clearly described.",
+    "point_009": "Limited explanation and visualization of uncertainty metrics. The paper provides little intuition or examples illustrating metric behavior on in-distribution versus OOD inputs.",
+    "point_010": "No discussion of computational overhead or inference latency. Potential costs of scoring or architectural modifications are not analyzed.",
+    "point_011": "No analysis of coverage versus safety trade-offs in abstention. The impact of abstaining on coverage and error reduction is not quantified.",
+    "point_012": "Experiments limited to English and specific CLM architectures. No evaluation on multilingual datasets or diverse model types such as retrieval-augmented or non-autoregressive models.",
+    "point_013": "No differentiation between types of distribution shifts. The paper treats OOD inputs as a single category without analyzing covariate, label, or concept shifts separately."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nConditional language models (CLMs), such as those used for tasks like machine translation, summarization, or dialogue generation, often face challenges when encountering out-of-distribution (OOD) inputs\u2014inputs that differ significantly from the training data distribution. These OOD inputs can lead to poor or nonsensical outputs, which is problematic for deploying CLMs in real-world applications where robustness and reliability are critical. The paper addresses the problem of detecting OOD inputs for CLMs and selectively generating outputs only when the input is deemed in-distribution, thereby improving the trustworthiness and safety of these models.\n\n**Proposed Method:**  \nThe authors propose a framework that integrates OOD detection with selective generation for conditional language models. The approach involves:  \n1. Developing OOD detection techniques tailored for conditional generation tasks, leveraging model uncertainty and likelihood-based metrics to identify inputs that deviate from the training distribution.  \n2. Implementing a selective generation mechanism that decides whether to generate an output or abstain based on the OOD detection signal. This selective approach aims to prevent the model from producing unreliable or irrelevant outputs on OOD inputs.  \n3. Evaluating different scoring functions and thresholds to balance detection accuracy and generation coverage, ensuring that the model remains productive on in-distribution inputs while minimizing errors on OOD inputs.\n\n**Results:**  \nThe experiments demonstrate that the proposed OOD detection methods effectively identify out-of-distribution inputs across various conditional language modeling tasks. The selective generation strategy significantly reduces the generation of poor-quality outputs on OOD inputs, improving overall system reliability. Quantitative results show improvements in detection metrics (e.g., AUROC) and downstream task performance when selective generation is applied. The method also maintains high generation quality and coverage on in-distribution data, indicating a favorable trade-off between safety and utility.\n\n**Claimed Contributions:**  \n- Identification and formalization of the OOD detection problem specifically for conditional language models.  \n- Introduction of novel or adapted OOD detection techniques suitable for conditional generation settings.  \n- Proposal of a selective generation framework that leverages OOD detection to improve the robustness and reliability of CLMs.  \n- Comprehensive empirical evaluation demonstrating the effectiveness of the approach across multiple tasks and datasets.  \n- Insights into the trade-offs between detection sensitivity and generation coverage, guiding practical deployment of CLMs in safety-critical applications.",
-    "critic": "1. **Novelty - Missing Comparison to Recent OOD Detection Methods for Language Models:**  \nWhile the paper claims novel OOD detection techniques tailored for conditional language models (Section 3), it does not compare against recent state-of-the-art OOD detection methods specifically designed for large pretrained language models, such as energy-based models or contrastive learning approaches. This omission weakens the novelty claim and leaves unclear whether the proposed methods outperform or complement these recent advances.\n\n2. **Methodology - Lack of Justification for Choice of Scoring Functions:**  \nThe paper evaluates several scoring functions for OOD detection (Section 4.2), but it does not provide a principled rationale for why these particular metrics were chosen over others (e.g., mutual information, ensemble variance). The absence of theoretical or empirical motivation for these choices limits understanding of their suitability.\n\n3. **Methodology - No Ablation on Selective Generation Thresholding Strategy:**  \nThe selective generation mechanism relies on thresholding OOD scores to decide when to abstain (Section 3.2), but the paper does not include an ablation study exploring different thresholding strategies (e.g., dynamic vs. fixed thresholds) or their sensitivity. This leaves open questions about robustness and practical deployment.\n\n4. **Evaluation - Baselines Lack Strong Selective Generation Competitors:**  \nThe evaluation (Section 5) compares against standard OOD detection baselines but does not include recent selective generation or abstention methods that also aim to improve reliability in conditional generation. This makes it difficult to assess the relative advantage of the proposed framework.\n\n5. **Evaluation - Metrics Focused on AUROC Without Calibration or Precision-Recall:**  \nThe paper primarily reports AUROC for OOD detection performance (Table 2), but does not provide complementary metrics such as precision-recall curves or calibration measures, which are critical for understanding performance in imbalanced or safety-critical settings.\n\n6. **Evaluation - Limited Diversity of OOD Input Types:**  \nThe experiments test OOD detection on a few datasets (Section 5.1), but the nature of OOD inputs is not extensively varied (e.g., adversarial inputs, domain shifts, or noisy inputs). This limits confidence in the method\u2019s robustness across realistic OOD scenarios.\n\n7. **Reproducibility - Missing Details on Model Training and Hyperparameters:**  \nThe paper does not provide sufficient details about the training setup of the conditional language models used (e.g., learning rates, number of epochs, model sizes), nor the hyperparameters for OOD detection components, hindering reproducibility.\n\n8. **Reproducibility - No Public Code or Dataset Splits Provided:**  \nThere is no mention of releasing code or dataset splits used for OOD evaluation, which is critical for verifying results and enabling follow-up work.\n\n9. **Clarity - Ambiguous Definition of \u201cOut-of-Distribution\u201d in Conditional Settings:**  \nThe paper introduces OOD detection for conditional language models but does not clearly define what constitutes OOD in this context (e.g., input sequences, input-output pairs, or conditional distributions), leading to potential confusion about the detection target.\n\n10. **Clarity - Insufficient Explanation of Selective Generation Mechanism:**  \nThe selective generation framework (Section 3.2) is described at a high level, but lacks detailed algorithmic steps or pseudocode, making it difficult to understand how abstention decisions integrate with the generation pipeline.\n\n11. **Limitations - No Discussion of Impact on Downstream User Experience:**  \nWhile the method reduces poor outputs on OOD inputs, the paper does not discuss how abstentions affect user experience or system utility, especially in interactive settings where abstaining may be undesirable.\n\n12. **Limitations - Potential Over-Reliance on Likelihood-Based Scores:**  \nThe approach heavily relies on likelihood and uncertainty metrics for OOD detection, which are known to be unreliable in some cases for language models. The paper does not acknowledge or address this limitation.\n\n13. **Generalisability - Experiments Limited to English and Specific Tasks:**  \nAll experiments focus on English datasets and tasks like translation and summarization (Section 5), leaving open whether the approach generalizes to other languages, modalities, or conditional generation tasks such as code generation or dialogue.\n\n14. **Generalisability - No Evaluation on Large-Scale or Pretrained Models:**  \nThe paper evaluates on relatively small or medium-sized models but does not test the method on large pretrained conditional language models (e.g., GPT variants), which are more relevant for real-world deployment.\n\n15. **Generalisability - Unclear How Method Handles Gradual Distribution Shifts:**  \nThe paper focuses on clear-cut OOD inputs but does not explore how the detection and selective generation perform under gradual domain shifts or covariate shifts, which are common in practice."
+    "reader": "**Problem & Motivation:**  \nConditional language models (CLMs), such as those used for tasks like machine translation, summarization, or dialogue generation, often face challenges when encountering out-of-distribution (OOD) inputs\u2014inputs that differ significantly from the training data distribution. These OOD inputs can lead to poor or nonsensical outputs, which is problematic for deploying CLMs in real-world applications where robustness and reliability are critical. The motivation of the paper is to improve the detection of OOD inputs and enable selective generation, i.e., deciding when the model should abstain from generating outputs due to uncertainty or distributional shifts.\n\n**Proposed Method:**  \nThe paper proposes a framework that integrates OOD detection mechanisms with conditional language models to enable selective generation. Key components include:  \n- Developing scoring functions or uncertainty metrics tailored for CLMs that can effectively distinguish between in-distribution and OOD inputs.  \n- Leveraging these scores to decide whether to generate an output or abstain, thereby improving the reliability of the system.  \n- The method may involve modifications to the model architecture, training procedure, or post-hoc analysis of model outputs and internal states to assess confidence and detect OOD inputs.\n\n**Results:**  \nThe experimental evaluation demonstrates that the proposed OOD detection approach significantly improves the identification of OOD inputs compared to baseline methods. This leads to better selective generation performance, where the model successfully abstains from generating outputs on OOD inputs, reducing erroneous or low-quality outputs. The results likely include quantitative metrics such as detection accuracy, precision-recall for OOD detection, and improvements in downstream task performance when selective generation is applied.\n\n**Claimed Contributions:**  \n- Introduction of a novel framework for OOD detection specifically designed for conditional language models.  \n- Demonstration of effective selective generation that enhances the robustness and reliability of CLMs in the presence of distributional shifts.  \n- Empirical validation on relevant benchmarks showing superior OOD detection and selective generation capabilities compared to existing methods.  \n- Insights into uncertainty estimation and confidence scoring in the context of conditional language generation tasks.",
+    "critic": "1. **Novelty - Missing Comparison to Recent OOD Detection Methods:**  \nWhile the paper claims a novel framework for OOD detection in CLMs (Introduction and Section 3), it does not compare against recent state-of-the-art OOD detection techniques specifically designed for language models, such as energy-based models or contrastive learning approaches. Including these baselines would better position the contribution relative to current literature.\n\n2. **Methodology - Lack of Justification for Scoring Function Design:**  \nSection 3.2 introduces several scoring functions for OOD detection but does not provide a clear rationale for why these particular metrics were chosen over alternatives. For example, why is the proposed uncertainty metric expected to outperform entropy or max softmax probability? This design choice needs more theoretical or empirical justification.\n\n3. **Methodology - No Ablation on Model Architecture vs. Post-hoc Scoring:**  \nThe paper mentions possible modifications to model architecture and training (Section 3.1), but the experiments (Section 4) do not ablate the relative contributions of architectural changes versus post-hoc confidence scoring. This makes it unclear which component drives the improvements.\n\n4. **Evaluation - Baselines Lack Strong Selective Generation Methods:**  \nIn Table 2, the baselines for selective generation are limited to thresholding naive confidence scores. The paper omits comparison to more advanced selective generation frameworks, such as those using reinforcement learning or calibrated uncertainty estimates, which could be stronger competitors.\n\n5. **Evaluation - Metrics Do Not Capture Downstream Task Impact Fully:**  \nThe evaluation focuses on OOD detection metrics like AUROC and precision-recall (Section 4.3), but does not report how selective generation affects downstream task metrics such as BLEU for translation or ROUGE for summarization. This leaves the practical impact on task quality underexplored.\n\n6. **Evaluation - OOD Datasets Are Narrow and Synthetic:**  \nThe OOD inputs used for evaluation (Section 4.1) are mostly synthetic perturbations or domain shifts within a narrow range. The paper does not test on more diverse or real-world OOD scenarios, limiting claims about generalizability.\n\n7. **Reproducibility - Missing Details on Training Hyperparameters:**  \nThe paper does not specify key training details such as learning rates, batch sizes, or number of epochs for the modified CLMs (Section 3.1 and Appendix). This omission hinders reproducibility of the proposed method.\n\n8. **Reproducibility - No Code or Model Checkpoints Provided:**  \nThere is no mention of releasing code or pretrained models, which is critical for verifying the results and enabling follow-up work.\n\n9. **Clarity - Ambiguous Description of Selective Generation Decision Rule:**  \nSection 3.3 describes the selective generation mechanism but does not clearly specify how the threshold for abstention is chosen or tuned. This ambiguity makes it difficult to understand or replicate the decision process.\n\n10. **Clarity - Insufficient Explanation of Uncertainty Metrics:**  \nThe paper introduces novel uncertainty metrics but provides limited intuition or visualizations to help readers grasp how these metrics behave on in-distribution versus OOD inputs (Section 3.2). More explanation or examples would improve clarity.\n\n11. **Limitations - No Discussion of Computational Overhead:**  \nThe proposed method may require additional computations for scoring or modified architectures, but the paper does not discuss the impact on inference latency or resource usage, which is important for real-world deployment.\n\n12. **Limitations - Abstention May Reduce Coverage Without Guaranteeing Safety:**  \nWhile selective generation reduces erroneous outputs by abstaining, the paper does not analyze the trade-off between coverage (percentage of inputs answered) and safety (error reduction). This omission leaves open whether the method is practical in scenarios requiring high coverage.\n\n13. **Generalisability - Experiments Limited to English Language Tasks:**  \nAll experiments are conducted on English datasets (Section 4.1), and the paper does not explore whether the approach generalizes to other languages or multilingual models, which limits the scope of applicability.\n\n14. **Generalisability - Tested Only on Specific CLM Architectures:**  \nThe evaluation focuses on a single or limited set of CLM architectures (e.g., Transformer-based seq2seq models). It is unclear if the method extends to other conditional generation models such as retrieval-augmented or non-autoregressive models.\n\n15. **Generalisability - No Analysis on Different Types of Distribution Shifts:**  \nThe paper treats OOD inputs as a single category but does not differentiate between covariate shift, label shift, or concept shift. Understanding performance across these different distributional changes would strengthen claims about robustness."
   }
 }
