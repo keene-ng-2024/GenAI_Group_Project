@@ -423,6 +423,10 @@ has cosine similarity ≥ threshold (default **0.50**, set in `config.yaml`).
 | Precision | Fraction of generated points that match a GT pt |
 | F1        | Harmonic mean of precision and recall           |
 
+### Known Limitations
+
+* **Vertex AI / Gemini Evaluation Penalty:** Approximately 19% of Vertex AI papers score an F1 of 0.0 despite generating semantically valid critique points. Gemini 2.5 Flash often utilizes highly verbose phrasing that drifts significantly from the succinct ground truth phrasing. As a result, the cosine similarity fails to clear the 0.50 threshold (e.g., max similarity ~0.487), which artificially depresses the recall metrics for Vertex AI (0.302) compared to platforms like n8n (0.373).
+
 ---
 
 ## Configuration
