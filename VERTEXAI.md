@@ -135,9 +135,9 @@ Output per paper is saved as JSON with:
 | Latency | ~9s | ~44s | ~214s |
 | Papers | 100 | 99 | 100 |
 
-Vertex AI leads on precision (0.421 vs 0.463 baseline, 0.386 n8n) — the multi-round debate produces fewer but higher-quality critique points. Recall is lower because the debate loop tends to consolidate points rather than enumerate many. The trade-off is significant latency (~214s vs ~9s baseline).
+Vertex AI achieves higher precision than n8n (0.421 vs 0.386) but remains below the baseline (0.463) — the multi-round debate produces fewer, more selective critique points. Recall is lower than n8n because the debate loop tends to consolidate points rather than enumerate many. The trade-off is significant latency (~214s vs ~9s baseline).
 
-Vertex AI leads on precision and F1. The multi-round debate produces fewer but higher-quality critique points compared to single-shot approaches.
+Vertex AI does not lead on precision or F1 overall, but it outperforms the baseline on F1 (0.342 vs 0.331) while trailing n8n (0.382). The multi-round debate produces fewer but higher-quality critique points compared to single-shot approaches.
 
 ## Report Framing
 
