@@ -11,12 +11,13 @@ Compare multiple agentic platforms building the same multi-agent paper critique 
 
 ## Systems Being Compared
 
-| System | Platform | Models | Status |
-|--------|----------|--------|--------|
-| Baseline | Custom Python (direct API) | Claude Sonnet | Done, F1≈0.497 |
-| Agents | Custom Python (multi-agent) | Claude Sonnet + Haiku | Scoring pending |
-| n8n | n8n workflow automation | GPT-4o-mini (Reader/Auditor) + GPT-4o (Critic/Summariser) | Done, F1=0.172 |
+> **Note:** The scores and model assignments in this table are for one **n8n-specific experimental run/configuration** documented in this file. Other project documents (for example, `VERTEXAI.md`) may report different baseline/n8n models or scores for **different runs, dates, or configs** and should not be read as the same experiment unless explicitly stated.
 
+| System | Platform | Models | Experimental run / status |
+|--------|----------|--------|----------------------------|
+| Baseline | Custom Python (direct API) | Claude Sonnet | n8n comparison run in this document; Done, F1≈0.497 |
+| Agents | Custom Python (multi-agent) | Claude Sonnet + Haiku | n8n comparison run in this document; Scoring pending |
+| n8n | n8n workflow automation | GPT-4o-mini (Reader/Auditor) + GPT-4o (Critic/Summariser) | n8n comparison run in this document; Done, F1=0.172 |
 ## Key Architecture
 
 ```
