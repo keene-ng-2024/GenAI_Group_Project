@@ -10,27 +10,27 @@ and integrates with the grounding verifier for evidence-based critique.
 from __future__ import annotations
 
 import json
+import re
 import time
-from pathlib import Path
-from typing import Dict, Any, List, Optional
-
+import sys
 import yaml
+from pathlib import Path
 
-from src.agents.state import (
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from agents.state import (
     create_initial_state,
     update_transcript,
     update_token_usage,
     increment_rounds,
-    should_early_stop,
     get_latency_seconds,
 )
-from src.agents.vertex_client import (
+from agents.vertex_client import (
     get_vertex_ai_client,
-    generate_content,
-    load_config,
 )
-from src.agents.personas import AgentRole, BaseAgent, build_agents
-from src.agents.grounding_verifier import verify_all_grounding
+from agents.personas import AgentRole, BaseAgent
+from agents.grounding_verifier import verify_all_grounding
 
 
 # ── Config ─────────────────────────────────────────────────────────────────────
@@ -43,15 +43,39 @@ def load_config(config_path: str = "config.yaml") -> dict:
 
 # ── Output parsing ─────────────────────────────────────────────────────────────
 
+_VALID_JSON_ESCAPES = set('"' + '\\' + '/' + 'bfnrtu')
+
+
+def _sanitize_json_escapes(text: str) -> str:
+    """Replace invalid JSON escape sequences (e.g. \\alpha → \\\\alpha) so
+    json.loads can parse strings containing LaTeX or other backslash sequences."""
+    result = []
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if ch == '\\' and i + 1 < len(text):
+            next_ch = text[i + 1]
+            if next_ch in _VALID_JSON_ESCAPES:
+                result.append(ch)
+                result.append(next_ch)
+                i += 2
+            else:
+                result.append('\\\\')
+                i += 1
+        else:
+            result.append(ch)
+            i += 1
+    return ''.join(result)
+
+
 def _parse_structured_output(raw: str) -> dict:
     """Parse the Summarizer's structured JSON output with fallbacks."""
     text = raw.strip()
 
-    # Strip markdown fences if present
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
+    # Strip markdown fences if present (handles ```json, ```, with/without trailing newline)
+    fence_match = re.match(r'^```(?:json)?\s*(.*?)\s*```\s*$', text, re.DOTALL)
+    if fence_match:
+        text = fence_match.group(1).strip()
 
     # Try direct parse first
     try:
@@ -59,14 +83,22 @@ def _parse_structured_output(raw: str) -> dict:
     except json.JSONDecodeError:
         pass
 
+    # Retry after sanitizing invalid escape sequences (e.g. LaTeX \alpha)
+    try:
+        return json.loads(_sanitize_json_escapes(text))
+    except json.JSONDecodeError:
+        pass
+
     # Fallback: extract the first JSON object with regex
-    import re
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if match:
         try:
             return json.loads(match.group())
         except json.JSONDecodeError:
-            pass
+            try:
+                return json.loads(_sanitize_json_escapes(match.group()))
+            except json.JSONDecodeError:
+                pass
 
     # Last resort: return an empty valid structure
     print("  [WARN] Failed to parse structured output, returning empty structure")
@@ -156,15 +188,17 @@ class VertexAgent:
         """Send a message and get a reply."""
         self.history.append({"role": "user", "content": user_message})
         
-        response = generate_content(
-            client=self.client,
-            model=self.model,
-            messages=self.history,
-            config=self.config,
+        response = self.client.generate_content(
+            prompt=user_message,
+            system_instruction=self.system_prompt,
+            model_name=self.model,
         )
         
         text = response.get("text", "")
-        token_usage = response.get("token_usage", {})
+        token_usage = {
+            "input_tokens": response.get("input_tokens", 0),
+            "output_tokens": response.get("output_tokens", 0),
+        }
         
         self.total_input_tokens += token_usage.get("input_tokens", 0)
         self.total_output_tokens += token_usage.get("output_tokens", 0)
@@ -218,7 +252,7 @@ def run_pipeline(
                 "## Claimed Contributions\n\n"
                 "Be factual and concise. Include specific numbers from experiments."
             ),
-            model=vertex_config.get("reader_model", "gemini-1.5-flash"),
+            model=vertex_config.get("reader_model", "gemini-2.5-flash-lite"),
             config=config,
         ),
         "critic": VertexAgent(
@@ -232,7 +266,7 @@ def run_pipeline(
                 "(c) what evidence from the paper supports your concern. "
                 "Be specific and actionable."
             ),
-            model=vertex_config.get("critic_model", "gemini-1.5-pro"),
+            model=vertex_config.get("critic_model", "gemini-2.5-flash"),
             config=config,
         ),
         "auditor": VertexAgent(
@@ -246,7 +280,7 @@ def run_pipeline(
                 "Also highlight genuine issues the Critic may have missed. "
                 "Be constructive but demanding."
             ),
-            model=vertex_config.get("auditor_model", "gemini-1.5-flash"),
+            model=vertex_config.get("auditor_model", "gemini-2.5-flash-lite"),
             config=config,
         ),
         "summarizer": VertexAgent(
@@ -280,7 +314,7 @@ def run_pipeline(
                 "- Base scores on the reviewer score context provided and the debate.\n"
                 "- Output nothing except the JSON object. No markdown fences, no commentary."
             ),
-            model=vertex_config.get("summariser_model", "gemini-1.5-pro"),
+            model=vertex_config.get("summariser_model", "gemini-2.5-flash"),
             config=config,
         ),
     }
@@ -321,8 +355,9 @@ def run_pipeline(
         
         rounds_done = round_num
         
-        # Check early stopping
-        if should_early_stop(audit_feedback, early_stop_phrases):
+        # Check early stopping (inline to avoid state.py signature mismatch)
+        feedback_lower = audit_feedback.lower()
+        if any(phrase in feedback_lower for phrase in early_stop_phrases):
             print(f"  [STOP] Auditor satisfied after round {round_num}.")
             break
         
@@ -364,6 +399,7 @@ def run_pipeline(
     
     return {
         "paper_id": paper_id,
+        "platform": "vertexai",
         "model": vertex_config.get("critic_model", "gemini-1.5-pro"),
         "rounds": rounds_done,
         "latency_seconds": latency_seconds,
@@ -414,7 +450,7 @@ def run_all_papers(
         try:
             result = run_pipeline(
                 paper_id=paper_id,
-                paper_text=paper.get("body_text", paper.get("full_text", "")),
+                paper_text=paper.get("full_text", ""),
                 config=config,
             )
         except Exception as exc:
@@ -438,5 +474,5 @@ if __name__ == "__main__":
     run_all_papers(
         reviews_path=cfg["data"]["reviews_file"],
         output_dir=cfg["results"]["vertexai_dir"],
-        cfg=cfg,
+        config=cfg,
     )

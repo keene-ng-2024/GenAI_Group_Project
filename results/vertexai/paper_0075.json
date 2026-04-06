@@ -42,18 +42,114 @@
     }
   ],
   "structured": {
-    "summary": "",
-    "strengths": [],
-    "weaknesses": [],
-    "questions": [],
+    "summary": "This paper introduces COCO-LM, a self-supervised learning framework for pretraining language models by **CO**rrecting and **CO**ntrasting corrupted text sequences. It employs two novel tasks: Corrective Language Modeling (CLM) for token-level detection and correction, and Sequence Contrastive Learning (SCL) for aligning and promoting uniformity in the representation space. COCO-LM achieves state-of-the-art performance on GLUE benchmarks and competitive results on SQuAD, while demonstrating significant pretraining and parameter efficiency compared to existing methods.",
+    "strengths": [
+      {
+        "point": "COCO-LM achieves state-of-the-art performance on GLUE benchmarks and is competitive on SQuAD.",
+        "evidence": "COCO-LM outperforms recent state-of-the-art pretrained models on the GLUE average score by approximately one point across base, base++, and large++ settings. It is also competitive on SQuAD."
+      },
+      {
+        "point": "Demonstrates significant parameter efficiency, matching larger models with fewer parameters.",
+        "evidence": "COCO-LM Large (367 million parameters) matches the MNLI average accuracy of Megatron 3.9B (3.9 billion parameters)."
+      },
+      {
+        "point": "Achieves substantial pretraining efficiency, requiring significantly fewer GPU hours than comparable models.",
+        "evidence": "COCO-LM matches the MNLI accuracy of RoBERTa and ELECTRA with 60% and 50% of their pretraining GPU hours, respectively."
+      },
+      {
+        "point": "Both CLM and SCL components individually contribute to overall performance improvements.",
+        "evidence": "Both CLM and SCL provide additional improvements over a backbone model with only RTD. CLM shows particular benefits on MNLI-mm, and SCL on RTE and MRPC."
+      },
+      {
+        "point": "SCL effectively improves the alignment and uniformity of the representation space, enhancing generalization, especially in few-shot learning.",
+        "evidence": "COCO-LM with SCL exhibits a representation space with better alignment... and uniformity... compared to models without SCL. SCL significantly improves few-shot learning performance, yielding 0.8/0.5 improvement in MNLI-m/mm accuracy with 1% MNLI labels."
+      },
+      {
+        "point": "CLM improves token-level representations, benefiting tasks like SQuAD and resulting in better word similarity metrics.",
+        "evidence": "COCO-LM with CLM demonstrates better token-level representations, improving SQuAD EM & F1 scores by 0.3 compared to a model without CLM (SCL + RTD). Word similarity analysis shows lower cosine similarity for random tokens (0.611 vs 0.724) and a larger gap between self and random similarity."
+      },
+      {
+        "point": "Joint pretraining of the auxiliary and main Transformers is shown to be superior, suggesting a natural learning curriculum.",
+        "evidence": "Pretraining the auxiliary and main Transformers jointly provides a natural learning curriculum and is superior to using a converged auxiliary network."
+      },
+      {
+        "point": "The shallow auxiliary network design with the same hidden dimension as the main model is identified as effective.",
+        "evidence": "A shallow auxiliary network (e.g., 4-layer for base) with the same hidden dimension as the main model is more effective than ELECTRA's smaller-hidden-dimension generator."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of clear articulation of how the specific formulations of CLM and SCL, or their combination, offer unique contributions beyond an amalgamation of existing techniques, particularly when compared to state-of-the-art methods in sequence correction and contrastive learning.",
+        "evidence": "The summary describes CLM as 'combining the benefits of replaced token detection and language modeling by using a multi-task setup with a copy mechanism' and SCL as improving alignment/uniformity by 'contrasting corrupted sequences with cropped versions of original sequences,' without deeply differentiating from existing solutions or explaining novel insights."
+      },
+      {
+        "point": "The multi-task setup of Corrective Language Modeling (CLM) involving $L_{LM}$, $L_{copy}$, and a `stop_gradient` operation lacks thorough empirical justification through ablation studies for its necessity, stability, and specific design choices.",
+        "evidence": "A 'stop gradient' operation is used to decouple the gradient backpropagation... allowing the model to first learn the easier classification task... Multi-task learning in CLM is crucial for stably learning the language modeling task on corrupted sequences."
+      },
+      {
+        "point": "Critical details regarding the auxiliary model's text corruption strategy, including masking probabilities, replacement token sampling, and consistency across CLM and SCL tasks, are missing, hindering understanding and reproducibility.",
+        "evidence": "COCO-LM employs an auxiliary language model to corrupt text sequences... COCO-LM follows an ELECTRA-style pretraining approach, utilizing an auxiliary model (generator) to create corrupted text sequences."
+      },
+      {
+        "point": "Claims of parameter and pretraining efficiency, particularly against high-parameter models like Megatron 3.9B, are presented without sufficient contextual details (e.g., architecture, pretraining data, GPU hours, fine-tuning setups) for all baselines, making fair comparison difficult.",
+        "evidence": "COCO-LM Large (367 million parameters) matches the MNLI average accuracy of Megatron 3.9B (3.9 billion parameters)."
+      },
+      {
+        "point": "Evaluation of the enhanced representation space from Sequence Contrastive Learning (SCL) primarily relies on internal ablations, lacking comparison against prominent external state-of-the-art representation learning methods on standard intrinsic benchmarks.",
+        "evidence": "COCO-LM with SCL exhibits a representation space with better alignment... compared to models without SCL. Average cosine similarity for similar pairs increases from 0.863 to 0.925 with SCL."
+      },
+      {
+        "point": "The roles and interaction of the 'auxiliary language model' and 'generator' during joint training are ambiguously described, making it difficult to understand the precise architectural relationship, gradient flow, and update mechanisms, and thus the claimed 'natural learning curriculum'.",
+        "evidence": "Pretraining the auxiliary and main Transformers jointly provides a natural learning curriculum and is superior to using a converged auxiliary network."
+      },
+      {
+        "point": "Critical hyperparameters (e.g., loss weights like $\\lambda_{copy}$, temperature $\tau$, learning rates, batch sizes, optimizer details) and specific training configurations for both pretraining and fine-tuning are absent, severely impeding reproducibility.",
+        "evidence": "The methods section details loss functions with $\\lambda_{copy}$ and $\tau$ but provides no values. No mention of learning rates, batch sizes, or optimization schedules."
+      },
+      {
+        "point": "The pretraining datasets used, including their versions and precise sizes, are not disclosed, which is fundamental for validating results and enabling fair comparisons with other models.",
+        "evidence": "The summary discusses 'pretraining' and 'pretraining efficiency' but explicitly omits any mention of the actual pretraining datasets used."
+      }
+    ],
+    "questions": [
+      {
+        "question": "For CLM, could the authors provide an ablation study that empirically justifies the necessity and impact of the `stop_gradient` operation, as well as the specific multi-task setup with $L_{LM}$ and $L_{copy}$?",
+        "motivation": "This is crucial to validate the complexity of CLM and understand how it specifically achieves stability and effectively combines the benefits of RTD and LM, addressing its 'hand-wavy' justification."
+      },
+      {
+        "question": "What are the comprehensive details of the auxiliary model's corruption strategy, including specific masking probabilities, how replacement tokens are sampled, and whether the corrupted sequences are consistent for both CLM and SCL tasks?",
+        "motivation": "These details are fundamental for understanding the training tasks, assessing the method's design choices, and ensuring the reproducibility of the reported results."
+      },
+      {
+        "question": "To substantiate the efficiency claims, particularly against Megatron 3.9B, can the authors provide full contextual details for all baselines, including their exact architectures, pretraining datasets (size), GPU hours, and fine-tuning setups?",
+        "motivation": "Without this context, the bold claims of parameter and pretraining efficiency are difficult to verify and may be misleading, preventing fair comparison with other state-of-the-art models."
+      },
+      {
+        "question": "Can the authors provide a comparative analysis of COCO-LM's representation space (with SCL) against state-of-the-art external representation learning methods on standard intrinsic evaluation benchmarks (e.g., semantic textual similarity)?",
+        "motivation": "While internal ablations show SCL's benefit, external comparisons are necessary to establish that COCO-LM's representations are 'enhanced' in a broader, state-of-the-art context and to quantify its advancement in representation learning."
+      },
+      {
+        "question": "Could the authors precisely clarify the training dynamics between the auxiliary and main models during joint pretraining, detailing the architectural relationship, gradient flow, and update rules to explain how the 'natural learning curriculum' is realized?",
+        "motivation": "A clear understanding of the interaction between these models is essential for grasping the method's core mechanics, validating the 'natural learning curriculum' claim, and ensuring successful replication."
+      }
+    ],
     "scores": {
       "correctness": 3,
       "novelty": 3,
       "recommendation": "borderline",
-      "confidence": 1
+      "confidence": 4
     }
   },
-  "critique_points": {},
+  "critique_points": {
+    "point_001": "Lack of clear articulation of how the specific formulations of CLM and SCL, or their combination, offer unique contributions beyond an amalgamation of existing techniques, particularly when compared to state-of-the-art methods in sequence correction and contrastive learning.. The summary describes CLM as 'combining the benefits of replaced token detection and language modeling by using a multi-task setup with a copy mechanism' and SCL as improving alignment/uniformity by 'contrasting corrupted sequences with cropped versions of original sequences,' without deeply differentiating from existing solutions or explaining novel insights",
+    "point_002": "The multi-task setup of Corrective Language Modeling (CLM) involving $L_{LM}$, $L_{copy}$, and a `stop_gradient` operation lacks thorough empirical justification through ablation studies for its necessity, stability, and specific design choices.. A 'stop gradient' operation is used to decouple the gradient backpropagation... allowing the model to first learn the easier classification task... Multi-task learning in CLM is crucial for stably learning the language modeling task on corrupted sequences",
+    "point_003": "Critical details regarding the auxiliary model's text corruption strategy, including masking probabilities, replacement token sampling, and consistency across CLM and SCL tasks, are missing, hindering understanding and reproducibility.. COCO-LM employs an auxiliary language model to corrupt text sequences... COCO-LM follows an ELECTRA-style pretraining approach, utilizing an auxiliary model (generator) to create corrupted text sequences",
+    "point_004": "Claims of parameter and pretraining efficiency, particularly against high-parameter models like Megatron 3.9B, are presented without sufficient contextual details (e.g., architecture, pretraining data, GPU hours, fine-tuning setups) for all baselines, making fair comparison difficult.. COCO-LM Large (367 million parameters) matches the MNLI average accuracy of Megatron 3.9B (3.9 billion parameters)",
+    "point_005": "Evaluation of the enhanced representation space from Sequence Contrastive Learning (SCL) primarily relies on internal ablations, lacking comparison against prominent external state-of-the-art representation learning methods on standard intrinsic benchmarks.. COCO-LM with SCL exhibits a representation space with better alignment... compared to models without SCL. Average cosine similarity for similar pairs increases from 0.863 to 0.925 with SCL",
+    "point_006": "The roles and interaction of the 'auxiliary language model' and 'generator' during joint training are ambiguously described, making it difficult to understand the precise architectural relationship, gradient flow, and update mechanisms, and thus the claimed 'natural learning curriculum'.. Pretraining the auxiliary and main Transformers jointly provides a natural learning curriculum and is superior to using a converged auxiliary network",
+    "point_007": "Critical hyperparameters (e.g., loss weights like $\\lambda_{copy}$, temperature $\tau$, learning rates, batch sizes, optimizer details) and specific training configurations for both pretraining and fine-tuning are absent, severely impeding reproducibility.. The methods section details loss functions with $\\lambda_{copy}$ and $\tau$ but provides no values. No mention of learning rates, batch sizes, or optimization schedules",
+    "point_008": "The pretraining datasets used, including their versions and precise sizes, are not disclosed, which is fundamental for validating results and enabling fair comparisons with other models.. The summary discusses 'pretraining' and 'pretraining efficiency' but explicitly omits any mention of the actual pretraining datasets used"
+  },
   "grounding_verifier_scores": {
     "avg_confidence": 0.0,
     "grounding_rate": 0.0,
@@ -63,5 +159,6 @@
   "run_metadata": {
     "latency_ms": 159940.0,
     "timestamp": 1775368447.8236108
-  }
+  },
+  "platform": "vertexai"
 }

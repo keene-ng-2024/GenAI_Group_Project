@@ -1,291 +1,177 @@
 """
 vertex_client.py
 ----------------
-Vertex AI client initialization and utilities for the AI Research Paper Critique Assistant.
+Vertex AI client using the google-genai SDK (avoids gRPC hang on import).
 
-This module provides:
-- get_vertex_ai_client(): Get or create Vertex AI client
-- generate_content(): Generate content with retry logic
-- Rate limiting and circuit breaker support
+Uses google.genai.Client with vertexai=True — no vertexai.init() needed.
 """
 
 from __future__ import annotations
 
 import time
-import os
-from typing import Optional, Dict, Any, List
-from dataclasses import dataclass
-from functools import wraps
+from typing import Optional, Dict, Any
+from dataclasses import dataclass, field
+from enum import Enum
 
-from google.cloud import aiplatform
-from google.cloud.aiplatform.gapic import PredictionServiceClient
-from google.cloud.aiplatform_v1.types import (
-    Content,
-    GenerateContentRequest,
-    Part,
-    GenerationConfig,
-)
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-# ── Configuration ──────────────────────────────────────────────────────────────
-
-def load_config(config_path: str = "config.yaml") -> dict:
-    """Load configuration from YAML file."""
-    import yaml
-    with open(config_path) as f:
-        return yaml.safe_load(f)
-
-
-# ── Client management ────────────────────────────────────────────────────────
-
-_client_cache: Dict[str, PredictionServiceClient] = {}
-
-
-def get_vertex_ai_client(
-    project: Optional[str] = None,
-    location: Optional[str] = None,
-    config: Optional[dict] = None,
-) -> PredictionServiceClient:
-    """
-    Get or create a Vertex AI PredictionServiceClient.
-    
-    Args:
-        project: GCP project ID (optional, uses config if not provided)
-        location: GCP location (optional, uses config if not provided)
-        config: Config dict with vertex_ai settings
-        
-    Returns:
-        PredictionServiceClient instance
-    """
-    # Get config if not provided
-    if config is None:
-        config = load_config()
-    
-    # Get project and location from config or parameters
-    vertex_config = config.get("vertex_ai", {})
-    project_id = project or vertex_config.get("project", "your-project-id")
-    loc = location or vertex_config.get("location", "us-central1")
-    
-    # Create cache key
-    cache_key = f"{project_id}:{loc}"
-    
-    if cache_key not in _client_cache:
-        # Initialize aiplatform
-        aiplatform.init(project=project_id, location=loc)
-        
-        # Create client
-        _client_cache[cache_key] = PredictionServiceClient(
-            client_options={"api_endpoint": f"{loc}-aiplatform.googleapis.com"}
-        )
-    
-    return _client_cache[cache_key]
-
-
-# ── Content generation ───────────────────────────────────────────────────────
-
-def generate_content(
-    client: PredictionServiceClient,
-    model: str,
-    messages: List[Dict[str, str]],
-    config: Optional[dict] = None,
-    max_retries: int = 3,
-    base_delay: float = 1.0,
-) -> Dict[str, Any]:
-    """
-    Generate content using Vertex AI with retry logic.
-    
-    Args:
-        client: PredictionServiceClient instance
-        model: Model name (e.g., "gemini-1.5-flash")
-        messages: List of message dicts with "role" and "content"
-        config: Config dict with generation settings
-        max_retries: Maximum number of retries
-        base_delay: Base delay for exponential backoff
-        
-    Returns:
-        Dict with "text" (response text) and "token_usage" (dict with input/output tokens)
-        
-    Raises:
-        Exception: If all retries fail
-    """
-    if config is None:
-        config = load_config()
-    
-    vertex_config = config.get("vertex_ai", {})
-    max_tokens = config.get("max_tokens", 4096)
-    temperature = config.get("temperature", 0.2)
-    
-    # Build content for Vertex AI
-    contents = []
-    for msg in messages:
-        role = msg["role"]
-        content = msg["content"]
-        
-        # Convert role to Vertex AI format
-        vertex_role = "user" if role == "user" else "model"
-        contents.append(Content(role=vertex_role, parts=[Part(text=content)]))
-    
-    generation_config = GenerationConfig(
-        max_output_tokens=max_tokens,
-        temperature=temperature,
-    )
-    
-    request = GenerateContentRequest(
-        model=model,
-        contents=contents,
-        generation_config=generation_config,
-    )
-    
-    # Retry with exponential backoff
-    last_error = None
-    for attempt in range(max_retries):
-        try:
-            response = client.generate_content(request=request)
-            
-            # Extract text from response
-            text = ""
-            if response.candidates and response.candidates[0].content.parts:
-                text = response.candidates[0].content.parts[0].text
-            
-            # Extract token usage
-            token_usage = {}
-            if response.usage_metadata:
-                token_usage = {
-                    "input_tokens": response.usage_metadata.prompt_token_count,
-                    "output_tokens": response.usage_metadata.candidates_token_count,
-                }
-            
-            return {
-                "text": text,
-                "token_usage": token_usage,
-            }
-            
-        except Exception as e:
-            last_error = e
-            if attempt < max_retries - 1:
-                delay = base_delay * (2 ** attempt)
-                print(f"  [WARN] Vertex AI API call failed, retrying in {delay}s: {e}")
-                time.sleep(delay)
-            else:
-                print(f"  [ERROR] Vertex AI API call failed after {max_retries} attempts: {e}")
-                raise
-    
-    raise last_error
-
-
-# ── Rate limiting and circuit breaker ────────────────────────────────────────
-
-@dataclass
-class RateLimiter:
-    """Simple rate limiter for API calls."""
-    max_calls: int
-    window_seconds: float
-    
-    calls: List[float] = None
-    
-    def __post_init__(self):
-        self.calls = []
-    
-    def is_allowed(self) -> bool:
-        """Check if a call is allowed under the rate limit."""
-        now = time.time()
-        # Remove old calls outside the window
-        self.calls = [t for t in self.calls if now - t < self.window_seconds]
-        return len(self.calls) < self.max_calls
-    
-    def record_call(self):
-        """Record a call."""
-        self.calls.append(time.time())
+class CircuitState(Enum):
+    CLOSED = "closed"
+    OPEN = "open"
+    HALF_OPEN = "half_open"
 
 
 @dataclass
 class CircuitBreaker:
-    """Circuit breaker for API calls."""
     failure_threshold: int = 5
     recovery_timeout: float = 30.0
-    
+    half_open_max_calls: int = 3
     failures: int = 0
+    state: CircuitState = CircuitState.CLOSED
     last_failure_time: Optional[float] = None
-    state: str = "closed"  # closed, open, half-open
-    
-    def is_allowed(self) -> bool:
-        """Check if a call is allowed."""
-        if self.state == "closed":
-            return True
-        elif self.state == "open":
-            # Check if recovery timeout has passed
-            if self.last_failure_time and time.time() - self.last_failure_time > self.recovery_timeout:
-                self.state = "half-open"
-                return True
-            return False
-        else:  # half-open
-            return True
-    
-    def record_success(self):
-        """Record a successful call."""
+    half_open_calls: int = 0
+
+    def record_success(self) -> None:
         self.failures = 0
-        self.state = "closed"
-    
-    def record_failure(self):
-        """Record a failed call."""
+        self.state = CircuitState.CLOSED
+        self.half_open_calls = 0
+
+    def record_failure(self) -> None:
         self.failures += 1
         self.last_failure_time = time.time()
-        
         if self.failures >= self.failure_threshold:
-            self.state = "open"
+            self.state = CircuitState.OPEN
+
+    def is_allowed(self) -> bool:
+        if self.state == CircuitState.CLOSED:
+            return True
+        if self.state == CircuitState.OPEN:
+            if self.last_failure_time and (time.time() - self.last_failure_time) >= self.recovery_timeout:
+                self.state = CircuitState.HALF_OPEN
+                self.half_open_calls = 0
+                return True
+            return False
+        if self.state == CircuitState.HALF_OPEN:
+            if self.half_open_calls < self.half_open_max_calls:
+                self.half_open_calls += 1
+                return True
+            return False
+        return False
 
 
-# ── Global instances ─────────────────────────────────────────────────────────
+class RateLimiter:
+    def __init__(self, rate: float = 10.0, burst: int = 20):
+        self.rate = rate
+        self.burst = burst
+        self.tokens = float(burst)
+        self.last_update = time.time()
 
-_rate_limiter: Optional[RateLimiter] = None
-_circuit_breaker: Optional[CircuitBreaker] = None
-
-
-def get_rate_limiter(config: Optional[dict] = None) -> RateLimiter:
-    """Get or create rate limiter."""
-    global _rate_limiter
-    if _rate_limiter is None:
-        if config is None:
-            config = load_config()
-        vertex_config = config.get("vertex_ai", {})
-        max_calls = vertex_config.get("rate_limit", {}).get("max_calls", 100)
-        window_seconds = vertex_config.get("rate_limit", {}).get("window_seconds", 60)
-        _rate_limiter = RateLimiter(max_calls=max_calls, window_seconds=window_seconds)
-    return _rate_limiter
-
-
-def get_circuit_breaker(config: Optional[dict] = None) -> CircuitBreaker:
-    """Get or create circuit breaker."""
-    global _circuit_breaker
-    if _circuit_breaker is None:
-        _circuit_breaker = CircuitBreaker()
-    return _circuit_breaker
+    def acquire(self) -> None:
+        while True:
+            now = time.time()
+            self.tokens = min(self.burst, self.tokens + (now - self.last_update) * self.rate)
+            self.last_update = now
+            if self.tokens >= 1:
+                self.tokens -= 1
+                return
+            time.sleep(0.1)
 
 
-def with_rate_limiting(func):
-    """Decorator to add rate limiting to a function."""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        limiter = get_rate_limiter()
-        if not limiter.is_allowed():
-            raise Exception("Rate limit exceeded")
-        limiter.record_call()
-        return func(*args, **kwargs)
-    return wrapper
+class VertexAIClient:
+    """Vertex AI client using google-genai SDK (no gRPC hang)."""
+
+    def __init__(self, project: str, location: str, config: dict):
+        self.project = project
+        self.location = location
+        self.config = config
+        self.circuit_breaker = CircuitBreaker(
+            failure_threshold=config.get("failure_threshold", 5),
+            recovery_timeout=config.get("recovery_timeout", 30.0),
+        )
+        self.rate_limiter = RateLimiter(
+            rate=config.get("rate_limit", 5.0),
+            burst=config.get("burst", 10),
+        )
+        self.model_map = config.get("models", {})
+        self._client = None
+
+    def _get_client(self):
+        if self._client is None:
+            try:
+                import google.genai as genai
+                self._client = genai.Client(
+                    vertexai=True,
+                    project=self.project,
+                    location=self.location,
+                )
+            except ImportError:
+                raise ImportError("google-genai not installed. Run: pip install google-genai")
+        return self._client
+
+    def generate_content(
+        self,
+        prompt: str,
+        system_instruction: Optional[str] = None,
+        model_name: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+    ) -> Dict[str, Any]:
+        if not self.circuit_breaker.is_allowed():
+            raise RuntimeError("Circuit breaker is open")
+
+        self.rate_limiter.acquire()
+
+        if model_name is None:
+            model_name = self.model_map.get("default", "gemini-2.5-flash-lite")
+
+        import google.genai.types as types
+
+        client = self._get_client()
+
+        gen_config = {}
+        if max_tokens:
+            gen_config["max_output_tokens"] = max_tokens
+        if temperature is not None:
+            gen_config["temperature"] = temperature
+
+        full_prompt = f"{system_instruction}\n\n{prompt}" if system_instruction else prompt
+
+        # Retry with exponential backoff on 429 rate-limit errors
+        max_retries = 6
+        backoff = 30.0
+        for attempt in range(max_retries):
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=full_prompt,
+                    config=types.GenerateContentConfig(**gen_config) if gen_config else None,
+                )
+                self.circuit_breaker.record_success()
+                usage = response.usage_metadata
+                return {
+                    "text": response.text,
+                    "input_tokens": getattr(usage, "prompt_token_count", 0) if usage else 0,
+                    "output_tokens": getattr(usage, "candidates_token_count", 0) if usage else 0,
+                }
+            except Exception as e:
+                err_str = str(e)
+                if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                    if attempt < max_retries - 1:
+                        wait = backoff * (2 ** attempt)
+                        print(f"  [429] Rate limited. Waiting {wait:.0f}s before retry {attempt + 1}/{max_retries - 1}…")
+                        time.sleep(wait)
+                        continue
+                self.circuit_breaker.record_failure()
+                raise
 
 
-def with_circuit_breaker(func):
-    """Decorator to add circuit breaker to a function."""
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        breaker = get_circuit_breaker()
-        if not breaker.is_allowed():
-            raise Exception("Circuit breaker is open")
-        try:
-            result = func(*args, **kwargs)
-            breaker.record_success()
-            return result
-        except Exception as e:
-            breaker.record_failure()
-            raise
-    return wrapper
+def get_vertex_ai_client(config: dict) -> VertexAIClient:
+    vertex_config = config.get("vertex_ai", {})
+    return VertexAIClient(
+        project=vertex_config.get("project", "genai-vertexai-492302"),
+        location=vertex_config.get("location", "us-central1"),
+        config=vertex_config,
+    )

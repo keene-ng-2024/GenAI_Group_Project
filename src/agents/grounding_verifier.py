@@ -12,10 +12,17 @@ This module provides:
 from __future__ import annotations
 
 import re
+import yaml
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
-from src.agents.vertex_client import get_vertex_ai_client, generate_content, load_config
+from agents.vertex_client import get_vertex_ai_client
+from agents.tools import call_tool
+
+
+def load_config(config_path: str = "config.yaml") -> dict:
+    with open(config_path) as f:
+        return yaml.safe_load(f)
 
 
 # ── Data structures ────────────────────────────────────────────────────────────
@@ -51,7 +58,7 @@ def verify_grounding(
         config = load_config()
     
     vertex_config = config.get("vertex_ai", {})
-    model = vertex_config.get("grounding_verifier", {}).get("model", "gemini-1.5-flash")
+    model = vertex_config.get("grounding_verifier", {}).get("model", "gemini-2.5-flash-lite")
     max_tokens = vertex_config.get("grounding_verifier", {}).get("max_tokens", 1024)
     
     point = critique_point.get("point", "")
@@ -82,11 +89,10 @@ Respond with JSON:
     client = get_vertex_ai_client(config=config)
     
     try:
-        response = generate_content(
-            client=client,
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            config=config,
+        response = client.generate_content(
+            prompt=prompt,
+            model_name=model,
+            max_tokens=max_tokens,
         )
         
         # Parse response
@@ -182,7 +188,7 @@ def verify_all_grounding(
     
     for point in critique_points:
         # Find relevant paper section (simplified: use full text)
-        paper_section = paper.get("body_text", paper.get("full_text", ""))[:5000]
+        paper_section = paper.get("full_text", "")[:5000]
         
         result = verify_grounding(point, paper_section, config)
         
