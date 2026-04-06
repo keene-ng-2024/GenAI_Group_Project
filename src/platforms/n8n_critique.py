@@ -107,7 +107,7 @@ def critique_paper_via_n8n(
     webhook_url: str,
     mode: str,
     cfg: dict,
-    timeout: int = 300,
+    timeout: int = 1000,
 ) -> dict:
     """POST a paper to the n8n webhook and return the structured result."""
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
