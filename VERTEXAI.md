@@ -121,9 +121,9 @@ Output per paper is saved as JSON with:
 
 - **Slow throughput** — ~4-5 min per paper due to multi-round debate + API latency. Full 100-paper run takes ~7-8 hours.
 - **v1beta1 error rate ~43%** — visible in GCP dashboard. These are 429 rate-limit retries handled automatically by the SDK with exponential backoff. Not actual failures — the circuit breaker and rate limiter in `vertex_client.py` manage this.
-- **Occasional JSON parse failures** — Summariser sometimes wraps JSON in extra markdown. The `_parse_structured_output()` fallback handles this; affected papers get 0 weakness points and should be rerun.
+- **Occasional structured-output extraction mismatches** — Summariser sometimes wraps JSON in extra markdown, and `_parse_structured_output()` recovers some of these cases. However, in the current committed results there are still papers where the transcript contains a JSON review but the saved `structured` and `critique_points` are empty. These should be treated as parse/persistence failures in the saved artifact, and affected papers should be rerun if exact field consistency is required.
 - **Gemini 2.5 Flash thinking tokens** — `gemini-2.5-flash` uses internal reasoning tokens that count toward billing but aren't in the output. Actual cost is higher than token counts suggest.
-- **Paper_0043** — Summariser returned unparseable output (0 weakness points). Rerun after pipeline completes.
+- **Known affected outputs** — `paper_0043`, `paper_0044`, `paper_0059`, and `paper_0083` have transcript/saved-output mismatches; they should not be described as cleanly handled by the fallback.
 
 ## Final Results (100/100 papers)
 
