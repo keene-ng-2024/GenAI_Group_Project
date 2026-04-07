@@ -209,7 +209,7 @@ def run_baseline(reviews_path: str, output_dir: str, cfg: dict) -> None:
                 paper_id=paper_id,
                 title=paper.get("title", paper_id),
                 abstract=paper.get("abstract", ""),
-                full_text=paper.get("full_text", ""),
+                full_text=paper.get("body_text", paper.get("full_text", "")),
                 cfg=cfg,
             )
         except Exception as exc:
