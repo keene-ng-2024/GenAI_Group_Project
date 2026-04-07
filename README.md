@@ -14,21 +14,26 @@ using semantic-similarity recall / precision.
 
 Six platforms implement the same 4-agent pipeline under controlled conditions.
 **Prompts are identical across all platforms.** The only dimensions that vary
-are workflow structure and model.
+are workflow structure, input format, and model (Vertex AI only).
 
-| Platform | Workflow file(s) | Loop type | Model |
-|----------|-----------------|-----------|-------|
-| Baseline | `src/baseline/baseline_critique.py` | None | GPT-4.1-mini |
-| n8n (no loop) | `src/platforms/n8n_workflow_noloop.json` | None | GPT-4.1-mini |
-| n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini |
-| Dify (no loop) | Dify workflow | None | GPT-4.1-mini |
-| Dify (1 round) | Dify workflow | Fixed 1 round | GPT-4.1-mini |
-| Vertex AI | `src/agents/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* |
-| LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini |
-| LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini |
-| LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini |
+| Platform | Workflow file(s) | Loop type | Model | Input |
+|----------|-----------------|-----------|-------|-------|
+| Baseline | `src/baseline/baseline_critique.py` | None | GPT-4.1-mini | JSONL body_text |
+| n8n (no loop) | `src/platforms/n8n_workflow_noloop.json` | None | GPT-4.1-mini | JSONL body_text |
+| n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
+| Dify (no loop) | Dify workflow (`single_critic`) | None | GPT-4.1-mini | Raw PDF |
+| Dify (1 round) | Dify workflow (`dual_critic`) | Fixed 1 round | GPT-4.1-mini | Raw PDF |
+| Vertex AI | `src/agents/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | JSONL body_text |
+| LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | JSONL body_text |
+| LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
+| LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
 
 *Vertex AI uses Gemini 2.5 Flash due to platform model lock-in.
+
+> **Input format note:** Dify ingests raw PDFs via its file upload API and handles parsing internally.
+> All other platforms receive `body_text` from the JSONL dataset via the Python adapters.
+> This difference is a platform constraint, not a controlled variable, and is noted as a limitation
+> when comparing Dify scores against other platforms.
 
 **Loop types explained:**
 - **None** — Reader → Critic → Summariser. No debate, no Auditor.
@@ -185,6 +190,29 @@ Critic2 output:
 
 Reader summary:
 {summary}
+
+Output in this exact JSON format:
+{
+  "summary": "2-3 sentence paper summary",
+  "strengths": [
+    {"point": "strength point", "evidence": "evidence from paper"},
+    {"point": "strength point", "evidence": "evidence from paper"}
+  ],
+  "weaknesses": [
+    {"point": "weakness point", "evidence": "evidence from paper"},
+    {"point": "weakness point", "evidence": "evidence from paper"}
+  ],
+  "questions": [
+    {"question": "open question", "motivation": "why this matters"},
+    {"question": "open question", "motivation": "why this matters"}
+  ],
+  "scores": {
+    "correctness": 3,
+    "novelty": 3,
+    "recommendation": "borderline",
+    "confidence": 3
+  }
+}
 ```
 
 ### Model assignment
@@ -274,7 +302,7 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env and add your ANTHROPIC_API_KEY
+# Edit .env and add OPENAI_API_KEY, DIFY_API_KEY, and any other required keys
 ```
 
 ### 3. Add data
@@ -296,9 +324,19 @@ python -m src.baseline.baseline_critique
 # Run agentic system (multi-agent loop)
 python -m src.agents.orchestrator
 
-# Score both systems
+# Run n8n workflows (requires n8n running locally at localhost:5678)
+python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
+python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+
+# Run Dify workflows (requires DIFY_API_KEY in .env)
+python -m src.dify.run_dify                   # runs single_critic workflow by default
+
+# Score all systems
 python -m src.evaluation.scorer baseline
 python -m src.evaluation.scorer agents
+python -m src.evaluation.scorer n8n
+python -m src.evaluation.scorer n8n_noloop
+python -m src.evaluation.scorer dify
 
 # Print comparison table + plots
 python -m src.evaluation.metrics
@@ -340,7 +378,7 @@ Paper text
 
 Each generated critique point is embedded with `sentence-transformers`.
 A ground-truth point is considered *covered* if at least one generated point
-has cosine similarity ≥ threshold (default 0.75).
+has cosine similarity ≥ threshold (default **0.50**, set in `config.yaml`).
 
 | Metric    | Definition                                      |
 |-----------|-------------------------------------------------|
