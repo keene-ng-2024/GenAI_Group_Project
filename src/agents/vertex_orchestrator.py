@@ -359,7 +359,14 @@ def run_pipeline(
         full_debate = reviewer_scores_block + "\n\n" + full_debate
 
     raw_summary = agents["summarizer"].chat(
-        f"Critic2 output:\n{critique}\n\nReader summary:\n{summary}"
+        f"Critic2 output:\n{critique}\n\n"
+        f"Reader summary:\n{summary}\n\n"
+        "Output your review as a single JSON object with this exact structure:\n"
+        '{"summary": "...", "strengths": [{"point": "...", "evidence": "..."}], '
+        '"weaknesses": [{"point": "...", "evidence": "..."}], '
+        '"questions": [{"question": "...", "motivation": "..."}], '
+        '"scores": {"correctness": 1-5, "novelty": 1-5, "recommendation": "accept|borderline|reject", "confidence": 1-5}}\n'
+        "No markdown fences. No other text. Only the JSON object."
     )
     log("Summarizer", raw_summary)
 
