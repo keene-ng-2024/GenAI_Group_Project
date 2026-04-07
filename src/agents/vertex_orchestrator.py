@@ -361,12 +361,28 @@ def run_pipeline(
     raw_summary = agents["summarizer"].chat(
         f"Critic2 output:\n{critique}\n\n"
         f"Reader summary:\n{summary}\n\n"
-        "Output your review as a single JSON object with this exact structure:\n"
-        '{"summary": "...", "strengths": [{"point": "...", "evidence": "..."}], '
-        '"weaknesses": [{"point": "...", "evidence": "..."}], '
-        '"questions": [{"question": "...", "motivation": "..."}], '
-        '"scores": {"correctness": 1-5, "novelty": 1-5, "recommendation": "accept|borderline|reject", "confidence": 1-5}}\n'
-        "No markdown fences. No other text. Only the JSON object."
+        "Output in this exact JSON format:\n"
+        "{\n"
+        '  "summary": "2-3 sentence paper summary",\n'
+        '  "strengths": [\n'
+        '    {"point": "strength point", "evidence": "evidence from paper"},\n'
+        '    {"point": "strength point", "evidence": "evidence from paper"}\n'
+        "  ],\n"
+        '  "weaknesses": [\n'
+        '    {"point": "weakness point", "evidence": "evidence from paper"},\n'
+        '    {"point": "weakness point", "evidence": "evidence from paper"}\n'
+        "  ],\n"
+        '  "questions": [\n'
+        '    {"question": "open question", "motivation": "why this matters"},\n'
+        '    {"question": "open question", "motivation": "why this matters"}\n'
+        "  ],\n"
+        '  "scores": {\n'
+        '    "correctness": 3,\n'
+        '    "novelty": 3,\n'
+        '    "recommendation": "borderline",\n'
+        '    "confidence": 3\n'
+        "  }\n"
+        "}"
     )
     log("Summarizer", raw_summary)
 
