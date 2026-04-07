@@ -112,7 +112,7 @@ def critique_paper_via_n8n(
     """POST a paper to the n8n webhook and return the structured result."""
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
     title = paper.get("title", paper_id)
-    full_text = paper.get("full_text", "")
+    full_text = paper.get("body_text", paper.get("full_text", ""))
     paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", title)
 
     payload = {
