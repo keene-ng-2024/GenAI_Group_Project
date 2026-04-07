@@ -199,6 +199,9 @@ if __name__ == "__main__":
         "baseline": cfg["results"]["baseline_dir"],
         "agents": cfg["results"]["agents_dir"],
         "n8n": cfg["results"]["n8n_dir"],
+        "dify": cfg["results"]["dify_dir"],
+        "dify-dual": "results/dify/dual_critic",
+        "dify-single": "results/dify/single_critic",
     }.get(mode, cfg["results"]["agents_dir"])
 
     scores = score_all(

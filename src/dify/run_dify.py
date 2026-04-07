@@ -36,7 +36,7 @@ HEADERS = {"Authorization": f"Bearer {DIFY_API_KEY}"}
 
 CHECKPOINT_FILE = Path("data/checkpoint.json")
 PAPERS_DIR = Path("data/papers")
-OUTPUT_DIR = Path("results/dify")
+OUTPUT_DIR = Path("results/dify/single_critic")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 SLEEP_BETWEEN_PAPERS = 3  # seconds, to avoid rate limiting
