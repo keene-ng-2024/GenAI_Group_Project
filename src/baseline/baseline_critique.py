@@ -7,6 +7,8 @@ The model is given the paper title + abstract (and optionally the full text)
 and asked to produce a structured peer review in JSON format matching the
 project's final output schema.
 
+Uses OpenAI 4o model as the baseline for comparison with agentic approaches.
+
 Output per paper: results/baseline/<paper_id>.json
   {
     "paper_id": str,
@@ -34,7 +36,7 @@ import os
 import time
 from pathlib import Path
 
-import anthropic
+import openai
 import yaml
 from dotenv import load_dotenv
 
@@ -153,24 +155,24 @@ def critique_paper(
     full_text: str = "",
     cfg: dict = None,
 ) -> dict:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     model = cfg["models"]["baseline"]
     truncate_chars = cfg.get("agent", {}).get("truncate_body_chars", 12000)
 
     t0 = time.time()
-    response = client.messages.create(
+    response = client.chat.completions.create(
         model=model,
         max_tokens=cfg["max_tokens"],
         temperature=cfg["temperature"],
-        system=SYSTEM_PROMPT,
         messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": format_user_message(
                 title, abstract, full_text, truncate_chars=truncate_chars)}
         ],
     )
     latency = round(time.time() - t0, 3)
 
-    raw = response.content[0].text
+    raw = response.choices[0].message.content
     structured = _parse_json(raw, paper_id) or {}
 
     return {
@@ -178,8 +180,8 @@ def critique_paper(
         "model": model,
         "latency_seconds": latency,
         "token_usage": {
-            "input": response.usage.input_tokens,
-            "output": response.usage.output_tokens,
+            "input": response.usage.prompt_tokens,
+            "output": response.usage.completion_tokens,
         },
         "structured": structured,
         "critique_points": _flatten_to_critique_points(structured),
