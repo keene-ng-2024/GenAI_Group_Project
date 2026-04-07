@@ -165,10 +165,10 @@ def run_agentic_critique(
         transcript.append({"role": role, "content": content})
         print(f"\n    [{role}]\n{content[:300]}{'…' if len(content) > 300 else ''}")
 
-    # Prepare paper text (truncated for context window management)
+    # Prepare paper text
     title = paper.get("title", paper_id)
     full_text = paper.get("full_text", "")
-    paper_text = full_text[:truncate_chars] if full_text else paper.get("abstract", "")
+    paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", "")
     if not paper_text:
         paper_text = title
 
