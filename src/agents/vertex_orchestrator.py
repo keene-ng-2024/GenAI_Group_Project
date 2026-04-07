@@ -228,15 +228,8 @@ def run_pipeline(
             name="Reader",
             role=AgentRole.READER,
             system_prompt=(
-                "You are a careful academic reader. "
-                "When given a paper (or section of a paper), produce a structured "
-                "summary with the following clearly labelled sections:\n\n"
-                "## Problem & Motivation\n"
-                "## Proposed Method\n"
-                "## Methods\n"
-                "## Results\n"
-                "## Claimed Contributions\n\n"
-                "Be factual and concise. Include specific numbers from experiments."
+                "You are a Reader agent. Read the following paper and produce a structured summary. Cover:\n"
+                "Problem & Motivation, Proposed Method, Results, Claimed Contributions."
             ),
             model=vertex_config.get("reader_model", "gemini-2.5-flash-lite"),
             config=config,
@@ -244,28 +237,14 @@ def run_pipeline(
         "critic": VertexAgent(
             name="Critic",
             role=AgentRole.CRITIC,
-            system_prompt=(
-                "You are a rigorous peer reviewer for a top-tier ML/AI venue. "
-                "Given a paper summary, identify substantive weaknesses in: "
-                "novelty, methodology, evaluation, clarity, and reproducibility. "
-                "For each point give: (a) the issue, (b) why it matters, "
-                "(c) what evidence from the paper supports your concern. "
-                "Be specific and actionable."
-            ),
+            system_prompt="You are a Critic agent reviewing an AI/ML research paper.",
             model=vertex_config.get("critic_model", "gemini-2.5-flash"),
             config=config,
         ),
         "auditor": VertexAgent(
             name="Auditor",
             role=AgentRole.AUDITOR,
-            system_prompt=(
-                "You are a senior programme committee member auditing a peer review. "
-                "Your job is to challenge poorly-supported critique points: "
-                "ask for concrete evidence, flag over-interpretations, and identify "
-                "any points that are actually addressed in the paper. "
-                "Also highlight genuine issues the Critic may have missed. "
-                "Be constructive but demanding."
-            ),
+            system_prompt="You are an Auditor agent. Your job is to make the Critic's review stronger.",
             model=vertex_config.get("auditor_model", "gemini-2.5-flash-lite"),
             config=config,
         ),
@@ -273,32 +252,8 @@ def run_pipeline(
             name="Summarizer",
             role=AgentRole.SUMMARIZER,
             system_prompt=(
-                "You are a senior editor. Given a debate between a Critic and Auditor "
-                "about a paper, synthesise their discussion into a final structured review.\n\n"
-                "Output ONLY valid JSON matching this exact schema:\n"
-                "{\n"
-                '  "summary": "<2-3 sentence paper summary>",\n'
-                '  "strengths": [\n'
-                '    {"point": "<strength>", "evidence": "<supporting evidence from paper>"}\n'
-                "  ],\n"
-                '  "weaknesses": [\n'
-                '    {"point": "<weakness>", "evidence": "<supporting evidence from paper>"}\n'
-                "  ],\n"
-                '  "questions": [\n'
-                '    {"question": "<question for authors>", "motivation": "<why this matters>"}\n'
-                "  ],\n"
-                '  "scores": {\n'
-                '    "correctness": <int 1-5>,\n'
-                '    "novelty": <int 1-5>,\n'
-                '    "recommendation": "<accept|borderline|reject>",\n'
-                '    "confidence": <int 1-5>\n'
-                "  }\n"
-                "}\n\n"
-                "Rules:\n"
-                "- Include 3-8 strengths and 3-8 weaknesses (deduplicated).\n"
-                "- Include 2-5 questions for the authors.\n"
-                "- Base scores on the reviewer score context provided and the debate.\n"
-                "- Output nothing except the JSON object. No markdown fences, no commentary."
+                "You are a Summariser agent. Consolidate the critique into a final structured review.\n"
+                "Output ONLY valid JSON, no other text, no markdown code fences."
             ),
             model=vertex_config.get("summariser_model", "gemini-2.5-flash"),
             config=config,
@@ -314,27 +269,51 @@ def run_pipeline(
 
     # ── Step 1: Reader summarises ──────────────────────────────────────────────
     print(f"\n  [ROUND 0] Reading paper …")
-    summary = agents["reader"].chat(f"Please summarise the following paper:\n\n{paper_text}")
+    summary = agents["reader"].chat(f"Paper:\n{paper_text}")
     log("Reader", summary)
     transcript[-1]["input_tokens"] = agents["reader"].total_input_tokens
     transcript[-1]["output_tokens"] = agents["reader"].total_output_tokens
 
     # ── Step 2: Critic generates initial critique ──────────────────────────────
     print(f"\n  [ROUND 0] Critic generating initial points …")
-    critique = agents["critic"].chat(
-        f"Here is the paper summary:\n\n{summary}\n\nNow list your critique points."
+    critic_round1_user = (
+        f"Paper summary:\n{summary}\n\n"
+        "Generate 12-15 specific critique points.\n\n"
+        "For each point you MUST:\n"
+        "- Be concrete and specific, not generic\n"
+        "- Reference specific sections, tables, or claims from the paper\n"
+        "- Focus on ONE issue per point\n\n"
+        "Cover ALL of these dimensions:\n"
+        "- Novelty: what prior work is missing or inadequately compared?\n"
+        "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
+        "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
+        "- Reproducibility: what implementation details are missing?\n"
+        "- Clarity: what is confusing or poorly explained in the paper?\n"
+        "- Limitations: what does the method fail to address or acknowledge?\n"
+        "- Generalisability: does it work beyond the tested settings?\n\n"
+        "IMPORTANT: Only critique what is actually in the paper.\n"
+        "Do NOT invent references, section numbers, or claims not explicitly stated."
     )
+    critique = agents["critic"].chat(critic_round1_user)
     log("Critic (initial)", critique)
 
     # ── Steps 3–4: Auditor ↔ Critic debate ────────────────────────────────────
     rounds_done = 0
     for round_num in range(1, max_rounds + 1):
         print(f"\n  [ROUND {round_num}] Auditor auditing …")
-        audit_feedback = agents["auditor"].chat(
+        auditor_user = (
             f"Paper summary:\n{summary}\n\n"
-            f"Critic's points:\n{critique}\n\n"
-            "Challenge weak points and identify anything important that was missed."
+            f"Critic response:\n{critique}\n\n"
+            "For each critique point:\n"
+            "1. Is it specific enough or too generic? Push for concrete details.\n"
+            "2. Is it supported by evidence from the paper?\n"
+            "3. What important issues did the Critic completely miss?\n\n"
+            "Be aggressive — a weak vague point is worse than no point.\n"
+            "Explicitly list 3-5 issues the Critic missed.\n\n"
+            "Do NOT suggest ethical implications or bias points unless\n"
+            "the paper explicitly makes claims in these areas."
         )
+        audit_feedback = agents["auditor"].chat(auditor_user)
         log(f"Auditor (round {round_num})", audit_feedback)
         rounds_done = round_num
 
@@ -344,10 +323,29 @@ def run_pipeline(
             break
 
         print(f"  [ROUND {round_num}] Critic revising …")
-        critique = agents["critic"].chat(
-            f"The Auditor has challenged some of your points:\n\n{audit_feedback}\n\n"
-            "Revise or defend your critique points accordingly."
+        critic_round2_user = (
+            f"Original paper summary:\n{summary}\n\n"
+            f"Your original critique:\n{critique}\n\n"
+            f"Auditor feedback:\n{audit_feedback}\n\n"
+            "Now produce an improved critique that:\n"
+            "- Fixes all weak or vague points the Auditor flagged\n"
+            "- Adds the missing issues the Auditor identified\n"
+            "- Keeps all strong original points\n"
+            "- Generates 12-15 total points\n\n"
+            "For each point you MUST:\n"
+            "- Be concrete and specific, not generic\n"
+            "- Reference specific sections, tables, or claims from the paper\n"
+            "- Focus on ONE issue per point\n\n"
+            "Cover ALL of these dimensions:\n"
+            "- Novelty: what prior work is missing or inadequately compared?\n"
+            "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
+            "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
+            "- Reproducibility: what implementation details are missing?\n"
+            "- Clarity: what is confusing or poorly explained in the paper?\n"
+            "- Limitations: what does the method fail to address or acknowledge?\n"
+            "- Generalisability: does it work beyond the tested settings?"
         )
+        critique = agents["critic"].chat(critic_round2_user)
         log(f"Critic (round {round_num})", critique)
 
     # ── Step 5: Summarizer consolidates ────────────────────────────────────────
@@ -361,8 +359,7 @@ def run_pipeline(
         full_debate = reviewer_scores_block + "\n\n" + full_debate
 
     raw_summary = agents["summarizer"].chat(
-        f"Here is the full debate transcript:\n\n{full_debate}\n\n"
-        "Produce the final structured review JSON."
+        f"Critic2 output:\n{critique}\n\nReader summary:\n{summary}"
     )
     log("Summarizer", raw_summary)
 

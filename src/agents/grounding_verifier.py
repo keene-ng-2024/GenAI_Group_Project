@@ -64,14 +64,14 @@ def verify_grounding(
     point = critique_point.get("point", "")
     evidence = critique_point.get("evidence", "")
     
-    # Build prompt for grounding verification
+    paper_section_truncated = paper_section[:2000]
     prompt = f"""Analyze whether the critique point is supported by the provided paper section.
 
 Critique Point: {point}
 Claimed Evidence: {evidence}
 
 Paper Section:
-{paper_section[:2000]}  # Truncate for efficiency
+{paper_section_truncated}
 
 Please evaluate:
 1. Is the claimed evidence actually present in the paper section?
