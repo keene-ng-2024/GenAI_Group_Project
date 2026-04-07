@@ -182,7 +182,7 @@ def verify_all_grounding(
     
     for point in critique_points:
         # Find relevant paper section (simplified: use full text)
-        paper_section = paper.get("full_text", "")[:5000]
+        paper_section = paper.get("body_text", paper.get("full_text", ""))[:5000]
         
         result = verify_grounding(point, paper_section, config)
         

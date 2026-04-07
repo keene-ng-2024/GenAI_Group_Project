@@ -414,7 +414,7 @@ def run_all_papers(
         try:
             result = run_pipeline(
                 paper_id=paper_id,
-                paper_text=paper.get("full_text", ""),
+                paper_text=paper.get("body_text", paper.get("full_text", "")),
                 config=config,
             )
         except Exception as exc:
