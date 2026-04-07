@@ -16,21 +16,26 @@ Six platforms implement the same 4-agent pipeline under controlled conditions.
 **Prompts are identical across all platforms.** The only dimensions that vary
 are workflow structure and model.
 
-| Platform | Workflow | Loop type | Model |
-|----------|----------|-----------|-------|
-| Baseline | Single call | None | GPT-4.1-mini |
-| n8n | Visual DAG | Fixed rounds | GPT-4.1-mini |
-| Dify | Visual DAG | Fixed rounds | GPT-4.1-mini |
-| Vertex AI | Python (google-genai SDK) | Dynamic conditional | Gemini 2.5 Flash* |
-| LangGraph | StateGraph (code-first) | Dynamic conditional | GPT-4.1-mini |
-| CrewAI | Role-based sequential | Fixed rounds | GPT-4.1-mini |
+| Platform | Workflow file(s) | Loop type | Model |
+|----------|-----------------|-----------|-------|
+| Baseline | `src/baseline/baseline_critique.py` | None | GPT-4.1-mini |
+| n8n (no loop) | `src/platforms/n8n_workflow_noloop.json` | None | GPT-4.1-mini |
+| n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini |
+| Dify (no loop) | Dify workflow | None | GPT-4.1-mini |
+| Dify (1 round) | Dify workflow | Fixed 1 round | GPT-4.1-mini |
+| Vertex AI | `src/agents/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* |
+| LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini |
+| LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini |
+| LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini |
 
 *Vertex AI uses Gemini 2.5 Flash due to platform model lock-in.
 
 **Loop types explained:**
-- **None** — single LLM call, no debate
-- **Fixed rounds** — Critic → Auditor unrolled N times (hardcoded, no early exit); used by platforms that cannot express conditional cycles (n8n, Dify, CrewAI)
-- **Dynamic conditional** — Critic ↔ Auditor loop with early exit when Auditor is satisfied; native to LangGraph and implemented in Python for Vertex AI
+- **None** — Reader → Critic → Summariser. No debate, no Auditor.
+- **Fixed 1 round** — Reader → Critic 1 → Auditor → Critic 2 → Summariser. Auditor challenges Critic 1, Critic 2 revises based on feedback, Summariser consolidates. Hardcoded, no early exit. Used by platforms that cannot express conditional cycles (n8n, Dify).
+- **Dynamic conditional** — same agents but Critic ↔ Auditor loop repeats until Auditor is satisfied or max rounds reached. Native to LangGraph, implemented in Python for Vertex AI.
+
+> **Note:** The fixed-round design requires an explicit Critic 2 node — a second Critic call that receives the Auditor's feedback and revises accordingly. Passing Auditor feedback directly to the Summariser (skipping Critic 2) is a weaker design as the critique points never get revised.
 
 ---
 

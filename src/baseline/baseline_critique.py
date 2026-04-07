@@ -97,8 +97,8 @@ def format_user_message(title: str, abstract: str, full_text: str = "",
                         truncate_chars: int = 12000) -> str:
     full_text_section = ""
     if full_text:
-        truncated = full_text[:truncate_chars]
-        full_text_section = f"Full text (truncated):\n{truncated}\n"
+        truncated = full_text[:truncate_chars] if truncate_chars else full_text
+        full_text_section = f"Full text:\n{truncated}\n"
     return USER_TEMPLATE.format(
         title=title,
         abstract=abstract,

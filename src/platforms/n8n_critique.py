@@ -1,37 +1,27 @@
 """
 n8n_critique.py
 ---------------
-Python adapter that drives the n8n multi-agent critique workflow.
+Python adapter that drives the n8n multi-agent critique workflows.
 
-Architecture
-  This module POSTs each paper to the n8n webhook URL.
-  The n8n workflow handles the Reader → Critic → Auditor → Summariser
-  pipeline by calling the Anthropic API at each step, then returns
-  the Summariser's structured JSON output.
+Two workflow modes:
+  noloop — Reader → Critic → Summariser
+            webhook path: /paper-critique-noloop
+            output dir:   results/n8n_noloop/
 
-  Python (this file)              n8n workflow
-  ─────────────────               ────────────────────────────────────
-  POST {paper_id, title,    ───►  Webhook trigger
-        paper_text}               │
-                                  ├─ Reader Agent   (Anthropic API)
-                                  ├─ Critic Agent   (Anthropic API)
-                                  ├─ Auditor Agent  (Anthropic API)
-                                  ├─ Summariser     (Anthropic API)
-  ◄─── {structured JSON}          └─ Respond to Webhook
+  1round  — Reader → Critic 1 → Auditor → Critic 2 → Summariser
+            webhook path: /paper-critique
+            output dir:   results/n8n/
 
-Setup
-  1. Import n8n_workflow.json into your n8n instance.
-  2. Activate the workflow and copy the webhook URL (e.g.
-     http://localhost:5678/webhook/paper-critique).
-  3. Set n8n.webhook_url in config.yaml.
-
-Output per paper: results/n8n/<paper_id>.json  (same schema as baseline)
+Usage:
+  python -m src.platforms.n8n_critique noloop
+  python -m src.platforms.n8n_critique 1round
 """
 
 from __future__ import annotations
 
 import json
 import re
+import sys
 import time
 from pathlib import Path
 
@@ -49,21 +39,20 @@ def load_config(config_path: str = "config.yaml") -> dict:
         return yaml.safe_load(f)
 
 
-# ── Output parsing (same logic as orchestrator) ────────────────────────────────
+# ── Output parsing ─────────────────────────────────────────────────────────────
 
 def _parse_structured_output(raw: str | dict) -> dict:
     """Parse structured JSON from n8n response with fallbacks."""
-    # If n8n already parsed it into a dict, use directly
     if isinstance(raw, dict) and "weaknesses" in raw:
         return raw
 
     text = str(raw).strip()
 
-    # Strip markdown fences
     if text.startswith("```"):
         text = text.split("```")[1]
         if text.startswith("json"):
             text = text[4:]
+        text = text.strip()
 
     try:
         return json.loads(text)
@@ -116,23 +105,15 @@ def critique_paper_via_n8n(
     paper_id: str,
     paper: dict,
     webhook_url: str,
+    mode: str,
     cfg: dict,
-    timeout: int = 300,
+    timeout: int = 1000,
 ) -> dict:
-    """
-    POST a paper to the n8n webhook and return the structured result.
-
-    Args:
-        paper_id:    Unique paper identifier.
-        paper:       Full paper dict from reviews_parsed.json.
-        webhook_url: n8n webhook URL (e.g. http://localhost:5678/webhook/paper-critique).
-        cfg:         Config dict.
-        timeout:     HTTP timeout in seconds (n8n pipelines take ~60-120s per paper).
-    """
+    """POST a paper to the n8n webhook and return the structured result."""
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
     title = paper.get("title", paper_id)
     full_text = paper.get("full_text", "")
-    paper_text = full_text[:truncate_chars] if full_text else paper.get("abstract", title)
+    paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", title)
 
     payload = {
         "paper_id": paper_id,
@@ -152,41 +133,78 @@ def critique_paper_via_n8n(
 
     latency_seconds = round(time.perf_counter() - start_time, 2)
 
-    # n8n may return the structured dict directly, or wrap it in {"output": ...}
     body = response.json()
-    raw = body.get("output") or body.get("structured") or body
 
+    # New workflows return critique_points + structured + transcript directly
+    if "critique_points" in body and "structured" in body:
+        return {
+            "paper_id": paper_id,
+            "title": title,
+            "platform": f"n8n_{mode}",
+            "model": "gpt-4.1-mini",
+            "latency_seconds": latency_seconds,
+            "structured": body["structured"],
+            "critique_points": body["critique_points"],
+            "transcript": body.get("transcript", {}),
+        }
+
+    # Fallback: parse structured output manually
+    raw = body.get("output") or body.get("structured") or body
     structured = _parse_structured_output(raw)
     critique_points = _flatten_to_critique_points(structured)
 
     return {
         "paper_id": paper_id,
         "title": title,
-        "platform": "n8n",
-        "model": "gpt-4o",
+        "platform": f"n8n_{mode}",
+        "model": "gpt-4.1-mini",
         "latency_seconds": latency_seconds,
         "structured": structured,
         "critique_points": critique_points,
+        "transcript": {},
     }
 
 
 # ── Batch pipeline ─────────────────────────────────────────────────────────────
 
-def run_all_papers(reviews_path: str, output_dir: str, cfg: dict) -> None:
-    webhook_url = cfg.get("n8n", {}).get("webhook_url", "")
+def run_all_papers(mode: str, cfg: dict) -> None:
+    """
+    Run all eval papers through the specified n8n workflow.
+
+    Args:
+        mode: "noloop" or "1round"
+        cfg:  Config dict from config.yaml
+    """
+    n8n_cfg = cfg.get("n8n", {})
+
+    if mode == "noloop":
+        webhook_url = n8n_cfg.get("webhook_url_noloop", "")
+        output_dir = cfg["results"].get("n8n_noloop_dir", "results/n8n_noloop")
+    elif mode == "1round":
+        webhook_url = n8n_cfg.get("webhook_url", "")
+        output_dir = cfg["results"].get("n8n_dir", "results/n8n")
+    else:
+        raise ValueError(f"Unknown mode '{mode}'. Use 'noloop' or '1round'.")
+
     if not webhook_url:
         raise ValueError(
-            "n8n.webhook_url is not set in config.yaml. "
-            "Import n8n_workflow.json into n8n, activate it, and paste the webhook URL."
+            f"Webhook URL for mode '{mode}' is not set in config.yaml.\n"
+            "Set n8n.webhook_url (1round) or n8n.webhook_url_noloop (noloop)."
         )
 
-    with open(reviews_path) as f:
-        all_papers: dict = json.load(f)
+    full_path = cfg["data"].get("jsonl_file", "data/ReviewCritique.jsonl")
+    papers_to_run = {}
+    with open(full_path) as f:
+        for i, line in enumerate(f, start=1):
+            row = json.loads(line)
+            paper_id = f"paper_{i:04d}"
+            papers_to_run[paper_id] = row
+    print(f"  [INFO] Running {len(papers_to_run)} papers (mode={mode})")
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    for paper_id, paper in all_papers.items():
+    for paper_id, paper in papers_to_run.items():
         out_file = out_dir / f"{paper_id}.json"
         if out_file.exists():
             print(f"  [SKIP] {paper_id}")
@@ -199,13 +217,14 @@ def run_all_papers(reviews_path: str, output_dir: str, cfg: dict) -> None:
                 paper_id=paper_id,
                 paper=paper,
                 webhook_url=webhook_url,
+                mode=mode,
                 cfg=cfg,
             )
         except requests.exceptions.ConnectionError:
             print(f"  [ERROR] Cannot reach n8n at {webhook_url}. Is n8n running?")
             break
         except requests.exceptions.Timeout:
-            print(f"  [ERROR] {paper_id} timed out — n8n took >300s")
+            print(f"  [ERROR] {paper_id} timed out (>{300}s)")
             continue
         except Exception as exc:
             print(f"  [ERROR] {paper_id} failed: {exc}")
@@ -215,15 +234,16 @@ def run_all_papers(reviews_path: str, output_dir: str, cfg: dict) -> None:
             json.dump(result, f, indent=2)
 
         n_points = len(result["critique_points"])
-        print(f"\n  [SAVED] {n_points} weakness points → {out_file}  ({result['latency_seconds']}s)")
+        print(f"  [SAVED] {n_points} weakness points → {out_file}  ({result['latency_seconds']}s)")
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    if len(sys.argv) < 2 or sys.argv[1] not in ("noloop", "1round"):
+        print("Usage: python -m src.platforms.n8n_critique [noloop|1round]")
+        sys.exit(1)
+
+    mode = sys.argv[1]
     cfg = load_config()
-    run_all_papers(
-        reviews_path=cfg["data"]["reviews_file"],
-        output_dir=cfg["results"]["n8n_dir"],
-        cfg=cfg,
-    )
+    run_all_papers(mode=mode, cfg=cfg)
