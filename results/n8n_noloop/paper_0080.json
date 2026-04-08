@@ -3,137 +3,92 @@
   "title": "Using Document Similarity Methods to create Parallel Datasets for Code Translation",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 43.11,
+  "latency_seconds": 55.2,
   "structured": {
-    "summary": "The paper proposes an automated pipeline leveraging document similarity techniques to mine parallel code pairs from large multilingual code repositories, aiming to alleviate the scarcity of parallel datasets for code translation. Experiments demonstrate that models trained on the mined data achieve competitive translation performance compared to smaller manually curated datasets, suggesting the approach's potential scalability and utility.",
+    "summary": "This paper proposes a method to automatically create noisy parallel code datasets by leveraging document similarity metrics, particularly Word Mover\u2019s Distance, to pair code samples across programming languages. The approach enables supervised training of code translation models for a wider range of language pairs, demonstrating robustness to noise and practical improvements over random baselines on multiple datasets including CodeNet.",
     "strengths": [
       {
-        "point": "Addresses an important problem of scarce parallel code data for translation.",
-        "evidence": "The motivation to automate parallel dataset creation for code translation is well articulated."
+        "point": "Novel approach to address scarcity of parallel code data",
+        "evidence": "The paper introduces a method using document similarity metrics to create noisy parallel datasets from non-parallel corpora, enabling supervised training for code translation."
       },
       {
-        "point": "Proposes a scalable, automated pipeline using document similarity metrics.",
-        "evidence": "The method applies TF-IDF and embedding-based similarity to large code corpora to identify candidate parallel pairs."
+        "point": "Comprehensive empirical evaluation across multiple datasets and languages",
+        "evidence": "Experiments include existing parallel datasets and large-scale CodeNet data, evaluating several similarity measures and multiple code translation models."
       },
       {
-        "point": "Demonstrates competitive translation performance with mined datasets.",
-        "evidence": "Experiments show models trained on mined data perform comparably to those trained on smaller manual datasets."
+        "point": "Demonstrated noise tolerance of code translation models",
+        "evidence": "Models trained on noisy datasets with up to ~30% noise show only moderate performance degradation, indicating robustness."
+      },
+      {
+        "point": "Expanded language coverage for supervised code translation",
+        "evidence": "Created noisy parallel datasets for 10 new language pairs beyond prior work and showed improved translation accuracy over random pairing."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks comparison to prior parallel data mining methods.",
-        "evidence": "No discussion or experiments contrasting with established approaches like AST alignment or semantic embeddings."
+        "point": "Lack of comparison to recent unsupervised code translation baselines",
+        "evidence": "No direct empirical comparison to state-of-the-art unsupervised methods that do not rely on parallel data weakens claims of superiority."
       },
       {
-        "point": "Insufficient justification and ablation of similarity metrics used.",
-        "evidence": "No rationale for choosing TF-IDF and embedding similarity over other metrics, nor impact analysis."
+        "point": "Insufficient justification and analysis of similarity threshold and pairing strategy",
+        "evidence": "No principled method or sensitivity analysis for selecting similarity threshold \u03b4; uniqueness constraint on target documents not ablated."
       },
       {
-        "point": "Inadequate details on code preprocessing and normalization.",
-        "evidence": "Section 3 briefly mentions preprocessing but omits handling of language-specific syntax differences."
+        "point": "Limited evaluation metrics and missing qualitative analysis",
+        "evidence": "Evaluation relies on BLEU, CodeBLEU, Exact Match, and CA@k without human evaluation or detailed error analysis to assess semantic or functional correctness."
       },
       {
-        "point": "Limited and potentially unfair baselines in evaluation.",
-        "evidence": "No comparison to models trained on synthetic data or other automatic mining pipelines."
+        "point": "Potential data leakage concerns in CodeNet splits",
+        "evidence": "Unclear if train/test splits ensure no overlap of problem IDs or solutions, possibly inflating performance metrics."
       },
       {
-        "point": "Evaluation focuses solely on translation accuracy without assessing mined data quality.",
-        "evidence": "No manual inspection or precision/recall metrics for the mined parallel pairs."
+        "point": "Reproducibility hindered by missing preprocessing and hyperparameter details",
+        "evidence": "No description of code preprocessing/tokenization or parameters for similarity computations like WMD embeddings or TF-IDF settings."
       },
       {
-        "point": "Missing critical implementation and hyperparameter details.",
-        "evidence": "Embedding models, similarity thresholds, and hardware/software configurations are not specified."
+        "point": "Ambiguity in similarity score interpretation",
+        "evidence": "Confusing description of pairing documents if similarity is 'below \u03b4' despite some metrics having higher values for more similar documents."
       },
       {
-        "point": "Ambiguous description of filtering and refinement steps.",
-        "evidence": "Lacks clear criteria or algorithms, reducing clarity on their role and effectiveness."
+        "point": "No discussion of code style, formatting differences, or scalability challenges",
+        "evidence": "Paper omits limitations related to stylistic differences affecting similarity and computational cost of expensive metrics like WMD."
       },
       {
-        "point": "No analysis of false positives or semantic equivalence in mined pairs.",
-        "evidence": "Potential for similar but non-parallel code pairs is not discussed."
-      },
-      {
-        "point": "Scalability claims are unsubstantiated by empirical runtime or resource analysis.",
-        "evidence": "No quantitative data on computational costs or bottlenecks."
-      },
-      {
-        "point": "Experiments limited to few language pairs, limiting generalizability.",
-        "evidence": "Focus on Java-Python without testing on diverse or low-resource languages."
-      },
-      {
-        "point": "No evaluation on downstream tasks beyond code translation.",
-        "evidence": "Misses demonstrating applicability to cross-language code understanding or migration."
-      },
-      {
-        "point": "Assumes document-level similarity implies parallelism, which may be flawed.",
-        "evidence": "Shared libraries or templates could confound similarity scores."
-      },
-      {
-        "point": "No statistical significance testing reported for results.",
-        "evidence": "Unclear if reported improvements are robust."
-      },
-      {
-        "point": "Lacks illustrative examples of mined code pairs.",
-        "evidence": "No concrete snippets provided to aid interpretability."
-      },
-      {
-        "point": "No mention of dataset or code release for reproducibility.",
-        "evidence": "Limits community adoption and verification."
+        "point": "Limited generalizability analysis to low-resource or domain-specific languages",
+        "evidence": "No detailed results on truly low-resource languages or languages outside popular CodeNet languages."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed method compare quantitatively and qualitatively to prior parallel mining approaches using ASTs or semantic embeddings?",
-        "motivation": "To better understand the novelty and relative effectiveness of the approach."
+        "question": "How does the proposed supervised noisy dataset approach compare quantitatively to recent unsupervised code translation methods?",
+        "motivation": "Direct comparison is needed to validate claims of superiority and practical utility."
       },
       {
-        "question": "What is the impact of different similarity metrics and preprocessing choices on the quality of mined pairs?",
-        "motivation": "To justify design decisions and optimize the pipeline."
+        "question": "What is the impact of varying the similarity threshold \u03b4 and the pairing uniqueness constraint on dataset quality and model performance?",
+        "motivation": "Understanding sensitivity to these hyperparameters is critical for method robustness and reproducibility."
       },
       {
-        "question": "Can the authors provide examples of mined parallel code pairs and an analysis of false positives?",
-        "motivation": "To assess the semantic correctness and practical utility of the mined data."
+        "question": "Can similarity scores be effectively incorporated as training weights to further improve model robustness to noise?",
+        "motivation": "Exploring this could enhance training and is mentioned as future work but not empirically studied."
       },
       {
-        "question": "What are the computational costs and scalability limits when mining from very large codebases?",
-        "motivation": "To validate scalability claims and guide practical deployment."
-      },
-      {
-        "question": "Have the authors considered evaluating the mined datasets on downstream tasks beyond translation, such as code search or migration?",
-        "motivation": "To demonstrate broader applicability and impact."
-      },
-      {
-        "question": "Will the authors release the mined datasets and code to facilitate reproducibility?",
-        "motivation": "To enable community validation and further research."
+        "question": "Are there risks of data leakage in CodeNet splits, and how might this affect reported results?",
+        "motivation": "Ensuring no overlap between train and test sets is essential for credible evaluation."
       }
-    ],
-    "scores": {
-      "correctness": 3,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Lacks comparison to prior parallel data mining methods.. No discussion or experiments contrasting with established approaches like AST alignment or semantic embeddings.",
-    "point_002": "Insufficient justification and ablation of similarity metrics used.. No rationale for choosing TF-IDF and embedding similarity over other metrics, nor impact analysis.",
-    "point_003": "Inadequate details on code preprocessing and normalization.. Section 3 briefly mentions preprocessing but omits handling of language-specific syntax differences.",
-    "point_004": "Limited and potentially unfair baselines in evaluation.. No comparison to models trained on synthetic data or other automatic mining pipelines.",
-    "point_005": "Evaluation focuses solely on translation accuracy without assessing mined data quality.. No manual inspection or precision/recall metrics for the mined parallel pairs.",
-    "point_006": "Missing critical implementation and hyperparameter details.. Embedding models, similarity thresholds, and hardware/software configurations are not specified.",
-    "point_007": "Ambiguous description of filtering and refinement steps.. Lacks clear criteria or algorithms, reducing clarity on their role and effectiveness.",
-    "point_008": "No analysis of false positives or semantic equivalence in mined pairs.. Potential for similar but non-parallel code pairs is not discussed.",
-    "point_009": "Scalability claims are unsubstantiated by empirical runtime or resource analysis.. No quantitative data on computational costs or bottlenecks.",
-    "point_010": "Experiments limited to few language pairs, limiting generalizability.. Focus on Java-Python without testing on diverse or low-resource languages.",
-    "point_011": "No evaluation on downstream tasks beyond code translation.. Misses demonstrating applicability to cross-language code understanding or migration.",
-    "point_012": "Assumes document-level similarity implies parallelism, which may be flawed.. Shared libraries or templates could confound similarity scores.",
-    "point_013": "No statistical significance testing reported for results.. Unclear if reported improvements are robust.",
-    "point_014": "Lacks illustrative examples of mined code pairs.. No concrete snippets provided to aid interpretability.",
-    "point_015": "No mention of dataset or code release for reproducibility.. Limits community adoption and verification."
+    "point_001": "Lack of comparison to recent unsupervised code translation baselines. No direct empirical comparison to state-of-the-art unsupervised methods that do not rely on parallel data weakens claims of superiority.",
+    "point_002": "Insufficient justification and analysis of similarity threshold and pairing strategy. No principled method or sensitivity analysis for selecting similarity threshold \u03b4; uniqueness constraint on target documents not ablated.",
+    "point_003": "Limited evaluation metrics and missing qualitative analysis. Evaluation relies on BLEU, CodeBLEU, Exact Match, and CA@k without human evaluation or detailed error analysis to assess semantic or functional correctness.",
+    "point_004": "Potential data leakage concerns in CodeNet splits. Unclear if train/test splits ensure no overlap of problem IDs or solutions, possibly inflating performance metrics.",
+    "point_005": "Reproducibility hindered by missing preprocessing and hyperparameter details. No description of code preprocessing/tokenization or parameters for similarity computations like WMD embeddings or TF-IDF settings.",
+    "point_006": "Ambiguity in similarity score interpretation. Confusing description of pairing documents if similarity is 'below \u03b4' despite some metrics having higher values for more similar documents.",
+    "point_007": "No discussion of code style, formatting differences, or scalability challenges. Paper omits limitations related to stylistic differences affecting similarity and computational cost of expensive metrics like WMD.",
+    "point_008": "Limited generalizability analysis to low-resource or domain-specific languages. No detailed results on truly low-resource languages or languages outside popular CodeNet languages."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nThe paper addresses the challenge of creating parallel datasets for code translation between programming languages. High-quality parallel corpora are essential for training effective code translation models, but such datasets are scarce and costly to produce manually. The motivation is to develop automated methods to generate parallel code pairs, enabling improved code translation systems and facilitating tasks like code migration and cross-language code understanding.\n\n**Proposed Method:**  \nThe authors propose leveraging document similarity techniques to identify and extract parallel code snippets from large corpora of source code written in different programming languages. By treating code files or fragments as documents, they apply similarity metrics (e.g., TF-IDF, embedding-based similarity) to find pairs of code segments that are likely translations of each other. This approach involves:  \n- Collecting large code repositories in multiple languages.  \n- Preprocessing code to normalize and tokenize it appropriately.  \n- Computing similarity scores between code documents across languages.  \n- Selecting high-similarity pairs as candidate parallel data.  \n- Optionally refining or filtering these pairs to improve quality.\n\n**Results:**  \nThe paper demonstrates that document similarity methods can effectively identify parallel code snippets, producing sizable parallel datasets without manual annotation. Experiments show that models trained on these automatically generated datasets achieve competitive performance on code translation tasks compared to models trained on smaller, manually curated datasets. The approach scales well and can be applied to various language pairs.\n\n**Claimed Contributions:**  \n- Introducing a novel application of document similarity techniques to generate parallel code datasets for code translation.  \n- Providing a scalable, automated pipeline for mining parallel code pairs from large multilingual codebases.  \n- Empirically validating the quality and utility of the generated datasets through downstream code translation experiments.  \n- Enabling improved code translation models and facilitating cross-language software engineering tasks by alleviating the scarcity of parallel code data.",
-    "critic": "1. **Novelty - Missing Comparison to Prior Parallel Data Mining Approaches:**  \nThe paper claims novelty in applying document similarity techniques to mine parallel code pairs but does not adequately compare to prior work on parallel corpus mining in code or natural language (e.g., alignment methods using ASTs or semantic embeddings). Section 3 lacks discussion or experiments contrasting their approach with these established methods, which limits understanding of the true novelty.\n\n2. **Methodology - Justification for Similarity Metrics Choice:**  \nIn Section 3, the authors use TF-IDF and embedding-based similarity but do not justify why these metrics were selected over others (e.g., graph-based similarity, token-level alignment). There is no ablation study showing the impact of different similarity metrics on the quality of mined pairs, leaving the design choice insufficiently motivated.\n\n3. **Methodology - Lack of Details on Code Preprocessing:**  \nThe preprocessing step is briefly mentioned but lacks specifics on how code normalization and tokenization are performed (Section 3). For example, how are language-specific syntax differences handled? Without this, it is unclear how comparable the code fragments are before similarity computation.\n\n4. **Evaluation - Baselines Are Limited and Possibly Unfair:**  \nThe experiments compare models trained on mined data versus small manually curated datasets but do not include strong baselines such as models trained on synthetic data generated by code translation models or other automatic mining pipelines. This limits the conclusiveness of the claimed competitive performance (Section 5).\n\n5. **Evaluation - Metrics Focus Solely on Translation Accuracy:**  \nThe evaluation primarily reports translation accuracy or BLEU scores (Section 5) but does not assess the quality of the mined parallel pairs themselves, e.g., via manual inspection or precision/recall against a gold standard. This weakens the validation of the data generation step.\n\n6. **Reproducibility - Missing Hyperparameter and Implementation Details:**  \nThe paper omits critical implementation details such as the exact embedding models used, similarity thresholds for pair selection, and hardware/software configurations (Section 4). This hinders reproducibility and adoption by other researchers.\n\n7. **Clarity - Ambiguous Description of Filtering and Refinement:**  \nThe optional filtering/refinement step is vaguely described without clear criteria or algorithms (Section 3). It is unclear how this step improves data quality or how it is integrated into the pipeline, which reduces clarity.\n\n8. **Limitations - No Discussion on False Positives in Mined Pairs:**  \nThe paper does not acknowledge or analyze the potential for false positives\u2014code pairs that are similar but not true translations (Section 6). This is a critical limitation given the reliance on similarity metrics that may not capture semantic equivalence.\n\n9. **Limitations - Scalability Claims Lack Empirical Evidence:**  \nWhile the authors claim scalability to large corpora (Section 6), there is no quantitative analysis of runtime, computational resources, or scalability bottlenecks, making this claim unsubstantiated.\n\n10. **Generalisability - Experiments Limited to Few Language Pairs:**  \nThe experiments focus on a narrow set of language pairs (e.g., Java-Python) without testing on more diverse or low-resource languages (Section 5). This raises questions about the generalizability of the approach across different programming paradigms.\n\n11. **Generalisability - No Evaluation on Downstream Tasks Beyond Translation:**  \nAlthough the motivation includes cross-language code understanding and migration, the evaluation is restricted to code translation accuracy (Section 5). The paper misses an opportunity to demonstrate broader applicability.\n\n12. **Methodology - Hidden Assumption of Parallelism at Document Level:**  \nThe approach treats code files or fragments as documents and assumes that high similarity implies parallelism (Section 3). This assumption may not hold if codebases share common libraries or templates, potentially confounding similarity scores.\n\n13. **Evaluation - No Statistical Significance Testing Reported:**  \nResults in Section 5 report performance improvements but do not include statistical significance tests or confidence intervals, leaving it unclear whether gains are robust.\n\n14. **Clarity - Lack of Illustrative Examples of Mined Code Pairs:**  \nThe paper would benefit from concrete examples of mined parallel code snippets to help readers understand the nature and quality of the data (Section 4 or 5). Their absence reduces interpretability.\n\n15. **Reproducibility - Dataset and Code Release Not Mentioned:**  \nThere is no mention of releasing the mined parallel datasets or code for the pipeline (Section 7), which limits reproducibility and community impact."
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Translating source code between programming languages is essential for modernizing legacy systems but is time-consuming and costly. Automated code translation using machine learning (ML) and natural language processing (NLP) techniques has shown promise but is limited by the scarcity of parallel code datasets (i.e., aligned code samples in two languages).\n\n- **Motivation:** Unlike natural language, code rarely exists as verbatim translations across languages, making parallel dataset creation difficult and expensive. Existing datasets cover only a few popular languages (e.g., Java \u2194 C#, Java \u2194 Python). Unsupervised methods using monolingual corpora have been proposed but often underperform compared to supervised methods, especially when languages differ significantly or data is low-resource.\n\n- **Goal:** To overcome the lack of parallel datasets, the authors propose a method to automatically create noisy parallel code datasets using document similarity techniques, enabling supervised training of code translation models for a wider range of programming languages.\n\n---\n\n### Proposed Method\n\n- **Core Idea:** Use document similarity metrics to pair code samples from two different programming languages that are likely to be translations or implementations of the same functionality, thereby creating noisy parallel datasets.\n\n- **Algorithm:**\n  - Input: Two non-parallel corpora of code samples in different languages (D and D'), a similarity measure M, and a similarity threshold \u03b4.\n  - For each document in D, find the most similar document(s) in D' using M.\n  - Pair documents if similarity is below \u03b4 and the target document is not already paired.\n  - Return a sorted list of unique document pairs ordered by similarity score.\n\n- **Similarity Measures Explored:**\n  - TF-IDF with cosine similarity\n  - Okapi-BM25\n  - Latent Dirichlet Allocation (LDA)\n  - Latent Semantic Indexing (LSI)\n  - Word Mover\u2019s Distance (WMD)\n\n- **Rationale:** Although the created datasets are noisy (may contain incorrect pairs), the formal and structured nature of code means models can tolerate some noise and still learn effective translations.\n\n---\n\n### Experimental Setup\n\n- **Datasets:**\n  - Existing parallel datasets: Java \u2194 C#, Java \u2194 Python, Java \u2194 C++, Python \u2194 C++.\n  - Large-scale non-parallel dataset: CodeNet (14 million solutions across 55 languages).\n  \n- **Models:**\n  - CodeBERT\n  - GraphCodeBERT\n  - PLBART\n\n- **Evaluation Metrics:**\n  - BLEU score\n  - CodeBLEU score (incorporates syntax and semantics)\n  - Exact Match (EM)\n  - Computational Accuracy @ k (CA@k) based on passing unit tests\n\n---\n\n### Results\n\n1. **RQ1: Effectiveness of Document Similarity Methods**\n   - On datasets with known ground-truth pairs, WMD, TF-IDF, and Okapi-BM25 outperform latent space methods (LDA, LSI).\n   - WMD consistently achieves the highest match accuracy (~90%).\n   - On CodeNet (no ground-truth pairs), WMD achieves higher pseudo-match accuracy (correctly matching solutions to the same problem) compared to TF-IDF and Okapi-BM25, which vary widely (30%-70%).\n\n2. **RQ2: Noise Tolerance of Models**\n   - Models trained on noisy datasets created by document similarity methods still perform well.\n   - Performance degradation is gradual with increasing noise; even at ~30% noise, BLEU and CodeBLEU scores drop only moderately.\n   - Models trained on WMD-created datasets (high accuracy) show only ~1% performance drop compared to ground-truth.\n   - Even datasets with ~47% noise (e.g., LDA) outperform random pairing baselines.\n   - The formal structure of code helps models learn despite noise.\n\n3. **RQ3: Practical Utility for New Language Pairs**\n   - Created noisy parallel datasets for 10 language pairs from CodeNet: C, C#, C++, Go, Java, JavaScript, PHP, Python, Ruby, Scala.\n   - Fine-tuned PLBART on these datasets and evaluated CA@5.\n   - Models trained on WMD-matched datasets significantly outperform those trained on randomly paired data.\n   - Improvements observed across common and less-studied language pairs (e.g., PHP \u2192 Ruby, JavaScript \u2192 C++).\n   - Demonstrates scalability and practical applicability of the method.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Method:** Propose using document similarity metrics, especially Word Mover\u2019s Distance, to automatically create noisy parallel code datasets from non-parallel corpora.\n\n2. **Empirical Validation:** Show that document similarity methods can accurately create parallel datasets with high match accuracy.\n\n3. **Noise Robustness:** Demonstrate that code translation models trained on noisy datasets retain strong performance, tolerating moderate noise levels.\n\n4. **Expanded Language Coverage:** Successfully create parallel datasets and train models for 10 language pairs beyond those previously studied, enabling supervised code translation in low-resource language pairs.\n\n5. **Practical Impact:** Provide a scalable approach to alleviate the scarcity of parallel code data, facilitating improved automated code translation and legacy code modernization.\n\n---\n\n### Additional Notes\n\n- The authors provide reproducibility materials including source code and subsets of created datasets.\n\n- Ethical considerations highlight that the work aims to assist human programmers rather than replace them and acknowledges risks of unsupervised code generation.\n\n- Future work includes exploring better similarity metrics and incorporating similarity scores as weights during model training.\n\n---\n\n**In summary,** this paper addresses the critical bottleneck of parallel data scarcity in code translation by leveraging document similarity methods to create noisy but effective parallel datasets. The approach is validated across multiple datasets and languages, showing that models trained on such data perform well and that the method enables supervised translation for many new language pairs.",
+    "critic": "1. **Novelty - Missing Comparison to Recent Unsupervised Code Translation Methods:**  \nWhile the paper motivates the scarcity of parallel datasets and proposes a novel noisy parallel dataset creation method, it lacks a direct empirical comparison to recent state-of-the-art unsupervised code translation approaches that do not rely on parallel data (e.g., large pretrained multilingual code models fine-tuned with back-translation or denoising objectives). This omission weakens the claim that supervised training on noisy data is superior, as no direct baseline from unsupervised methods is reported in the experiments (see Results section, RQ2 and RQ3).\n\n2. **Methodology - Justification for Similarity Threshold \u03b4 and Pairing Strategy:**  \nThe paper describes pairing documents if similarity is below a threshold \u03b4 but does not provide a principled method for selecting \u03b4 or analyze how sensitive results are to this hyperparameter. Moreover, the strategy of pairing only the most similar document and ensuring uniqueness (no repeated target documents) could bias the dataset towards certain samples, but this design choice is not justified or ablated (see Proposed Method section).\n\n3. **Methodology - Lack of Ablation on Similarity Measures Combination:**  \nThe authors evaluate several similarity measures individually but do not explore whether combining multiple similarity metrics (e.g., ensemble or weighted fusion of WMD and TF-IDF) could yield better pairing accuracy or dataset quality. This is a missed opportunity to improve dataset creation beyond single-metric approaches (see RQ1 results).\n\n4. **Evaluation - Limited Metrics for Code Translation Quality:**  \nThe evaluation relies heavily on BLEU, CodeBLEU, Exact Match, and CA@k metrics. However, these metrics may not fully capture semantic equivalence or functional correctness beyond unit tests. The paper does not report human evaluation or qualitative error analysis to understand the types of translation errors induced by noisy training data (see Experimental Setup and Results).\n\n5. **Evaluation - No Baseline Using Ground-Truth Parallel Data for New Language Pairs:**  \nFor the 10 new language pairs created from CodeNet, the paper evaluates models trained on noisy datasets versus random pairing. However, it does not compare against any ground-truth parallel data baseline (even if small subsets exist) or unsupervised baselines, making it difficult to gauge the absolute performance or practical utility of the approach (see RQ3).\n\n6. **Evaluation - Potential Data Leakage in CodeNet Matching:**  \nThe paper uses CodeNet solutions to create noisy parallel datasets by matching solutions to the same problem across languages. However, it is unclear whether the train/test splits ensure no overlap of problem IDs or solutions, raising concerns about data leakage inflating performance metrics (see Experimental Setup and RQ3).\n\n7. **Reproducibility - Missing Details on Preprocessing and Tokenization:**  \nThe paper does not specify how code samples were preprocessed or tokenized before similarity computation and model training. Details such as handling of comments, formatting, or normalization are critical for reproducibility and could impact similarity scores and model performance (see Proposed Method and Experimental Setup).\n\n8. **Reproducibility - Lack of Hyperparameter Settings for Similarity Computation:**  \nParameters for similarity measures like WMD (e.g., word embeddings used, distance metric), TF-IDF vectorization (e.g., n-gram range, vocabulary size), and LDA/LSI (e.g., number of topics) are not reported, hindering reproducibility and understanding of the method\u2019s sensitivity to these choices (see Proposed Method and RQ1).\n\n9. **Clarity - Ambiguous Description of Similarity Score Direction:**  \nThe paper states pairing documents if similarity is \"below \u03b4,\" but similarity metrics like cosine similarity and BM25 typically have higher values for more similar documents. This ambiguity in whether lower or higher scores indicate similarity could confuse readers and should be clarified (see Proposed Method).\n\n10. **Limitations - No Discussion on Impact of Code Style and Formatting Differences:**  \nThe method assumes that document similarity can capture functional equivalence, but code style, formatting, and idiomatic differences across languages or projects can reduce similarity scores and introduce noise. The paper does not discuss this limitation or potential mitigation strategies (see Motivation and Limitations).\n\n11. **Limitations - Scalability and Computational Cost of WMD Not Addressed:**  \nWMD is known to be computationally expensive, especially on large corpora like CodeNet. The paper does not discuss the computational resources required or scalability challenges of applying WMD at scale, which is critical for practical adoption (see RQ1 and Practical Impact).\n\n12. **Generalisability - Evaluation Limited to Popular Languages and CodeNet Dataset:**  \nAlthough the paper claims expanded language coverage, all experiments are restricted to languages present in CodeNet and popular languages. It remains unclear whether the method generalizes to domain-specific languages, scripting languages, or codebases with different characteristics (see RQ3).\n\n13. **Generalisability - No Analysis of Model Performance on Low-Resource Languages:**  \nWhile the paper mentions low-resource language pairs, it does not provide detailed analysis or results on truly low-resource languages with limited monolingual data, leaving open whether the approach can bootstrap translation models effectively in such scenarios (see Motivation and RQ3).\n\n14. **Clarity - Insufficient Explanation of Pseudo-Match Accuracy Metric:**  \nIn RQ1, the paper reports \"pseudo-match accuracy\" on CodeNet but does not clearly define how this metric is computed or validated without ground-truth pairs, which may confuse readers about its reliability (see RQ1 Results).\n\n15. **Methodology - No Exploration of Using Similarity Scores as Training Weights:**  \nThe authors mention as future work the idea of incorporating similarity scores as weights during model training but do not provide preliminary experiments or analysis on this, missing an opportunity to demonstrate potential improvements or challenges (see Additional Notes)."
   }
 }

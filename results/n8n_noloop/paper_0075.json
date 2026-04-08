@@ -3,136 +3,73 @@
   "title": "COCO-LM: Correcting and Contrasting Text Sequences for Language Model Pretraining",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 27.4,
+  "latency_seconds": 51.65,
   "structured": {
-    "summary": "The paper proposes COCO-LM, a novel language model pretraining framework that jointly combines correction of corrupted text sequences with contrastive learning against hard negative samples to learn richer and more discriminative representations. Experiments on standard benchmarks like GLUE and SQuAD show improved downstream performance over strong MLM baselines, supported by ablation studies highlighting the contributions of each component.",
+    "summary": "COCO-LM proposes a novel pretraining framework that combines corrective language modeling with sequence contrastive learning on corrupted text sequences to improve both token-level and sequence-level representations. The method achieves strong performance on GLUE and SQuAD benchmarks with improved parameter efficiency and representation quality compared to prior models like ELECTRA and RoBERTa.",
     "strengths": [
       {
-        "point": "Novel integration of correction and contrastive learning objectives",
-        "evidence": "COCO-LM combines token-level correction with sequence-level contrastive learning to enhance representation quality."
+        "point": "Improved pretraining efficiency and parameter efficiency",
+        "evidence": "COCO-LM matches or exceeds ELECTRA and RoBERTa MNLI accuracy with 50%-60% of their pretraining compute and matches Megatron 3.9B accuracy with far fewer parameters."
       },
       {
-        "point": "Empirical improvements on multiple NLP benchmarks",
-        "evidence": "The model outperforms strong MLM baselines on GLUE, SQuAD, and other natural language understanding tasks."
+        "point": "Combines token-level correction and sequence-level contrastive learning",
+        "evidence": "Introduces corrective language modeling (CLM) with a multi-task loss and sequence contrastive learning (SCL) on cropped corrupted sequences, improving both token semantic representations and sequence representation alignment."
       },
       {
-        "point": "Ablation studies demonstrating the contribution of components",
-        "evidence": "Analyses confirm that both correcting and contrasting objectives contribute to performance gains."
+        "point": "Demonstrated improvements in representation space quality",
+        "evidence": "Representation analysis shows better alignment and uniformity, reducing anisotropy common in prior PLMs and improving few-shot learning ability."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to prior contrastive pretraining methods",
-        "evidence": "The paper lacks detailed discussion and empirical comparison with related approaches like ELECTRA or DeCLUTR."
+        "point": "Lack of comparison to existing contrastive pretraining methods",
+        "evidence": "The paper does not compare or discuss prior contrastive learning approaches like SimCSE or DeCLUTR, leaving unclear how SCL differs or improves upon them."
       },
       {
-        "point": "Lack of thorough justification and analysis of negative sample generation",
-        "evidence": "The rationale for chosen corruption methods and their effectiveness as hard negatives is not clearly explained."
+        "point": "Insufficient methodological justification and ablations",
+        "evidence": "No ablation or rationale is provided for key design choices such as cropping 90% length in SCL, disabling dropout in the auxiliary model, or the auxiliary model architecture."
       },
       {
-        "point": "Ablation studies do not isolate effects of different negative sampling strategies",
-        "evidence": "It remains unclear which corruption types contribute most to contrastive learning gains."
+        "point": "Limited evaluation scope and missing broader benchmarks",
+        "evidence": "Evaluation is restricted to GLUE and SQuAD 2.0; no experiments on generation, open-domain QA, multilingual, or few-shot/zero-shot tasks."
       },
       {
-        "point": "Baseline selection omits recent contrastive or hybrid pretraining methods",
-        "evidence": "Comparisons are primarily against strong MLM models, raising concerns about fairness and novelty claims."
+        "point": "Reproducibility concerns due to missing hyperparameter details",
+        "evidence": "Details on multi-task loss balancing, contrastive learning temperature, and negative sampling strategies are omitted."
       },
       {
-        "point": "Evaluation limited to standard benchmarks without robustness or semantic nuance tests",
-        "evidence": "No experiments on adversarial inputs or tasks specifically testing discriminative ability."
-      },
-      {
-        "point": "No statistical significance testing reported",
-        "evidence": "Performance improvements lack confidence intervals or significance analysis."
-      },
-      {
-        "point": "Missing detailed hyperparameter settings critical for reproducibility",
-        "evidence": "Key parameters like contrastive loss weight and corruption rates are not fully disclosed."
-      },
-      {
-        "point": "No discussion of training compute requirements or efficiency trade-offs",
-        "evidence": "Practical reproducibility and adoption considerations are not addressed."
-      },
-      {
-        "point": "Ambiguous descriptions of correction objective and contrastive loss integration",
-        "evidence": "Unclear whether correction is token-level or sequence-level and how losses are combined during training."
-      },
-      {
-        "point": "No discussion of potential biases introduced by negative sampling",
-        "evidence": "Possible artifacts from corrupted negatives that could limit generalization are not acknowledged."
-      },
-      {
-        "point": "Experiments only on English datasets, limiting generalizability",
-        "evidence": "No evaluation or discussion on multilingual or low-resource language settings."
-      },
-      {
-        "point": "Downstream tasks evaluated lack diversity beyond classification and QA",
-        "evidence": "No tests on generation tasks or other NLP applications to demonstrate broader applicability."
-      },
-      {
-        "point": "No exploration of impact on smaller models or low-resource pretraining",
-        "evidence": "Focus is on large pretrained models without analysis of benefits in constrained scenarios."
-      },
-      {
-        "point": "No analysis of potential redundancy or interference between correction and contrastive objectives",
-        "evidence": "Interaction effects between the two losses during training are not studied."
+        "point": "Unclear implementation details and potential limitations not discussed",
+        "evidence": "The copy mechanism is ambiguously described; no discussion on potential negative transfer from corrupted sequences or computational overhead."
       }
     ],
     "questions": [
       {
-        "question": "How does COCO-LM compare empirically to recent contrastive pretraining methods like ELECTRA or DeCLUTR?",
-        "motivation": "To better assess the novelty and effectiveness relative to state-of-the-art approaches combining MLM and contrastive learning."
+        "question": "How does COCO-LM\u2019s sequence contrastive learning compare empirically and conceptually to existing contrastive pretraining methods like SimCSE or DeCLUTR?",
+        "motivation": "Understanding this would clarify the novelty and relative benefits of the proposed SCL objective."
       },
       {
-        "question": "What is the rationale behind the specific corruption methods used for negative sample generation?",
-        "motivation": "Understanding why these perturbations are most effective could guide future improvements and reproducibility."
+        "question": "What is the impact of different cropping ratios or augmentation strategies in SCL, and how sensitive is performance to these choices?",
+        "motivation": "This would inform whether the 90% contiguous cropping is optimal or if better augmentations exist."
       },
       {
-        "question": "Can the authors provide ablation isolating the impact of each negative sampling strategy?",
-        "motivation": "To clarify which corruption types contribute most to the contrastive learning gains."
+        "question": "Can COCO-LM\u2019s improvements generalize to multilingual, low-resource, or few-shot/zero-shot settings?",
+        "motivation": "Demonstrating broader applicability would strengthen claims about representation quality and practical utility."
       },
       {
-        "question": "Are there plans to evaluate COCO-LM on more diverse tasks, including generation and robustness benchmarks?",
-        "motivation": "To demonstrate broader applicability and the claimed benefits in semantic nuance and adversarial robustness."
-      },
-      {
-        "question": "Could the authors clarify the exact formulation and combination of the correction and contrastive losses?",
-        "motivation": "To improve understanding of the training procedure and facilitate reproducibility."
-      },
-      {
-        "question": "What are the training compute requirements and efficiency trade-offs introduced by COCO-LM?",
-        "motivation": "Important for assessing practical feasibility and adoption in real-world settings."
-      },
-      {
-        "question": "Has COCO-LM been tested or adapted for multilingual or low-resource language scenarios?",
-        "motivation": "To evaluate generalizability beyond English and applicability in diverse linguistic contexts."
+        "question": "What are the computational costs and training speed implications of the multi-task CLM and SCL objectives compared to ELECTRA or RoBERTa?",
+        "motivation": "This is important for assessing practical efficiency beyond parameter counts and GPU hours."
       }
-    ],
-    "scores": {
-      "correctness": 4,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to prior contrastive pretraining methods. The paper lacks detailed discussion and empirical comparison with related approaches like ELECTRA or DeCLUTR.",
-    "point_002": "Lack of thorough justification and analysis of negative sample generation. The rationale for chosen corruption methods and their effectiveness as hard negatives is not clearly explained.",
-    "point_003": "Ablation studies do not isolate effects of different negative sampling strategies. It remains unclear which corruption types contribute most to contrastive learning gains.",
-    "point_004": "Baseline selection omits recent contrastive or hybrid pretraining methods. Comparisons are primarily against strong MLM models, raising concerns about fairness and novelty claims.",
-    "point_005": "Evaluation limited to standard benchmarks without robustness or semantic nuance tests. No experiments on adversarial inputs or tasks specifically testing discriminative ability.",
-    "point_006": "No statistical significance testing reported. Performance improvements lack confidence intervals or significance analysis.",
-    "point_007": "Missing detailed hyperparameter settings critical for reproducibility. Key parameters like contrastive loss weight and corruption rates are not fully disclosed.",
-    "point_008": "No discussion of training compute requirements or efficiency trade-offs. Practical reproducibility and adoption considerations are not addressed.",
-    "point_009": "Ambiguous descriptions of correction objective and contrastive loss integration. Unclear whether correction is token-level or sequence-level and how losses are combined during training.",
-    "point_010": "No discussion of potential biases introduced by negative sampling. Possible artifacts from corrupted negatives that could limit generalization are not acknowledged.",
-    "point_011": "Experiments only on English datasets, limiting generalizability. No evaluation or discussion on multilingual or low-resource language settings.",
-    "point_012": "Downstream tasks evaluated lack diversity beyond classification and QA. No tests on generation tasks or other NLP applications to demonstrate broader applicability.",
-    "point_013": "No exploration of impact on smaller models or low-resource pretraining. Focus is on large pretrained models without analysis of benefits in constrained scenarios.",
-    "point_014": "No analysis of potential redundancy or interference between correction and contrastive objectives. Interaction effects between the two losses during training are not studied."
+    "point_001": "Lack of comparison to existing contrastive pretraining methods. The paper does not compare or discuss prior contrastive learning approaches like SimCSE or DeCLUTR, leaving unclear how SCL differs or improves upon them.",
+    "point_002": "Insufficient methodological justification and ablations. No ablation or rationale is provided for key design choices such as cropping 90% length in SCL, disabling dropout in the auxiliary model, or the auxiliary model architecture.",
+    "point_003": "Limited evaluation scope and missing broader benchmarks. Evaluation is restricted to GLUE and SQuAD 2.0; no experiments on generation, open-domain QA, multilingual, or few-shot/zero-shot tasks.",
+    "point_004": "Reproducibility concerns due to missing hyperparameter details. Details on multi-task loss balancing, contrastive learning temperature, and negative sampling strategies are omitted.",
+    "point_005": "Unclear implementation details and potential limitations not discussed. The copy mechanism is ambiguously described; no discussion on potential negative transfer from corrupted sequences or computational overhead."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nPretraining language models (LMs) effectively requires learning rich contextual representations. Traditional masked language modeling (MLM) approaches focus on predicting masked tokens but often overlook the relationships between text spans and the need for better negative sampling strategies. This can limit the model's ability to understand nuanced textual differences and improve downstream task performance. The paper addresses the challenge of enhancing language model pretraining by incorporating mechanisms that correct corrupted text sequences and contrast them against negative samples, aiming to learn more discriminative and robust representations.\n\n**Proposed Method:**  \nThe authors introduce COCO-LM, a novel pretraining framework that combines two key components:  \n1. **Correcting:** The model is trained to reconstruct original text sequences from corrupted versions, which involves predicting masked tokens and correcting perturbed spans. This encourages the model to understand the context and semantics deeply.  \n2. **Contrasting:** Alongside correction, the model learns to distinguish between the original sequences and hard negative samples generated by corruptions. This contrastive learning objective helps the model to better capture subtle differences in meaning and improve representation quality.  \n\nCOCO-LM integrates these objectives into a unified pretraining loss, leveraging both token-level and sequence-level signals. The approach also introduces strategies for generating effective negative samples to enhance contrastive learning.\n\n**Results:**  \nExperiments demonstrate that COCO-LM outperforms strong baselines on a variety of natural language understanding benchmarks, including GLUE, SQuAD, and others. The model shows improvements in both token-level prediction accuracy and downstream task performance, indicating that the combined correcting and contrasting objectives lead to richer and more transferable language representations. Ablation studies confirm the contribution of each component, and analyses reveal that COCO-LM learns more discriminative features compared to standard MLM approaches.\n\n**Claimed Contributions:**  \n- A novel pretraining framework (COCO-LM) that jointly leverages correcting corrupted text sequences and contrasting against hard negatives to improve language model learning.  \n- Effective strategies for generating corrupted sequences and negative samples that enhance the contrastive learning process.  \n- Empirical evidence showing that COCO-LM achieves superior performance on multiple NLP benchmarks, validating the benefits of the combined objectives.  \n- Insights into how integrating correction and contrastive learning can lead to more robust and discriminative language representations, advancing the state of the art in language model pretraining.",
-    "critic": "1. **Novelty - Comparison to Prior Contrastive Pretraining:**  \nThe paper claims novelty in combining correction and contrastive learning objectives but does not sufficiently compare COCO-LM to prior works that also integrate contrastive learning with MLM, such as ELECTRA or DeCLUTR. A more detailed discussion and empirical comparison with these related methods is missing, which weakens the claim of novelty (see Related Work and Experiments sections).\n\n2. **Methodology - Justification for Negative Sample Generation:**  \nWhile the paper introduces strategies for generating hard negative samples, it lacks a thorough justification or analysis of why the chosen corruption methods produce the most effective negatives. The rationale behind selecting specific perturbations over others is not clearly explained (see Section on Negative Sampling).\n\n3. **Methodology - Ablation on Negative Sampling Strategies:**  \nThe ablation studies do not isolate the impact of different negative sampling strategies. It remains unclear which corruption types contribute most to the contrastive learning gains, limiting understanding of the method\u2019s components (see Ablation Studies).\n\n4. **Evaluation - Baseline Selection and Fairness:**  \nThe baselines used for comparison include strong MLM models but omit recent contrastive pretraining methods or hybrid approaches that could be more competitive. This raises concerns about whether COCO-LM\u2019s improvements are due to the novel framework or simply stronger baselines (see Experiments).\n\n5. **Evaluation - Metrics Limited to Standard Benchmarks:**  \nThe evaluation focuses on GLUE and SQuAD but does not include tasks that specifically test semantic nuance or robustness to adversarial inputs, which are relevant to the claimed benefits of contrastive learning. This limits the evidence for improved discriminative ability (see Results).\n\n6. **Evaluation - Lack of Statistical Significance Testing:**  \nReported improvements on downstream tasks lack statistical significance testing or confidence intervals, making it difficult to assess the robustness of the performance gains (see Results tables).\n\n7. **Reproducibility - Missing Hyperparameter Details:**  \nThe paper does not provide detailed hyperparameter settings for the contrastive loss weight, negative sample size, or corruption rates, which are critical for reproducing the results (see Methodology and Appendix).\n\n8. **Reproducibility - Training Compute and Efficiency:**  \nThere is no discussion of training compute requirements or efficiency trade-offs introduced by the combined correcting and contrasting objectives, which affects practical reproducibility and adoption (see Experiments).\n\n9. **Clarity - Ambiguous Description of Correction Objective:**  \nThe description of how the model corrects perturbed spans versus masked tokens is somewhat ambiguous. It is unclear whether the correction is token-level prediction or sequence-level reconstruction, which affects understanding of the training signal (see Proposed Method).\n\n10. **Clarity - Insufficient Explanation of Contrastive Loss Integration:**  \nThe paper briefly mentions integrating token-level and sequence-level signals but does not clearly explain how these losses are combined or balanced during training, leaving the optimization procedure unclear (see Proposed Method).\n\n11. **Limitations - No Discussion of Potential Negative Sampling Bias:**  \nThe paper does not acknowledge that the negative samples generated by corruptions might introduce biases or artifacts that the model could exploit, potentially limiting generalization (see Negative Sampling).\n\n12. **Limitations - Applicability Beyond English:**  \nAll experiments are conducted on English datasets, and the paper does not discuss whether COCO-LM\u2019s approach generalizes to other languages or multilingual settings, which is important for broader applicability (see Experiments).\n\n13. **Generalisability - Limited Downstream Task Diversity:**  \nThe downstream tasks evaluated are mostly classification and QA benchmarks. The paper does not test COCO-LM on generation tasks or more diverse NLP applications, leaving its generalizability to other settings unproven (see Results).\n\n14. **Generalisability - Impact on Smaller Models or Low-Resource Settings:**  \nThe paper focuses on large pretrained models but does not explore whether COCO-LM benefits extend to smaller architectures or low-resource pretraining scenarios, which would be valuable for practical deployment (see Experiments).\n\n15. **Methodology - Potential Overlap Between Correction and Contrastive Objectives:**  \nThe paper does not analyze whether the correcting and contrasting objectives might be redundant or interfere with each other during training, which could affect the efficiency and effectiveness of the combined loss (see Proposed Method and Ablation)."
+    "reader": "Structured Summary of \"COCO-LM: Correcting and Contrasting Text Sequences for Language Model Pretraining\"\n\n---\n\n**Problem & Motivation**\n\n- Pretrained language models (PLMs), especially BERT-style Transformers, have become foundational in NLP by learning token-level language modeling tasks such as masked language modeling (MLM).\n- Existing pretraining methods face two main challenges:\n  1. **Efficiency**: After initial pretraining, many signals become less informative, requiring exponentially more compute and parameters for linear gains.\n  2. **Representation Space Issues**: Pretrained models often produce anisotropic (irregular) sequence representations, where random sentence pairs have high similarity and semantically similar pairs may not be well aligned, harming downstream sequence-level tasks.\n- ELECTRA improved pretraining efficiency by using an auxiliary generator to replace tokens and training a discriminator to detect replaced tokens (replaced token detection, RTD). However, ELECTRA\u2019s binary classification task:\n  - Lacks full language modeling capability, limiting use in tasks requiring token generation.\n  - Leads to squeezed representation space with poor uniformity and alignment.\n  \n---\n\n**Proposed Method**\n\n- **COCO-LM**: A self-supervised pretraining framework that builds on ELECTRA-style token corruption but introduces two novel tasks for the main Transformer model:\n\n  1. **Corrective Language Modeling (CLM)**:\n     - A token-level multi-task objective combining replaced token detection and language modeling.\n     - The main model learns to detect replaced tokens and also to correct them by predicting the original tokens.\n     - Uses a copy mechanism with a multi-task loss to stabilize learning and improve token-level semantic capture.\n  \n  2. **Sequence Contrastive Learning (SCL)**:\n     - A sequence-level contrastive learning objective.\n     - Positive pairs are formed by pairing corrupted sequences (from the auxiliary model) with randomly cropped contiguous spans of the original sequence (90% length).\n     - The model is trained to align representations of these positive pairs while pushing apart unrelated sequences, improving alignment and uniformity in the representation space.\n  \n- The auxiliary Transformer is smaller and generates corrupted sequences by replacing tokens based on MLM probabilities.\n- The main Transformer is jointly trained with CLM and SCL losses, improving both token-level and sequence-level representations.\n- Architectural choices include keeping the auxiliary model\u2019s hidden size the same as the main model but with fewer layers and disabling dropout during token replacement sampling.\n\n---\n\n**Results**\n\n- **Datasets**: Evaluated on GLUE benchmark (various language understanding tasks) and SQuAD 2.0 (reading comprehension).\n- **Performance**:\n  - COCO-LM consistently outperforms recent state-of-the-art pretrained models on GLUE average scores across three settings (base, base++, large++).\n  - Matches or exceeds ELECTRA and RoBERTa MNLI accuracy with significantly fewer GPU hours (50%-60% of their pretraining compute).\n  - COCO-LM Large (367M parameters) matches the MNLI accuracy of Megatron 3.9B (3.9 billion parameters), demonstrating superior parameter efficiency.\n- **Ablation Studies**:\n  - Both CLM and SCL contribute positively to performance; combining them yields the best results.\n  - Using a shallow auxiliary model with full hidden dimension is more effective than ELECTRA\u2019s smaller hidden dimension generator.\n  - Multi-task learning in CLM (combining RTD and LM) is necessary for stable and effective training.\n  - Contrastive learning with cropped sequences as positive pairs improves representation alignment and uniformity.\n- **Representation Analysis**:\n  - COCO-LM\u2019s sequence representations show better separation between semantically similar and random sentence pairs compared to ELECTRA and RoBERTa.\n  - SCL regularizes the representation space, reducing degeneration and improving few-shot learning ability.\n- **Token-Level Task Improvements**:\n  - CLM improves token semantic representations, as evidenced by better word similarity scores and improved SQuAD performance.\n  \n---\n\n**Claimed Contributions**\n\n1. **Novel Pretraining Framework**: COCO-LM introduces corrective language modeling and sequence contrastive learning on corrupted text sequences, combining token-level correction with sequence-level contrastive objectives.\n\n2. **Improved Efficiency and Effectiveness**: Achieves state-of-the-art accuracy on GLUE and SQuAD benchmarks with significantly reduced pretraining compute and fewer parameters compared to large-scale models.\n\n3. **Better Representation Space**: Demonstrates improved alignment and uniformity in sequence representations, addressing anisotropy issues common in prior PLMs.\n\n4. **Multi-task Learning for Token Correction**: Proposes a multi-task setup that stabilizes language modeling on corrupted sequences by explicitly training a copy mechanism alongside token correction.\n\n5. **Open Source Release**: Commits to releasing code and pretrained models to facilitate further research.\n\n---\n\n**Limitations and Future Work**\n\n- Current contrastive pairs are constructed using simple cropping and MLM replacements; exploring more advanced data augmentations could further improve performance.\n- The auxiliary model training is independent of the main model, which may not yield optimal training signals; future work could investigate joint or adaptive training strategies.\n\n---\n\nThis summary captures the key aspects of the COCO-LM paper, highlighting its motivation, methodology, empirical results, and contributions to the field of language model pretraining.",
+    "critic": "1. **Novelty - Missing Comparison to Other Contrastive Pretraining Methods**  \nWhile COCO-LM introduces sequence contrastive learning (SCL) on corrupted sequences, the paper does not sufficiently compare or discuss prior contrastive learning approaches for language models such as SimCSE or DeCLUTR. These methods also aim to improve representation uniformity and alignment but are not cited or empirically compared, leaving unclear how COCO-LM\u2019s SCL differs or improves upon existing contrastive frameworks.\n\n2. **Methodology - Justification for Cropping 90% Length in SCL**  \nThe choice to use a randomly cropped contiguous span of 90% length as the positive pair in SCL is not well justified. The paper does not provide ablations or rationale on why 90% was chosen over other cropping ratios or augmentation strategies, nor does it explore whether non-contiguous cropping or other augmentations might yield better alignment or robustness.\n\n3. **Methodology - Auxiliary Model Architecture and Training Details**  \nThe auxiliary model is described as having the same hidden size but fewer layers than the main model, with dropout disabled during token replacement sampling. However, the paper lacks detailed justification or ablation on these architectural choices, such as why disabling dropout improves token replacement quality or how sensitive the main model\u2019s performance is to the auxiliary model\u2019s size and training regime.\n\n4. **Evaluation - Limited Downstream Tasks Beyond GLUE and SQuAD**  \nThe evaluation focuses primarily on GLUE and SQuAD 2.0 benchmarks, which are standard but limited in scope. The paper does not assess COCO-LM on other challenging downstream tasks such as open-domain question answering, summarization, or generation tasks that require strong token-level modeling, which would better demonstrate the claimed improvements in token generation capabilities.\n\n5. **Evaluation - Lack of Comparison to Larger Models with Similar Compute**  \nCOCO-LM Large is compared favorably to Megatron 3.9B in terms of MNLI accuracy and parameter efficiency, but the paper does not compare to other large-scale models trained with similar compute budgets, such as T5 or GPT variants. This limits understanding of COCO-LM\u2019s relative efficiency and effectiveness in the broader landscape of large pretrained models.\n\n6. **Reproducibility - Missing Hyperparameter Details for Multi-task Loss Balancing**  \nThe multi-task loss combining RTD and LM objectives in CLM is central to COCO-LM, yet the paper does not provide explicit details on how the losses are weighted or balanced during training. This omission hinders reproducibility and understanding of how sensitive the model is to these hyperparameters.\n\n7. **Reproducibility - Details on Contrastive Learning Temperature and Negative Sampling**  \nThe contrastive learning objective depends on temperature scaling and negative sampling strategies, but the paper does not specify the temperature hyperparameter or how negatives are sampled (e.g., in-batch negatives, memory bank). These details are critical for reproducing the reported improvements in representation alignment.\n\n8. **Clarity - Ambiguity in the Copy Mechanism Implementation**  \nThe paper mentions a copy mechanism used in CLM to stabilize learning but does not clearly explain how this mechanism is implemented within the Transformer architecture or how it interacts with the token prediction head. This lack of clarity makes it difficult to understand the novelty and practical impact of this component.\n\n9. **Clarity - Insufficient Explanation of Representation Analysis Metrics**  \nThe representation analysis claims improved alignment and uniformity but does not specify the exact metrics or procedures used to quantify these properties (e.g., cosine similarity distributions, uniformity scores). Providing these details would strengthen the claims and allow readers to better interpret the results.\n\n10. **Limitations - No Discussion on Potential Negative Transfer from Corrupted Sequences**  \nWhile COCO-LM leverages corrupted sequences for training, the paper does not discuss whether learning from corrupted inputs might introduce biases or degrade performance on tasks requiring precise token-level understanding, especially in generation or translation scenarios.\n\n11. **Limitations - Independent Training of Auxiliary Model May Limit Joint Optimization**  \nThe paper acknowledges that the auxiliary model is trained independently from the main model but does not explore or empirically evaluate joint or adaptive training strategies. This leaves open the question of whether COCO-LM\u2019s performance could be further improved by co-training or feedback mechanisms.\n\n12. **Generalisability - Unclear if COCO-LM Benefits Transfer to Non-English or Multilingual Settings**  \nAll experiments appear to be conducted on English datasets, and the paper does not discuss or evaluate COCO-LM\u2019s applicability to multilingual or low-resource languages. This limits understanding of the method\u2019s generalizability across diverse linguistic contexts.\n\n13. **Generalisability - No Evaluation on Few-shot or Zero-shot Transfer Tasks**  \nAlthough the paper claims improved few-shot learning ability due to better representation uniformity, it does not present empirical results on few-shot or zero-shot benchmarks (e.g., SuperGLUE few-shot, prompt-based tasks) to substantiate this claim.\n\n14. **Evaluation - Lack of Ablation on Effect of Disabling Dropout in Auxiliary Model**  \nDisabling dropout during token replacement sampling in the auxiliary model is a notable design choice, but the paper does not provide an ablation study showing how this affects the quality of corrupted sequences or downstream performance, leaving the impact of this choice unclear.\n\n15. **Methodology - No Discussion on Computational Overhead of Multi-task Training**  \nWhile COCO-LM claims improved pretraining efficiency, the paper does not analyze or report the computational overhead introduced by the multi-task CLM objective and the additional contrastive loss, nor does it compare training speed or memory usage relative to ELECTRA or RoBERTa."
   }
 }

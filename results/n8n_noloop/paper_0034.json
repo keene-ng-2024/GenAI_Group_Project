@@ -3,101 +3,121 @@
   "title": "On Robust Prefix-Tuning for Text Classification",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 42.03,
+  "latency_seconds": 45.67,
   "structured": {
-    "summary": "This paper addresses the vulnerability of prefix-tuning to adversarial attacks and noisy inputs in text classification by proposing a robust prefix-tuning framework that integrates adversarial training with noise-invariant regularization. Experiments demonstrate improved robustness and maintained clean accuracy across multiple datasets and pretrained models, while preserving parameter efficiency.",
+    "summary": "This paper proposes a robust prefix-tuning framework that enhances the adversarial robustness of prefix-tuning by leveraging canonical manifolds of activations from correctly classified training samples and performing lightweight test-time batch-level prefix tuning. The method preserves the modularity and efficiency of prefix-tuning while achieving substantial robustness improvements against diverse adversarial text attacks without modifying the pretrained language model.",
     "strengths": [
       {
-        "point": "Effective integration of adversarial training and noise-invariant regularization",
-        "evidence": "The method jointly optimizes prefix vectors with adversarial prefix perturbations and a noise-invariant regularization term, improving robustness without full model fine-tuning."
+        "point": "Preserves modularity and efficiency of prefix-tuning",
+        "evidence": "The method does not require modifying the pretrained LM and only performs lightweight test-time optimization, avoiding expensive adversarial training or data augmentation."
       },
       {
-        "point": "Empirical validation on multiple datasets and models",
-        "evidence": "Experiments show significant robustness gains over standard prefix-tuning and full fine-tuning baselines across different pretrained language models and text classification benchmarks."
+        "point": "Demonstrates substantial robustness gains against multiple strong adversarial attacks",
+        "evidence": "Experiments on SST-2, AG\u2019s News, and SNLI show improved robustness against five different attack types while maintaining clean accuracy."
       },
       {
-        "point": "Maintains parameter efficiency",
-        "evidence": "The approach only tunes prefix vectors, preserving the lightweight nature of prefix-tuning while enhancing robustness."
+        "point": "Provides theoretical insight via an optimal control interpretation",
+        "evidence": "Frames prefix-tuning as open-loop control and robust prefix-tuning as closed-loop control, offering a novel perspective on the method."
+      },
+      {
+        "point": "Includes qualitative analysis to interpret robustness mechanism",
+        "evidence": "Attention visualization shows the model shifts focus away from perturbed tokens or adversarial triggers under robust prefix-tuning."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to recent robust parameter-efficient tuning methods",
-        "evidence": "No baselines such as robust adapters or robust LoRA variants are included, limiting assessment of novelty and relative performance."
+        "point": "Insufficient comparison to related robust prompting methods",
+        "evidence": "The paper omits discussion and empirical comparison to recent concurrent works on robust soft prompting or prompt tuning defenses that also avoid full model fine-tuning."
       },
       {
-        "point": "Missing ablation study on noise-invariant regularization",
-        "evidence": "The contribution of the noise-invariant regularization term is not isolated, leaving unclear its individual impact on robustness."
+        "point": "Lacks justification and ablation for PCA dimensionality and manifold construction",
+        "evidence": "No analysis on sensitivity to PCA hyperparameters or exploration of alternative manifold learning methods is provided."
       },
       {
-        "point": "Insufficient methodological details on adversarial perturbation generation",
-        "evidence": "Key details like perturbation magnitude, scheduling, attack algorithm parameters, and noise distributions are not specified, hindering reproducibility."
+        "point": "Assumes availability of correctly classified training samples for manifold construction without addressing noisy or low-resource settings",
+        "evidence": "The method relies on activations from correctly classified samples but does not discuss applicability when such samples are scarce or labels noisy."
       },
       {
-        "point": "Evaluation limited in scope and metrics",
-        "evidence": "Robustness is tested against a narrow set of adversarial attacks and synthetic noise only; robustness-specific metrics and real-world noisy inputs are not evaluated."
+        "point": "Limited robustness baselines and evaluation metrics",
+        "evidence": "Does not compare to other lightweight defenses like input preprocessing or certified defenses and focuses mainly on accuracy without reporting metrics like confidence calibration or adaptive attack robustness."
       },
       {
-        "point": "Incomplete reporting of hyperparameters and prefix initialization",
-        "evidence": "Critical hyperparameters and prefix vector initialization methods are not fully described, affecting clarity and reproducibility."
+        "point": "No statistical significance testing or confidence intervals reported",
+        "evidence": "Reported improvements lack statistical validation, making it unclear if gains are consistent across seeds or splits."
       },
       {
-        "point": "No discussion on potential trade-offs or generalization beyond text classification",
-        "evidence": "The paper does not analyze whether robustness improvements affect model capacity or extend to other NLP tasks or larger model architectures."
+        "point": "Test-time overhead claims lack precise quantitative analysis",
+        "evidence": "No detailed runtime or computational cost profiling is provided to substantiate efficiency claims."
       },
       {
-        "point": "Claims of minimal computational overhead lack quantitative evidence",
-        "evidence": "No runtime or resource usage comparisons are provided to substantiate efficiency claims."
+        "point": "Reproducibility hindered by missing hyperparameter details and code",
+        "evidence": "Key test-time optimization parameters and pseudocode or code release are absent."
+      },
+      {
+        "point": "Ambiguous explanation of optimal control interpretation",
+        "evidence": "Lacks intuitive examples or diagrams to clarify the control theory perspective for readers unfamiliar with the concept."
+      },
+      {
+        "point": "Limited discussion on scalability to larger models or complex tasks",
+        "evidence": "Experiments are on moderate-size LMs and datasets; no analysis on applicability to very large models or generation/multimodal tasks."
+      },
+      {
+        "point": "No analysis of potential vulnerability to adaptive adversaries",
+        "evidence": "The defense\u2019s reliance on canonical manifolds may be exploitable, but this is not investigated."
+      },
+      {
+        "point": "Claims of extensibility beyond prefix-tuning are unsupported by experiments",
+        "evidence": "No ablations or demonstrations on other soft prompt tuning variants are provided."
+      },
+      {
+        "point": "Layer selection rationale for additional prefix tuning is underexplored",
+        "evidence": "Findings that bottom layers yield better robustness lack detailed analysis or theoretical justification."
+      },
+      {
+        "point": "Insufficient detail on attention visualization methodology",
+        "evidence": "Does not specify how attention weights are extracted or whether patterns are consistent across samples or attacks."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed method compare to other robust parameter-efficient tuning approaches like robust adapters or LoRA?",
-        "motivation": "To clarify the novelty and relative effectiveness of the approach."
+        "question": "How sensitive is the robustness performance to the choice of PCA dimensionality and could alternative manifold learning methods improve results?",
+        "motivation": "Understanding this would clarify the robustness and generality of the canonical manifold construction."
       },
       {
-        "question": "What is the isolated effect of noise-invariant regularization on robustness?",
-        "motivation": "To understand the contribution of each component in the proposed framework."
+        "question": "How does the method perform in low-resource or noisy-label scenarios where correctly classified training samples are limited or unreliable?",
+        "motivation": "This affects the practical applicability of the approach in real-world settings."
       },
       {
-        "question": "What are the exact adversarial perturbation generation details (e.g., attack algorithm, step size, number of steps)?",
-        "motivation": "To enable reproducibility and assess the robustness evaluation rigor."
+        "question": "Can the framework effectively defend against adaptive adversaries aware of the manifold constraints?",
+        "motivation": "Evaluating adaptive attacks is critical to validate the robustness claims."
       },
       {
-        "question": "How are prefix vectors initialized before training?",
-        "motivation": "Initialization can impact convergence and robustness outcomes."
+        "question": "What is the precise computational overhead at test time compared to standard prefix-tuning and adversarial training?",
+        "motivation": "Quantitative efficiency analysis is necessary to justify the claimed practicality."
       },
       {
-        "question": "Does the robust prefix-tuning framework generalize to other NLP tasks beyond text classification?",
-        "motivation": "To evaluate the broader applicability of the method."
-      },
-      {
-        "question": "Can the authors provide quantitative measurements of computational overhead compared to standard prefix-tuning?",
-        "motivation": "To substantiate claims of efficiency."
-      },
-      {
-        "question": "How does the method perform under diverse and real-world noisy inputs or attacks beyond synthetic noise and gradient-based perturbations?",
-        "motivation": "To assess real-world robustness and generalization."
+        "question": "Can the robust prefix-tuning framework be extended and validated on other soft prompt tuning methods beyond prefix-tuning?",
+        "motivation": "Demonstrating extensibility would strengthen the generality of the approach."
       }
-    ],
-    "scores": {
-      "correctness": 4,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison to recent robust parameter-efficient tuning methods. No baselines such as robust adapters or robust LoRA variants are included, limiting assessment of novelty and relative performance.",
-    "point_002": "Missing ablation study on noise-invariant regularization. The contribution of the noise-invariant regularization term is not isolated, leaving unclear its individual impact on robustness.",
-    "point_003": "Insufficient methodological details on adversarial perturbation generation. Key details like perturbation magnitude, scheduling, attack algorithm parameters, and noise distributions are not specified, hindering reproducibility.",
-    "point_004": "Evaluation limited in scope and metrics. Robustness is tested against a narrow set of adversarial attacks and synthetic noise only; robustness-specific metrics and real-world noisy inputs are not evaluated.",
-    "point_005": "Incomplete reporting of hyperparameters and prefix initialization. Critical hyperparameters and prefix vector initialization methods are not fully described, affecting clarity and reproducibility.",
-    "point_006": "No discussion on potential trade-offs or generalization beyond text classification. The paper does not analyze whether robustness improvements affect model capacity or extend to other NLP tasks or larger model architectures.",
-    "point_007": "Claims of minimal computational overhead lack quantitative evidence. No runtime or resource usage comparisons are provided to substantiate efficiency claims."
+    "point_001": "Insufficient comparison to related robust prompting methods. The paper omits discussion and empirical comparison to recent concurrent works on robust soft prompting or prompt tuning defenses that also avoid full model fine-tuning.",
+    "point_002": "Lacks justification and ablation for PCA dimensionality and manifold construction. No analysis on sensitivity to PCA hyperparameters or exploration of alternative manifold learning methods is provided.",
+    "point_003": "Assumes availability of correctly classified training samples for manifold construction without addressing noisy or low-resource settings. The method relies on activations from correctly classified samples but does not discuss applicability when such samples are scarce or labels noisy.",
+    "point_004": "Limited robustness baselines and evaluation metrics. Does not compare to other lightweight defenses like input preprocessing or certified defenses and focuses mainly on accuracy without reporting metrics like confidence calibration or adaptive attack robustness.",
+    "point_005": "No statistical significance testing or confidence intervals reported. Reported improvements lack statistical validation, making it unclear if gains are consistent across seeds or splits.",
+    "point_006": "Test-time overhead claims lack precise quantitative analysis. No detailed runtime or computational cost profiling is provided to substantiate efficiency claims.",
+    "point_007": "Reproducibility hindered by missing hyperparameter details and code. Key test-time optimization parameters and pseudocode or code release are absent.",
+    "point_008": "Ambiguous explanation of optimal control interpretation. Lacks intuitive examples or diagrams to clarify the control theory perspective for readers unfamiliar with the concept.",
+    "point_009": "Limited discussion on scalability to larger models or complex tasks. Experiments are on moderate-size LMs and datasets; no analysis on applicability to very large models or generation/multimodal tasks.",
+    "point_010": "No analysis of potential vulnerability to adaptive adversaries. The defense\u2019s reliance on canonical manifolds may be exploitable, but this is not investigated.",
+    "point_011": "Claims of extensibility beyond prefix-tuning are unsupported by experiments. No ablations or demonstrations on other soft prompt tuning variants are provided.",
+    "point_012": "Layer selection rationale for additional prefix tuning is underexplored. Findings that bottom layers yield better robustness lack detailed analysis or theoretical justification.",
+    "point_013": "Insufficient detail on attention visualization methodology. Does not specify how attention weights are extracted or whether patterns are consistent across samples or attacks."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nPrefix-tuning is a parameter-efficient fine-tuning technique that prepends trainable continuous vectors (prefixes) to the input of a pretrained language model for downstream tasks. While effective, prefix-tuning is vulnerable to adversarial attacks and noisy inputs, which can significantly degrade model performance in text classification tasks. The motivation of this paper is to enhance the robustness of prefix-tuning methods against such perturbations without sacrificing their parameter efficiency.\n\n**Proposed Method:**  \nThe paper proposes a robust prefix-tuning framework that incorporates adversarial training and noise-invariant regularization into the prefix optimization process. Specifically, the method:  \n- Generates adversarial prefixes by adding perturbations to the prefix vectors during training to simulate worst-case scenarios.  \n- Employs a noise-invariant regularization term that encourages the model to produce consistent predictions under input noise and prefix perturbations.  \n- Integrates these components into the prefix-tuning objective to jointly optimize for accuracy and robustness.  \nThis approach maintains the lightweight nature of prefix-tuning by only tuning prefix vectors while improving resilience to input and prefix perturbations.\n\n**Results:**  \nExperiments on multiple text classification benchmarks demonstrate that the proposed robust prefix-tuning method:  \n- Achieves significantly improved robustness against adversarial attacks compared to standard prefix-tuning and full fine-tuning baselines.  \n- Maintains comparable or better clean accuracy on original, unperturbed data.  \n- Shows effectiveness across different pretrained language models and datasets, confirming the generality of the approach.  \n- Requires minimal additional computational overhead relative to standard prefix-tuning.\n\n**Claimed Contributions:**  \n1. Identification of robustness vulnerabilities in existing prefix-tuning methods for text classification.  \n2. A novel robust prefix-tuning framework that integrates adversarial training and noise-invariant regularization to enhance model robustness.  \n3. Empirical validation showing improved adversarial robustness and maintained clean accuracy across multiple datasets and models.  \n4. Demonstration that robustness can be achieved in a parameter-efficient manner without full model fine-tuning.",
-    "critic": "1. **Novelty - Missing Comparison to Related Robust Fine-tuning Methods:**  \nWhile the paper proposes adversarial training and noise-invariant regularization for prefix-tuning robustness, it lacks comparison to recent robust fine-tuning methods that also target parameter-efficient tuning, such as adapters with robustness enhancements or robust LoRA variants. This omission weakens the novelty claim since it is unclear how the proposed method advances beyond existing robust parameter-efficient tuning approaches.\n\n2. **Methodology - Lack of Ablation on Noise-invariant Regularization:**  \nThe paper integrates noise-invariant regularization alongside adversarial prefix perturbations but does not provide an ablation study isolating the effect of this regularization term (e.g., Table 3 or Section 4.3). Without this, it is unclear how much each component contributes to robustness improvements.\n\n3. **Methodology - Justification for Perturbation Magnitude and Schedule Missing:**  \nThe adversarial prefix perturbations are introduced during training, but the paper does not justify the choice of perturbation magnitude, nor whether it is fixed or scheduled over epochs. This design choice could significantly impact robustness and training stability but is not discussed in Section 3.\n\n4. **Evaluation - Baselines Lack Robustness-specific Fine-tuning Methods:**  \nThe experiments compare against standard prefix-tuning and full fine-tuning baselines but omit robustness-enhanced baselines such as adversarially trained full fine-tuning or robust adapters. This makes it difficult to assess whether the gains come from the robust training strategy or simply from prefix-tuning\u2019s inherent properties.\n\n5. **Evaluation - Metrics Focus Solely on Accuracy, Missing Robustness-specific Metrics:**  \nThe evaluation reports accuracy on adversarial and noisy inputs but does not include robustness metrics like certified robustness bounds, robustness curves over perturbation budgets, or calibration under attack. This limits understanding of the robustness improvements\u2019 depth.\n\n6. **Evaluation - Limited Diversity of Adversarial Attacks Tested:**  \nThe paper evaluates robustness against a single or limited set of adversarial attacks (e.g., only gradient-based prefix perturbations). It does not test against diverse attack types such as synonym substitution, paraphrasing, or black-box attacks, which limits claims about general robustness.\n\n7. **Reproducibility - Missing Details on Adversarial Perturbation Generation:**  \nThe paper does not specify key implementation details such as the adversarial attack algorithm used to generate prefix perturbations (e.g., PGD steps, step size), nor the noise distributions used for noise-invariant regularization. This omission hinders reproducibility.\n\n8. **Reproducibility - Hyperparameter Settings Not Fully Reported:**  \nCritical hyperparameters like learning rates for prefix vectors, regularization weights, batch sizes, and number of training epochs are not fully detailed in the experimental setup (Section 4), making it difficult to replicate results.\n\n9. **Clarity - Ambiguous Description of Noise-invariant Regularization Objective:**  \nThe mathematical formulation of the noise-invariant regularization term is vaguely described in Section 3.2, lacking precise equations or pseudocode. This reduces clarity on how consistency under noise is enforced during training.\n\n10. **Clarity - Insufficient Explanation of Prefix Vector Initialization:**  \nThe paper does not clarify how prefix vectors are initialized before training (random, pretrained, or otherwise), which can affect convergence and robustness outcomes.\n\n11. **Limitations - No Discussion on Potential Trade-offs with Model Capacity:**  \nThe paper claims robustness improvements without sacrificing parameter efficiency but does not discuss whether the added regularization or adversarial training might limit the expressiveness or adaptation capacity of prefix vectors in complex tasks.\n\n12. **Limitations - Unaddressed Impact on Downstream Tasks Beyond Text Classification:**  \nAll experiments focus exclusively on text classification benchmarks. The paper does not discuss or evaluate whether the robust prefix-tuning framework generalizes to other NLP tasks such as sequence labeling, generation, or question answering.\n\n13. **Generalisability - Limited Evaluation on Pretrained Model Types:**  \nAlthough the paper claims generality across pretrained language models, experiments are only conducted on two model families (e.g., BERT and RoBERTa). It remains unclear if the approach extends to larger or different architectures like GPT or T5.\n\n14. **Generalisability - No Analysis of Robustness under Real-world Noisy Inputs:**  \nThe noise-invariant regularization is motivated by robustness to noisy inputs, but the evaluation uses synthetic noise only. The paper does not test on naturally noisy or user-generated text, which limits claims about real-world applicability.\n\n15. **Evaluation - Computational Overhead Claims Lack Quantitative Evidence:**  \nThe paper states that the robust prefix-tuning requires minimal additional computational overhead compared to standard prefix-tuning but does not provide quantitative runtime or resource usage comparisons in the results section to substantiate this claim."
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Context:** Large-scale pretrained language models (LMs) are effective for NLP tasks but full fine-tuning is costly in memory and storage.\n- **Prefix-tuning:** A lightweight, modular alternative that tunes only continuous prefix embeddings prepended at each Transformer layer, requiring far fewer parameters than full fine-tuning.\n- **Robustness Issue:** Despite efficiency, prefix-tuning is vulnerable to adversarial text attacks (character-, word-, sentence-level perturbations, and universal adversarial triggers).\n- **Limitations of Existing Defenses:** Most textual defense methods require modifying model parameters or architectures or maintaining additional detectors, which conflicts with prefix-tuning\u2019s modularity and low storage benefits.\n- **Research Question:** Can robustness of prefix-tuning be improved while preserving its efficiency, modularity, and without modifying the pretrained LM?\n\n---\n\n### Proposed Method\n\n- **Robust Prefix-Tuning Framework:**\n  - **Core Idea:** Use layerwise activations of the LM at the output prediction position from correctly classified training data to define canonical manifolds representing \u201ccorrect\u201d model behavior.\n  - **Construction of Canonical Manifolds:** \n    - Collect activations at the output position from correctly classified training samples.\n    - Apply PCA to project these activations onto low-dimensional canonical manifolds for each layer.\n  - **Test-Time Batch-Level Prefix Tuning:**\n    - For each test batch, an additional batch-level prefix embedding is tuned on-the-fly (with the original prefix fixed) to minimize the distance between the batch\u2019s activations and the canonical manifolds.\n    - The sum of the original prefix and this extra prefix steers the LM towards correct predictions despite adversarial perturbations.\n  - **Applicability:** Though demonstrated on prefix-tuning, the framework can extend to other soft prompt-based tuning methods.\n- **Interpretation:** The method is interpreted from an optimal control perspective, where prefix-tuning corresponds to open-loop control and the robust framework corresponds to closed-loop control for robustness.\n\n---\n\n### Results\n\n- **Datasets:** SST-2 (sentiment analysis), AG\u2019s News (topic classification), SNLI (natural language inference).\n- **Attacks Evaluated:** Five strong textual attacks including PWWS, VIPER, SCPN, TextBugger (BUG), and Universal Adversarial Triggers (UAT).\n- **Baselines:** Standard prefix-tuning, adversarial prefix-tuning (adversarial training on prefix embeddings), and adversarial data augmentation.\n- **Key Findings:**\n  - The robust prefix-tuning framework substantially improves robustness against all five attack types compared to baselines.\n  - It maintains comparable accuracy on clean (non-adversarial) texts.\n  - Outperforms adversarial prefix-tuning baselines in robustness and clean accuracy, while being much more efficient (adversarial prefix-tuning requires significantly longer training).\n  - Adversarial data augmentation improves robustness to the specific attack used for augmentation but may reduce robustness to other attacks; applying the robust prefix-tuning framework on top further improves robustness.\n  - Tuning the bottom layers (e.g., bottom 3 layers) for the additional prefix yields better robustness than tuning top layers or all layers.\n- **Qualitative Analysis:**\n  - For in-sentence attacks, robust prefix-tuning steers the LM to \u201caverage attention\u201d over tokens, reducing focus on perturbed tokens.\n  - For UAT attacks, it \u201cignores the distraction\u201d by assigning low attention to adversarial triggers and higher attention to essential tokens.\n- **Efficiency:** The on-the-fly tuning of the extra prefix at test time adds negligible overhead compared to the large training cost of adversarial training or data augmentation.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Robust Prefix-Tuning Framework:** First defense method for prefix-tuning that preserves its lightweight, modular nature and does not require modifying the pretrained LM.\n2. **Robustness Enhancement:** Demonstrated substantial robustness improvements against diverse adversarial text attacks while maintaining clean accuracy.\n3. **Efficient and Practical:** Avoids expensive adversarial training or data augmentation during training; only requires lightweight test-time optimization.\n4. **Theoretical Insight:** Provides an interpretation of prefix-tuning and the robust framework from the perspective of optimal control theory, framing prefix-tuning as open-loop control and robust prefix-tuning as closed-loop control.\n5. **Extensibility:** Framework is applicable beyond prefix-tuning to other soft prompt-based tuning methods.\n6. **Empirical Analysis:** Detailed experiments on multiple benchmarks and attacks, including ablations on which layers to tune and attention visualization to understand the mechanism of robustness.\n\n---\n\n**In summary,** this paper addresses the vulnerability of prefix-tuning to adversarial text attacks by introducing a robust prefix-tuning framework that leverages canonical manifolds of correct activations and batch-level prefix tuning at test time, achieving strong robustness gains efficiently and without compromising the modularity and storage advantages of prefix-tuning.",
+    "critic": "1. **Novelty \u2013 Missing Comparison to Related Robust Prompting Methods:**  \nThe paper claims novelty as the first defense for prefix-tuning that preserves modularity and avoids modifying the pretrained LM. However, it does not sufficiently compare or discuss recent concurrent works on robust soft prompting or prompt tuning defenses that also avoid full model fine-tuning. For example, methods that use test-time adaptation or manifold regularization in prompt tuning are not cited or empirically compared, which weakens the novelty claim (see \u201cClaimed Contributions\u201d and \u201cRelated Work\u201d sections).\n\n2. **Methodology \u2013 Justification for PCA Dimensionality and Manifold Construction:**  \nThe choice of PCA to construct canonical manifolds and the dimensionality retained per layer are not clearly justified or ablated. It is unclear how sensitive robustness is to these hyperparameters or whether other manifold learning methods (e.g., autoencoders) might be more effective. This is a critical design choice that lacks empirical validation (see \u201cProposed Method\u201d section).\n\n3. **Methodology \u2013 Assumption of Correctly Classified Training Samples for Manifold Construction:**  \nThe method relies on collecting activations from correctly classified training samples to define canonical manifolds. The paper does not discuss how this assumption holds in low-resource or noisy-label scenarios where correct classification is not guaranteed, potentially limiting applicability (see \u201cProposed Method\u201d).\n\n4. **Evaluation \u2013 Limited Baselines for Robustness:**  \nThe baselines include standard prefix-tuning, adversarial prefix-tuning, and adversarial data augmentation. However, the paper omits comparison to other lightweight robustness methods such as input preprocessing, certified defenses, or robust fine-tuning approaches that might also preserve modularity partially. This limits understanding of the relative effectiveness of the proposed method (see \u201cResults\u201d).\n\n5. **Evaluation \u2013 Metrics Focus Solely on Accuracy:**  \nRobustness evaluation is primarily based on accuracy under attack and clean accuracy. The paper does not report other robustness metrics such as confidence calibration, attack success rate, or robustness under adaptive attacks, which would provide a more comprehensive evaluation (see \u201cResults\u201d).\n\n6. **Evaluation \u2013 Lack of Statistical Significance Testing:**  \nReported improvements in robustness and clean accuracy lack statistical significance testing or confidence intervals. Given the relatively small margins in some cases, it is unclear if improvements are robust across random seeds or dataset splits (see \u201cResults\u201d tables).\n\n7. **Evaluation \u2013 Test-Time Overhead Not Quantified Precisely:**  \nWhile the paper claims negligible overhead for test-time batch-level prefix tuning, it does not provide detailed runtime or computational cost analysis compared to standard prefix-tuning or adversarial training. Quantitative profiling would strengthen the efficiency claim (see \u201cResults\u201d and \u201cEfficiency\u201d).\n\n8. **Reproducibility \u2013 Missing Details on Optimization at Test Time:**  \nThe paper does not specify key hyperparameters for the on-the-fly batch-level prefix tuning, such as learning rate, number of optimization steps, batch size, or initialization of the additional prefix. These details are crucial for reproducing the method (see \u201cProposed Method\u201d).\n\n9. **Reproducibility \u2013 Lack of Code or Pseudocode:**  \nNo code release or pseudocode is provided for the robust prefix-tuning framework, especially for the test-time optimization procedure. This omission hinders reproducibility and adoption by the community (general observation).\n\n10. **Clarity \u2013 Ambiguous Explanation of Optimal Control Interpretation:**  \nThe interpretation of prefix-tuning as open-loop control and robust prefix-tuning as closed-loop control is intriguing but not clearly explained. The paper lacks intuitive examples or diagrams to help readers unfamiliar with control theory understand this perspective (see \u201cProposed Method\u201d).\n\n11. **Limitations \u2013 No Discussion on Scalability to Larger Models or Tasks:**  \nThe experiments are limited to relatively small datasets and presumably moderate-size LMs. The paper does not discuss how the method scales to very large models (e.g., GPT-3 scale) or more complex tasks like generation or multi-modal inputs, which may affect manifold construction and test-time tuning feasibility (see \u201cResults\u201d).\n\n12. **Limitations \u2013 Potential Vulnerability to Adaptive Attacks:**  \nThe defense relies on steering activations toward canonical manifolds derived from clean data. The paper does not analyze or discuss whether adaptive adversaries aware of this mechanism could craft perturbations that evade or exploit the manifold constraints, leaving robustness claims incomplete (see \u201cResults\u201d).\n\n13. **Generalisability \u2013 Limited Demonstration Beyond Prefix-Tuning:**  \nAlthough the paper claims extensibility to other soft prompt-based tuning methods, no experiments or ablations are provided to support this. Demonstrations on alternative prompt tuning variants would strengthen this claim (see \u201cClaimed Contributions\u201d).\n\n14. **Methodology \u2013 Layer Selection for Additional Prefix Tuning Not Fully Explored:**  \nThe paper finds tuning bottom layers yields better robustness but does not provide a detailed analysis or theoretical rationale for this observation. More extensive ablations or explanations would clarify this design choice (see \u201cResults\u201d).\n\n15. **Clarity \u2013 Insufficient Description of Attention Visualization Setup:**  \nThe qualitative analysis mentions attention patterns shifting under robust prefix-tuning but does not detail how attention weights are extracted or visualized, nor whether these patterns are consistent across samples or attacks. This limits interpretability of the qualitative claims (see \u201cQualitative Analysis\u201d)."
   }
 }

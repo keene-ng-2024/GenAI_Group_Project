@@ -205,13 +205,7 @@ Output in this exact JSON format:
   "questions": [
     {"question": "open question", "motivation": "why this matters"},
     {"question": "open question", "motivation": "why this matters"}
-  ],
-  "scores": {
-    "correctness": 3,
-    "novelty": 3,
-    "recommendation": "borderline",
-    "confidence": 3
-  }
+  ]
 }
 ```
 

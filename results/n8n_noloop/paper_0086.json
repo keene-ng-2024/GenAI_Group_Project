@@ -3,144 +3,96 @@
   "title": "Knowledge-in-Context: Towards Knowledgeable Semi-Parametric Language Models ",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 50.76,
+  "latency_seconds": 77.31,
   "structured": {
-    "summary": "The paper proposes Knowledge-in-Context, a semi-parametric approach that integrates retrieved external knowledge snippets directly into a language model's context window in a structured manner, enabling simultaneous attention over prompt and knowledge. This method aims to improve factual accuracy and adaptability of large language models without full retraining, demonstrating enhanced performance on knowledge-intensive benchmarks.",
+    "summary": "The paper proposes Knowledge-in-Context (KiC), a semi-parametric language model that augments a parametric text-to-text Transformer with an external memory containing six distinct structured knowledge categories. It introduces an instance-adaptive knowledge selector formulated as a mixture-of-experts router to dynamically select the most relevant knowledge per input, achieving strong zero-shot generalization on diverse NLP tasks with significantly smaller model sizes than comparable baselines.",
     "strengths": [
       {
-        "point": "Novel semi-parametric integration of knowledge into context window",
-        "evidence": "The approach embeds retrieved knowledge snippets directly alongside the prompt, allowing the model to attend over both simultaneously, which improves factual grounding."
+        "point": "Innovative integration of diverse structured knowledge sources",
+        "evidence": "KiC incorporates six distinct knowledge categories (Entity, Dictionary, Commonsense, Event, Script, Causality) to enrich the model's external memory, addressing limitations of prior semi-parametric models relying mostly on plain text."
       },
       {
-        "point": "Improved factual accuracy and knowledge recall",
-        "evidence": "Experiments show significant gains over baseline parametric and retrieval-augmented models on knowledge-intensive QA benchmarks."
+        "point": "Instance-adaptive knowledge selection mechanism",
+        "evidence": "The knowledge selector dynamically chooses the most relevant knowledge category per input instance, formulated as a differentiable mixture-of-experts router with load balancing, enabling fine-grained and effective knowledge augmentation."
       },
       {
-        "point": "Adaptability to evolving knowledge without full retraining",
-        "evidence": "The method allows updating external knowledge datastore independently, reducing the need for costly model retraining."
+        "point": "Strong empirical zero-shot performance at smaller scale",
+        "evidence": "KiC Large (770M parameters) outperforms much larger zero-shot baselines like GPT-NeoX-20B and OPT-30B and approaches GPT-3 175B few-shot accuracy on MMLU, demonstrating emergent abilities at a fraction of the size."
+      },
+      {
+        "point": "Comprehensive multi-task training and evaluation",
+        "evidence": "Trained on 39 diverse NLP tasks with 8.4M instances and evaluated zero-shot on 40+ unseen tasks, showing consistent improvements and detailed analysis of knowledge impact across tasks."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to closely related semi-parametric models",
-        "evidence": "The paper omits comparisons to strong baselines like RAG or REALM, limiting assessment of true novelty."
+        "point": "Insufficient comparison to prior semi-parametric models using structured knowledge",
+        "evidence": "The paper lacks detailed experimental or conceptual comparison to existing retrieval-augmented models leveraging structured knowledge bases like Wikidata or ConceptNet, weakening the novelty claim."
       },
       {
-        "point": "Lack of ablation studies on knowledge embedding structure",
-        "evidence": "No experiments isolate the impact of different structuring strategies for embedding knowledge snippets."
+        "point": "Limited justification and analysis of knowledge category selection",
+        "evidence": "No clear rationale for choosing exactly six knowledge types or discussion of coverage overlap, redundancy, or potential missing knowledge sources such as Freebase or domain-specific ontologies."
       },
       {
-        "point": "No analysis of retrieval quality impact or robustness",
-        "evidence": "The paper does not evaluate how retrieval errors or noisy knowledge affect generation quality or fallback mechanisms."
+        "point": "No ablation studies on knowledge selector design and multi-category retrieval",
+        "evidence": "The paper does not explore variations in selector complexity or compare single top-1 knowledge category retrieval against multi-category fusion, limiting understanding of design choices."
       },
       {
-        "point": "Baseline models not parameter-matched",
-        "evidence": "Comparisons use smaller or differently sized models, raising fairness concerns about performance gains."
+        "point": "Uneven baseline comparisons due to differing training setups",
+        "evidence": "KiC benefits from multi-task fine-tuning on millions of examples, whereas baselines like GPT-NeoX-20B and OPT-30B are evaluated zero-shot without such training, making comparisons less fair."
       },
       {
-        "point": "Evaluation metrics limited to factual accuracy and recall",
-        "evidence": "No assessment of fluency, coherence, or human evaluation, restricting understanding of overall generation quality."
+        "point": "Reproducibility concerns due to missing implementation details",
+        "evidence": "Key details on knowledge retrieval methods, indexing, retrieval algorithms, training hyperparameters, and prompt template construction are omitted, hindering replication."
       },
       {
-        "point": "No cross-domain or out-of-distribution testing",
-        "evidence": "Experiments focus solely on knowledge-intensive QA benchmarks without testing generalizability to other tasks."
+        "point": "Limited evaluation metrics and scope",
+        "evidence": "Evaluation focuses mainly on accuracy; metrics like calibration, robustness, or retrieval precision/recall are not reported. Experiments are limited to English and standard NLP tasks without exploring other languages or domains."
       },
       {
-        "point": "Reproducibility hindered by missing implementation details",
-        "evidence": "Details on retrieval datastore construction, indexing, updating, and fine-tuning protocols are insufficient."
+        "point": "Unaddressed scalability and knowledge noise handling",
+        "evidence": "The paper does not discuss how the approach scales with larger or additional knowledge bases nor how it manages conflicting or noisy knowledge from external sources."
       },
       {
-        "point": "Ambiguous description of 'structured manner' of knowledge integration",
-        "evidence": "Lacks concrete examples or diagrams explaining how knowledge snippets are embedded alongside prompts."
-      },
-      {
-        "point": "Unclear model attention mechanism over prompt and knowledge",
-        "evidence": "No clarification on architectural modifications or attention masking required for simultaneous attention."
-      },
-      {
-        "point": "No discussion on context window size constraints",
-        "evidence": "The impact of limited context length on scalability and performance with large knowledge snippets is not addressed."
-      },
-      {
-        "point": "Potential latency and computational overhead not evaluated",
-        "evidence": "Inference speed and resource costs compared to baselines are not measured or discussed."
-      },
-      {
-        "point": "Generalisability to other LLM architectures untested",
-        "evidence": "Experiments are limited to a single model architecture without exploring applicability to others."
-      },
-      {
-        "point": "No evaluation on continual or incremental knowledge updates",
-        "evidence": "Claims of adaptability lack empirical support for performance with evolving knowledge datastores."
-      },
-      {
-        "point": "Overlap with existing prompt engineering techniques not discussed",
-        "evidence": "The paper does not differentiate its approach from simpler methods that prepend retrieved knowledge without fine-tuning."
+        "point": "Clarity issues in explaining key components",
+        "evidence": "The mixture-of-experts reformulation and prompt template construction are described abstractly without concrete examples or diagrams, reducing reader comprehension."
       }
     ],
     "questions": [
       {
-        "question": "How does the method compare quantitatively and qualitatively to recent semi-parametric models like RAG or REALM?",
-        "motivation": "To better assess the novelty and effectiveness relative to strong existing baselines."
+        "question": "How does KiC compare empirically and conceptually to prior semi-parametric models that also leverage structured knowledge bases?",
+        "motivation": "Clarifying this would strengthen the novelty claim and contextualize KiC\u2019s contributions within existing literature."
       },
       {
-        "question": "What is the impact of different knowledge embedding structures on model performance?",
-        "motivation": "To justify the design choice of the 'structured manner' of knowledge integration."
+        "question": "Would incorporating multiple knowledge categories per instance (top-n selection) improve performance over the current top-1 approach?",
+        "motivation": "Understanding the benefits of multi-category fusion could guide future model design and potentially enhance knowledge integration."
       },
       {
-        "question": "How robust is the approach to retrieval errors or noisy knowledge snippets?",
-        "motivation": "Understanding failure modes and robustness is critical for practical deployment."
+        "question": "How sensitive is KiC\u2019s performance to the design and complexity of the knowledge selector?",
+        "motivation": "Ablations could reveal whether simpler or alternative selector architectures suffice, impacting model efficiency and interpretability."
       },
       {
-        "question": "Does the approach require architectural changes or special attention mechanisms to attend over prompt and knowledge simultaneously?",
-        "motivation": "Clarifying implementation details aids reproducibility and understanding."
+        "question": "How does KiC handle noisy or conflicting knowledge retrieved from external sources?",
+        "motivation": "Addressing knowledge reliability is critical for robustness and practical deployment in real-world scenarios."
       },
       {
-        "question": "How does context window size limit the amount of knowledge that can be integrated, and what are the trade-offs?",
-        "motivation": "To evaluate scalability and applicability to tasks requiring large knowledge inputs."
-      },
-      {
-        "question": "What are the latency and computational overhead implications of integrating retrieval and knowledge embedding at generation time?",
-        "motivation": "Important for assessing efficiency and real-world usability."
-      },
-      {
-        "question": "Can the method generalize to different LLM architectures and tokenization schemes?",
-        "motivation": "To understand the broader applicability of the approach."
-      },
-      {
-        "question": "How does the model perform when the knowledge datastore is updated incrementally over time?",
-        "motivation": "To validate claims of adaptability to evolving knowledge."
-      },
-      {
-        "question": "Could simpler prompt engineering techniques achieve similar improvements without fine-tuning?",
-        "motivation": "To clarify the incremental novelty and cost-benefit trade-offs."
+        "question": "Can the approach scale effectively to much larger or evolving knowledge bases, and how would this impact retrieval latency and model performance?",
+        "motivation": "Scalability is essential for applicability to real-world knowledge graphs that continuously grow and change."
       }
-    ],
-    "scores": {
-      "correctness": 4,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to closely related semi-parametric models. The paper omits comparisons to strong baselines like RAG or REALM, limiting assessment of true novelty.",
-    "point_002": "Lack of ablation studies on knowledge embedding structure. No experiments isolate the impact of different structuring strategies for embedding knowledge snippets.",
-    "point_003": "No analysis of retrieval quality impact or robustness. The paper does not evaluate how retrieval errors or noisy knowledge affect generation quality or fallback mechanisms.",
-    "point_004": "Baseline models not parameter-matched. Comparisons use smaller or differently sized models, raising fairness concerns about performance gains.",
-    "point_005": "Evaluation metrics limited to factual accuracy and recall. No assessment of fluency, coherence, or human evaluation, restricting understanding of overall generation quality.",
-    "point_006": "No cross-domain or out-of-distribution testing. Experiments focus solely on knowledge-intensive QA benchmarks without testing generalizability to other tasks.",
-    "point_007": "Reproducibility hindered by missing implementation details. Details on retrieval datastore construction, indexing, updating, and fine-tuning protocols are insufficient.",
-    "point_008": "Ambiguous description of 'structured manner' of knowledge integration. Lacks concrete examples or diagrams explaining how knowledge snippets are embedded alongside prompts.",
-    "point_009": "Unclear model attention mechanism over prompt and knowledge. No clarification on architectural modifications or attention masking required for simultaneous attention.",
-    "point_010": "No discussion on context window size constraints. The impact of limited context length on scalability and performance with large knowledge snippets is not addressed.",
-    "point_011": "Potential latency and computational overhead not evaluated. Inference speed and resource costs compared to baselines are not measured or discussed.",
-    "point_012": "Generalisability to other LLM architectures untested. Experiments are limited to a single model architecture without exploring applicability to others.",
-    "point_013": "No evaluation on continual or incremental knowledge updates. Claims of adaptability lack empirical support for performance with evolving knowledge datastores.",
-    "point_014": "Overlap with existing prompt engineering techniques not discussed. The paper does not differentiate its approach from simpler methods that prepend retrieved knowledge without fine-tuning."
+    "point_001": "Insufficient comparison to prior semi-parametric models using structured knowledge. The paper lacks detailed experimental or conceptual comparison to existing retrieval-augmented models leveraging structured knowledge bases like Wikidata or ConceptNet, weakening the novelty claim.",
+    "point_002": "Limited justification and analysis of knowledge category selection. No clear rationale for choosing exactly six knowledge types or discussion of coverage overlap, redundancy, or potential missing knowledge sources such as Freebase or domain-specific ontologies.",
+    "point_003": "No ablation studies on knowledge selector design and multi-category retrieval. The paper does not explore variations in selector complexity or compare single top-1 knowledge category retrieval against multi-category fusion, limiting understanding of design choices.",
+    "point_004": "Uneven baseline comparisons due to differing training setups. KiC benefits from multi-task fine-tuning on millions of examples, whereas baselines like GPT-NeoX-20B and OPT-30B are evaluated zero-shot without such training, making comparisons less fair.",
+    "point_005": "Reproducibility concerns due to missing implementation details. Key details on knowledge retrieval methods, indexing, retrieval algorithms, training hyperparameters, and prompt template construction are omitted, hindering replication.",
+    "point_006": "Limited evaluation metrics and scope. Evaluation focuses mainly on accuracy; metrics like calibration, robustness, or retrieval precision/recall are not reported. Experiments are limited to English and standard NLP tasks without exploring other languages or domains.",
+    "point_007": "Unaddressed scalability and knowledge noise handling. The paper does not discuss how the approach scales with larger or additional knowledge bases nor how it manages conflicting or noisy knowledge from external sources.",
+    "point_008": "Clarity issues in explaining key components. The mixture-of-experts reformulation and prompt template construction are described abstractly without concrete examples or diagrams, reducing reader comprehension."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nLarge language models (LLMs) have demonstrated impressive capabilities but often struggle with factual accuracy and knowledge recall, especially as knowledge evolves over time. Purely parametric models encode knowledge in their parameters, making updates costly and inefficient. On the other hand, retrieval-augmented or semi-parametric models incorporate external knowledge sources but face challenges in effectively integrating retrieved information into the generation process. The paper addresses the problem of enhancing LLMs with better knowledge integration mechanisms to improve factual accuracy and adaptability without retraining the entire model.\n\n**Proposed Method:**  \nThe authors propose \"Knowledge-in-Context,\" a semi-parametric approach that tightly integrates external knowledge into the language model\u2019s context window during generation. Instead of treating retrieved documents as separate inputs, their method incorporates knowledge snippets directly into the model\u2019s context in a structured manner, allowing the model to attend over both the prompt and relevant knowledge simultaneously. This approach involves:  \n- Efficient retrieval of relevant knowledge pieces from an external datastore based on the input query.  \n- Contextual embedding of retrieved knowledge alongside the original input prompt.  \n- Training or fine-tuning the language model to effectively leverage this combined context for generation, improving factual grounding and reducing hallucinations.\n\n**Results:**  \nExperiments demonstrate that the Knowledge-in-Context method significantly improves factual accuracy and knowledge recall compared to baseline parametric and retrieval-augmented models. The approach shows:  \n- Enhanced performance on knowledge-intensive benchmarks and question answering tasks.  \n- Better adaptability to updated knowledge without full model retraining.  \n- Improved generation quality with fewer hallucinations and more relevant, accurate content.  \nQuantitative metrics and qualitative analyses confirm the benefits of tightly integrating knowledge into the model context.\n\n**Claimed Contributions:**  \n1. Introduction of a novel semi-parametric language modeling framework that embeds retrieved knowledge directly into the model\u2019s context window.  \n2. Demonstration that this tight integration leads to improved factual accuracy and knowledge utilization compared to existing retrieval-augmented methods.  \n3. Empirical evidence showing the approach\u2019s effectiveness across multiple knowledge-intensive tasks and benchmarks.  \n4. A step towards more knowledgeable, adaptable language models that can incorporate evolving external knowledge efficiently without costly retraining.",
-    "critic": "1. **Novelty - Missing Comparison to Closely Related Semi-Parametric Models:**  \nWhile the paper claims novelty in tightly integrating retrieved knowledge into the context window, it does not sufficiently compare against recent semi-parametric methods such as RAG (Retrieval-Augmented Generation) or REALM that also embed retrieved documents into the input. Section 4\u2019s experimental comparisons omit these strong baselines, limiting the assessment of true novelty.\n\n2. **Methodology - Lack of Ablation on Knowledge Embedding Structure:**  \nThe paper proposes a \u201cstructured manner\u201d of embedding knowledge snippets alongside the prompt but does not provide ablation studies isolating the impact of different structuring strategies (e.g., ordering, delimiter tokens, or embedding formats). This is critical to justify the design choice described in Section 3.\n\n3. **Methodology - Assumption of Retrieval Quality Not Addressed:**  \nThe approach relies heavily on the retrieval module\u2019s ability to fetch relevant knowledge pieces, but the paper does not analyze how retrieval errors or noisy knowledge affect generation quality (Section 3.1). There is no robustness evaluation or discussion of fallback mechanisms.\n\n4. **Evaluation - Baselines Lack Parameter-Matched Models:**  \nIn Section 4, the baseline parametric models are smaller or differently sized than the proposed model, raising concerns about fairness. The paper does not clarify if the improvements stem from model size or the knowledge-in-context integration.\n\n5. **Evaluation - Metrics Focused Solely on Factual Accuracy:**  \nThe evaluation primarily uses factual accuracy and knowledge recall metrics (Table 2) but omits other important generation quality metrics such as fluency, coherence, or human evaluation scores. This narrow focus limits understanding of overall generation quality.\n\n6. **Evaluation - No Cross-Domain or Out-of-Distribution Testing:**  \nAll experiments are conducted on knowledge-intensive QA benchmarks (Section 4), but the paper does not test generalizability to other tasks or domains where external knowledge integration might behave differently.\n\n7. **Reproducibility - Missing Details on Retrieval Datastore Construction:**  \nThe paper does not specify how the external knowledge datastore is constructed, indexed, or updated (Section 3.1). These implementation details are crucial for replicating the retrieval and integration pipeline.\n\n8. **Reproducibility - Training/Fine-Tuning Protocols Under-Specified:**  \nSection 3.3 mentions fine-tuning the language model to leverage combined context but lacks details on hyperparameters, training duration, dataset splits, or computational resources, hindering reproducibility.\n\n9. **Clarity - Ambiguous Description of \u201cStructured Manner\u201d of Knowledge Integration:**  \nThe explanation of how knowledge snippets are embedded \u201cin a structured manner\u201d (Section 3.2) is vague and lacks concrete examples or diagrams, making it difficult to understand the exact mechanism.\n\n10. **Clarity - Insufficient Explanation of How Model Attends Over Prompt and Knowledge:**  \nThe paper claims the model attends simultaneously over prompt and knowledge but does not clarify whether this requires architectural modifications or special attention masking, leaving the reader uncertain about implementation.\n\n11. **Limitations - No Discussion on Context Window Size Constraints:**  \nThe approach depends on fitting both prompt and retrieved knowledge into the model\u2019s context window, but the paper does not discuss how context length limitations affect scalability or performance when large knowledge snippets are needed.\n\n12. **Limitations - Potential Latency Overhead Not Addressed:**  \nIntegrating retrieval and embedding knowledge snippets into context likely introduces latency during generation, yet the paper does not measure or discuss inference speed or computational overhead compared to baselines.\n\n13. **Generalisability - Unclear if Method Works with Different LLM Architectures:**  \nExperiments focus on a single language model architecture; the paper does not explore whether the knowledge-in-context approach generalizes to other LLMs with different tokenization or attention mechanisms.\n\n14. **Generalisability - No Evaluation on Continual or Incremental Knowledge Updates:**  \nAlthough the paper claims adaptability to evolving knowledge, it does not empirically evaluate the method\u2019s performance when the knowledge datastore is updated incrementally over time.\n\n15. **Novelty - Overlap with Existing Prompt Engineering Techniques Not Discussed:**  \nThe paper does not acknowledge or differentiate its approach from prompt engineering methods that prepend retrieved knowledge to prompts, which may achieve similar effects without fine-tuning, raising questions about the incremental novelty."
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Challenges with Fully-Parametric Language Models:**\n  - Require extremely large numbers of parameters to store necessary knowledge for diverse NLP tasks, especially in zero/few-shot settings.\n  - Difficult and costly to update or adapt to evolving world knowledge due to expensive retraining.\n  - Emergent problem-solving abilities typically appear only at very large model scales.\n\n- **Limitations of Existing Semi-Parametric Models:**\n  - Use large textual corpora as external memory, but useful knowledge is sparsely distributed and retrieval is challenging.\n  - Difficulty in determining the proper granularity of text chunks for indexing.\n  - Existing semi-parametric models mostly rely on plain text memories rather than structured or semi-structured knowledge.\n\n- **Motivation:**\n  - Leverage rich, structured knowledge resources (e.g., knowledge graphs) to build a more effective semi-parametric language model.\n  - Develop an adaptive mechanism to select the most relevant knowledge type per input instance.\n  - Achieve strong zero-shot generalization with smaller parametric models by augmenting with external knowledge.\n\n---\n\n### Proposed Method\n\n- **Knowledge-in-Context (KiC) Architecture:**\n  - A semi-parametric language model that augments a parametric text-to-text Transformer backbone (e.g., T5) with a knowledge-rich external memory.\n  - External memory contains six distinct knowledge categories:\n    1. **Entity Knowledge:** From Wikipedia and Wikidata, including entity properties and related sentences.\n    2. **Dictionary Knowledge:** Lexical definitions and examples from Wiktionary.\n    3. **Commonsense Knowledge:** ConceptNet triplets representing everyday knowledge.\n    4. **Event Knowledge:** Human-constructed and auto-extracted event graphs (ATOMIC, GLUCOSE, ASER).\n    5. **Script Knowledge:** Complex commonsense scenarios from script knowledge datasets.\n    6. **Causality Knowledge:** Cause-effect relations from CausalBank.\n\n- **Instance-Adaptive Knowledge Selector:**\n  - For each input instance, dynamically selects the most relevant knowledge category.\n  - Retrieves the most helpful knowledge pieces from the selected category.\n  - Concatenates the retrieved knowledge with the input instance, converts to natural language via prompt templates, and feeds into the text-to-text model.\n\n- **Mixture-of-Experts (MoE) Reformulation:**\n  - KiC is formulated as a special one-layer MoE model.\n  - The knowledge selector acts as the MoE router, assigning each input instance to one expert.\n  - Each expert corresponds to the text-to-text model augmented with one knowledge category\u2019s memory.\n  - Includes a \"generalist\" expert (text-to-text model alone) for cases where no external knowledge is needed.\n  - Training uses a differentiable approach inspired by MoE learning, including a load balancing loss to encourage diverse knowledge selection.\n\n- **Training Setup:**\n  - Multi-task training on 39 diverse NLP tasks (8.4M training instances).\n  - Zero-shot evaluation on held-out unseen tasks.\n  - Backbone model initialized from T5-LM-adapt (T5 further trained on language modeling).\n\n---\n\n### Results\n\n- **Zero-Shot Generalization:**\n  - KiC Large (770M parameters) outperforms zero-shot baseline models like GPT-NeoX-20B and OPT-30B, which are 25-38x larger.\n  - On the MMLU benchmark, KiC Large achieves 39.4% accuracy, close to GPT-3\u2019s 43.9% (175B parameters, 227x larger) with 5-shot examples.\n  - Demonstrates strong zero-shot performance on 40+ diverse tasks, including coreference, NLI, sentence completion, and word sense disambiguation.\n\n- **Multi-Task Training:**\n  - KiC Large outperforms T0 Large (3B parameters) on in-domain tasks and unseen tasks within observed categories.\n  - Significant improvements on knowledge-intensive tasks like CosmosQA and DREAM.\n\n- **Emergent Abilities at Smaller Scale:**\n  - KiC shows emergent zero/few-shot capabilities at model sizes as small as 0.22B to 0.77B parameters.\n  - In contrast, fully-parametric models like T5 require 11B+ parameters to show similar emergent behavior.\n\n- **Knowledge Usefulness Analysis:**\n  - Different tasks benefit from different knowledge types.\n  - Instance-adaptive knowledge selection is critical; the selector often picks knowledge types that improve performance even if those types hurt in single-task settings.\n  - Example: Entity knowledge helps on commonsense reasoning tasks like Winogrande more than commonsense knowledge itself.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Semi-Parametric Language Model Architecture (KiC):**\n   - Integrates a parametric text-to-text model with a large, diverse, knowledge-rich external memory covering six distinct knowledge types.\n\n2. **Instance-Adaptive Knowledge Selector:**\n   - Dynamically selects the most relevant knowledge category per input instance, enabling fine-grained knowledge augmentation.\n\n3. **Mixture-of-Experts Reformulation and Training Algorithm:**\n   - Reformulates KiC as a MoE model with the knowledge selector as the router.\n   - Develops a fully differentiable end-to-end training method with load balancing to effectively learn knowledge selection.\n\n4. **Strong Empirical Results:**\n   - Demonstrates superior zero-shot performance on 40+ NLP tasks with a model 4-39x smaller than comparable baselines.\n   - Shows emergent abilities at a much smaller scale than fully-parametric models.\n\n5. **Comprehensive Analysis of Knowledge Impact:**\n   - Provides insights into how different knowledge types affect various tasks.\n   - Highlights the importance of adaptive knowledge selection for performance gains.\n\n---\n\n### Additional Notes\n\n- The approach leverages structured and semi-structured knowledge resources rather than plain text chunks, addressing retrieval and granularity challenges.\n- The text-to-text paradigm allows handling multiple tasks with a unified interface and generalizes well to unseen tasks.\n- Future work includes exploring pre-training KiC with unstructured plain texts and extending top-1 knowledge selection to top-n.\n\n---\n\nThis summary captures the core ideas, methodology, experimental validation, and contributions of the paper \"Knowledge-in-Context: Towards Knowledge-able Semi-Parametric Language Models.\"",
+    "critic": "1. **Novelty \u2013 Comparison to Prior Semi-Parametric Models Using Structured Knowledge:**  \nThe paper claims novelty in leveraging structured and semi-structured knowledge (Section \"Proposed Method\"), but it lacks a detailed comparison to prior semi-parametric models that also incorporate structured knowledge bases (e.g., retrieval-augmented models using Wikidata or ConceptNet). Without explicitly contrasting KiC\u2019s approach and performance against these, the novelty claim is weakened.\n\n2. **Methodology \u2013 Justification for Six Knowledge Categories and Their Coverage:**  \nWhile six distinct knowledge types are used (Entity, Dictionary, Commonsense, Event, Script, Causality), the rationale for selecting exactly these categories and excluding others (e.g., factual knowledge bases like Freebase or domain-specific ontologies) is not clearly justified. The paper does not discuss coverage overlap or redundancy among these categories, which could affect retrieval efficiency and model performance.\n\n3. **Methodology \u2013 Lack of Ablation on Knowledge Selector Complexity:**  \nThe instance-adaptive knowledge selector is central to the approach, yet the paper does not provide ablations on its architecture or complexity (e.g., simple classifiers vs. more complex models). It is unclear how sensitive performance is to the selector\u2019s design or whether simpler heuristics could suffice.\n\n4. **Methodology \u2013 Single Knowledge Category Retrieval vs. Multi-Category Fusion:**  \nKiC selects only one knowledge category per instance (top-1 selection). The paper notes future work on top-n selection but does not provide experiments comparing single vs. multiple knowledge categories per input. This limits understanding of whether multi-category knowledge fusion could yield better results.\n\n5. **Evaluation \u2013 Baselines Not Fully Matched in Training Data or Setup:**  \nKiC is trained on 39 tasks with 8.4M instances, but baselines like GPT-NeoX-20B and OPT-30B are zero-shot without multi-task training. This makes the comparison somewhat uneven, as KiC benefits from multi-task fine-tuning. The paper should clarify or control for training data differences to ensure fair zero-shot comparisons.\n\n6. **Evaluation \u2013 Lack of Few-Shot Comparisons Beyond MMLU:**  \nWhile KiC\u2019s zero-shot performance is highlighted, few-shot results are only briefly mentioned for MMLU. Given the importance of few-shot learning in large language models, more extensive few-shot evaluations across diverse tasks would strengthen claims about emergent abilities at smaller scales.\n\n7. **Evaluation \u2013 Metrics Focused Mainly on Accuracy:**  \nThe evaluation primarily reports accuracy (e.g., MMLU accuracy). Other relevant metrics such as calibration, robustness to adversarial inputs, or knowledge retrieval precision/recall are not reported. These could provide deeper insights into the model\u2019s knowledge integration effectiveness.\n\n8. **Reproducibility \u2013 Missing Details on Knowledge Retrieval Implementation:**  \nThe paper does not provide sufficient details on how knowledge pieces are retrieved from each category\u2019s memory (e.g., indexing methods, retrieval algorithms, retrieval latency). This hinders reproducibility and understanding of the system\u2019s efficiency and scalability.\n\n9. **Reproducibility \u2013 Training Hyperparameters and Selector Optimization Details Omitted:**  \nDetails such as learning rates, batch sizes, optimizer choices, and how the load balancing loss is weighted during training are not fully specified. The absence of these details makes it difficult to replicate the training procedure and verify the reported results.\n\n10. **Clarity \u2013 Ambiguity in Prompt Template Construction:**  \nThe process of converting retrieved knowledge into natural language prompts is mentioned but not elaborated. It is unclear how prompt templates are designed, whether they are fixed or learned, and how sensitive performance is to prompt engineering.\n\n11. **Limitations \u2013 Scalability to Larger Knowledge Bases Not Addressed:**  \nThe external memory covers six knowledge categories, but the paper does not discuss how the approach scales when knowledge bases grow significantly larger or when new knowledge types are added. Potential bottlenecks or memory constraints remain unexplored.\n\n12. **Limitations \u2013 Handling of Conflicting or Noisy Knowledge:**  \nThe paper does not address how KiC deals with contradictory or noisy knowledge retrieved from external sources, which is common in large knowledge graphs. There is no mechanism described for filtering or weighting knowledge reliability.\n\n13. **Generalisability \u2013 Evaluation Limited to English and Specific NLP Tasks:**  \nAll experiments appear to be conducted on English datasets and standard NLP benchmarks. The paper does not explore or discuss applicability to other languages, domains (e.g., biomedical), or modalities, limiting claims about generalizability.\n\n14. **Generalisability \u2013 Unclear Performance on Truly Unseen Knowledge Types:**  \nWhile zero-shot generalization to unseen tasks is evaluated, it is unclear how KiC performs when the required knowledge type is not present in the six categories or when the knowledge selector must extrapolate beyond trained categories.\n\n15. **Clarity \u2013 Mixture-of-Experts Reformulation Explanation Could Be Improved:**  \nThe MoE reformulation is a key conceptual contribution, but the explanation is somewhat abstract. More concrete examples or diagrams illustrating how the knowledge selector routes inputs and how experts correspond to knowledge categories would improve reader understanding."
   }
 }
