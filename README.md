@@ -205,7 +205,14 @@ Output in this exact JSON format:
   "questions": [
     {"question": "open question", "motivation": "why this matters"},
     {"question": "open question", "motivation": "why this matters"}
-  ]
+<<<<<<< HEAD
+  ],
+  "scores": {
+    "correctness": 3,
+    "novelty": 3,
+    "recommendation": "borderline",
+    "confidence": 3
+  }
 }
 ```
 
@@ -355,7 +362,8 @@ python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
 python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 
 # Run Dify workflows (requires DIFY_API_KEY in .env)
-python -m src.dify.run_dify                   # runs single_critic workflow by default
+python -m src.dify.run_dify single_critic     # Reader → Critic → Summariser
+python -m src.dify.run_dify dual_critic       # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 
 # Score all systems
 python -m src.evaluation.scorer baseline

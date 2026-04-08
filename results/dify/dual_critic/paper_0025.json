@@ -1,28 +1,85 @@
 {
-  "critique_points": {
-    "point_001": "The paper's primary novelty is scaling the XLM-R architecture to 3.5B and 10.7B parameters without proposing new architectural components, training objectives, or optimization techniques, missing deeper analysis on why scaling alone suffices.",
-    "point_002": "Comparisons to large multilingual masked language models trained on comparable datasets are missing, making it unclear if improvements stem from model size or dataset differences.",
-    "point_003": "There is no ablation study on the language sampling distribution parameter (\u03b1=0.3) at scale, leaving unclear how scaling interacts with or reduces dependence on this hyperparameter.",
-    "point_004": "The impact of reduced training updates and smaller batch sizes on convergence and final performance is not analyzed, raising concerns about potential undertraining of larger models.",
-    "point_005": "Evaluation is limited to a narrow set of tasks (NLI, QA, English GLUE), omitting broader multilingual tasks such as sequence labeling, generation, or low-resource classification.",
-    "point_006": "Baseline comparisons are not fully balanced or fair, with discrepancies in training data size and parameter counts hindering clear attribution of performance gains.",
-    "point_007": "The paper does not explore fine-tuning performance on genuinely low-resource languages with limited labeled data, weakening claims about benefits for these languages.",
-    "point_008": "Details on the model parallelism setup, including hardware, parallelism strategies, and hyperparameters, are insufficient, hindering reproducibility."
-  },
-  "summary": "This paper presents an empirical study scaling the XLM-R multilingual masked language model to 3.5B and 10.7B parameters, demonstrating improved cross-lingual performance and maintained English understanding. While scaling yields state-of-the-art results on several benchmarks, the work lacks architectural or methodological innovations, fairer baseline comparisons, detailed ablations on key hyperparameters, comprehensive evaluation across diverse tasks and languages, and critical reproducibility details. Addressing these limitations would strengthen the mechanistic understanding and practical impact of large-scale multilingual model scaling.",
-  "strengths": [
-    "Comprehensive empirical evaluation of very large-scale multilingual masked language models.",
-    "Demonstrated improvements on cross-lingual natural language inference, question answering, and English GLUE benchmarks with larger models."
-  ],
-  "weaknesses": [
-    "Lack of new architectural or training innovations beyond scaling.",
-    "Insufficient ablation studies and broader evaluations to fully understand scaling effects and generalizability."
-  ],
-  "questions": [
-    "How does varying the language sampling temperature (\u03b1) at large scale affect performance trade-offs between high- and low-resource languages?",
-    "What are the detailed hardware and parallelism strategies used for training the largest models, and how do they impact training stability and efficiency?"
-  ],
   "paper_id": "paper_0025",
-  "system": "dify",
-  "title": "Representation and Bias in Multilingual NLP: Insights from Controlled Experiments on Conditional Language Modeling"
+  "title": "Representation and Bias in Multilingual NLP: Insights from Controlled Experiments on Conditional Language Modeling",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 96.87,
+  "structured": {
+    "summary": "This paper investigates scaling multilingual masked language models to unprecedented sizes (3.5B and 10.7B parameters) using the same CC100 dataset as smaller XLM-R models. The resulting models demonstrate significant improvements on cross-lingual benchmarks like XNLI, MLQA, and XQuAD, and achieve competitive or better performance compared to monolingual and other multilingual baselines, suggesting that scaling can overcome prior trade-offs in multilingual modeling.",
+    "strengths": [
+      {
+        "point": "Scaling multilingual masked language models to very large parameter counts",
+        "evidence": "Developed and trained XLM-RXL (3.5B) and XLM-RXXL (10.7B) models, nearly two orders of magnitude larger than previous XLM-R."
+      },
+      {
+        "point": "Strong empirical improvements on cross-lingual understanding tasks",
+        "evidence": "XLM-RXXL achieves up to 2.4% accuracy gains on XNLI, ~4 F1 improvements on MLQA and XQuAD, setting new state-of-the-art for multiple languages."
+      },
+      {
+        "point": "Demonstrating that large multilingual models can match or surpass monolingual baselines",
+        "evidence": "XLM-RXXL outperforms RoBERTa-Large on English GLUE benchmarks while covering 99 additional languages."
+      },
+      {
+        "point": "Using a consistent training dataset facilitates controlled scaling comparisons",
+        "evidence": "Both new large models trained on the same 167B token CC100 dataset as smaller XLM-R models, isolating model size effects."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison with other recent multilingual pretrained models",
+        "evidence": "No evaluation against InfoXLM, RemBERT, mBART, multilingual PaLM, or BLOOM, which limits contextualizing improvements."
+      },
+      {
+        "point": "Lack of ablations on vocabulary size, tokenizer design, and language-specific architectural components",
+        "evidence": "No experiments varying the large 250K shared vocabulary or including language embeddings/adapters to assess their impact."
+      },
+      {
+        "point": "Omission of training optimization details and stability analysis",
+        "evidence": "Details on optimizer, learning rate schedules, gradient clipping, or instability during training very large models are missing."
+      },
+      {
+        "point": "Evaluation scope is narrow and excludes truly low-resource or typologically distant languages",
+        "evidence": "Benchmarks focus on moderate- to high-resource languages; no analysis on extremely low-resource languages or diverse linguistic typologies."
+      },
+      {
+        "point": "No analysis on language data imbalance effects during training",
+        "evidence": "CC100 dataset is heavily imbalanced across languages, but paper does not investigate how this affects learning or transfer."
+      },
+      {
+        "point": "Insufficient reporting of reproducibility-critical details and practical deployment considerations",
+        "evidence": "Key hyperparameters, compute costs, inference latency, and memory footprints are not disclosed."
+      },
+      {
+        "point": "No investigation of cross-lingual alignment improvements from contrastive or supervised objectives",
+        "evidence": "Models are trained solely with monolingual MLM, without exploring objectives that explicitly improve cross-lingual alignment."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How would the models perform compared to other recent large multilingual pretrained models incorporating encoder-decoder or causal architectures?",
+        "motivation": "Understanding relative gains is critical to justify scaling XLM-R-style MLMs versus alternative architectures."
+      },
+      {
+        "question": "What is the impact of vocabulary size and shared vocabulary design on performance, especially for low-resource languages?",
+        "motivation": "This affects tokenization quality and could influence cross-lingual transfer and capacity utilization."
+      },
+      {
+        "question": "How does language imbalance in the training corpus influence learned representations and performance across languages?",
+        "motivation": "To validate the claim that scaling addresses trade-offs between high- and low-resource languages, this needs direct investigation."
+      },
+      {
+        "question": "What are the training stability challenges, hyperparameter choices, and computational resources required to train and deploy these very large models?",
+        "motivation": "Such details are essential for reproducibility and practical adoption."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Limited comparison with other recent multilingual pretrained models. No evaluation against InfoXLM, RemBERT, mBART, multilingual PaLM, or BLOOM, which limits contextualizing improvements",
+    "point_002": "Lack of ablations on vocabulary size, tokenizer design, and language-specific architectural components. No experiments varying the large 250K shared vocabulary or including language embeddings/adapters to assess their impact",
+    "point_003": "Omission of training optimization details and stability analysis. Details on optimizer, learning rate schedules, gradient clipping, or instability during training very large models are missing",
+    "point_004": "Evaluation scope is narrow and excludes truly low-resource or typologically distant languages. Benchmarks focus on moderate- to high-resource languages; no analysis on extremely low-resource languages or diverse linguistic typologies",
+    "point_005": "No analysis on language data imbalance effects during training. CC100 dataset is heavily imbalanced across languages, but paper does not investigate how this affects learning or transfer",
+    "point_006": "Insufficient reporting of reproducibility-critical details and practical deployment considerations. Key hyperparameters, compute costs, inference latency, and memory footprints are not disclosed",
+    "point_007": "No investigation of cross-lingual alignment improvements from contrastive or supervised objectives. Models are trained solely with monolingual MLM, without exploring objectives that explicitly improve cross-lingual alignment"
+  }
 }

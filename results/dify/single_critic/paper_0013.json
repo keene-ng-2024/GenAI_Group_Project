@@ -1,28 +1,90 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks a thorough comparison to existing knowledge distillation methods for language models, such as prompt-based or chain-of-thought distillation approaches, which is vital to substantiate its claimed novelty.",
-    "point_002": "It is unclear whether baseline fine-tuning models in Text-to-SQL experiments used the exact same labeled data or number of examples as those used in teacher prompts, raising concerns about fairness of comparisons.",
-    "point_003": "The definition and construction of student templates are ambiguous, with insufficient justification for how minimal prompts are chosen or controlled across experiments, potentially biasing results.",
-    "point_004": "The evaluation covers a limited diversity of tasks and datasets, focusing mainly on Natural-Instructions-V2, SPIDER Text-to-SQL, and 8-digit addition, which restricts claims of broad generalizability.",
-    "point_005": "There are insufficient controlled ablations examining how the quality or type of explanations influence student improvement, limiting understanding of what instructional signals drive effective internalization.",
-    "point_006": "The method heavily depends on the teacher model's reasoning ability and output quality, but the paper does not analyze sensitivity to teacher errors or discuss failure cases.",
-    "point_007": "Details on how the final answers are extracted from teacher scratchpads via the answer extractor are insufficiently described, despite its critical role in distillation quality.",
-    "point_008": "The paper minimally addresses potential forgetting or interference during sequential distillation, leaving open questions about knowledge retention or catastrophic forgetting in practice."
-  },
-  "summary": "The paper introduces context distillation, a novel framework enabling language models to internalize the benefits of contextual inputs such as instructions, examples, and reasoning chains directly into their parameters. By distilling from teacher outputs conditioned on rich prompts into students receiving minimal prompts, the approach improves performance and inference efficiency across diverse tasks including natural language instructions, Text-to-SQL, and multi-digit arithmetic. The method also offers mechanisms to overcome context window limits through simultaneous and sequential distillation. While promising in enhancing learning and reducing reliance on costly context tokens, the work would benefit from broader task evaluations, clearer methodological details, stronger baselines, and deeper analysis of factors affecting distillation success.",
-  "strengths": [
-    "Proposes a general and flexible framework for internalizing diverse contextual information into language model parameters.",
-    "Demonstrates empirical gains across multiple learning signals such as instructions, examples, and step-by-step reasoning, including improvements over conventional fine-tuning."
-  ],
-  "weaknesses": [
-    "Lacks comprehensive comparisons to prior knowledge distillation and prompt-based learning methods, weakening claims of novelty.",
-    "Provides limited methodological transparency and evaluation scope, including ambiguous template design and insufficient exploration of robustness and failure modes."
-  ],
-  "questions": [
-    "How does context distillation perform when teacher and student models differ in architecture or size, and can it generalize beyond same-model distillation?",
-    "What are the computational and training cost trade-offs of context distillation compared to standard fine-tuning or instruction tuning approaches?"
-  ],
   "paper_id": "paper_0013",
-  "system": "dify",
-  "title": "Learning by Distilling Context"
+  "title": "Learning by Distilling Context",
+  "platform": "dify_single_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 53.2,
+  "structured": {
+    "summary": "The paper proposes context distillation, a method for language models to internalize knowledge from rich contextual prompts by distilling teacher outputs conditioned on detailed contexts into students conditioned on minimal contexts. This approach enables models to internalize instructions, examples, and step-by-step reasoning, improving performance and efficiency while overcoming context window limitations.",
+    "strengths": [
+      {
+        "point": "General and flexible framework for internalizing diverse contextual knowledge",
+        "evidence": "The method applies to abstract instructions, concrete examples, and step-by-step reasoning across multiple benchmarks, showing consistent performance gains."
+      },
+      {
+        "point": "Demonstrated ability to internalize more information than fits in the context window",
+        "evidence": "Simultaneous distillation from multiple teacher prompts allows internalizing many exemplars beyond the context window size, outperforming direct fine-tuning."
+      },
+      {
+        "point": "Improves inference efficiency by drastically reducing context length",
+        "evidence": "Distilled models require up to 11x fewer input tokens at inference while retaining or improving accuracy on tasks like addition and text-to-SQL."
+      },
+      {
+        "point": "Shows capability transfer and flexible updating via sequential distillation",
+        "evidence": "Distilled arithmetic reasoning transfers to related tasks; sequential distillation can overwrite task associations, demonstrating flexible knowledge updating."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison and differentiation from related distillation and parameter-efficient tuning methods",
+        "evidence": "The paper lacks detailed contrasts with prior work on recursive or prompting-based self-distillation and does not compare to methods like LoRA or prefix-tuning."
+      },
+      {
+        "point": "Limited ablations on the impact of teacher prompt quality and answer extractor assumptions",
+        "evidence": "No analysis on how noisy or suboptimal teacher prompts affect student learning or sensitivity to errors in the answer extraction function."
+      },
+      {
+        "point": "Reproducibility hampered by missing hyperparameter and training details",
+        "evidence": "Key information such as learning rates, batch sizes, epochs, sampling temperatures, and model sizes used are not fully specified."
+      },
+      {
+        "point": "Evaluation metrics are limited and lack human or more nuanced assessments",
+        "evidence": "Mainly Rouge-L and exact match scores are reported, which may not capture subtle improvements in reasoning or instruction internalization quality."
+      },
+      {
+        "point": "Lack of comparisons to alternative methods that extend context window or use retrieval techniques",
+        "evidence": "The paper does not benchmark against approaches that augment context length or leverage retrieval-augmented generation which could offer similar benefits."
+      },
+      {
+        "point": "Unclear scalability to larger models and practical efficiency claims lack quantitative latency or cost measures",
+        "evidence": "Experiments are limited to models up to ~2.7B parameters; no wall-clock or energy consumption data provided despite claims of efficiency gains."
+      },
+      {
+        "point": "Sparse explanation of the answer extractor implementation and sensitivity",
+        "evidence": "The function extracting final answers from complex teacher outputs is vaguely described, limiting understanding of robustness."
+      },
+      {
+        "point": "Clarity on when to use simultaneous versus sequential distillation is insufficient",
+        "evidence": "The paper introduces both but does not provide explicit guidelines or detailed discussion on their interaction or applicability."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How sensitive is the distillation performance to the quality and variability of teacher prompts?",
+        "motivation": "Understanding this is critical since teacher outputs directly supervise the student, and noisy or suboptimal prompts could degrade learning."
+      },
+      {
+        "question": "How does the choice and robustness of the answer extraction function affect final results?",
+        "motivation": "Since the method relies on extracting final answers from potentially complex teacher outputs, errors or ambiguities could hinder distillation effectiveness."
+      },
+      {
+        "question": "Can context distillation scale effectively to very large language models (e.g., 13B+ parameters) and what challenges arise?",
+        "motivation": "Scaling to state-of-the-art models is important for practical impact; it is unclear if gains and training stability hold at larger scales."
+      },
+      {
+        "question": "How does context distillation compare to recent methods that extend context windows or use retrieval-based prompting?",
+        "motivation": "Benchmarking against these alternatives would clarify the unique advantages and limitations of distillation approaches."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison and differentiation from related distillation and parameter-efficient tuning methods. The paper lacks detailed contrasts with prior work on recursive or prompting-based self-distillation and does not compare to methods like LoRA or prefix-tuning",
+    "point_002": "Limited ablations on the impact of teacher prompt quality and answer extractor assumptions. No analysis on how noisy or suboptimal teacher prompts affect student learning or sensitivity to errors in the answer extraction function",
+    "point_003": "Reproducibility hampered by missing hyperparameter and training details. Key information such as learning rates, batch sizes, epochs, sampling temperatures, and model sizes used are not fully specified",
+    "point_004": "Evaluation metrics are limited and lack human or more nuanced assessments. Mainly Rouge-L and exact match scores are reported, which may not capture subtle improvements in reasoning or instruction internalization quality",
+    "point_005": "Lack of comparisons to alternative methods that extend context window or use retrieval techniques. The paper does not benchmark against approaches that augment context length or leverage retrieval-augmented generation which could offer similar benefits",
+    "point_006": "Unclear scalability to larger models and practical efficiency claims lack quantitative latency or cost measures. Experiments are limited to models up to ~2.7B parameters; no wall-clock or energy consumption data provided despite claims of efficiency gains",
+    "point_007": "Sparse explanation of the answer extractor implementation and sensitivity. The function extracting final answers from complex teacher outputs is vaguely described, limiting understanding of robustness",
+    "point_008": "Clarity on when to use simultaneous versus sequential distillation is insufficient. The paper introduces both but does not provide explicit guidelines or detailed discussion on their interaction or applicability"
+  }
 }
