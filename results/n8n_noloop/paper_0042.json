@@ -3,135 +3,96 @@
   "title": "Charformer: Fast Character Transformers via Gradient-based Subword Tokenization",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 38.15,
+  "latency_seconds": 51.96,
   "structured": {
-    "summary": "The paper presents Charformer, a character-level transformer model incorporating Gradient-based Subword Tokenization (GBST), a novel module that dynamically learns subword units during training via a gradient-based soft selection mechanism. Charformer reduces sequence length early in the network, improving computational efficiency while maintaining or surpassing the accuracy of traditional subword-based models on several NLP benchmarks.",
+    "summary": "The paper proposes Charformer, a Transformer model integrating Gradient-Based Subword Tokenization (GBST), a novel differentiable method that learns latent subword units from characters end-to-end. Charformer achieves competitive or superior performance to subword and byte-level baselines across English, noisy, and multilingual NLP tasks while improving efficiency and interpretability.",
     "strengths": [
       {
-        "point": "Novel dynamic tokenization approach",
-        "evidence": "GBST enables end-to-end learning of subword units without relying on static tokenizers, introducing a new paradigm for tokenization."
+        "point": "Novel gradient-based soft subword tokenization method (GBST)",
+        "evidence": "GBST enables end-to-end learning of latent subword representations from characters without relying on external tokenizers."
       },
       {
-        "point": "Improved computational efficiency",
-        "evidence": "Charformer achieves faster training and inference speeds by reducing sequence length early in the network via GBST aggregation."
+        "point": "Strong empirical performance and efficiency",
+        "evidence": "Charformer matches or outperforms subword and byte-level baselines on GLUE, multilingual QA, and noisy social media tasks while being 28-100% faster and more memory efficient."
       },
       {
-        "point": "Competitive or superior performance",
-        "evidence": "Empirical results show Charformer matches or outperforms traditional subword-based transformers on language modeling and text classification tasks."
+        "point": "Improved robustness and multilingual generalization",
+        "evidence": "Charformer shows robustness to noisy text and competitive zero-shot cross-lingual transfer performance compared to subword models."
       },
       {
-        "point": "Ablation studies confirming effectiveness",
-        "evidence": "Ablations demonstrate the contribution of the gradient-based tokenization mechanism to model accuracy and efficiency."
+        "point": "Interpretability of learned latent subwords",
+        "evidence": "Visualizations reveal linguistically plausible segmentation patterns, such as vowels and whitespace as single-character blocks."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to recent dynamic tokenization methods",
-        "evidence": "The paper lacks discussion and empirical comparison to contemporaneous adaptive or soft tokenization approaches, limiting contextualization of novelty."
+        "point": "Insufficient comparison to recent learned or soft tokenization methods",
+        "evidence": "The paper lacks discussion or empirical comparison to related learned tokenization approaches like differentiable Unigram LM or neural segmentation."
       },
       {
-        "point": "Lack of hyperparameter justification and sensitivity analysis",
-        "evidence": "No ablations or rationale are provided for GBST hyperparameters such as temperature and aggregation window size."
+        "point": "Missing ablation studies on key hyperparameters and components",
+        "evidence": "No ablation on maximum block length M or on the optional position-wise score calibration module to clarify their impact."
       },
       {
-        "point": "No ablation on GBST placement within the network",
-        "evidence": "The paper does not explore or justify why early sequence length reduction is optimal, missing comparisons of GBST at different layers."
+        "point": "Unclear fairness and matching of baselines",
+        "evidence": "Baseline models may differ in training data size, compute budget, or hyperparameters, potentially biasing efficiency and performance claims."
       },
       {
-        "point": "Evaluation missing strong character-level baselines",
-        "evidence": "Comparisons omit recent strong character-level or hybrid models, weakening claims of superiority."
+        "point": "Limited evaluation on extremely low-resource languages and diverse downstream tasks",
+        "evidence": "Multilingual experiments do not explicitly analyze very low-resource languages; no generation tasks such as summarization or translation are included."
       },
       {
-        "point": "Incomplete efficiency metrics",
-        "evidence": "Memory usage and model size are not reported, despite their importance for practical deployment."
+        "point": "Reproducibility concerns due to missing implementation details",
+        "evidence": "Key GBST hyperparameters, training stability, and pretraining corpus details for baselines are not fully specified."
       },
       {
-        "point": "Limited language diversity in benchmarks",
-        "evidence": "Evaluation focuses mainly on English and high-resource languages, lacking tests on low-resource or morphologically rich languages."
+        "point": "Ambiguity in methodological explanations",
+        "evidence": "Softmax normalization over overlapping blocks is not clearly described; quantitative analysis of latent subword alignment to linguistic units is missing."
       },
       {
-        "point": "Reproducibility concerns",
-        "evidence": "Details on GBST initialization, training stability, and hyperparameter configurations are missing; no code release is mentioned."
+        "point": "No discussion of computational overhead and scalability",
+        "evidence": "Enumerating candidate blocks up to length M may be expensive, but the paper does not analyze runtime or memory scaling with sequence length."
       },
       {
-        "point": "Clarity issues in explaining GBST mechanism",
-        "evidence": "The gradient-based soft selection is described in a mathematically dense manner without intuitive explanations or visualizations."
-      },
-      {
-        "point": "Ambiguous terminology regarding subword units",
-        "evidence": "It is unclear whether GBST outputs correspond to linguistically meaningful units or purely learned embeddings."
-      },
-      {
-        "point": "No discussion of failure modes or tokenization errors",
-        "evidence": "The paper lacks analysis of scenarios where GBST might produce suboptimal tokenizations, such as rare or noisy inputs."
-      },
-      {
-        "point": "No consideration of downstream tasks requiring fine-grained tokenization",
-        "evidence": "Potential impact on tasks like named entity recognition or parsing is not addressed."
-      },
-      {
-        "point": "Generalisability claims not fully supported",
-        "evidence": "No experiments beyond NLP tasks or on very long sequences are provided to substantiate broader applicability."
-      },
-      {
-        "point": "Lack of statistical significance testing",
-        "evidence": "Reported accuracy and speed improvements lack confidence intervals or significance tests."
+        "point": "Lack of comparison to pure character models with similar downsampling",
+        "evidence": "No baseline isolates the benefit of learned tokenization versus simple downsampling on character-level Transformers."
       }
     ],
     "questions": [
       {
-        "question": "How does GBST compare empirically to other recent dynamic or learned tokenization methods?",
-        "motivation": "To better understand the novelty and relative advantages of GBST."
+        "question": "How sensitive is model performance and efficiency to the maximum block length M?",
+        "motivation": "Understanding this is critical to balance granularity of tokenization and computational cost."
       },
       {
-        "question": "What is the sensitivity of model performance to GBST hyperparameters like temperature and aggregation window size?",
-        "motivation": "To assess robustness and guide practical tuning."
+        "question": "What is the exact contribution of the position-wise score calibration module?",
+        "motivation": "Clarifying its impact would justify its inclusion and inform future model design."
       },
       {
-        "question": "Would placing GBST modules at different network depths or multiple times improve performance or efficiency?",
-        "motivation": "To validate design choices regarding early sequence length reduction."
+        "question": "How does Charformer perform on truly low-resource languages and generation tasks?",
+        "motivation": "Evaluating these scenarios would strengthen claims about multilingual robustness and general applicability."
       },
       {
-        "question": "How does Charformer perform on low-resource or morphologically rich languages?",
-        "motivation": "To evaluate generalizability across diverse linguistic settings."
+        "question": "Can the authors provide more detailed implementation and training details to facilitate reproducibility?",
+        "motivation": "Complete transparency is necessary for replication and adoption by the community."
       },
       {
-        "question": "Are there failure cases or tokenization errors produced by GBST, and how do they affect downstream tasks?",
-        "motivation": "To understand limitations and robustness of the approach."
-      },
-      {
-        "question": "Can GBST and Charformer be effectively applied to non-NLP sequence domains such as speech or biological sequences?",
-        "motivation": "To explore broader applicability beyond NLP."
-      },
-      {
-        "question": "Will the authors release code and detailed hyperparameter configurations to facilitate reproducibility?",
-        "motivation": "To enable adoption and verification by the research community."
+        "question": "What is the computational overhead of enumerating candidate blocks, and how does it scale with sequence length?",
+        "motivation": "This affects practical deployment and efficiency claims."
       }
-    ],
-    "scores": {
-      "correctness": 4,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to recent dynamic tokenization methods. The paper lacks discussion and empirical comparison to contemporaneous adaptive or soft tokenization approaches, limiting contextualization of novelty.",
-    "point_002": "Lack of hyperparameter justification and sensitivity analysis. No ablations or rationale are provided for GBST hyperparameters such as temperature and aggregation window size.",
-    "point_003": "No ablation on GBST placement within the network. The paper does not explore or justify why early sequence length reduction is optimal, missing comparisons of GBST at different layers.",
-    "point_004": "Evaluation missing strong character-level baselines. Comparisons omit recent strong character-level or hybrid models, weakening claims of superiority.",
-    "point_005": "Incomplete efficiency metrics. Memory usage and model size are not reported, despite their importance for practical deployment.",
-    "point_006": "Limited language diversity in benchmarks. Evaluation focuses mainly on English and high-resource languages, lacking tests on low-resource or morphologically rich languages.",
-    "point_007": "Reproducibility concerns. Details on GBST initialization, training stability, and hyperparameter configurations are missing; no code release is mentioned.",
-    "point_008": "Clarity issues in explaining GBST mechanism. The gradient-based soft selection is described in a mathematically dense manner without intuitive explanations or visualizations.",
-    "point_009": "Ambiguous terminology regarding subword units. It is unclear whether GBST outputs correspond to linguistically meaningful units or purely learned embeddings.",
-    "point_010": "No discussion of failure modes or tokenization errors. The paper lacks analysis of scenarios where GBST might produce suboptimal tokenizations, such as rare or noisy inputs.",
-    "point_011": "No consideration of downstream tasks requiring fine-grained tokenization. Potential impact on tasks like named entity recognition or parsing is not addressed.",
-    "point_012": "Generalisability claims not fully supported. No experiments beyond NLP tasks or on very long sequences are provided to substantiate broader applicability.",
-    "point_013": "Lack of statistical significance testing. Reported accuracy and speed improvements lack confidence intervals or significance tests."
+    "point_001": "Insufficient comparison to recent learned or soft tokenization methods. The paper lacks discussion or empirical comparison to related learned tokenization approaches like differentiable Unigram LM or neural segmentation.",
+    "point_002": "Missing ablation studies on key hyperparameters and components. No ablation on maximum block length M or on the optional position-wise score calibration module to clarify their impact.",
+    "point_003": "Unclear fairness and matching of baselines. Baseline models may differ in training data size, compute budget, or hyperparameters, potentially biasing efficiency and performance claims.",
+    "point_004": "Limited evaluation on extremely low-resource languages and diverse downstream tasks. Multilingual experiments do not explicitly analyze very low-resource languages; no generation tasks such as summarization or translation are included.",
+    "point_005": "Reproducibility concerns due to missing implementation details. Key GBST hyperparameters, training stability, and pretraining corpus details for baselines are not fully specified.",
+    "point_006": "Ambiguity in methodological explanations. Softmax normalization over overlapping blocks is not clearly described; quantitative analysis of latent subword alignment to linguistic units is missing.",
+    "point_007": "No discussion of computational overhead and scalability. Enumerating candidate blocks up to length M may be expensive, but the paper does not analyze runtime or memory scaling with sequence length.",
+    "point_008": "Lack of comparison to pure character models with similar downsampling. No baseline isolates the benefit of learned tokenization versus simple downsampling on character-level Transformers."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nTraditional NLP models often rely on fixed subword tokenization methods (e.g., Byte-Pair Encoding) that are computationally expensive and introduce a bottleneck in processing speed. Character-level models avoid this but typically suffer from slower training and inference due to longer input sequences. There is a need for a fast, efficient character-level transformer model that can dynamically learn subword tokenization during training, improving both speed and performance without relying on static tokenization schemes.\n\n**Proposed Method:**  \nThe paper introduces **Charformer**, a character-level transformer model that incorporates a novel **Gradient-based Subword Tokenization (GBST)** module. GBST learns to aggregate character embeddings into variable-length subword units dynamically during training by using gradient-based soft selection mechanisms. This approach enables the model to perform tokenization as part of the network, allowing end-to-end learning of subword representations without pre-tokenization. The GBST module reduces sequence length early in the network, improving computational efficiency while maintaining the flexibility of character-level inputs.\n\n**Results:**  \n- Charformer achieves competitive or superior performance compared to traditional subword-based transformers on multiple NLP benchmarks, including language modeling and text classification tasks.  \n- The model demonstrates significantly faster training and inference speeds due to reduced sequence lengths after GBST aggregation.  \n- Ablation studies confirm that the gradient-based tokenization mechanism effectively learns meaningful subword units and contributes to improved model efficiency and accuracy.  \n- Charformer shows robustness across languages and tasks, highlighting its general applicability.\n\n**Claimed Contributions:**  \n1. Introduction of the Gradient-based Subword Tokenization (GBST) module that enables dynamic, learnable subword tokenization within a character-level transformer.  \n2. Development of Charformer, the first character-level transformer model that is both fast and accurate by integrating GBST to reduce input sequence length early in the network.  \n3. Empirical demonstration that Charformer matches or outperforms traditional subword-based models on various NLP tasks while offering significant computational speedups.  \n4. Providing a new paradigm for tokenization that removes the dependency on static, pre-defined tokenizers, allowing end-to-end learning of subword units.",
-    "critic": "1. **Novelty - Missing Comparison to Recent Dynamic Tokenization Methods:**  \nWhile the paper claims novelty in introducing Gradient-based Subword Tokenization (GBST), it does not adequately compare to recent contemporaneous works on dynamic or learned tokenization approaches (e.g., adaptive tokenization or soft tokenization methods). Section 2 lacks discussion or empirical comparison to these, which could contextualize the novelty of GBST more rigorously.\n\n2. **Methodology - Lack of Justification for GBST Hyperparameters:**  \nThe paper introduces GBST with several hyperparameters controlling the soft selection mechanism (e.g., temperature, aggregation window size), but does not provide a detailed rationale or sensitivity analysis for these choices. Section 3.2 would benefit from ablations showing how these parameters affect performance and efficiency.\n\n3. **Methodology - No Ablation on GBST Placement in Network:**  \nCharformer reduces sequence length early in the network via GBST, but the paper does not explore or justify why early reduction is optimal. An ablation comparing GBST placement at different layers or multiple GBST modules could clarify design decisions (Section 4.3 only ablates presence vs. absence).\n\n4. **Evaluation - Baselines Lack Strong Character-Level Models:**  \nThe evaluation compares Charformer primarily against traditional subword-based transformers but omits recent strong character-level baselines that also attempt to improve efficiency (e.g., character CNNs or hybrid models). This weakens claims of superiority in Section 5.\n\n5. **Evaluation - Metrics Focus on Accuracy and Speed, Missing Memory Footprint:**  \nWhile training and inference speed improvements are reported (Table 3), the paper does not provide memory usage or model size comparisons, which are critical for practical deployment and efficiency claims.\n\n6. **Evaluation - Limited Language Diversity in Benchmarks:**  \nThough the paper claims robustness across languages, the evaluation benchmarks (Section 5.2) focus mainly on English and a few high-resource languages. There is no evaluation on truly low-resource or morphologically rich languages to substantiate generalizability claims.\n\n7. **Reproducibility - Missing Details on GBST Initialization and Training Stability:**  \nThe paper does not specify how GBST parameters are initialized or whether any special training tricks (e.g., warm-up schedules, gradient clipping) are needed to stabilize the soft tokenization learning, which could impact reproducibility (Section 3.2 and training details).\n\n8. **Reproducibility - No Public Code or Hyperparameter Configurations Provided:**  \nThere is no mention of releasing code or detailed hyperparameter configurations for Charformer and GBST, which hinders reproducibility and adoption by the community (Section 6 lacks this information).\n\n9. **Clarity - Insufficient Explanation of Gradient-Based Soft Selection Mechanism:**  \nThe description of how gradients guide the soft selection in GBST (Section 3.2) is mathematically dense and lacks intuitive explanation or visualizations, making it difficult for readers to grasp the core mechanism.\n\n10. **Clarity - Ambiguous Terminology Around \"Subword Units\":**  \nThe paper uses \"subword units\" to describe GBST outputs but does not clarify whether these units correspond to linguistically meaningful morphemes or purely learned embeddings, which could confuse readers about interpretability (Section 4.4 touches on this but is inconclusive).\n\n11. **Limitations - No Discussion of Potential Failure Modes or Tokenization Errors:**  \nThe paper does not acknowledge scenarios where GBST might produce suboptimal tokenizations, such as rare words or noisy text, nor does it analyze error cases, limiting understanding of method robustness (Section 5 lacks error analysis).\n\n12. **Limitations - Does Not Address Impact on Downstream Tasks Requiring Fine-Grained Tokenization:**  \nTasks like named entity recognition or syntactic parsing often require precise token boundaries, but the paper does not discuss whether GBST\u2019s soft aggregation might hinder such applications (Section 5 focuses on classification and language modeling only).\n\n13. **Generalisability - No Experiments Beyond NLP Tasks:**  \nThe paper claims general applicability but only evaluates on NLP benchmarks. It remains unclear if GBST and Charformer would be effective for other sequence domains like speech or protein sequences, limiting the scope of claims (Section 5).\n\n14. **Generalisability - Unclear How GBST Handles Extremely Long Sequences:**  \nWhile GBST reduces sequence length, the paper does not analyze performance or efficiency on very long documents or inputs, which is a common challenge for character-level models (Section 5 datasets are mostly short to medium length).\n\n15. **Evaluation - Lack of Statistical Significance Testing:**  \nReported improvements in accuracy and speed (Tables 2 and 3) lack confidence intervals or significance tests, making it difficult to assess whether gains are robust or within noise margins."
+    "reader": "**Structured Summary of the Paper: \"Charformer: Fast Character Transformers via Gradient-Based Subword Tokenization\"**\n\n---\n\n### Problem & Motivation\n\n- **Current Limitation:** State-of-the-art NLP models rely on fixed, separate subword tokenization algorithms (e.g., BPE, WordPiece, SentencePiece), which are rigid and limit model adaptability and generalization.\n- **Issues with Existing Tokenization:**\n  - Tokenization is a pre-processing step, not learned end-to-end.\n  - Subword segmentation is frequency-based, ignoring lexical/semantic similarity.\n  - Models are brittle to rare words, adversarial and natural perturbations.\n  - Multilingual models suffer from over-segmentation in low-resource languages, hurting performance and cross-lingual transfer.\n  - Mismatch between pre-training and downstream tokenization distributions requires engineering effort.\n- **Character-level models** avoid tokenization but suffer from increased computational cost due to longer sequences and generally lower performance.\n- **Goal:** Develop an end-to-end learnable tokenization method that combines character-level compositionality with subword-level efficiency, improving robustness, multilinguality, and computational efficiency.\n\n---\n\n### Proposed Method\n\n- **Gradient-Based Subword Tokenization (GBST):**\n  - A novel, soft, gradient-based module that learns latent subword representations from characters/bytes end-to-end.\n  - Enumerates candidate subword blocks (contiguous character spans) up to a max length M.\n  - Uses a non-parameterized pooling function (mean pooling after 1D convolution) to embed each block.\n  - A block scoring network assigns scores to candidate blocks at each character position.\n  - Scores are normalized via softmax to produce a soft selection over subword blocks per position.\n  - Latent subword representations are formed by weighted sums of candidate block embeddings.\n  - Downsampling is applied via mean pooling to reduce sequence length, enabling efficient Transformer processing.\n  - Optional position-wise score calibration module to allow block scores at different positions to influence each other.\n- **Charformer Architecture:**\n  - Integrates GBST as a front-end module followed by a deep Transformer encoder-decoder.\n  - Operates directly on byte-level inputs (vocabulary size 256).\n  - Includes a scaled variant (SBase) with deeper encoder and fewer decoder layers to compensate for smaller embedding capacity compared to subword models.\n  - Pre-training uses span corruption similar to T5.\n- **Efficiency Considerations:**\n  - GBST enables downsampling and reduces sequence length compared to pure character models.\n  - Charformer is designed to be faster and more memory efficient than existing byte-level and subword models.\n\n---\n\n### Results\n\n- **Datasets & Tasks:**\n  - English: GLUE benchmark (sentiment, NLI, paraphrase, similarity), long document classification (IMDb, AGNews).\n  - Noisy English: Toxicity detection on social media datasets (Civil Comments, Wikipedia Comments).\n  - Multilingual: Cross-lingual QA (TyDiQA-GoldP, XQuAD, MLQA), NLI (XNLI), paraphrase detection (PAWS-X).\n- **Baselines:**\n  - Subword-based: BERT, T5, multilingual BERT, multilingual T5.\n  - Byte-level: Byte-level T5, Byte-level T5 with CANINE-style downsampling (LASC).\n- **Performance:**\n  - Charformer outperforms other character-level baselines with similar parameter counts across all English tasks.\n  - The scaled Charformer (SBase) matches or exceeds subword-based models on several GLUE tasks and long document classification.\n  - On noisy social media data, Charformer outperforms subword models, showing robustness to spelling variation and non-standard language.\n  - In multilingual settings, Charformer performs on par or better than subword-based baselines, especially on in-language multi-task QA.\n  - Charformer outperforms other character-level models in zero-shot cross-lingual transfer, though this remains challenging.\n- **Efficiency:**\n  - Charformer is 28-100% faster than vanilla byte-level and subword-level Transformers with similar or fewer parameters.\n  - It is 2\u00d7 more memory efficient and up to 93% faster than ByT5.\n  - The scaled variant is 28% faster than mT5 with 3\u00d7 fewer parameters.\n- **Interpretability:**\n  - Visualization of learned latent subwords shows meaningful segmentation patterns, e.g., vowels and whitespace tend to be single-character blocks, consonants form larger blocks.\n  - This suggests the model learns linguistically plausible subword units dynamically.\n\n---\n\n### Claimed Contributions\n\n1. **Gradient-Based Subword Tokenization (GBST):**  \n   A novel, differentiable, soft subword tokenization method that learns latent subword representations from characters end-to-end, enabling interpretable and efficient tokenization without external algorithms.\n\n2. **Charformer Model:**  \n   A Transformer encoder-decoder architecture integrating GBST, operating on byte-level inputs, achieving strong performance on English, noisy, and multilingual NLP tasks.\n\n3. **Efficiency Gains:**  \n   Charformer significantly improves training and inference speed and memory usage compared to existing byte-level and subword-level models, making character-level modeling practical.\n\n4. **Robustness and Generalization:**  \n   Demonstrated improved robustness to noisy and non-standard text, better handling of multilingual data, and competitive or superior performance compared to subword-based models.\n\n5. **Interpretability:**  \n   The learned latent subwords are interpretable, providing insights into the model\u2019s internal tokenization behavior.\n\n6. **Open-source Implementation and Reproducibility:**  \n   The authors provide code and detailed hyperparameters to facilitate replication and further research.\n\n---\n\n### Summary\n\nThis paper introduces Charformer, a novel Transformer-based NLP model that integrates a gradient-based subword tokenization module (GBST) to learn latent subword units from characters/bytes in an end-to-end differentiable manner. This approach addresses limitations of rigid, separate tokenization algorithms by enabling soft, data-driven tokenization that is interpretable and efficient. Extensive experiments on English, noisy, and multilingual datasets show that Charformer matches or outperforms strong subword and byte-level baselines while being significantly faster and more memory efficient. The work paves the way for practical, robust, and tokenization-free NLP models.",
+    "critic": "1. **Novelty - Missing Comparison to Recent Learned Tokenization Methods:**  \nWhile the paper claims GBST as a novel gradient-based subword tokenization, it does not sufficiently compare or discuss prior work on learned tokenization or soft tokenization methods, such as Unigram LM tokenizers with differentiable approximations or recent neural segmentation approaches. This omission weakens the novelty claim since related methods that also learn subword units end-to-end are not contrasted or empirically compared.\n\n2. **Methodology - Lack of Ablation on Max Block Length (M):**  \nThe GBST enumerates candidate subword blocks up to a maximum length M, but the paper does not provide an ablation study or justification for the choice of M. It is unclear how sensitive the model\u2019s performance and efficiency are to this hyperparameter, which is critical for balancing granularity and computational cost.\n\n3. **Methodology - Unclear Impact of Position-wise Score Calibration Module:**  \nThe optional position-wise score calibration module is introduced but its contribution to final performance or efficiency is not clearly quantified in the experiments. An ablation isolating this component would clarify its necessity and impact.\n\n4. **Evaluation - Baselines May Not Be Fully Matched in Model Size or Training Regime:**  \nThe paper compares Charformer to subword-based models like BERT and T5, but it is not always clear if the baselines have been trained with the same compute budget, data, or hyperparameters. For example, the scaled Charformer variant (SBase) is compared to mT5 with fewer parameters but it is unclear if training steps or data size are matched, potentially biasing efficiency claims.\n\n5. **Evaluation - Limited Analysis on Extremely Low-Resource Languages:**  \nAlthough multilingual experiments are presented, the paper does not explicitly evaluate or analyze performance on truly low-resource languages where tokenization challenges are most acute. This limits claims about improved multilingual generalization and robustness to over-segmentation.\n\n6. **Evaluation - Metrics Focused on Accuracy but Lack of Robustness Quantification:**  \nThe robustness claims on noisy social media data are supported by improved accuracy, but the paper lacks detailed robustness metrics such as error types, adversarial perturbation tests, or out-of-distribution generalization analyses that would strengthen these claims.\n\n7. **Reproducibility - Missing Details on GBST Hyperparameters and Training Stability:**  \nKey implementation details such as the exact convolution kernel sizes, pooling window sizes, and learning rate schedules for GBST are not fully specified. Additionally, the paper does not discuss training stability or convergence behavior of the soft tokenization module, which could be critical for replication.\n\n8. **Reproducibility - Lack of Details on Pretraining Data and Tokenization for Baselines:**  \nThe paper mentions pretraining with span corruption similar to T5 but does not specify the pretraining corpus size, language composition, or tokenization used for baseline models. This makes it difficult to assess fairness or reproduce the experimental setup.\n\n9. **Clarity - Ambiguous Explanation of Softmax Normalization Overlapping Blocks:**  \nThe description of how scores are normalized via softmax over overlapping candidate blocks at each character position is somewhat confusing. It is unclear whether the softmax is applied independently per position or jointly across all candidate blocks spanning the sequence, which affects interpretability.\n\n10. **Clarity - Visualization of Latent Subwords Lacks Quantitative Analysis:**  \nWhile the paper provides qualitative visualizations of learned latent subwords, it does not quantify how well these align with linguistic units or standard subword vocabularies. A quantitative evaluation of interpretability would strengthen this contribution.\n\n11. **Limitations - No Discussion of Potential Overfitting to Training Languages or Domains:**  \nThe paper does not discuss whether the learned latent subwords or GBST module might overfit to the training languages or domains, potentially limiting generalization to unseen languages or text genres.\n\n12. **Limitations - Computational Overhead of Enumerating Candidate Blocks Not Addressed:**  \nEnumerating all candidate subword blocks up to length M could be computationally expensive, especially for long sequences. The paper does not analyze or discuss this overhead or how it scales with sequence length, which is important for practical deployment.\n\n13. **Generalisability - No Experiments Beyond NLP Tasks:**  \nThe method is only evaluated on NLP benchmarks. It remains unclear whether GBST and Charformer would generalize to other sequence modeling domains such as speech, code, or biological sequences where tokenization challenges also exist.\n\n14. **Generalisability - Limited Downstream Task Diversity:**  \nThe evaluation focuses on classification, QA, and paraphrase detection but does not include generation tasks (e.g., summarization, translation) where tokenization plays a critical role. This limits understanding of Charformer\u2019s effectiveness in broader NLP applications.\n\n15. **Methodology - No Comparison to Pure Character Models with Similar Downsampling:**  \nThe paper claims Charformer is more efficient than pure character models but does not include a baseline that applies similar downsampling or pooling strategies to a character-level Transformer without GBST. This would isolate the benefit of learned tokenization versus simple downsampling."
   }
 }

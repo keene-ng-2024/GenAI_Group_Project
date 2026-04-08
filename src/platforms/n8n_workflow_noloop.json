@@ -6,7 +6,10 @@
       "name": "Receive Paper",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "parameters": {
         "httpMethod": "POST",
         "path": "paper-critique-noloop",
@@ -19,15 +22,23 @@
       "name": "Reader Agent",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [480, 300],
+      "position": [
+        480,
+        300
+      ],
       "parameters": {
-        "jsCode": "const raw = $input.item.json;\nconst paper = raw.body ?? raw;\nconst apiKey = $env.OPENAI_API_KEY;\nconst paperId = paper.paper_id || '';\nconst title = paper.title || '';\nconst paperText = paper.paper_text || '';\n\nconst data = await this.helpers.request({\n  method: 'POST',\n  uri: 'https://api.openai.com/v1/chat/completions',\n  headers: { 'Authorization': 'Bearer ' + apiKey },\n  body: {\n    model: 'gpt-4.1-mini',\n    temperature: 0.2,\n    max_tokens: 1500,\n    messages: [\n      {\n        role: 'system',\n        content: 'You are a Reader agent. Read the following paper and produce a structured summary. Cover: Problem & Motivation, Proposed Method, Results, Claimed Contributions.'\n      },\n      {\n        role: 'user',\n        content: 'Paper:\\n' + paperText\n      }\n    ]\n  },\n  json: true,\n  timeout: 300000\n});\n\nconst summary = data.choices[0].message.content;\nreturn [{ json: { paper_id: paperId, title, paper_text: paperText, reader_summary: summary } }];"      }    },
+        "jsCode": "const raw = $input.item.json;\nconst paper = raw.body ?? raw;\nconst apiKey = $env.OPENAI_API_KEY;\nconst paperId = paper.paper_id || '';\nconst title = paper.title || '';\nconst paperText = paper.paper_text || '';\n\nconst data = await this.helpers.request({\n  method: 'POST',\n  uri: 'https://api.openai.com/v1/chat/completions',\n  headers: { 'Authorization': 'Bearer ' + apiKey },\n  body: {\n    model: 'gpt-4.1-mini',\n    temperature: 0.2,\n    max_tokens: 1500,\n    messages: [\n      {\n        role: 'system',\n        content: 'You are a Reader agent. Read the following paper and produce a structured summary. Cover: Problem & Motivation, Proposed Method, Results, Claimed Contributions.'\n      },\n      {\n        role: 'user',\n        content: 'Paper:\\n' + paperText\n      }\n    ]\n  },\n  json: true,\n  timeout: 300000\n});\n\nconst summary = data.choices[0].message.content;\nreturn [{ json: { paper_id: paperId, title, paper_text: paperText, reader_summary: summary } }];"
+      }
+    },
     {
       "id": "b2c3d4e5-0003-0003-0003-000000000003",
       "name": "Critic Agent",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [720, 300],
+      "position": [
+        720,
+        300
+      ],
       "parameters": {
         "jsCode": "const ctx = $input.item.json;\nconst apiKey = $env.OPENAI_API_KEY;\nconst summary = ctx.reader_summary || '';\n\nconst userMsg = 'Paper summary:\\n' + summary +\n  '\\n\\nGenerate 12-15 specific critique points.' +\n  '\\n\\nFor each point you MUST:' +\n  '\\n- Be concrete and specific, not generic' +\n  '\\n- Reference specific sections, tables, or claims from the paper' +\n  '\\n- Focus on ONE issue per point' +\n  '\\n\\nCover ALL of these dimensions:' +\n  '\\n- Novelty: what prior work is missing or inadequately compared?' +\n  '\\n- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?' +\n  '\\n- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?' +\n  '\\n- Reproducibility: what implementation details are missing?' +\n  '\\n- Clarity: what is confusing or poorly explained in the paper?' +\n  '\\n- Limitations: what does the method fail to address or acknowledge?' +\n  '\\n- Generalisability: does it work beyond the tested settings?' +\n  '\\n\\nIMPORTANT: Only critique what is actually in the paper.' +\n  '\\nDo NOT invent references, section numbers, or claims not explicitly stated.';\n\nconst data = await this.helpers.request({\n  method: 'POST',\n  uri: 'https://api.openai.com/v1/chat/completions',\n  headers: { 'Authorization': 'Bearer ' + apiKey },\n  body: {\n    model: 'gpt-4.1-mini',\n    temperature: 0.2,\n    max_tokens: 2000,\n    messages: [\n      {\n        role: 'system',\n        content: 'You are a Critic agent reviewing an AI/ML research paper.'\n      },\n      {\n        role: 'user',\n        content: userMsg\n      }\n    ]\n  },\n  json: true,\n  timeout: 300000\n});\n\nconst critique = data.choices[0].message.content;\nreturn [{ json: { ...ctx, critic_points: critique } }];"
       }
@@ -37,9 +48,12 @@
       "name": "Summariser Agent",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [960, 300],
+      "position": [
+        960,
+        300
+      ],
       "parameters": {
-        "jsCode": "const ctx = $input.item.json;\nconst apiKey = $env.OPENAI_API_KEY;\nconst summary = ctx.reader_summary || '';\nconst critiqueOutput = ctx.critic_points || '';\n\nconst systemPrompt = 'You are a Summariser agent. Consolidate the critique into a final structured review.' +\n  ' Output ONLY valid JSON with these fields:' +\n  ' summary (2-3 sentence paper summary),' +\n  ' strengths (array of {point, evidence}),' +\n  ' weaknesses (array of {point, evidence}),' +\n  ' questions (array of {question, motivation}),' +\n  ' scores ({correctness: int 1-5, novelty: int 1-5, recommendation: accept|borderline|reject, confidence: int 1-5}).' +\n  ' No markdown code fences, no other text.';\n\nconst userMsg = 'Critic output:\\n' + critiqueOutput + '\\n\\nReader summary:\\n' + summary;\n\nconst data = await this.helpers.request({\n  method: 'POST',\n  uri: 'https://api.openai.com/v1/chat/completions',\n  headers: { 'Authorization': 'Bearer ' + apiKey },\n  body: {\n    model: 'gpt-4.1-mini',\n    temperature: 0.2,\n    max_tokens: 2000,\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: userMsg }\n    ]\n  },\n  json: true,\n  timeout: 300000\n});\n\nlet rawOutput = data.choices[0].message.content.trim();\nif (rawOutput.startsWith('```')) {\n  rawOutput = rawOutput.split('```')[1];\n  if (rawOutput.startsWith('json')) rawOutput = rawOutput.slice(4);\n  rawOutput = rawOutput.trim();\n}\n\nlet structured;\ntry {\n  structured = JSON.parse(rawOutput);\n} catch(e) {\n  structured = { summary: '', strengths: [], weaknesses: [], questions: [], scores: { correctness: 3, novelty: 3, recommendation: 'borderline', confidence: 2 }, raw: rawOutput };\n}\n\nconst critiquePoints = {};\n(structured.weaknesses || []).forEach((w, i) => {\n  const idx = String(i + 1).padStart(3, '0');\n  const text = typeof w === 'string' ? w : ((w.point || '') + (w.evidence ? '. ' + w.evidence : ''));\n  critiquePoints['point_' + idx] = text;\n});\n\nreturn [{ json: {\n  paper_id: ctx.paper_id,\n  title: ctx.title,\n  platform: 'n8n_noloop',\n  model: 'gpt-4.1-mini',\n  structured,\n  critique_points: critiquePoints,\n  transcript: {\n    reader: ctx.reader_summary,\n    critic: ctx.critic_points\n  }\n} }];"
+        "jsCode": "const ctx = $input.item.json;\nconst apiKey = $env.OPENAI_API_KEY;\nconst summary = ctx.reader_summary || '';\nconst critiqueOutput = ctx.critic_points || '';\n\nconst systemPrompt = \"You are a Summariser agent. Consolidate the critique into a final structured review.\\nOutput ONLY valid JSON, no other text, no markdown code fences.\";\n\nconst userMsg = 'Critic output:\\n' + critiqueOutput + '\\n\\nReader summary:\\n' + summary + \"\\n\\nOutput in this exact JSON format:\\n{\\n  \\\"summary\\\": \\\"2-3 sentence paper summary\\\",\\n  \\\"strengths\\\": [\\n    {\\\"point\\\": \\\"strength point\\\", \\\"evidence\\\": \\\"evidence from paper\\\"},\\n    {\\\"point\\\": \\\"strength point\\\", \\\"evidence\\\": \\\"evidence from paper\\\"}\\n  ],\\n  \\\"weaknesses\\\": [\\n    {\\\"point\\\": \\\"weakness point\\\", \\\"evidence\\\": \\\"evidence from paper\\\"},\\n    {\\\"point\\\": \\\"weakness point\\\", \\\"evidence\\\": \\\"evidence from paper\\\"}\\n  ],\\n  \\\"questions\\\": [\\n    {\\\"question\\\": \\\"open question\\\", \\\"motivation\\\": \\\"why this matters\\\"},\\n    {\\\"question\\\": \\\"open question\\\", \\\"motivation\\\": \\\"why this matters\\\"}\\n  ],\\n  \\\"scores\\\": {\\n    \\\"correctness\\\": 3,\\n    \\\"novelty\\\": 3,\\n    \\\"recommendation\\\": \\\"borderline\\\",\\n    \\\"confidence\\\": 3\\n  }\\n}\";\n\nconst data = await this.helpers.request({\n  method: 'POST',\n  uri: 'https://api.openai.com/v1/chat/completions',\n  headers: { 'Authorization': 'Bearer ' + apiKey },\n  body: {\n    model: 'gpt-4.1-mini',\n    temperature: 0.2,\n    max_tokens: 2000,\n    messages: [\n      { role: 'system', content: systemPrompt },\n      { role: 'user', content: userMsg }\n    ]\n  },\n  json: true,\n  timeout: 300000\n});\n\nlet rawOutput = data.choices[0].message.content.trim();\nif (rawOutput.startsWith('```')) {\n  rawOutput = rawOutput.split('```')[1];\n  if (rawOutput.startsWith('json')) rawOutput = rawOutput.slice(4);\n  rawOutput = rawOutput.trim();\n}\n\nlet structured;\ntry {\n  structured = JSON.parse(rawOutput);\n} catch(e) {\n  structured = { summary: '', strengths: [], weaknesses: [], questions: [], scores: { correctness: 3, novelty: 3, recommendation: 'borderline', confidence: 2 }, raw: rawOutput };\n}\n\nconst critiquePoints = {};\n(structured.weaknesses || []).forEach((w, i) => {\n  const idx = String(i + 1).padStart(3, '0');\n  const text = typeof w === 'string' ? w : ((w.point || '') + (w.evidence ? '. ' + w.evidence : ''));\n  critiquePoints['point_' + idx] = text;\n});\n\nreturn [{ json: {\n  paper_id: ctx.paper_id,\n  title: ctx.title,\n  platform: 'n8n_noloop',\n  model: 'gpt-4.1-mini',\n  structured,\n  critique_points: critiquePoints,\n  transcript: {\n    reader: ctx.reader_summary,\n    critic: ctx.critic_points\n  }\n} }];"
       }
     },
     {
@@ -47,7 +61,10 @@
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1200, 300],
+      "position": [
+        1200,
+        300
+      ],
       "parameters": {
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify($json) }}",
@@ -57,20 +74,56 @@
   ],
   "connections": {
     "Receive Paper": {
-      "main": [[{"node": "Reader Agent", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Reader Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Reader Agent": {
-      "main": [[{"node": "Critic Agent", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Critic Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Critic Agent": {
-      "main": [[{"node": "Summariser Agent", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Summariser Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Summariser Agent": {
-      "main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
-  "settings": { "executionOrder": "v1" },
-  "meta": { "templateCredsSetupCompleted": true },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
   "tags": []
 }

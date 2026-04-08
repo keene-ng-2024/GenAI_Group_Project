@@ -208,6 +208,7 @@ Output in this exact JSON format:
   "questions": [
     {"question": "open question", "motivation": "why this matters"},
     {"question": "open question", "motivation": "why this matters"}
+<<<<<<< HEAD
   ],
   "scores": {
     "correctness": 3,
@@ -312,7 +313,39 @@ cp .env.example .env
 
 See [data/README.md](data/README.md) for how to obtain and place review files.
 
-### 4. Run the pipeline
+### 4. Platform setup
+
+#### n8n
+
+**Start n8n locally via Docker:**
+
+```bash
+docker run -it --rm \
+  --name n8n \
+  -p 5678:5678 \
+  -e GENERIC_TIMEZONE="Asia/Singapore" \
+  -e TZ="Asia/Singapore" \
+  -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
+  -e N8n_RUNNERS_ENABLED=true \
+  -e OPENAI_API_KEY=your_openai_api_key \
+  -e N8N_BLOCK_ENV_ACCESS_IN_NODE=false \
+  -v n8n_data:/home/node/.n8n \
+  docker.n8n.io/n8nio/n8n
+```
+
+**Import and activate workflows (do this once):**
+
+1. Open http://localhost:5678 in your browser
+2. Go to **Workflows → Add Workflow → Import from file**
+3. Import `src/platforms/n8n_workflow.json` (1-round debate)
+4. Import `src/platforms/n8n_workflow_noloop.json` (no loop)
+5. Open each workflow and click **Activate** (toggle top-right) to publish the webhook
+
+#### Dify
+
+Ensure `DIFY_API_KEY` is set in your `.env` file.
+
+### 5. Run the pipeline
 
 ```bash
 # Parse raw reviews
@@ -327,12 +360,13 @@ python -m src.baseline.baseline_critique
 # Run agentic system (multi-agent loop)
 python -m src.agents.orchestrator
 
-# Run n8n workflows (requires n8n running locally at localhost:5678)
+# Run n8n workflows (requires n8n running — see step 4)
 python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
 python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 
 # Run Dify workflows (requires DIFY_API_KEY in .env)
-python -m src.dify.run_dify                   # runs single_critic workflow by default
+python -m src.dify.run_dify single_critic     # Reader → Critic → Summariser
+python -m src.dify.run_dify dual_critic       # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 
 # Run CrewAI workflows
 python -m src.platforms.crewai_critique none     # Reader → Critic → Summariser

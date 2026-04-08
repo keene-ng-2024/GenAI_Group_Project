@@ -1,28 +1,132 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks sufficient comparison with recent selective sampling methods, especially advanced semi-supervised active learning or core-set methods designed for large pretrained models, leaving unclear its advantage beyond classical baselines.",
-    "point_002": "The method assumes that the model\u2019s confidence scores for partitioning unlabeled data are reliable and well-calibrated, but no analysis is provided to validate this assumption prior to annotation.",
-    "point_003": "There is limited ablation or sensitivity analysis on critical hyperparameters like the neighborhood size k in vote-k or graph construction parameters, restricting understanding of robustness and practical guidance.",
-    "point_004": "Evaluation datasets are mostly standard NLP benchmarks with limited domain diversity; there is no assessment on truly out-of-domain, low-resource languages, or complex structured output domains, constraining generalizability claims.",
-    "point_005": "Prompt templates and label mapping procedures, particularly for generation tasks, are not clearly described, potentially affecting reproducibility and fairness of evaluation.",
-    "point_006": "Comparisons with finetuning baselines may be unfair since it is unclear whether finetuning models have access to the same annotation budget or examples, possibly biasing results in favor of vote-k plus in-context adaptation.",
-    "point_007": "Robustness claims against domain shifts are promising but lack detailed quantitative experiments explicitly measuring performance under domain adaptation or input distribution changes.",
-    "point_008": "Vote-k\u2019s reliance on cosine similarity in SBERT embedding space assumes embedding similarity correlates with label similarity and representativeness, an assumption not systematically validated and potentially limiting across tasks with subtle semantics."
-  },
-  "summary": "This paper presents vote-k, a novel unsupervised graph-based selective annotation method that leverages pretrained sentence embeddings and model confidence to select a small, diverse, and representative subset of unlabeled data for annotation, aiming to improve annotation efficiency in in-context learning with large language models. By combining selective annotation with similarity-based prompt retrieval, the approach achieves significant relative improvements over random and classical baselines across ten diverse NLP tasks and multiple model scales, while also demonstrating better annotation cost-efficiency and robustness compared to finetuning methods. The work contributes a practical framework and extensive empirical evidence toward reducing annotation budgets for few-shot learning with large pretrained models, though some methodological details and broader evaluations remain to be addressed for full validation.",
-  "strengths": [
-    "Introduces a novel, unsupervised graph-based selective annotation method (vote-k) tailored to in-context learning that balances diversity and representativeness.",
-    "Demonstrates significant empirical gains in annotation efficiency and in-context learning performance across diverse NLP tasks and model sizes, including under low annotation budgets."
-  ],
-  "weaknesses": [
-    "Limited comparison with recent and state-of-the-art selective sampling approaches and lack of comprehensive hyperparameter sensitivity analyses.",
-    "Insufficient clarity and detail on prompt construction, label mapping, and fairness of comparisons to finetuning baselines."
-  ],
-  "questions": [
-    "How robust is the vote-k selection method to noisy or imperfect annotations in real-world settings where labeling errors occur?",
-    "Can the authors provide more quantitative evaluation of robustness under explicit domain shifts or out-of-domain generalization scenarios?"
-  ],
   "paper_id": "paper_0096",
-  "system": "dify",
-  "title": "Selective Annotation Makes Language Models Better Few-Shot Learners"
+  "title": "Selective Annotation Makes Language Models Better Few-Shot Learners",
+  "platform": "dify_single_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 55.32,
+  "structured": {
+    "summary": "This paper proposes a two-step framework for annotation-efficient in-context learning with large language models, introducing vote-k, a graph-based selective annotation method that chooses diverse and representative unlabeled examples to label before test time. Extensive experiments across 10 NLP tasks and multiple model sizes demonstrate that vote-k substantially improves few-shot learning performance and reduces annotation costs, outperforming random and other baseline selection methods, and rivaling finetuning with dramatically fewer labels.",
+    "strengths": [
+      {
+        "point": "Novel selective annotation method (vote-k) balancing diversity and confidence coverage",
+        "evidence": "Vote-k constructs a kNN graph and iteratively selects samples with a diversity-encouraging score, incorporating confidence buckets to cover uncertain examples (Sec. 3.1)."
+      },
+      {
+        "point": "Comprehensive empirical evaluation across diverse tasks and models",
+        "evidence": "Experiments on 10 datasets (classification, QA, dialogue, semantic parsing, summarization) and multiple LLMs (GPT-J, GPT-3, Codex, OPT-175B) show consistent performance gains and annotation cost reductions (Sec. 4)."
+      },
+      {
+        "point": "Demonstrated substantial annotation cost savings compared to finetuning",
+        "evidence": "Vote-k selected few-shot ICL outperforms finetuning requiring 10\u00d7 to 100\u00d7 more labeled data on representative tasks (Sec. 4.4)."
+      },
+      {
+        "point": "Stable and deterministic selection reduces performance variance",
+        "evidence": "Vote-k\u2019s deterministic selection conditioned on unlabeled data leads to lower variance compared to random selection (Sec. 4.3)."
+      },
+      {
+        "point": "Open-source code and practical guidelines provided",
+        "evidence": "Paper mentions open-source code release and detailed methodology enabling practical adoption."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to recent retrieval-based prompt construction methods",
+        "evidence": "No experiments comparing vote-k to retrieval-augmented generation or learned retrievers like Khandelwal et al. (2020) for prompt retrieval quality (Sec. 4.3)."
+      },
+      {
+        "point": "No ablation or analysis of hyperparameter sensitivity (k, \u03c1) in vote-k",
+        "evidence": "Hyperparameters k=150 and \u03c1=10 are fixed without justification or tuning experiments (Sec. 3.1)."
+      },
+      {
+        "point": "Limited discussion of annotation cost beyond label counts",
+        "evidence": "Annotation budget measured only by number of examples; no analysis of human effort or complexity of labeling vote-k selected samples (Sec. 4)."
+      },
+      {
+        "point": "No evaluation on extremely low annotation budgets (<10 examples)",
+        "evidence": "Results include 18-example budgets but omit ultra-low budget settings common in emerging tasks (Table 2)."
+      },
+      {
+        "point": "Prompt retrieval relies solely on generic Sentence-BERT embeddings",
+        "evidence": "Only semantic similarity used for retrieval; no exploration of hybrid or task-specific retrieval signals (Sec. 3.2)."
+      },
+      {
+        "point": "No analysis of failure cases or tasks where vote-k underperforms",
+        "evidence": "Some datasets like QuAC and CoQA show marginal or no improvements but are not analyzed (Sec. 4)."
+      },
+      {
+        "point": "No study of robustness to noisy or adversarial annotations",
+        "evidence": "Method assumes all annotations are correct; sensitivity to noise is unexamined."
+      },
+      {
+        "point": "No investigation of transferability of selected examples across tasks or domains",
+        "evidence": "Unclear if vote-k selections generalize to related tasks without re-annotation."
+      },
+      {
+        "point": "Computational overhead and scalability of vote-k not quantitatively analyzed",
+        "evidence": "While fast vote-k variant is proposed, no runtime or scalability benchmarks provided."
+      },
+      {
+        "point": "All datasets are English-only, limiting generalizability",
+        "evidence": "No multilingual or low-resource language experiments included."
+      },
+      {
+        "point": "Scoring function and selection algorithm description lacks clarity",
+        "evidence": "Mathematical explanation of diversity-encouraging score is terse and could benefit from examples or diagrams (Sec. 3.1)."
+      },
+      {
+        "point": "Prompt length limit constraints and interaction with annotation budgets not fully addressed",
+        "evidence": "4K token limit mentioned but no strategy discussed for longer contexts or annotation budget impact."
+      },
+      {
+        "point": "Comparison with finetuning excludes recent parameter-efficient or semi-supervised methods",
+        "evidence": "Finetuning baselines are standard supervised; lacks comparison to prefix tuning, adapters, or semi-supervised techniques (Sec. 4.4)."
+      },
+      {
+        "point": "No human evaluation of prompt quality or interpretability of selected examples",
+        "evidence": "No analysis on whether selected examples aid human understanding or model trustworthiness."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How sensitive is vote-k performance to the choice of hyperparameters k and \u03c1?",
+        "motivation": "Understanding hyperparameter impact is crucial for adapting vote-k to different datasets and annotation budgets."
+      },
+      {
+        "question": "Can vote-k selections transfer effectively across related tasks or domains without re-annotation?",
+        "motivation": "Transferability would reduce annotation costs further and broaden applicability."
+      },
+      {
+        "question": "How does vote-k perform under very low annotation budgets (<10 examples) common in emerging tasks?",
+        "motivation": "Evaluating ultra-low budget scenarios is important for practical deployment where labels are scarce."
+      },
+      {
+        "question": "What is the computational cost and scalability of vote-k on large unlabeled pools?",
+        "motivation": "Quantifying runtime and resource requirements is key for real-world adoption."
+      },
+      {
+        "question": "How robust is vote-k to noisy or mislabeled annotations?",
+        "motivation": "Robustness affects reliability in practical annotation settings where errors occur."
+      },
+      {
+        "question": "Would incorporating task-specific retrieval signals or learned retrievers improve prompt retrieval quality beyond Sentence-BERT similarity?",
+        "motivation": "Better retrieval could enhance the utility of selective annotation and overall ICL performance."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to recent retrieval-based prompt construction methods. No experiments comparing vote-k to retrieval-augmented generation or learned retrievers like Khandelwal et al. (2020) for prompt retrieval quality (Sec. 4.3)",
+    "point_002": "No ablation or analysis of hyperparameter sensitivity (k, \u03c1) in vote-k. Hyperparameters k=150 and \u03c1=10 are fixed without justification or tuning experiments (Sec. 3.1)",
+    "point_003": "Limited discussion of annotation cost beyond label counts. Annotation budget measured only by number of examples; no analysis of human effort or complexity of labeling vote-k selected samples (Sec. 4)",
+    "point_004": "No evaluation on extremely low annotation budgets (<10 examples). Results include 18-example budgets but omit ultra-low budget settings common in emerging tasks (Table 2)",
+    "point_005": "Prompt retrieval relies solely on generic Sentence-BERT embeddings. Only semantic similarity used for retrieval; no exploration of hybrid or task-specific retrieval signals (Sec. 3.2)",
+    "point_006": "No analysis of failure cases or tasks where vote-k underperforms. Some datasets like QuAC and CoQA show marginal or no improvements but are not analyzed (Sec. 4)",
+    "point_007": "No study of robustness to noisy or adversarial annotations. Method assumes all annotations are correct; sensitivity to noise is unexamined",
+    "point_008": "No investigation of transferability of selected examples across tasks or domains. Unclear if vote-k selections generalize to related tasks without re-annotation",
+    "point_009": "Computational overhead and scalability of vote-k not quantitatively analyzed. While fast vote-k variant is proposed, no runtime or scalability benchmarks provided",
+    "point_010": "All datasets are English-only, limiting generalizability. No multilingual or low-resource language experiments included",
+    "point_011": "Scoring function and selection algorithm description lacks clarity. Mathematical explanation of diversity-encouraging score is terse and could benefit from examples or diagrams (Sec. 3.1)",
+    "point_012": "Prompt length limit constraints and interaction with annotation budgets not fully addressed. 4K token limit mentioned but no strategy discussed for longer contexts or annotation budget impact",
+    "point_013": "Comparison with finetuning excludes recent parameter-efficient or semi-supervised methods. Finetuning baselines are standard supervised; lacks comparison to prefix tuning, adapters, or semi-supervised techniques (Sec. 4.4)",
+    "point_014": "No human evaluation of prompt quality or interpretability of selected examples. No analysis on whether selected examples aid human understanding or model trustworthiness"
+  }
 }

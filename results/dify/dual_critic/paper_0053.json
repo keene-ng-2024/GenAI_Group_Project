@@ -1,43 +1,84 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks a rigorous comparison and clear differentiation from prior generative weak supervision label models that estimate labeling function accuracies and dependencies, risking overstating novelty.",
-    "point_002": "There is no systematic robustness analysis exploring how ULF performs under varying levels of noise, bias, or adversarial corruption in labeling functions, limiting understanding of practical utility.",
-    "point_003": "Key algorithmic details of the signature-based fold splitting procedure are insufficiently explained, lacking precise definitions, step-by-step algorithms, or pseudocode, which hampers reproducibility.",
-    "point_004": "The experimental baselines do not include recent state-of-the-art end-to-end weak supervision models with joint labeling function accuracy estimation and discriminative training, leaving unclear whether ULF outperforms modern approaches.",
-    "point_005": "No statistical significance tests or confidence intervals accompany reported accuracy improvements, weakening the strength of empirical claims especially on low-resource datasets with modest gains.",
-    "point_006": "The attribution of performance gains between label refinement by ULF and downstream model fine-tuning is unclear due to missing ablation studies isolating their respective contributions.",
-    "point_007": "Descriptions of hyperparameter settings and tuning procedures are incomplete and often relegated to the appendix, reducing reproducibility and clarity.",
-    "point_008": "The pseudo-labeling approach for samples without labeling function coverage is vaguely specified without sufficient algorithmic detail or analysis, hindering reproducibility and understanding of its impact."
-  },
-  "summary": "This paper proposes ULF, an unsupervised label correction method for weak supervision that leverages labeling function (LF) structures via signature-based fold splitting in a cross-validation framework to iteratively refine LF-to-class assignments and improve noisy weak labels. Evaluated on multiple text classification datasets including low-resource African languages, ULF demonstrates improved label quality and downstream accuracy over several baselines. However, the work lacks rigorous comparisons to established generative label models, detailed methodological exposition, robustness analyses, and comprehensive evaluation against recent state-of-the-art methods. Addressing these limitations would strengthen the contribution and practical applicability of the approach.",
-  "strengths": [
-    "Introduces a novel LF signature-based fold splitting strategy that better captures LF-dependent noise patterns compared to random data splits.",
-    "Demonstrates iterative refinement of LF-to-class mappings to correct noisy weak labels without requiring manual annotations.",
-    "Evaluates on diverse datasets including low-resource languages, showing applicability beyond standard English benchmarks.",
-    "Integrates pseudo-labeling and self-training to handle samples without LF coverage, extending applicability.",
-    "Adapts and compares other denoising methods (CrossWeigh, Cleanlab) for weak supervision, providing broader context."
-  ],
-  "weaknesses": [
-    "Insufficient comparison and contextualization relative to prior generative label model approaches limits claims of novelty.",
-    "Lack of detailed algorithmic descriptions and pseudocode reduces reproducibility and clarity around key components like signature-based folding and pseudo-labeling.",
-    "No inclusion of recent end-to-end WS baselines with joint LF accuracy estimation and discriminative training weakens empirical evaluation.",
-    "Absence of statistical significance testing diminishes confidence in reported performance gains.",
-    "Unclear separation of improvements due to label correction versus model fine-tuning complicates interpretation of results.",
-    "Limited discussion of convergence properties, computational complexity, and scalability for large datasets.",
-    "Evaluation restricted to text classification tasks limits generalizability claims.",
-    "Naive handling and unexamined impact of samples without LF coverage may degrade label quality."
-  ],
-  "questions": [
-    "How does ULF compare quantitatively and qualitatively to recent generative label models that explicitly model LF accuracies and dependencies beyond Snorkel-DP?",
-    "Can the authors provide a detailed, step-by-step algorithm or pseudocode for the signature-based fold splitting procedure and the pseudo-labeling method for samples without LF coverage?",
-    "What is the sensitivity of ULF\u2019s performance to hyperparameters such as the convex combination weight and confidence thresholds, and how stable is the iterative refinement process?",
-    "Is there empirical evidence on convergence behavior and computational cost for large-scale datasets using ULF?",
-    "To what extent do the observed gains come from corrected labels versus downstream model fine-tuning, and can ablation studies isolate these effects?",
-    "Can ULF be extended or adapted to other NLP tasks beyond classification, such as sequence tagging or structured prediction, and to other modalities like images?",
-    "How does ULF handle or mitigate potential amplification of biases present in the original labeling functions during label correction?",
-    "What alternative strategies could be employed to handle samples without any LF coverage beyond random pseudo-labeling, and how might these affect results?"
-  ],
   "paper_id": "paper_0053",
-  "system": "dify",
-  "title": "ULF: UNSUPERVISED LABELING FUNCTION CORRECTION USING CROSS-VALIDATION FOR WEAK SUPERVISION"
+  "title": "ULF: UNSUPERVISED LABELING FUNCTION CORRECTION USING CROSS-VALIDATION FOR WEAK SUPERVISION",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 105.99,
+  "structured": {
+    "summary": "This paper proposes ULF, a novel unsupervised method for correcting label noise in weak supervision by leveraging LF-aware cross-validation splits and iterative refinement of LF-to-class mappings. ULF uses out-of-sample predictions filtered by confidence to update LF-class assignments, improving label quality without requiring manual annotations. Experiments on six datasets demonstrate that ULF consistently outperforms several state-of-the-art weak supervision baselines.",
+    "strengths": [
+      {
+        "point": "Innovative use of LF signature-based cross-validation to isolate and identify LF-specific noise patterns",
+        "evidence": "The method partitions data by LF signatures rather than random splits, enabling targeted correction of labeling function biases."
+      },
+      {
+        "point": "Iterative soft refinement of LF-to-class mappings avoids label removal and supports confident labeling of samples without matched LFs",
+        "evidence": "ULF updates the LF-to-class matrix using a weighted combination of previous and newly inferred mappings, allowing nuanced correction."
+      },
+      {
+        "point": "Demonstrated empirical improvements over diverse strong WS baselines on multiple datasets including low-resource languages",
+        "evidence": "ULF outperforms baselines such as Snorkel-DP, FlyingSquid, WeaSEL, and FABLE on 4 of 6 datasets and shows robustness across languages and domains."
+      },
+      {
+        "point": "Integration with existing WS frameworks and optional contrastive self-training for further gains",
+        "evidence": "The method is implemented in the Knodle framework and optionally applies cosine similarity-based self-training to enhance performance."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of benchmarking against broader label noise correction methods outside WS",
+        "evidence": "No comparison to established crowdsourcing or noisy-label correction methods such as GLAD or CrowdLayer is provided."
+      },
+      {
+        "point": "Insufficient theoretical justification or quantitative analysis for key methodological choices such as LF signature splitting and confidence thresholding",
+        "evidence": "The paper does not provide variance reduction metrics, bias analysis, or ablation studies on the effect of splitting strategy or threshold selection."
+      },
+      {
+        "point": "Missing ablations and sensitivity analyses on critical hyperparameters and components",
+        "evidence": "No systematic study of the update weight parameter p, the necessity of the contrastive self-training step, or disentangling the effects of splitting vs iterative refinement."
+      },
+      {
+        "point": "Limited discussion and evaluation of robustness, convergence guarantees, and scalability",
+        "evidence": "The iterative update process lacks theoretical convergence analysis; runtime and computational cost are not reported; no analysis of adversarial or correlated LFs."
+      },
+      {
+        "point": "Omission of detailed implementation details impedes reproducibility",
+        "evidence": "Model architectures, hyperparameters, confidence calibration methods, and training specifics are not fully described."
+      },
+      {
+        "point": "Sparse qualitative analysis and missing error case studies limit insight into failure modes or typical corrections",
+        "evidence": "Only one brief qualitative example is shown; no analysis of datasets where ULF underperforms."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How sensitive is ULF to the choice of the update weighting parameter p and confidence thresholds?",
+        "motivation": "Understanding parameter sensitivity is critical for practical tuning and ensuring stable convergence."
+      },
+      {
+        "question": "How does ULF perform relative to established label noise correction methods from crowdsourcing or noisy-label literature?",
+        "motivation": "Comparisons to a broader set of baselines would better contextualize ULF\u2019s novelty and effectiveness."
+      },
+      {
+        "question": "What are the computational costs and scalability limits of ULF on large datasets or many labeling functions?",
+        "motivation": "Practical applicability in real-world WS systems depends on efficiency and scalability."
+      },
+      {
+        "question": "Can ULF be extended to multi-label or structured prediction tasks, and how would the method adapt?",
+        "motivation": "Many WS applications involve complex outputs; generalization would broaden impact."
+      },
+      {
+        "question": "How robust is ULF to adversarial or systematically biased labeling functions?",
+        "motivation": "Robustness to malicious or biased LFs is critical for reliable WS in practice."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of benchmarking against broader label noise correction methods outside WS. No comparison to established crowdsourcing or noisy-label correction methods such as GLAD or CrowdLayer is provided",
+    "point_002": "Insufficient theoretical justification or quantitative analysis for key methodological choices such as LF signature splitting and confidence thresholding. The paper does not provide variance reduction metrics, bias analysis, or ablation studies on the effect of splitting strategy or threshold selection",
+    "point_003": "Missing ablations and sensitivity analyses on critical hyperparameters and components. No systematic study of the update weight parameter p, the necessity of the contrastive self-training step, or disentangling the effects of splitting vs iterative refinement",
+    "point_004": "Limited discussion and evaluation of robustness, convergence guarantees, and scalability. The iterative update process lacks theoretical convergence analysis; runtime and computational cost are not reported; no analysis of adversarial or correlated LFs",
+    "point_005": "Omission of detailed implementation details impedes reproducibility. Model architectures, hyperparameters, confidence calibration methods, and training specifics are not fully described",
+    "point_006": "Sparse qualitative analysis and missing error case studies limit insight into failure modes or typical corrections. Only one brief qualitative example is shown; no analysis of datasets where ULF underperforms"
+  }
 }

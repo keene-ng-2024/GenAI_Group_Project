@@ -1,38 +1,77 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks comparison against other recent parameter-efficient fine-tuning methods with robustness benefits, such as adapters or LoRA-based tuning, limiting understanding of the novelty of the approach.",
-    "point_002": "The robust prefix-tuning framework depends on activations collected from correctly classified training samples, implying a reliance on clean labeled data without discussing the impact of scarce or noisy labels or the use of unlabeled data.",
-    "point_003": "The claimed inference-time optimization computational cost is understated, as the paper does not provide wall-clock times or latency impacts for realistic deployment scenarios, especially with batch size one.",
-    "point_004": "There is no ablation or discussion on the choice and sensitivity of PCA dimensionality used in projecting activations to canonical manifolds, leaving unclear how this hyperparameter affects robustness or accuracy.",
-    "point_005": "The evaluations do not include baselines that perform full or partial LM parameter fine-tuning dynamically at inference to better justify efficiency claims of the proposed method.",
-    "point_006": "Experiments are limited to classification tasks and do not evaluate the method on generation or structured prediction tasks where prefix-tuning is also commonly applied, restricting generalizability claims.",
-    "point_007": "The mechanism by which activation alignment to canonical manifolds improves robustness is incompletely explained, lacking theoretical justification or visualizations illustrating how adversarial effects are suppressed.",
-    "point_008": "The robustness evaluation does not include stronger or adaptive adversaries that optimize against the dynamic prefix tuning procedure itself, limiting the robustness claims."
-  },
-  "summary": "The paper proposes a robust prefix-tuning framework that enhances the adversarial robustness of prefix-tuning for pretrained language models without modifying model parameters. By collecting layerwise activations from correctly classified training samples and projecting them onto canonical manifolds, the method dynamically tunes an additional prefix at inference to align test activations with these manifolds, improving robustness to diverse adversarial attacks including universal triggers. Experiments on multiple classification benchmarks demonstrate significant robustness gains with minimal overhead and preserved clean accuracy. Interpretability studies and an optimal control perspective provide insights into its effectiveness, offering a promising modular approach to robust and efficient adaptation of large language models.",
+  "summary": "This paper proposes a robust prefix-tuning framework that enhances the robustness of prefix-tuning against diverse adversarial text attacks by introducing an additional batch-level prefix tuned during inference to align activations with canonical manifolds of clean data. The method preserves pretrained LM parameters and prefix modularity, showing significant robustness gains across multiple benchmarks and attacks, supported by theoretical framing and interpretability analyses.",
   "strengths": [
-    "Introduces a novel inference-time dynamic prefix tuning method that improves adversarial robustness without updating pretrained model parameters.",
-    "Demonstrates significant robustness improvements against diverse adversarial attacks, including challenging universal adversarial triggers, across multiple datasets.",
-    "Maintains the lightweight and modular advantages of prefix-tuning while adding robustness.",
-    "Provides interpretability analyses linking activation alignment and attention patterns to robustness improvements.",
-    "Supports robustness improvements even when combined with adversarially trained prefix-tuning and under realistic mixed clean/adversarial test settings."
+    {
+      "point": "Effective robustness improvement without modifying pretrained LM weights",
+      "evidence": "The approach fixes LM parameters and original prefix, only tuning an additional batch-level prefix at inference, achieving significant robustness gains against various attacks including universal adversarial triggers."
+    },
+    {
+      "point": "Preserves parameter-efficiency and modularity of prefix-tuning",
+      "evidence": "Requires only small extra prefix storage (~14MB total) and avoids expensive adversarial training, maintaining the lightweight nature of prefix-tuning."
+    },
+    {
+      "point": "Comprehensive evaluation on multiple datasets and five strong adversarial attacks",
+      "evidence": "Experiments on SST-2, AG\u00e2\u20ac\u2122s News, SNLI with PWWS, VIPER, SCPN, TextBugger, and UAT attacks demonstrate superior robustness-accuracy trade-offs over standard and adversarial prefix-tuning baselines."
+    },
+    {
+      "point": "Insightful interpretability analysis linking robust prefix tuning to internal LM attention behavior",
+      "evidence": "Studies show the method mitigates adversarial distraction by steering attention to average token importance and reducing trigger influence, supported by gradient-attention importance proxies."
+    },
+    {
+      "point": "Formal framing connecting prefix-tuning robustness to optimal control theory",
+      "evidence": "Conceptualizes prefix tuning as open-loop control and robust prefix tuning as closed-loop control, providing a theoretical lens for understanding robustness improvements."
+    }
   ],
   "weaknesses": [
-    "Lacks comparison with other parameter-efficient robust fine-tuning methods such as adapters or LoRA.",
-    "Relies on clean labeled data for building canonical manifolds without addressing scenarios with limited or noisy labels.",
-    "Does not fully characterize inference-time computational costs or latency impacts for real-world deployment, especially with small batch sizes.",
-    "Limited exploration of PCA hyperparameters and their impact on performance.",
-    "Absence of baselines involving dynamic full or partial model fine-tuning at inference for more comprehensive efficiency comparisons.",
-    "Evaluation restricted to classification tasks without examining generation or structured prediction use cases.",
-    "No evaluation against adaptive adversaries specifically designed to target the proposed dynamic prefix tuning.",
-    "Insufficient theoretical or visual explanation of how activation alignment suppresses adversarial perturbations."
+    {
+      "point": "Limited baselines excluding other lightweight robustness methods",
+      "evidence": "Evaluations compare mainly to prefix-tuning variants and adversarial data augmentation but omit adapter-based or embedding-level robust fine-tuning baselines."
+    },
+    {
+      "point": "Lack of ablation and sensitivity analyses on canonical manifold construction",
+      "evidence": "No experiments exploring PCA dimensionality choice, alternative manifold learning methods, or dependency on training data size for manifold creation."
+    },
+    {
+      "point": "No analysis on stability or effectiveness under varying batch compositions at inference",
+      "evidence": "Method relies on batch-level prefix tuning but lacks detailed study on performance with small or skewed batches, which is important for practical deployment."
+    },
+    {
+      "point": "Sparse details on inference-time optimization hyperparameters and computational costs",
+      "evidence": "Paper does not specify learning rates, number of tuning steps, convergence criteria, or precise latency/GPU usage metrics for batch prefix tuning."
+    },
+    {
+      "point": "Evaluation restricted to text classification; no experiments on generation or structured prediction tasks",
+      "evidence": "All experiments focus on classification benchmarks; generalization to other NLP tasks where prefix-tuning is applied remains untested."
+    },
+    {
+      "point": "Unclear if canonical manifolds remain valid under domain shifts or data drift",
+      "evidence": "No discussion or experiments on how manifold representations adapt or degrade when input distributions change."
+    },
+    {
+      "point": "No exploration of attacks targeting internal LM representations beyond output position activations",
+      "evidence": "Method aligns activations at output position layers but does not consider robustness against adversarial manipulations of intermediate hidden states or attention."
+    },
+    {
+      "point": "Presentation of optimal control theory is conceptual and disconnected from algorithmic design",
+      "evidence": "Theoretical framing does not translate into practical algorithmic insights or design choices."
+    }
   ],
   "questions": [
-    "How does the method perform when clean labeled data is scarce or noisy, and can unlabeled or weakly labeled data be leveraged to build the canonical manifolds?",
-    "What is the detailed computational overhead and latency impact of inference-time prefix tuning in real-time or low-latency applications, especially with batch size one?",
-    "How sensitive is the method’s robustness to the choice of PCA dimensionality in constructing canonical manifolds, and is there an optimal range for this hyperparameter?",
-    "Would the proposed method maintain its robustness advantages on generation or structured prediction tasks beyond classification?",
-    "How does the method fare against adaptive adversaries that specifically optimize to circumvent the dynamic prefix tuning procedure?",
-    "Are there plans to release code, detailed hyperparameters, and pseudocode to facilitate reproducibility and wider adoption?"
+    {
+      "question": "How does the robust prefix-tuning framework perform on tasks beyond classification, such as question answering or text generation?",
+      "motivation": "Demonstrating robustness across diverse NLP tasks would establish broader applicability of the method."
+    },
+    {
+      "question": "How sensitive is the method to the choice of PCA dimensionality or alternative canonical manifold constructions?",
+      "motivation": "Understanding sensitivity to manifold design would clarify robustness and generalization of the approach."
+    },
+    {
+      "question": "What are the detailed inference-time computational overheads and latency impacts of batch-level prefix tuning in real deployment scenarios?",
+      "motivation": "Precise efficiency metrics are critical for assessing practicality of on-the-fly prefix tuning."
+    },
+    {
+      "question": "How stable and effective is batch-level prefix tuning with small or highly skewed batches at inference?",
+      "motivation": "Robustness in real-world settings with variable batch compositions is important for deployment."
+    }
   ]
 }

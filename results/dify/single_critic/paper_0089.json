@@ -1,40 +1,100 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks sufficient comparison with recent parameter-efficient fine-tuning methods such as adapters, prefix tuning, or LoRA, which also reduce parameter counts while maintaining or improving performance, limiting the novelty claim of SaMoE.",
-    "point_002": "There is insufficient justification or ablation study regarding the choice and impact of the global expert pool size on convergence and final accuracy, leaving an important design decision underexplored.",
-    "point_003": "The assumption of a fixed global expert pool shared across all MoE layers is not analyzed for potential downsides such as reduced model diversity or specialization, and the paper lacks ablations exploring partially trainable or layer-specific experts.",
-    "point_004": "It is unclear whether baseline models received equivalent hyperparameter tuning and optimization efforts, which raises concerns about the fairness and validity of the reported performance improvements.",
-    "point_005": "The zero-shot evaluation tasks, while numerous, may not sufficiently represent diverse domains, complex reasoning, or multilingual challenges, limiting claims of broad generalization.",
-    "point_006": "The paper does not include comparisons with fine-tuned dense or MoE models on downstream tasks, which would better demonstrate parameter efficiency and robustness beyond zero-shot performance.",
-    "point_007": "The reported improvements lack statistical significance testing or variance measures, making it difficult to assess the robustness of the observed gains given their relatively small magnitude.",
-    "point_008": "Key components such as the self-adaptive shortcut connections are insufficiently explained and lack intuitive descriptions or visualizations, which hinders understanding of their role and effectiveness."
-  },
-  "summary": "This paper introduces SaMoE, a novel Mixture-of-Experts architecture that enhances parameter efficiency by learning a soft linear combination of a global pool of expert layers shared across all MoE layers. By decoupling parameter count from model depth and improving gradient flow through self-adaptive shortcut connections, SaMoE achieves up to 5.2\u00d7 parameter reduction while maintaining or improving perplexity and zero-shot NLP task performance on large-scale autoregressive GPT-style models. Extensive ablations and comparisons demonstrate its advantages over baseline MoE models and alternative sharing strategies, highlighting its strong scaling properties and effectiveness in parameter-efficient large language model training.",
-  "strengths": [
-    "Innovative SaMoE design that learns soft combinations of a global expert pool, significantly reducing parameter count while maintaining or improving accuracy.",
-    "Comprehensive evaluation on billion-scale autoregressive language models showing substantial parameter savings and improved zero-shot task performance.",
-    "Thorough ablation studies confirming the importance of key components such as self-adaptive expert combination and shortcut connections.",
-    "Demonstrated scalability across model depth and expert pool size with superior performance compared to various baseline and sharing strategies."
-  ],
-  "weaknesses": [
-    "Insufficient comparison to other parameter-efficient tuning methods like adapters or LoRA, limiting assessment of novelty.",
-    "Lack of analysis on design choices such as global expert pool size and fixed sharing assumptions, leaving important methodological questions open.",
-    "Unclear fairness in baseline tuning and absence of fine-tuning experiments on downstream tasks, limiting the evaluation scope.",
-    "Missing statistical significance or variance reporting on results, reducing confidence in the robustness of improvements.",
-    "Limited explanation and visualization of novel components, such as self-adaptive shortcut connections and the dictionary learning analogy.",
-    "No discussion or measurement of inference cost or latency impacts, which are critical for practical deployment."
-  ],
-  "questions": [
-    "How does SaMoE compare in parameter efficiency and performance to other parameter-efficient tuning methods like adapters, prefix tuning, or LoRA?",
-    "What is the effect of varying the size of the global expert pool on model convergence, parameter efficiency, and final accuracy?",
-    "Could partially trainable or layer-specific experts within the global pool improve specialization and model performance?",
-    "Were baseline models given equivalent hyperparameter tuning and optimization to ensure fair comparisons?",
-    "How does SaMoE perform when fine-tuned on downstream tasks compared to dense or conventional MoE models?",
-    "What are the inference latency and computational cost implications of the soft expert combination in SaMoE?",
-    "Can the SaMoE approach generalize effectively to encoder-only, encoder-decoder architectures, or non-language modalities such as vision or speech?",
-    "How does SaMoE perform on smaller-scale or multilingual datasets, and does the expert sharing strategy remain effective in such scenarios?"
-  ],
   "paper_id": "paper_0089",
-  "system": "dify",
-  "title": "SaMoE: Parameter Efficient MoE Language Models via Self-Adaptive Expert Combination"
+  "title": "SaMoE: Parameter Efficient MoE Language Models via Self-Adaptive Expert Combination",
+  "platform": "dify_single_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 63.94,
+  "structured": {
+    "summary": "The paper proposes SaMoE, a parameter-efficient Mixture-of-Experts architecture that shares a global expert pool across layers via learned soft linear combinations and incorporates adaptive shortcut connections to improve gradient flow. SaMoE achieves up to 5.2\u00d7 parameter reduction compared to standard MoE models while maintaining or improving pretraining perplexity and zero-shot task accuracy on billion-scale autoregressive language models.",
+    "strengths": [
+      {
+        "point": "Novel parameter-efficient MoE design using soft adaptive expert sharing",
+        "evidence": "SaMoE decouples expert parameters from model depth by learning linear combinations of a shared expert pool, enabling significant parameter reduction without accuracy loss (Section 3, 4.3)."
+      },
+      {
+        "point": "Improved gradient flow via self-adaptive shortcut connections",
+        "evidence": "Learned residual scaling parameters per MoE layer help stabilize training and improve expert utilization, as validated in ablations (Section 3.2, 4.5)."
+      },
+      {
+        "point": "Comprehensive empirical evaluation on billion-scale AR language models",
+        "evidence": "SaMoE outperforms baselines including AR-MoE, PR-MoE, and Grouped-MoE in pretraining perplexity and zero-shot accuracy while using fewer parameters (Section 4.3, Tables 1 & 2)."
+      },
+      {
+        "point": "Ablation studies demonstrate the necessity of proposed components",
+        "evidence": "Ablations confirm that both soft expert sharing and shortcut connections contribute to performance gains, outperforming na\u00efve or heuristic parameter sharing (Section 4.5)."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to other recent parameter-efficient MoE methods",
+        "evidence": "The paper omits empirical or discussion-based evaluation against approaches like Switch Transformers with shared experts or low-rank/factorized expert methods, limiting contextualization of novelty (Critique #1)."
+      },
+      {
+        "point": "Insufficient justification and analysis of soft linear combination design",
+        "evidence": "No ablations or theoretical justification are provided for choosing learned linear combinations over other mixing functions such as gating or nonlinear attention (Critique #2)."
+      },
+      {
+        "point": "Sparse details on training hyperparameters and stability techniques",
+        "evidence": "Initialization schemes, learning rates, normalization or constraints on expert coefficients and shortcut scalars are not described, hindering reproducibility (Critique #3, #11)."
+      },
+      {
+        "point": "Limited evaluation scope restricted to autoregressive language models",
+        "evidence": "Generalization to other model architectures (encoder-only, encoder-decoder) or modalities is not explored (Critique #4)."
+      },
+      {
+        "point": "No analysis of expert pool size impact on overfitting or expert diversity",
+        "evidence": "Potential redundancy or specialization bottlenecks from sharing a global expert pool are not discussed or empirically analyzed (Critique #5, #12)."
+      },
+      {
+        "point": "Missing runtime, communication overhead, and efficiency metrics",
+        "evidence": "Although SaMoE requires all-to-all communication, no measurements of throughput, latency, or training cost are reported to assess practical trade-offs (Critique #6, #10)."
+      },
+      {
+        "point": "Baselines might not be fully parameter or training matched",
+        "evidence": "It is unclear if baseline models have matched depth, width, or training schedules, possibly biasing comparisons (Critique #7)."
+      },
+      {
+        "point": "Mathematical notation clarity issues",
+        "evidence": "Expert coefficient normalization or constraints are vaguely described, making it difficult to interpret the combination mechanism precisely (Critique #13)."
+      },
+      {
+        "point": "Limited discussion on open-source release details",
+        "evidence": "The timeline and scope of code and model release remain unspecified, reducing community impact expectations (Critique #14)."
+      },
+      {
+        "point": "Uncertainty about scalability to very large (10B+) models",
+        "evidence": "Experiments focus on models up to ~5.8B parameters, leaving open whether gains persist at larger scales (Critique #15)."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does SaMoE perform on encoder-only or encoder-decoder architectures and other modalities?",
+        "motivation": "Understanding generality beyond autoregressive language modeling is critical for broader applicability."
+      },
+      {
+        "question": "What are the practical training and inference costs (speed, memory, communication overhead) of SaMoE compared to standard MoE?",
+        "motivation": "Parameter efficiency gains are valuable only if runtime and hardware efficiency are not adversely impacted."
+      },
+      {
+        "question": "Can alternative expert combination mechanisms (e.g., gating, attention) improve performance or parameter efficiency compared to soft linear combinations?",
+        "motivation": "Exploring different combination functions may yield better gradient flow or capacity utilization."
+      },
+      {
+        "question": "Does the shared expert pool limit layer specialization and model capacity due to expert redundancy or bottlenecks?",
+        "motivation": "Ensuring sufficient expert diversity is important for model expressiveness and transferability."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to other recent parameter-efficient MoE methods. The paper omits empirical or discussion-based evaluation against approaches like Switch Transformers with shared experts or low-rank/factorized expert methods, limiting contextualization of novelty (Critique #1)",
+    "point_002": "Insufficient justification and analysis of soft linear combination design. No ablations or theoretical justification are provided for choosing learned linear combinations over other mixing functions such as gating or nonlinear attention (Critique #2)",
+    "point_003": "Sparse details on training hyperparameters and stability techniques. Initialization schemes, learning rates, normalization or constraints on expert coefficients and shortcut scalars are not described, hindering reproducibility (Critique #3, #11)",
+    "point_004": "Limited evaluation scope restricted to autoregressive language models. Generalization to other model architectures (encoder-only, encoder-decoder) or modalities is not explored (Critique #4)",
+    "point_005": "No analysis of expert pool size impact on overfitting or expert diversity. Potential redundancy or specialization bottlenecks from sharing a global expert pool are not discussed or empirically analyzed (Critique #5, #12)",
+    "point_006": "Missing runtime, communication overhead, and efficiency metrics. Although SaMoE requires all-to-all communication, no measurements of throughput, latency, or training cost are reported to assess practical trade-offs (Critique #6, #10)",
+    "point_007": "Baselines might not be fully parameter or training matched. It is unclear if baseline models have matched depth, width, or training schedules, possibly biasing comparisons (Critique #7)",
+    "point_008": "Mathematical notation clarity issues. Expert coefficient normalization or constraints are vaguely described, making it difficult to interpret the combination mechanism precisely (Critique #13)",
+    "point_009": "Limited discussion on open-source release details. The timeline and scope of code and model release remain unspecified, reducing community impact expectations (Critique #14)",
+    "point_010": "Uncertainty about scalability to very large (10B+) models. Experiments focus on models up to ~5.8B parameters, leaving open whether gains persist at larger scales (Critique #15)"
+  }
 }

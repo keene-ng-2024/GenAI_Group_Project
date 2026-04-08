@@ -1,28 +1,80 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks direct benchmarking against other recent retrieval-augmented generation systems such as REALM or RAG, making it difficult to assess the novelty of leveraging Google Search and few-shot prompting.",
-    "point_002": "There is no ablation or justification for fixed hyperparameters like the number of retrieved paragraphs (top-20 URLs) and paragraph chunk size (6 sentences), risking over-tuning.",
-    "point_003": "Closed-book baselines are evaluated only zero-shot or few-shot without fine-tuning, while the open-book approach uses external evidence, limiting fair comparison of gains attributable to retrieval versus fine-tuning.",
-    "point_004": "Using live Google Search may introduce temporal leakage by retrieving evidence that overlaps with test answers or postdates the LM's training cutoff, potentially inflating open-book gains and undermining apples-to-apples evaluation.",
-    "point_005": "The method does not clearly explain how free-text generated answers map back to discrete classification labels on classification datasets such as StrategyQA and FEVER, which affects evaluation fairness.",
-    "point_006": "There is no explicit analysis of the generality or sensitivity of the prompt template used for few-shot conditioning with (evidence, question, answer) triplets, leaving unclear if manual tuning per dataset is required.",
-    "point_007": "The reranking approach uses complex probabilistic scoring functions but lacks comparison to simpler baselines such as selecting the top-ranked paragraph or majority answer, obscuring the benefits of reranking complexity.",
-    "point_008": "Critical implementation details like Google Search API query parameters, handling of noisy or paywalled webpages, and document parsing heuristics are insufficiently described, hindering reproducibility."
-  },
-  "summary": "This paper proposes a simple and general approach to augment large pre-trained language models with external evidence retrieved from the live Internet via Google Search, combined with few-shot prompting and a novel reranking mechanism at inference time. By conditioning on retrieved paragraphs within prompt examples, the method turns any LM into an open-book system without additional training or parameter updates. Experiments on diverse QA benchmarks demonstrate consistent improvements over closed-book baselines, with smaller open-book models sometimes outperforming much larger closed-book ones. The approach also shows promise in incorporating up-to-date information beyond the LM's training data. However, the study leaves open questions about comparison to existing retrieval-augmented methods, evaluation fairness, prompt and hyperparameter sensitivity, and reproducibility.",
-  "strengths": [
-    "Introduces a novel retrieval-augmented few-shot prompting technique that leverages live web search without any model fine-tuning.",
-    "Demonstrates strong empirical gains on multiple QA benchmarks, including multi-hop and fact-checking datasets, with smaller open-book models outperforming larger closed-book counterparts."
-  ],
-  "weaknesses": [
-    "Lacks direct comparison to prior retrieval-augmented generation systems and fine-tuned closed-book baselines, limiting assessment of relative contributions.",
-    "Insufficient detail on methodological choices such as prompt design, hyperparameter settings, and reranking evaluation, as well as limited discussion on reproducibility and potential temporal leakage from live search."
-  ],
-  "questions": [
-    "How does the proposed method compare quantitatively and qualitatively to other retrieval-augmented models like REALM or RAG under controlled conditions?",
-    "How sensitive is the approach to the choice of prompt template, number of few-shot examples, and retrieval hyperparameters such as paragraph chunk size and number of retrieved documents?"
-  ],
   "paper_id": "paper_0081",
-  "system": "dify",
-  "title": "Internet-augmented language models through few-shot prompting for open-domain question answering"
+  "title": "Internet-augmented language models through few-shot prompting for open-domain question answering",
+  "platform": "dify_single_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 51.7,
+  "structured": {
+    "summary": "This paper proposes a simple, general approach to augment large language models with up-to-date factual knowledge by retrieving relevant evidence from Google Search and incorporating it via few-shot prompting and probabilistic reranking, without any fine-tuning. The method demonstrates substantial performance gains over closed-book models across diverse QA tasks, showing that inference-time compute through retrieval and reranking can partially replace scaling model size.",
+    "strengths": [
+      {
+        "point": "Effective use of Google Search as an off-the-shelf retrieval source",
+        "evidence": "The method leverages verbatim queries to Google Search to retrieve up-to-date web evidence, improving QA performance across multiple datasets without additional training."
+      },
+      {
+        "point": "Strong empirical gains with few-shot prompting and reranking",
+        "evidence": "Conditioning on retrieved evidence yields up to 30% relative improvement on Natural Questions, and smaller models with retrieval outperform much larger closed-book LMs."
+      },
+      {
+        "point": "Comprehensive evaluation across single-hop, multi-hop, fact-checking, and temporal QA tasks",
+        "evidence": "The approach is tested on diverse benchmarks including NQ, HotpotQA, StrategyQA, FEVER, and SituatedQA, demonstrating broad applicability."
+      },
+      {
+        "point": "Insightful analysis of reranking strategies and inference-time compute trade-offs",
+        "evidence": "The paper explores direct, noisy channel, and product-of-experts reranking methods and shows reranking multiple candidates from retrieved paragraphs boosts performance."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to recent state-of-the-art retrieval-augmented QA methods",
+        "evidence": "The paper lacks rigorous benchmarking against recent approaches combining commercial search with fine-tuned readers (e.g., WebGPT, ReAct), weakening the novelty claims."
+      },
+      {
+        "point": "Limited methodological details on search API usage and prompt construction",
+        "evidence": "Details about Google Search API parameters, query reformulation, and exact prompt templates including evidence incorporation are missing, hindering reproducibility."
+      },
+      {
+        "point": "Evaluation metrics may not fully capture reasoning improvements",
+        "evidence": "Reliance on exact match and classification accuracy overlooks partial correctness or factual consistency, especially for multi-hop and strategy QA tasks."
+      },
+      {
+        "point": "Lack of analysis on retrieval depth trade-offs and model size interaction",
+        "evidence": "The paper does not ablate how varying number of retrieved paragraphs affects performance vs prompt size constraints, nor how retrieval benefits vary across model scales in detail."
+      },
+      {
+        "point": "Limited discussion or experiments on risks and limitations of search engine dependence",
+        "evidence": "Potential failure modes from hallucinated or adversarial web content, latency, and API availability issues are mentioned but not empirically evaluated."
+      },
+      {
+        "point": "No public release of code or retrieval pipeline details",
+        "evidence": "Absence of code or detailed retrieval scripts reduces ability for the community to replicate results given reliance on commercial search."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does the approach compare quantitatively to recent retrieval-augmented QA methods that incorporate commercial search plus fine-tuned readers?",
+        "motivation": "Understanding comparative performance is crucial to assess true novelty and practical benefits over existing state-of-the-art."
+      },
+      {
+        "question": "What are the exact prompt construction details and Google Search API settings used?",
+        "motivation": "Precise reproduction of results depends on knowing prompt formatting and search parameters, especially due to dynamic and personalized nature of web search."
+      },
+      {
+        "question": "How robust is the system to noisy, adversarial, or outdated web content retrieved from Google Search?",
+        "motivation": "Assessing failure modes and safety risks is important for deploying such systems in real-world applications."
+      },
+      {
+        "question": "Does retrieval provide consistent benefits across different model sizes and more complex or ambiguous query types beyond the tested datasets?",
+        "motivation": "Clarifying generalizability and interaction effects can guide future system design and deployment."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to recent state-of-the-art retrieval-augmented QA methods. The paper lacks rigorous benchmarking against recent approaches combining commercial search with fine-tuned readers (e.g., WebGPT, ReAct), weakening the novelty claims",
+    "point_002": "Limited methodological details on search API usage and prompt construction. Details about Google Search API parameters, query reformulation, and exact prompt templates including evidence incorporation are missing, hindering reproducibility",
+    "point_003": "Evaluation metrics may not fully capture reasoning improvements. Reliance on exact match and classification accuracy overlooks partial correctness or factual consistency, especially for multi-hop and strategy QA tasks",
+    "point_004": "Lack of analysis on retrieval depth trade-offs and model size interaction. The paper does not ablate how varying number of retrieved paragraphs affects performance vs prompt size constraints, nor how retrieval benefits vary across model scales in detail",
+    "point_005": "Limited discussion or experiments on risks and limitations of search engine dependence. Potential failure modes from hallucinated or adversarial web content, latency, and API availability issues are mentioned but not empirically evaluated",
+    "point_006": "No public release of code or retrieval pipeline details. Absence of code or detailed retrieval scripts reduces ability for the community to replicate results given reliance on commercial search"
+  }
 }
