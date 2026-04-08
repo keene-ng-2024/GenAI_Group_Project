@@ -1,0 +1,103 @@
+{
+  "paper_id": "paper_0100",
+  "title": "Words are all you need? Language as an approximation for human similarity judgments ",
+  "platform": "n8n_noloop",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 59.8,
+  "structured": {
+    "summary": "This paper presents a large-scale evaluation of over 600 pre-trained models across images, audio, and video to approximate human similarity judgments. It proposes novel language-based similarity approximations using captions and tags, introduces an adaptive crowdsourcing pipeline (STEP-Tag) for tag collection, and demonstrates that combining language and sensory embeddings yields the best performance in approximating human similarity at scale.",
+    "strengths": [
+      {
+        "point": "Comprehensive large-scale benchmark across multiple modalities",
+        "evidence": "Evaluated 611 pre-trained models on images, audio, and video against extensive human similarity judgments."
+      },
+      {
+        "point": "Novel language-based similarity approximation methods",
+        "evidence": "Proposed O(N) methods using LLM embeddings and classical word frequency analysis that outperform DNN-only methods."
+      },
+      {
+        "point": "Introduction and validation of STEP-Tag adaptive tagging pipeline",
+        "evidence": "STEP-Tag collected higher quality and more diverse tags than baselines, improving similarity reconstruction."
+      },
+      {
+        "point": "Hybrid stacked embeddings combining DNN and LLM features",
+        "evidence": "Stacked methods consistently achieved the best approximation of human similarity, approaching inter-rater reliability."
+      },
+      {
+        "point": "Release of a large behavioral dataset and practical guide",
+        "evidence": "Dataset includes 206,339 human judgments from 1,492 participants and detailed methodology for scalable similarity approximation."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to prior language-based similarity models",
+        "evidence": "Lacks explicit discussion and empirical comparison with classical linguistic similarity approaches such as distributional semantics or word embeddings."
+      },
+      {
+        "point": "Unclear choice and justification of LLM embeddings",
+        "evidence": "Paper does not specify which LLMs were used or provide ablations comparing different LLMs."
+      },
+      {
+        "point": "Missing ablation studies on STEP-Tag parameters",
+        "evidence": "No analysis of how iteration count, participant pool size, or tag filtering thresholds affect tag quality and diversity."
+      },
+      {
+        "point": "Potential unfairness in DNN baselines",
+        "evidence": "Unclear if DNNs were fine-tuned or adapted for similarity tasks, possibly disadvantaging them relative to language methods."
+      },
+      {
+        "point": "Evaluation metrics limited to correlation with human judgments",
+        "evidence": "No use of rank-based metrics, clustering quality, or downstream task performance to comprehensively assess similarity approximations."
+      },
+      {
+        "point": "Reproducibility concerns due to missing methodological details",
+        "evidence": "Lacks details on hyperparameter optimization for stacked embeddings and insufficient description of STEP-Tag implementation and quality control."
+      },
+      {
+        "point": "Ambiguity in definition of 'human similarity'",
+        "evidence": "No clear task instructions or criteria for human judgments, complicating interpretation of what is being approximated."
+      },
+      {
+        "point": "Limited discussion of biases and generalizability",
+        "evidence": "Does not address how language-based methods may inherit cultural or annotator biases, or applicability to non-text-describable stimuli and cross-cultural settings."
+      },
+      {
+        "point": "Missing comparison to classical non-DNN, non-language baselines",
+        "evidence": "No inclusion of handcrafted feature distances or psychophysical models to contextualize gains."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How do language-based similarity approximations compare empirically to classical linguistic similarity models?",
+        "motivation": "Clarifying this would strengthen claims of novelty and contextualize improvements."
+      },
+      {
+        "question": "What is the impact of different LLM choices and STEP-Tag parameters on similarity approximation quality?",
+        "motivation": "Understanding sensitivity to these factors is critical for robustness and reproducibility."
+      },
+      {
+        "question": "How do the proposed methods perform on downstream tasks or using alternative evaluation metrics beyond correlation?",
+        "motivation": "This would provide a more comprehensive assessment of practical utility."
+      },
+      {
+        "question": "How do cultural and linguistic differences affect the generalizability of language-based similarity approximations?",
+        "motivation": "Addressing cross-cultural validity is important for broader applicability."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to prior language-based similarity models. Lacks explicit discussion and empirical comparison with classical linguistic similarity approaches such as distributional semantics or word embeddings.",
+    "point_002": "Unclear choice and justification of LLM embeddings. Paper does not specify which LLMs were used or provide ablations comparing different LLMs.",
+    "point_003": "Missing ablation studies on STEP-Tag parameters. No analysis of how iteration count, participant pool size, or tag filtering thresholds affect tag quality and diversity.",
+    "point_004": "Potential unfairness in DNN baselines. Unclear if DNNs were fine-tuned or adapted for similarity tasks, possibly disadvantaging them relative to language methods.",
+    "point_005": "Evaluation metrics limited to correlation with human judgments. No use of rank-based metrics, clustering quality, or downstream task performance to comprehensively assess similarity approximations.",
+    "point_006": "Reproducibility concerns due to missing methodological details. Lacks details on hyperparameter optimization for stacked embeddings and insufficient description of STEP-Tag implementation and quality control.",
+    "point_007": "Ambiguity in definition of 'human similarity'. No clear task instructions or criteria for human judgments, complicating interpretation of what is being approximated.",
+    "point_008": "Limited discussion of biases and generalizability. Does not address how language-based methods may inherit cultural or annotator biases, or applicability to non-text-describable stimuli and cross-cultural settings.",
+    "point_009": "Missing comparison to classical non-DNN, non-language baselines. No inclusion of handcrafted feature distances or psychophysical models to contextualize gains."
+  },
+  "transcript": {
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- Human similarity judgments are valuable supervision signals for machine learning tasks such as contrastive learning, information retrieval, and model alignment.\n- Collecting human similarity judgments at scale is prohibitively expensive because the number of pairwise judgments grows quadratically with the number of stimuli (O(N\u00b2)).\n- Recent approaches approximate human similarity using pre-trained deep neural networks (DNNs), which require only O(1) human judgments given the model, but:\n  - Pre-trained DNNs may not exist for many domains (e.g., medical images, low-resource languages).\n  - DNN embeddings may not align well with human similarity judgments.\n- There is a lack of comprehensive evaluation of how well pre-trained models approximate human similarity across different modalities.\n- Motivated by cognitive science findings that language efficiently encodes sensory information, the authors explore language-based methods as scalable approximations for human similarity.\n\n---\n\n### Proposed Method\n\n1. **Large-scale Evaluation of Pre-trained Models:**\n   - Evaluated 611 pre-trained models across three modalities: images, audio, and video.\n   - Compared their internal representations to human similarity judgments.\n\n2. **Language-based Similarity Approximation:**\n   - Proposed a new class of O(N) methods that approximate human similarity using textual descriptors (captions and tags).\n   - Two approaches for text-based similarity:\n     - Embeddings from pre-trained Large Language Models (LLMs) applied to captions or tags.\n     - Classical Word Frequency Analysis (WFA) methods (e.g., co-occurrence, Rouge, BM25, TF-IDF) for cases lacking LLMs.\n\n3. **Novel Adaptive Tag Collection Pipeline (STEP-Tag):**\n   - Developed STEP-Tag, an adaptive crowdsourcing pipeline for collecting high-quality, diverse, and meaningful word tags without a fixed taxonomy.\n   - Participants iteratively rate and add tags, with low-quality tags flagged and removed.\n   - Validated STEP-Tag against baselines, showing improved tag quality and diversity.\n\n4. **Stacked Representations:**\n   - Combined (concatenated) embeddings from the best-performing DNNs and LLMs to create hybrid similarity approximations.\n   - Optimized a rescaling hyperparameter for LLM embeddings using a small set of ground-truth similarity judgments.\n\n---\n\n### Results\n\n- **Performance Hierarchy:**\n  - Stacked methods (combined DNN + LLM embeddings) consistently provided the best approximation of human similarity across all modalities.\n  - Language-based methods (LLM embeddings and WFA) outperformed DNN-only methods.\n  - DNN-only methods performed worse than language-based and stacked methods.\n  - None of the methods fully reached the inter-rater reliability (IRR) upper bound, but stacked methods approached it most closely.\n\n- **Model Characteristics:**\n  - For image models, similarity approximation performance positively correlated with:\n    - Number of model parameters (r=0.39, p<0.001).\n    - ImageNet classification accuracy (r=0.26, p<0.001), though some high-accuracy models performed poorly on similarity.\n  - Layer depth analysis in audio models showed later layers generally better approximated human similarity.\n\n- **STEP-Tag Validation:**\n  - Tags collected via STEP-Tag outperformed single-tag or non-adaptive tag collection baselines in downstream similarity reconstruction.\n  - Tags from STEP-Tag also outperformed standard dataset labels in approximating human similarity.\n\n- **Scalability:**\n  - Language-based methods require only O(N) human judgments (describing individual stimuli), making them scalable compared to O(N\u00b2) pairwise similarity judgments.\n  - Approximated similarity matrices for 1,000 audio and 1,000 video clips, which would otherwise require ~2.5 million human judgments each.\n\n---\n\n### Claimed Contributions\n\n1. **Comprehensive Benchmark:**\n   - First large-scale evaluation of over 600 pre-trained models as approximations for human similarity judgments across images, audio, and video.\n\n2. **Novel Language-based Approximation:**\n   - Proposed and demonstrated efficient, modality-agnostic similarity approximation methods based on language, competitive with or better than DNN-based methods.\n\n3. **STEP-Tag Pipeline:**\n   - Developed and validated a novel adaptive crowdsourcing pipeline for collecting high-quality, diverse semantic tags without pre-existing taxonomies.\n\n4. **Stacked Embeddings:**\n   - Introduced hybrid methods combining sensory (DNN) and linguistic (LLM) embeddings, achieving the best performance in approximating human similarity.\n\n5. **Practical Guide and Data Release:**\n   - Provided a detailed guide for researchers on collecting and approximating human similarity judgments at scale.\n   - Released a large behavioral dataset (N=1,492 participants) with 206,339 human judgments across three modalities, including text-approximated similarity matrices.\n\n---\n\n### Additional Notes\n\n- The study highlights the complementarity of language and sensory information in capturing human similarity.\n- The approach enables similarity approximation in domains lacking pre-trained DNNs or LLMs.\n- The authors caution about potential biases in human-derived similarity proxies and emphasize careful use in downstream applications.\n- The methods and datasets facilitate future research in cognitive science and machine learning, including cross-cultural semantic representation studies.\n\n---\n\n**In summary, this work demonstrates that language-based methods, especially when combined with deep sensory embeddings, provide a scalable and effective approximation of human similarity judgments across multiple modalities, overcoming limitations of purely DNN-based approaches.**",
+    "critic": "1. **Novelty \u2013 Prior Work on Language-based Similarity Approximation:**  \nWhile the paper claims novelty in proposing language-based similarity approximations (Section \u201cProposed Method\u201d point 2), it does not sufficiently compare against prior cognitive science or NLP literature that uses language to model similarity or semantic relatedness (e.g., distributional semantics, word embeddings for similarity). A more explicit discussion and empirical comparison with these classical linguistic similarity models would strengthen the novelty claim.\n\n2. **Methodology \u2013 Justification for Choice of LLM Embeddings:**  \nThe paper uses embeddings from \u201cpre-trained Large Language Models\u201d for text-based similarity but does not specify which LLMs were used or justify their selection (Section \u201cProposed Method\u201d point 2). Different LLMs vary widely in architecture and training data, which can impact similarity quality. An ablation comparing multiple LLMs or at least clarifying the choice is missing.\n\n3. **Methodology \u2013 Lack of Ablation on STEP-Tag Parameters:**  \nSTEP-Tag is introduced as an adaptive pipeline for tag collection (Section \u201cProposed Method\u201d point 3), but the paper does not ablate key design choices such as the number of iterations, participant pool size, or tag filtering thresholds. These parameters could significantly affect tag quality and diversity, and their omission weakens confidence in STEP-Tag\u2019s robustness.\n\n4. **Evaluation \u2013 Fairness of DNN Baselines:**  \nThe evaluation compares 611 pre-trained DNNs to language-based methods (Section \u201cResults\u201d point 1), but it is unclear whether all DNNs were fine-tuned or adapted for similarity tasks or simply used off-the-shelf embeddings. Without task-specific adaptation, the DNN baselines may be unfairly disadvantaged relative to language methods that leverage semantic information directly.\n\n5. **Evaluation \u2013 Metrics Limited to Correlation with Human Judgments:**  \nThe primary evaluation metric appears to be correlation with human similarity judgments (Section \u201cResults\u201d). While correlation is informative, additional metrics such as rank-based measures, clustering quality, or downstream task performance (e.g., retrieval accuracy) would provide a more comprehensive assessment of approximation quality.\n\n6. **Evaluation \u2013 Inter-Rater Reliability (IRR) as Upper Bound Not Fully Explored:**  \nThe paper notes that none of the methods reach the IRR upper bound but does not analyze the gap or whether IRR varies by modality or stimulus type (Section \u201cResults\u201d point 1). Understanding these nuances would clarify how close the approximations are to human-level consistency and where improvements are most needed.\n\n7. **Reproducibility \u2013 Missing Details on Hyperparameter Optimization:**  \nThe stacked embeddings method involves optimizing a rescaling hyperparameter for LLM embeddings using a small set of ground-truth judgments (Section \u201cProposed Method\u201d point 4), but the paper lacks details on the optimization procedure, validation splits, or search space. This omission hinders reproducibility and assessment of potential overfitting.\n\n8. **Reproducibility \u2013 Insufficient Description of STEP-Tag Implementation:**  \nAlthough STEP-Tag is a key contribution, the paper does not provide enough implementation details such as the user interface, instructions given to participants, or quality control mechanisms beyond \u201cflagging low-quality tags\u201d (Section \u201cProposed Method\u201d point 3). These details are critical for replicating the pipeline.\n\n9. **Clarity \u2013 Ambiguity in Definition of \u201cHuman Similarity\u201d:**  \nThe paper refers to \u201chuman similarity judgments\u201d but does not clearly define the task instructions or criteria given to participants (e.g., semantic similarity, perceptual similarity, task context) (Section \u201cProblem & Motivation\u201d). This ambiguity makes it difficult to interpret what the approximations are capturing.\n\n10. **Clarity \u2013 Overloading of Terminology \u201cStacked Representations\u201d:**  \nThe term \u201cstacked representations\u201d is used to describe concatenation of DNN and LLM embeddings (Section \u201cProposed Method\u201d point 4), but the paper does not clarify if any dimensionality reduction or weighting beyond rescaling is applied. This could confuse readers about whether stacking is a simple concatenation or a more complex fusion.\n\n11. **Limitations \u2013 Potential Biases in Language-based Approximations Understated:**  \nWhile the paper briefly mentions biases in human-derived similarity proxies (Section \u201cAdditional Notes\u201d), it does not discuss how language-based methods might inherit or amplify cultural, linguistic, or annotator biases, especially when using crowdsourced tags or LLM embeddings trained on biased corpora.\n\n12. **Limitations \u2013 Applicability to Domains Without Textual Descriptions:**  \nThe approach relies heavily on textual descriptors (captions, tags) for language-based similarity (Section \u201cProposed Method\u201d point 2), but the paper does not address scenarios where stimuli are difficult to describe textually (e.g., abstract sounds, novel visual patterns). This limits generalizability and should be acknowledged.\n\n13. **Generalisability \u2013 Evaluation Limited to Three Modalities:**  \nThe experiments focus on images, audio, and video (Section \u201cProposed Method\u201d point 1), but it remains unclear how well the methods generalize to other sensory modalities (e.g., tactile stimuli) or complex multimodal stimuli. The paper should discuss this limitation explicitly.\n\n14. **Generalisability \u2013 Cross-Cultural Validity Not Tested:**  \nGiven that similarity judgments and language use vary across cultures and languages, the paper\u2019s reliance on English captions and tags (implied but not explicitly stated) raises questions about cross-cultural generalizability. No experiments or discussion address this important aspect.\n\n15. **Evaluation \u2013 Comparison to Non-Language, Non-DNN Baselines Missing:**  \nThe paper compares language-based methods primarily to DNN embeddings but does not include classical non-DNN, non-language similarity approximations (e.g., handcrafted feature distances, psychophysical models). Including such baselines would contextualize the gains from language and DNN methods more fully."
+  }
+}
