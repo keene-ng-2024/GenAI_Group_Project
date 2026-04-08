@@ -1,28 +1,77 @@
 {
-  "critique_points": {
-    "point_001": "The Related Work section omits recent unsupervised or automatic verbalizer construction approaches, such as prompt mining and embedding clustering, leaving the novelty and empirical superiority of NPPrompt unsubstantiated.",
-    "point_002": "The paper presents only limited empirical ablation and lacks theoretical motivation for using cosine similarity as the verbalizer candidate selection metric, without comparisons to alternative similarity measures.",
-    "point_003": "The method aggregates logits using a cosine similarity weighted summation but does not systematically explore or justify alternative score aggregation strategies, such as max pooling or temperature scaling.",
-    "point_004": "The study relies on a single simple cloze prompt template and does not investigate the impact of alternative prompt templates on zero-shot performance or verbalizer interaction.",
-    "point_005": "Handling of multi-word label names is underexplored, with no detailed quantitative ablation or error analysis to assess generalization to longer or ambiguous phrases.",
-    "point_006": "Baseline zero-shot comparisons with GPT-3 and ChatGPT lack transparency due to undisclosed prompt templates, hyperparameters, and tuning efforts, raising concerns about fairness.",
-    "point_007": "The paper provides limited evaluation and insufficient adaptation details when applying NPPrompt to different PLM architectures, hindering assessment of generality.",
-    "point_008": "Experiments are confined to English-centric datasets and a narrow range of tasks, with no evaluations on low-resource languages, sequence labeling, generation tasks, or cross-lingual settings."
-  },
-  "summary": "This paper proposes NPPrompt, a fully zero-shot method that automatically constructs verbalizers by leveraging pre-trained language model embeddings to identify nearest neighbor label words, aggregating their logits for prediction without any fine-tuning or human design. Demonstrated on diverse English NLP tasks, NPPrompt achieves substantial gains over prior zero-shot methods and competes with some few-shot approaches, showing flexibility across multiple PLMs and tasks. However, the work lacks comprehensive comparisons to recent verbalizer construction methods, deeper ablation studies, transparent baseline setups, and broader evaluations, which limits the strength of its claims and practical applicability.",
-  "strengths": [
-    "Introduces a novel, fully zero-shot verbalizer construction approach leveraging PLM embeddings without requiring labeled data or human prompt design.",
-    "Demonstrates strong empirical performance gains over previous zero-shot methods across multiple standard NLP benchmarks and PLM architectures."
-  ],
-  "weaknesses": [
-    "Insufficient contextualization against recent automatic verbalizer construction baselines and limited theoretical or empirical justification for key methodological choices.",
-    "Lacks transparency in baseline comparisons, detailed ablation of prompt templates and multi-word label handling, and broader evaluations beyond English and classification tasks."
-  ],
-  "questions": [
-    "How does NPPrompt compare experimentally to recent unsupervised verbalizer construction methods such as prompt mining or self-training approaches?",
-    "What is the impact of varying prompt templates on NPPrompt's zero-shot performance and verbalizer effectiveness across different tasks?"
-  ],
   "paper_id": "paper_0024",
-  "system": "dify",
-  "title": "Pre-trained Language Models can be Fully Zero-Shot Learners"
+  "title": "Pre-trained Language Models can be Fully Zero-Shot Learners",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 111.97,
+  "structured": {
+    "summary": "This paper proposes NPPrompt, a fully zero-shot prompting method that automatically induces verbalizers by leveraging pretrained language model static embeddings to find semantically related label words, aggregating masked token predictions to perform classification and other NLU tasks without any labeled or unlabeled data or human-designed verbalizers. Experiments show substantial improvements over previous zero-shot methods across diverse benchmarks, demonstrating a scalable, human-effort-free framework for zero-shot learning.",
+    "strengths": [
+      {
+        "point": "Fully zero-shot verbalizer induction without any labeled or unlabeled data",
+        "evidence": "The method leverages only PLM static embeddings and label names to find nearest neighbors for verbalizer construction, requiring no human effort or data beyond label names."
+      },
+      {
+        "point": "Strong empirical performance across multiple NLP tasks",
+        "evidence": "NPPrompt achieves +12.8% accuracy improvement on text classification and +15.6% on GLUE benchmarks compared to prior zero-shot methods, outperforming even GPT-3 on classification."
+      },
+      {
+        "point": "Flexible and scalable approach adaptable to different PLMs and tasks",
+        "evidence": "The method can be applied to RoBERTa, T5, and GPT-2 architectures and extends beyond classification to multiple-choice QA without retraining or manual verbalizer design."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to fully unsupervised no-data baselines",
+        "evidence": "The evaluation omits recent zero-resource lexical matching or clustering baselines that do not require labeled or unlabeled data, limiting contextualization of the method\u2019s performance."
+      },
+      {
+        "point": "No robustness analysis on label name ambiguity or multilingual settings",
+        "evidence": "The paper does not test or discuss performance degradation when label names are ambiguous, noisy, or non-English, which challenges the core assumption of meaningful label embeddings."
+      },
+      {
+        "point": "No principled or adaptive strategy for neighborhood size k or weighting scheme",
+        "evidence": "Neighborhood size k is fixed heuristically without data-driven selection, and weighting of neighbors uses only softmax-normalized cosine similarity without exploring alternatives."
+      },
+      {
+        "point": "Limited analysis of prompt template sensitivity and polysemy in static embeddings",
+        "evidence": "Only a single prompt template is used, and no disambiguation strategy for polysemous label words is provided, which may reduce verbalizer quality."
+      },
+      {
+        "point": "No runtime, efficiency, or scalability analysis",
+        "evidence": "Aggregating logits over multiple neighbors entails computational overhead not quantified or compared to baseline prompting methods."
+      },
+      {
+        "point": "Unclear handling of multiword label names and lack of error analysis",
+        "evidence": "The approach to multiword labels is vaguely described without examples or detailed algorithms; no qualitative or error analyses are provided."
+      },
+      {
+        "point": "Experiments restricted to English and standard benchmarks",
+        "evidence": "All evaluations are in English; applicability to multilingual or domain-specific label sets is untested."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does NPPrompt perform when label names are ambiguous, noisy, or in languages other than English?",
+        "motivation": "Understanding robustness to realistic label name variations is critical for practical deployment in diverse or noisy settings."
+      },
+      {
+        "question": "Can adaptive or data-driven methods improve neighborhood size selection and weighting schemes for verbalizer induction?",
+        "motivation": "Such improvements could enhance scalability to larger, fine-grained label sets and improve verbalizer quality."
+      },
+      {
+        "question": "What is the computational overhead of aggregating multiple masked token predictions compared to standard prompting or fine-tuning?",
+        "motivation": "Efficiency considerations are important for real-world adoption, especially on resource-constrained devices."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to fully unsupervised no-data baselines. The evaluation omits recent zero-resource lexical matching or clustering baselines that do not require labeled or unlabeled data, limiting contextualization of the method\u2019s performance",
+    "point_002": "No robustness analysis on label name ambiguity or multilingual settings. The paper does not test or discuss performance degradation when label names are ambiguous, noisy, or non-English, which challenges the core assumption of meaningful label embeddings",
+    "point_003": "No principled or adaptive strategy for neighborhood size k or weighting scheme. Neighborhood size k is fixed heuristically without data-driven selection, and weighting of neighbors uses only softmax-normalized cosine similarity without exploring alternatives",
+    "point_004": "Limited analysis of prompt template sensitivity and polysemy in static embeddings. Only a single prompt template is used, and no disambiguation strategy for polysemous label words is provided, which may reduce verbalizer quality",
+    "point_005": "No runtime, efficiency, or scalability analysis. Aggregating logits over multiple neighbors entails computational overhead not quantified or compared to baseline prompting methods",
+    "point_006": "Unclear handling of multiword label names and lack of error analysis. The approach to multiword labels is vaguely described without examples or detailed algorithms; no qualitative or error analyses are provided",
+    "point_007": "Experiments restricted to English and standard benchmarks. All evaluations are in English; applicability to multilingual or domain-specific label sets is untested"
+  }
 }

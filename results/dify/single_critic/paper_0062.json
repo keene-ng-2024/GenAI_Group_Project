@@ -1,34 +1,71 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks a thorough comparison or discussion of prior automated prompt search or tuning methods, such as AutoPrompt or gradient-based approaches, which weakens the novelty claim.",
-    "point_002": "The methodology depends on providing demonstration input-output pairs for candidate instruction generation, but the impact of the number and quality of these pairs is not systematically analyzed or clearly stated.",
-    "point_003": "The scoring function evaluation is limited to execution accuracy and log-probability metrics without exploring other potentially more informative metrics, missing an opportunity to better understand scoring design.",
-    "point_004": "Evaluations do not include comparisons against fine-tuning or state-of-the-art soft prompt tuning baselines, limiting understanding of APE's relative performance against competitive methods.",
-    "point_005": "The observed poor transferability of prompts across different LLMs is only superficially analyzed without deeper experimental investigation or mitigation strategies.",
-    "point_006": "Claims regarding cost efficiency of larger aligned LLMs generating shorter instructions are asserted without detailed quantitative analysis of instruction lengths or cost per token trade-offs.",
-    "point_007": "Key hyperparameters and termination criteria for the iterative Monte Carlo search procedure are not clearly detailed or are relegated to the appendix, hindering reproducibility.",
-    "point_008": "The explanation of forward versus reverse prompt generation templates is unclear and would benefit from explicit examples clarifying how and when each is used."
-  },
-  "summary": "This paper presents Automatic Prompt Engineer (APE), a novel algorithm that frames instruction generation for large language models as a black-box optimization problem solved via iterative proposal generation and scoring by LLMs themselves. APE uses demonstration input-output pairs to generate candidate instructions, scores them by execution accuracy or log-probability, and iteratively refines prompts to find high-quality natural language instructions that outperform human-engineered prompts on a wide range of NLP tasks, including zero-shot, few-shot, chain-of-thought reasoning, and truthfulness control. Extensive experiments demonstrate human-level or better performance across multiple benchmarks and provide insights on model size, scoring functions, and cost efficiency. However, the paper lacks thorough comparisons to existing automated prompt tuning methods, detailed analysis of data dependencies and scoring choices, and deeper evaluations of cross-model prompt transfer and computational costs.",
-  "strengths": [
-    "Novel framing of prompt generation as natural language program synthesis via black-box optimization guided by LLMs.",
-    "Comprehensive empirical evaluation showing human-level or better performance on diverse NLP tasks and benchmarks.",
-    "Versatile applications demonstrated including zero-shot chain-of-thought prompt optimization and controlling model behavior for truthfulness and informativeness.",
-    "Detailed analysis of factors affecting performance such as proposal distribution, scoring metrics, model scale, and iteration effects."
-  ],
-  "weaknesses": [
-    "Insufficient comparison to prior automated prompt search and tuning methods, limiting novelty claims.",
-    "Hidden data dependency on demonstration input-output pairs without systematic analysis of their impact.",
-    "Lack of detailed reporting on hyperparameters, compute resources, and runtime impeding reproducibility and practical assessment.",
-    "Limited analysis of cross-LLM prompt transfer failures and absence of mitigation strategies."
-  ],
-  "questions": [
-    "How sensitive is APE's performance to the number and quality of demonstration input-output pairs used for proposal generation?",
-    "Could incorporating alternative or more sophisticated scoring functions improve prompt selection beyond execution accuracy and log-probability?",
-    "How does APE compare empirically to state-of-the-art soft prompt tuning or fine-tuning methods on the same tasks?",
-    "Are there strategies to improve the transferability of generated prompts across different LLM architectures or sizes?"
-  ],
   "paper_id": "paper_0062",
-  "system": "dify",
-  "title": "Large Language Models are Human-Level Prompt Engineers"
+  "title": "Large Language Models are Human-Level Prompt Engineers",
+  "platform": "dify_single_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 51.74,
+  "structured": {
+    "summary": "The paper presents Automatic Prompt Engineer (APE), a black-box optimization framework that uses large language models to automatically generate and refine natural language instructions (prompts) for downstream tasks. By iteratively proposing, scoring, and selecting candidate instructions, APE achieves human-level or better performance on a variety of NLP benchmarks without requiring gradient access or model fine-tuning.",
+    "strengths": [
+      {
+        "point": "Novel framing of prompt generation as natural language program synthesis solved via black-box optimization",
+        "evidence": "APE formulates instruction generation as maximizing expected task performance over candidate instructions using LLMs for proposal and scoring."
+      },
+      {
+        "point": "Empirical validation across diverse tasks including BIG-Bench, chain-of-thought prompting, and TruthfulQA",
+        "evidence": "APE-generated prompts outperform human and greedy baselines on 24 NLP tasks, improve few-shot learning, and discover effective chain-of-thought triggers."
+      },
+      {
+        "point": "Use of instruction-tuned large LLMs as both proposal and scoring engines without gradient fine-tuning",
+        "evidence": "APE treats LLMs as black-boxes, leveraging their generative and scoring capabilities to synthesize prompts efficiently."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison and positioning relative to prior black-box prompt tuning and auto-prompting methods",
+        "evidence": "Related work section lacks detailed distinctions from contemporaneous prompt tuning approaches like Lester et al. (2021) and AutoPrompt (Shin et al., 2020)."
+      },
+      {
+        "point": "Limited ablation and analysis of iterative search benefits and scoring function choices",
+        "evidence": "Iterative refinement yields only marginal gains without detailed exploration of iteration counts or task-specific benefits; scoring metrics beyond accuracy are not deeply examined."
+      },
+      {
+        "point": "Reproducibility concerns due to missing hyperparameter details and exact prompt templates",
+        "evidence": "Key parameters like numbers of proposals, scoring samples, and adaptive scoring algorithms are not fully specified; example prompt templates are absent."
+      },
+      {
+        "point": "Evaluation limited to NLP tasks and reliance on large instruction-tuned LLMs limits generalizability",
+        "evidence": "Performance drops or untested scenarios on smaller or non-instruction-tuned models and non-NLP tasks remain unexplored."
+      },
+      {
+        "point": "Lack of human evaluation on generated instructions and failure mode analysis",
+        "evidence": "No qualitative assessment of fluency, interpretability, or potential hallucinations in instructions; failure cases or misleading prompts are not discussed."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does APE compare quantitatively and qualitatively to existing black-box prompt tuning methods?",
+        "motivation": "Clarifying novelty and advantages over prior approaches is crucial for understanding the contribution and practical benefits."
+      },
+      {
+        "question": "Can the method be effectively adapted to smaller or non-instruction-tuned LLMs, and how does model scale impact cost-efficiency?",
+        "motivation": "Determining generalizability and cost-effectiveness is important for broader applicability beyond large commercial models."
+      },
+      {
+        "question": "What are the detailed mechanisms and thresholds used in adaptive scoring, and how do they affect search efficiency?",
+        "motivation": "Understanding adaptive scoring is key to reproducing and potentially improving the method's efficiency."
+      },
+      {
+        "question": "How robust are APE-generated instructions to ambiguous or low-resource tasks, and what failure modes might arise?",
+        "motivation": "Identifying limitations and risks is essential for safe deployment and further development."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison and positioning relative to prior black-box prompt tuning and auto-prompting methods. Related work section lacks detailed distinctions from contemporaneous prompt tuning approaches like Lester et al. (2021) and AutoPrompt (Shin et al., 2020)",
+    "point_002": "Limited ablation and analysis of iterative search benefits and scoring function choices. Iterative refinement yields only marginal gains without detailed exploration of iteration counts or task-specific benefits; scoring metrics beyond accuracy are not deeply examined",
+    "point_003": "Reproducibility concerns due to missing hyperparameter details and exact prompt templates. Key parameters like numbers of proposals, scoring samples, and adaptive scoring algorithms are not fully specified; example prompt templates are absent",
+    "point_004": "Evaluation limited to NLP tasks and reliance on large instruction-tuned LLMs limits generalizability. Performance drops or untested scenarios on smaller or non-instruction-tuned models and non-NLP tasks remain unexplored",
+    "point_005": "Lack of human evaluation on generated instructions and failure mode analysis. No qualitative assessment of fluency, interpretability, or potential hallucinations in instructions; failure cases or misleading prompts are not discussed"
+  }
 }

@@ -167,7 +167,7 @@ def run_agentic_critique(
 
     # Prepare paper text
     title = paper.get("title", paper_id)
-    full_text = paper.get("full_text", "")
+    full_text = paper.get("body_text", paper.get("full_text", ""))
     paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", "")
     if not paper_text:
         paper_text = title

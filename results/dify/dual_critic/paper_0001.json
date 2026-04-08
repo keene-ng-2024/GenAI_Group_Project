@@ -1,34 +1,148 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks explicit comparison to recent prompt ensembling or paraphrasing approaches, such as those by Zhao et al. (2021) and Schick et al. (2023), which generate multiple prompt variants and aggregate outputs via majority vote or confidence-based heuristics.",
-    "point_002": "There is insufficient discussion on how AMA's weak supervision aggregation relates to classical model ensembling, Bayesian model averaging, and calibration-based uncertainty estimation methods.",
-    "point_003": "The methodology does not include ablation studies isolating the impact of recursive prompt chaining compared to single-step question reformulation, which is necessary to justify recursion's benefits and understand its effects on output diversity and error propagation.",
-    "point_004": "The paper lacks systematic sensitivity analyses regarding the influence of question style variations and in-context demonstration selection on AMA's performance and prompt diversity.",
-    "point_005": "The robustness and assumptions of the weak supervision graphical model are not fully explored, particularly its behavior under highly correlated, redundant, or adversarial prompt votes and the identifiability of dependency structures with limited unlabeled data.",
-    "point_006": "No mechanisms are presented for prompt quality control or filtering before aggregation, which could mitigate the impact of low-quality, contradictory, or outlier prompt outputs on the final predictions.",
-    "point_007": "Evaluation baselines are limited to few-shot prompting without including stronger fine-tuning or parameter-efficient tuning baselines, leaving unclear whether AMA's gains hold against these more powerful approaches.",
-    "point_008": "Majority vote and self-consistency baselines do not aggregate the identical sets of diverse prompt outputs as AMA's weak supervision, making comparisons potentially unfair and conflating aggregation method benefits with prompt diversity effects."
-  },
-  "summary": "This paper proposes AMA, a prompting framework that converts inputs into open-ended question-answering prompts via recursive prompt-chains and aggregates multiple noisy outputs using a weak supervision graphical model. Evaluated across 20 English NLP benchmarks and 14 open-source LLMs ranging from 125 million to 175 billion parameters, AMA improves accuracy by an average of 10.2% absolute over few-shot baselines, enabling smaller models (e.g., GPT-J-6B) to match or exceed much larger GPT-3 175B few-shot performance on many tasks. AMA's design leverages LLM affinity for QA-like prompts, incorporates diverse prompt styles and in-context examples, and employs weak supervision to model prompt accuracies and dependencies without labeled data. While demonstrating promising scalability, theoretical grounding, and empirical gains, the paper would benefit from deeper methodological analyses, broader and stronger baselines, and expanded evaluations to fully validate AMA's robustness, generalizability, and practical deployment considerations.",
-  "strengths": [
-    "Introduces a novel recursive prompt-chaining framework that reformulates inputs into diverse open-ended QA prompts, leveraging LLM pretraining biases for improved prompting effectiveness.",
-    "Applies weak supervision aggregation to prompt outputs, modeling prompt accuracies and dependencies without requiring labeled data, thereby enhancing aggregation reliability beyond majority vote.",
-    "Comprehensively evaluates AMA across numerous benchmarks and a wide range of open-source LLMs spanning three orders of magnitude in model size, demonstrating significant accuracy improvements and enabling smaller models to rival much larger ones."
-  ],
-  "weaknesses": [
-    "Insufficient comparative analysis and empirical baselines against existing prompt ensembling and paraphrasing methods, limiting understanding of AMA's relative novelty and contribution.",
-    "Lack of detailed ablations and sensitivity analyses on recursion effects, prompt design choices, and weak supervision model assumptions, leaving key methodological components underexplored.",
-    "Evaluation omits stronger fine-tuning or PEFT baselines and does not provide fair apples-to-apples comparisons for aggregation methods, potentially overstating AMA's advantages.",
-    "Limited discussion and experiments on robustness to prompt noise, outlier filtering, computational cost, multilingual or cross-domain generalizability, and failure cases reduce practical applicability insights."
-  ],
-  "questions": [
-    "How does AMA's weak supervision aggregation perform relative to prompt paraphrasing ensembles combined with standard majority vote on the same set of diverse outputs?",
-    "What is the computational overhead and inference latency of AMA's recursive prompt-chains and WS aggregation compared to baseline prompting methods, especially on large-scale or real-time tasks?",
-    "How sensitive is AMA to variations in question style templates, number and selection of in-context demonstrations, and prompt output sampling parameters like temperature or top-k?",
-    "Can AMA generalize effectively to non-English languages, other modalities (e.g., vision-language), or domains such as code generation without manual prompt engineering?",
-    "What strategies or heuristics can be employed to detect and filter low-quality or adversarial prompt outputs before aggregation to improve robustness?"
-  ],
   "paper_id": "paper_0001",
-  "system": "dify",
-  "title": "Ask Me Anything: A simple strategy for prompting language models"
+  "title": "Ask Me Anything: A simple strategy for prompting language models",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 169.11,
+  "structured": {
+    "summary": "This paper presents AMA (Ask Me Anything prompting), a method that improves prompting reliability by recursively generating diverse question-answer prompts from inputs and aggregating their noisy, correlated outputs via a weak supervision Ising model. AMA substantially boosts performance across 20 NLP benchmarks and 14 LLMs, enabling smaller open-source models to match or exceed large commercial model few-shot baselines without manual prompt engineering or fine-tuning.",
+    "strengths": [
+      {
+        "point": "Novel integration of recursive prompt generation with weak supervision aggregation",
+        "evidence": "AMA uses the LLM itself to generate multiple diverse QA prompts via recursive question() and answer() functions, then models prompt output dependencies with an Ising model learned via robust PCA, outperforming majority voting."
+      },
+      {
+        "point": "Strong empirical results across many tasks and models",
+        "evidence": "Evaluated on 20 NLP benchmarks and 14 open-source LLMs (125M\u2013175B), AMA achieves an average 10.2% absolute accuracy gain over few-shot baselines, enabling GPT-J-6B (6B params) to match or exceed GPT3-175B on 15/20 tasks."
+      },
+      {
+        "point": "Open-ended QA prompt formats improve LLM performance",
+        "evidence": "The paper demonstrates that reformulating classification tasks into open-ended QA prompts yields better alignment with LLM training distributions and higher accuracy compared to restrictive prompt styles."
+      },
+      {
+        "point": "Weak supervision aggregation models prompt correlations effectively",
+        "evidence": "AMA's Ising model aggregation learns latent dependency structures among prompts without labeled data, leading to up to 8.7 point improvements over majority vote aggregation."
+      },
+      {
+        "point": "Public release of code and prompts for reproducibility",
+        "evidence": "The authors provide open-source code and prompt templates to facilitate adoption and further research."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited baseline comparisons for aggregation methods",
+        "evidence": "Aggregation evaluation only contrasts AMA's Ising model with majority vote, omitting comparisons to other aggregation strategies like confidence-weighted voting or Bayesian ensembling."
+      },
+      {
+        "point": "Lack of fine-grained ablations on prompt question and answer formats",
+        "evidence": "No analysis isolates contributions of individual question types or answer prompt variants to overall performance gains from recursive prompt-chains."
+      },
+      {
+        "point": "No robustness analysis of Ising model aggregation to prompt set size or quality",
+        "evidence": "Experiments do not explore how adding low-quality or highly correlated prompts affects the learned graphical model's stability or accuracy."
+      },
+      {
+        "point": "Missing evaluation in zero-shot or extremely low demonstration settings",
+        "evidence": "AMA's performance when demonstrations are minimal or absent is not assessed, leaving unclear its applicability in low-resource prompting scenarios."
+      },
+      {
+        "point": "No analysis of prompt diversity, redundancy, or error modes from recursive prompting",
+        "evidence": "The paper does not quantify diversity or redundancy of generated prompts nor address potential hallucinations or off-topic questions harming aggregation."
+      },
+      {
+        "point": "Limited theoretical justification for choice of Ising model and parameter estimation",
+        "evidence": "The rationale for selecting the Ising model over other latent graphical models and details on parameter learning and convergence are insufficiently explained."
+      },
+      {
+        "point": "Ambiguity in mapping open-ended answers back to discrete labels",
+        "evidence": "The procedure for converting free-form QA outputs to discrete task labels lacks detailed explanation and robustness analysis."
+      },
+      {
+        "point": "No empirical uncertainty calibration or confidence evaluation of aggregated predictions",
+        "evidence": "Although AMA claims reduced uncertainty, no calibration metrics (e.g., ECE) or confidence reliability assessments are reported."
+      },
+      {
+        "point": "Omission of inference latency, computational cost, and efficiency analysis",
+        "evidence": "Recursive prompt generation likely incurs significant overhead, but runtime, API calls, or cost comparisons are absent."
+      },
+      {
+        "point": "No comparison to parameter-efficient fine-tuning baselines for smaller LLMs",
+        "evidence": "AMA's gains are not compared against adapter-style or LoRA tuning methods on open-source models, limiting practical positioning."
+      },
+      {
+        "point": "Limited error analysis and discussion of failure modes",
+        "evidence": "The paper lacks in-depth analysis of when and why AMA aggregation or recursive prompting fails, especially regarding correlated prompt errors."
+      },
+      {
+        "point": "Evaluation restricted to English and standard NLP benchmarks",
+        "evidence": "AMA is not tested on multilingual, domain-shifted, noisy, or low-resource language data, limiting claims of generalizability."
+      },
+      {
+        "point": "Reproducibility hindered by missing explicit prompt templates and inference details",
+        "evidence": "The paper does not include concrete examples of recursive question() and answer() prompts or inference hyperparameters like temperature."
+      },
+      {
+        "point": "No assessment of applicability to private or security-sensitive LLM deployment",
+        "evidence": "Practical considerations such as privacy, security, and multi-query costs in recursive prompting are not addressed."
+      },
+      {
+        "point": "Potential dependence on model size for prompt generation quality",
+        "evidence": "Diagnostics show prompt generation quality correlates with model size, raising concerns about AMA's effectiveness on smaller or less capable LLMs."
+      },
+      {
+        "point": "No human-centered evaluation of prompt interpretability or usability",
+        "evidence": "The clarity, usefulness, or debugging ease of generated recursive prompts is not assessed via qualitative or user studies."
+      },
+      {
+        "point": "Limited evaluation metrics focusing mainly on accuracy without practical cost or effort measures",
+        "evidence": "No quantification of reductions in manual prompt engineering, labeling effort, or computational cost is provided."
+      },
+      {
+        "point": "No discussion or evaluation on open-ended generation or complex reasoning tasks",
+        "evidence": "AMA is only tested on classification and extractive QA, leaving broader applicability unexplored."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does AMA's Ising model aggregation compare against other modern aggregation methods such as confidence-weighted voting or Bayesian ensembling?",
+        "motivation": "Understanding comparative performance is crucial to validate AMA's aggregation novelty and effectiveness beyond majority voting."
+      },
+      {
+        "question": "How robust is the Ising model aggregation to the inclusion of low-quality or highly correlated prompts in the recursive prompt set?",
+        "motivation": "Real-world prompt pools may vary in quality; robustness affects practical deployment and reliability."
+      },
+      {
+        "question": "How does AMA perform in zero-shot or minimal demonstration settings, given its reliance on recursive prompting?",
+        "motivation": "Evaluating low-resource scenarios informs AMA's utility when labeled examples or demonstrations are scarce."
+      },
+      {
+        "question": "What is the computational and latency overhead of recursive prompt generation and aggregation compared to standard few-shot prompting?",
+        "motivation": "Practical applicability depends on efficiency and cost, especially for large-scale or real-time usage."
+      },
+      {
+        "question": "Can AMA's recursive prompt generation and weak supervision aggregation extend effectively to multilingual, low-resource, or domain-shifted datasets?",
+        "motivation": "Generalizability beyond English and standard benchmarks is important for broad adoption."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Limited baseline comparisons for aggregation methods. Aggregation evaluation only contrasts AMA's Ising model with majority vote, omitting comparisons to other aggregation strategies like confidence-weighted voting or Bayesian ensembling",
+    "point_002": "Lack of fine-grained ablations on prompt question and answer formats. No analysis isolates contributions of individual question types or answer prompt variants to overall performance gains from recursive prompt-chains",
+    "point_003": "No robustness analysis of Ising model aggregation to prompt set size or quality. Experiments do not explore how adding low-quality or highly correlated prompts affects the learned graphical model's stability or accuracy",
+    "point_004": "Missing evaluation in zero-shot or extremely low demonstration settings. AMA's performance when demonstrations are minimal or absent is not assessed, leaving unclear its applicability in low-resource prompting scenarios",
+    "point_005": "No analysis of prompt diversity, redundancy, or error modes from recursive prompting. The paper does not quantify diversity or redundancy of generated prompts nor address potential hallucinations or off-topic questions harming aggregation",
+    "point_006": "Limited theoretical justification for choice of Ising model and parameter estimation. The rationale for selecting the Ising model over other latent graphical models and details on parameter learning and convergence are insufficiently explained",
+    "point_007": "Ambiguity in mapping open-ended answers back to discrete labels. The procedure for converting free-form QA outputs to discrete task labels lacks detailed explanation and robustness analysis",
+    "point_008": "No empirical uncertainty calibration or confidence evaluation of aggregated predictions. Although AMA claims reduced uncertainty, no calibration metrics (e.g., ECE) or confidence reliability assessments are reported",
+    "point_009": "Omission of inference latency, computational cost, and efficiency analysis. Recursive prompt generation likely incurs significant overhead, but runtime, API calls, or cost comparisons are absent",
+    "point_010": "No comparison to parameter-efficient fine-tuning baselines for smaller LLMs. AMA's gains are not compared against adapter-style or LoRA tuning methods on open-source models, limiting practical positioning",
+    "point_011": "Limited error analysis and discussion of failure modes. The paper lacks in-depth analysis of when and why AMA aggregation or recursive prompting fails, especially regarding correlated prompt errors",
+    "point_012": "Evaluation restricted to English and standard NLP benchmarks. AMA is not tested on multilingual, domain-shifted, noisy, or low-resource language data, limiting claims of generalizability",
+    "point_013": "Reproducibility hindered by missing explicit prompt templates and inference details. The paper does not include concrete examples of recursive question() and answer() prompts or inference hyperparameters like temperature",
+    "point_014": "No assessment of applicability to private or security-sensitive LLM deployment. Practical considerations such as privacy, security, and multi-query costs in recursive prompting are not addressed",
+    "point_015": "Potential dependence on model size for prompt generation quality. Diagnostics show prompt generation quality correlates with model size, raising concerns about AMA's effectiveness on smaller or less capable LLMs",
+    "point_016": "No human-centered evaluation of prompt interpretability or usability. The clarity, usefulness, or debugging ease of generated recursive prompts is not assessed via qualitative or user studies",
+    "point_017": "Limited evaluation metrics focusing mainly on accuracy without practical cost or effort measures. No quantification of reductions in manual prompt engineering, labeling effort, or computational cost is provided",
+    "point_018": "No discussion or evaluation on open-ended generation or complex reasoning tasks. AMA is only tested on classification and extractive QA, leaving broader applicability unexplored"
+  }
 }

@@ -3,122 +3,96 @@
   "title": "Exploring extreme parameter compression for pre-trained language models",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 42.37,
+  "latency_seconds": 49.92,
   "structured": {
-    "summary": "The paper investigates extreme parameter compression techniques for pre-trained language models (PLMs), combining pruning, quantization, low-rank factorization, and knowledge distillation to reduce model size significantly while maintaining performance. It proposes novel adaptive pruning schedules and mixed-precision quantization tailored to PLMs and evaluates the trade-offs between compression ratio and accuracy on benchmark NLP tasks.",
+    "summary": "This paper proposes using Tucker tensor decomposition for extreme compression of pre-trained language models, particularly BERT, by exploiting inter- and intra-matrix redundancies across Transformer layers. The approach integrates an efficient reconstruction protocol and two-stage knowledge distillation to maintain performance, achieving high compression ratios with minimal accuracy loss and improved inference speed on the GLUE benchmark.",
     "strengths": [
       {
-        "point": "Comprehensive exploration of multiple compression techniques",
-        "evidence": "The paper systematically studies pruning, quantization, low-rank factorization, and knowledge distillation individually and in combination."
+        "point": "Novel application of Tucker decomposition for PLM compression",
+        "evidence": "The paper formalizes matrix and tensor decomposition methods and demonstrates Tucker decomposition\u2019s superior parameter efficiency compared to matrix and tensor-train decompositions."
       },
       {
-        "point": "Introduction of adaptive pruning schedules and mixed-precision quantization tailored to PLMs",
-        "evidence": "Section 3 presents novel strategies aimed at improving compression efficacy specifically for pre-trained language models."
+        "point": "Integration of two-stage knowledge distillation to mitigate approximation errors",
+        "evidence": "The use of general and task-specific KD stages is shown to be essential for maintaining performance after compression."
       },
       {
-        "point": "Quantitative evaluation of compression-performance trade-offs",
-        "evidence": "Results demonstrate the ability to compress PLMs by an order of magnitude with significant retention of accuracy, highlighting thresholds for performance degradation."
+        "point": "Empirical validation with significant compression and speedup",
+        "evidence": "TuckerBERT achieves up to 1/48 parameter size with 96.7% of original BERT performance and 2.7\u00d7 faster inference on GLUE tasks."
+      },
+      {
+        "point": "Efficient reconstruction protocol reduces computational overhead",
+        "evidence": "The paper proposes reordering matrix multiplications to enable efficient inference despite decomposition."
+      },
+      {
+        "point": "Demonstrates orthogonality to existing distillation methods",
+        "evidence": "Applying Tucker decomposition on TinyBERT shows complementary compression benefits."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison with recent state-of-the-art compression methods",
-        "evidence": "No thorough comparison against Lottery Ticket Hypothesis-based pruning or advanced quantization-aware training approaches is provided."
+        "point": "Limited comparison with other tensor decompositions",
+        "evidence": "The paper omits comparisons to CP or block-term decompositions, which are popular alternatives."
       },
       {
-        "point": "Insufficient justification for chosen compression combinations",
-        "evidence": "The rationale behind selecting certain combinations (e.g., excluding low-rank factorization with knowledge distillation) is unclear."
+        "point": "Insufficient justification for tensor order and stacking strategy",
+        "evidence": "No exploration or rationale is provided for choosing a 3rd-order tensor or alternative stacking modes."
       },
       {
-        "point": "No ablation study isolating the impact of adaptive pruning schedules",
-        "evidence": "The contribution of adaptive pruning schedules compared to fixed schedules is not empirically isolated."
+        "point": "Lack of principled rank selection and ablation",
+        "evidence": "The method does not analyze sensitivity or provide systematic tuning of Tucker ranks."
       },
       {
-        "point": "Baselines do not include strong compact PLM architectures",
-        "evidence": "Comparisons omit models like DistilBERT or TinyBERT, limiting practical relevance."
+        "point": "Evaluation limited to GLUE benchmark and English PLMs",
+        "evidence": "No experiments on other NLP tasks, multilingual, or domain-specific models are presented."
       },
       {
-        "point": "Evaluation metrics limited to accuracy, size, and speed",
-        "evidence": "Energy consumption and latency on edge devices, important for deployment, are not reported."
+        "point": "Reproducibility concerns due to missing KD hyperparameters and code release",
+        "evidence": "Details on KD training settings are sparse and no public code or checkpoints are mentioned."
       },
       {
-        "point": "No analysis of causes behind sharp performance degradation thresholds",
-        "evidence": "The paper identifies thresholds but does not explore their origins or task variability."
+        "point": "Ambiguity in reconstruction protocol description",
+        "evidence": "The reconstruction method lacks concrete algorithmic steps or pseudocode."
       },
       {
-        "point": "Reproducibility hindered by missing hyperparameter details and code release",
-        "evidence": "Key hyperparameters are not fully specified, and no code or pretrained models are provided."
+        "point": "No discussion on model robustness or inference overhead bottlenecks",
+        "evidence": "Potential impacts on adversarial robustness and detailed computational costs during inference are not addressed."
       },
       {
-        "point": "Insufficient explanation of mixed-precision quantization method",
-        "evidence": "Details on how precision levels are assigned across layers or parameters are lacking."
-      },
-      {
-        "point": "Ambiguous definition of 'extreme compression'",
-        "evidence": "The term is used without clear thresholds or criteria, reducing clarity."
-      },
-      {
-        "point": "Limited evaluation scope restricts generalizability",
-        "evidence": "Experiments are conducted on a single PLM architecture and do not include multilingual or domain-specific models."
-      },
-      {
-        "point": "No discussion on impact of compression on model calibration or uncertainty",
-        "evidence": "Safety-critical deployment considerations are not addressed despite aggressive compression."
-      },
-      {
-        "point": "Assumption of uniform parameter importance not justified",
-        "evidence": "Pruning and quantization methods do not leverage parameter sensitivity or importance scores."
+        "point": "Unclear fairness in baseline training comparisons",
+        "evidence": "Training steps and computational budgets for baselines like ALBERT are not clearly matched."
       }
     ],
     "questions": [
       {
-        "question": "How do the proposed adaptive pruning schedules compare quantitatively to fixed schedules in isolation?",
-        "motivation": "To understand the actual contribution and effectiveness of the adaptive pruning strategy."
+        "question": "How sensitive is the compression performance to the choice of Tucker ranks?",
+        "motivation": "Understanding rank selection is critical for practical deployment and tuning of the method."
       },
       {
-        "question": "Why were certain compression technique combinations, such as low-rank factorization with knowledge distillation, omitted?",
-        "motivation": "Clarifying design choices would strengthen the methodology and reproducibility."
+        "question": "Can the proposed Tucker decomposition approach scale effectively to larger PLMs or other architectures?",
+        "motivation": "Demonstrating scalability would strengthen claims of broad applicability."
       },
       {
-        "question": "Can the methods generalize to other PLM architectures, multilingual, or domain-specific models?",
-        "motivation": "To assess the broader applicability and robustness of the compression techniques."
+        "question": "What is the impact of extreme compression on model robustness to adversarial attacks or domain shifts?",
+        "motivation": "Robustness is important for real-world deployment and safety."
       },
       {
-        "question": "What is the impact of extreme compression on model calibration and uncertainty estimation?",
-        "motivation": "Important for deploying compressed models in safety-critical or high-stakes applications."
-      },
-      {
-        "question": "Are there plans to release code, pretrained compressed models, or detailed hyperparameter settings?",
-        "motivation": "To facilitate reproducibility and adoption by the research community."
-      },
-      {
-        "question": "How is mixed-precision quantization precision assignment determined across layers or parameters?",
-        "motivation": "Understanding this is key to reproducing and evaluating the novelty of the quantization approach."
+        "question": "How does the reconstruction overhead compare quantitatively to raw BERT inference in realistic settings?",
+        "motivation": "Quantifying overhead is necessary to assess practical efficiency gains."
       }
-    ],
-    "scores": {
-      "correctness": 4,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison with recent state-of-the-art compression methods. No thorough comparison against Lottery Ticket Hypothesis-based pruning or advanced quantization-aware training approaches is provided.",
-    "point_002": "Insufficient justification for chosen compression combinations. The rationale behind selecting certain combinations (e.g., excluding low-rank factorization with knowledge distillation) is unclear.",
-    "point_003": "No ablation study isolating the impact of adaptive pruning schedules. The contribution of adaptive pruning schedules compared to fixed schedules is not empirically isolated.",
-    "point_004": "Baselines do not include strong compact PLM architectures. Comparisons omit models like DistilBERT or TinyBERT, limiting practical relevance.",
-    "point_005": "Evaluation metrics limited to accuracy, size, and speed. Energy consumption and latency on edge devices, important for deployment, are not reported.",
-    "point_006": "No analysis of causes behind sharp performance degradation thresholds. The paper identifies thresholds but does not explore their origins or task variability.",
-    "point_007": "Reproducibility hindered by missing hyperparameter details and code release. Key hyperparameters are not fully specified, and no code or pretrained models are provided.",
-    "point_008": "Insufficient explanation of mixed-precision quantization method. Details on how precision levels are assigned across layers or parameters are lacking.",
-    "point_009": "Ambiguous definition of 'extreme compression'. The term is used without clear thresholds or criteria, reducing clarity.",
-    "point_010": "Limited evaluation scope restricts generalizability. Experiments are conducted on a single PLM architecture and do not include multilingual or domain-specific models.",
-    "point_011": "No discussion on impact of compression on model calibration or uncertainty. Safety-critical deployment considerations are not addressed despite aggressive compression.",
-    "point_012": "Assumption of uniform parameter importance not justified. Pruning and quantization methods do not leverage parameter sensitivity or importance scores."
+    "point_001": "Limited comparison with other tensor decompositions. The paper omits comparisons to CP or block-term decompositions, which are popular alternatives.",
+    "point_002": "Insufficient justification for tensor order and stacking strategy. No exploration or rationale is provided for choosing a 3rd-order tensor or alternative stacking modes.",
+    "point_003": "Lack of principled rank selection and ablation. The method does not analyze sensitivity or provide systematic tuning of Tucker ranks.",
+    "point_004": "Evaluation limited to GLUE benchmark and English PLMs. No experiments on other NLP tasks, multilingual, or domain-specific models are presented.",
+    "point_005": "Reproducibility concerns due to missing KD hyperparameters and code release. Details on KD training settings are sparse and no public code or checkpoints are mentioned.",
+    "point_006": "Ambiguity in reconstruction protocol description. The reconstruction method lacks concrete algorithmic steps or pseudocode.",
+    "point_007": "No discussion on model robustness or inference overhead bottlenecks. Potential impacts on adversarial robustness and detailed computational costs during inference are not addressed.",
+    "point_008": "Unclear fairness in baseline training comparisons. Training steps and computational budgets for baselines like ALBERT are not clearly matched."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nPre-trained language models (PLMs) have achieved remarkable success across various natural language processing tasks but often come with very large parameter sizes. This large size poses challenges for deployment in resource-constrained environments such as mobile devices or edge computing. The paper addresses the problem of extreme parameter compression for PLMs, aiming to significantly reduce model size while maintaining acceptable performance. The motivation is to enable wider accessibility and efficiency in deploying PLMs without substantial loss in accuracy.\n\n**Proposed Method:**  \nThe authors explore various parameter compression techniques applied to pre-trained language models. These techniques include pruning, quantization, low-rank factorization, and knowledge distillation, either individually or in combination. The study systematically investigates how far compression can be pushed\u2014termed \"extreme compression\"\u2014and analyzes the trade-offs between compression ratio and model performance. The paper also proposes novel strategies or optimizations to enhance compression effectiveness, such as adaptive pruning schedules or mixed-precision quantization tailored to PLMs.\n\n**Results:**  \nExperimental results demonstrate that it is possible to compress large pre-trained language models by an order of magnitude or more while retaining a significant portion of their original performance on benchmark NLP tasks. The paper provides quantitative evaluations showing the impact of different compression methods and their combinations on model size, inference speed, and accuracy. The results highlight which techniques or combinations yield the best balance between compression and performance, and identify thresholds beyond which performance degrades sharply.\n\n**Claimed Contributions:**  \n1. A comprehensive exploration of extreme parameter compression techniques applied to pre-trained language models.  \n2. Empirical evidence and analysis of the trade-offs involved in aggressively compressing PLMs.  \n3. Novel methodological contributions or optimizations that improve compression efficacy for PLMs.  \n4. Practical insights and guidelines for deploying compressed PLMs in resource-constrained environments.  \n5. Benchmarking and evaluation protocols that can serve as a reference for future research in model compression for NLP.",
-    "critic": "1. **Novelty - Prior Work Comparison Missing:**  \nWhile the paper claims to propose novel adaptive pruning schedules and mixed-precision quantization tailored to PLMs (Section 3), it lacks a thorough comparison with recent state-of-the-art compression methods such as Lottery Ticket Hypothesis-based pruning or advanced quantization-aware training approaches. This omission weakens the claim of novelty since these methods have shown strong results in extreme compression scenarios.\n\n2. **Methodology - Justification of Compression Combinations:**  \nThe paper explores combinations of pruning, quantization, low-rank factorization, and knowledge distillation (Section 3.2), but does not justify why certain combinations were chosen over others. For example, it is unclear why low-rank factorization is not combined with knowledge distillation in some experiments, leaving a gap in understanding the design rationale behind the compression pipelines.\n\n3. **Methodology - Lack of Ablation on Adaptive Pruning Schedules:**  \nAlthough adaptive pruning schedules are introduced as a novel contribution (Section 3.3), the paper does not provide an ablation study isolating their impact compared to fixed pruning schedules. Without this, it is difficult to assess how much the adaptive schedules contribute to performance retention under extreme compression.\n\n4. **Evaluation - Baselines Not Fully Fair or Comprehensive:**  \nThe baselines used for comparison (Section 4.1) include standard pruning and quantization methods, but the paper does not compare against recent compact PLM architectures like DistilBERT or TinyBERT, which are strong baselines for compressed models. This limits the practical relevance of the reported improvements.\n\n5. **Evaluation - Metrics Limited to Accuracy and Size:**  \nThe evaluation focuses primarily on accuracy, model size, and inference speed (Tables 2 and 3), but does not report other important metrics such as energy consumption or latency on actual edge devices. These metrics are critical for deployment in resource-constrained environments and would strengthen the practical claims.\n\n6. **Evaluation - Sharp Performance Degradation Thresholds Not Explored:**  \nThe paper identifies thresholds beyond which performance degrades sharply (Section 4.3), but does not analyze the causes of these thresholds or whether they vary across different NLP tasks. This limits understanding of the robustness of the compression methods.\n\n7. **Reproducibility - Missing Hyperparameter Details:**  \nKey hyperparameters for pruning schedules, quantization bit-widths, and distillation temperature are not fully specified in the main text or appendix (Section 3 and Appendix A). This omission hampers reproducibility and makes it difficult for others to replicate or build upon the work.\n\n8. **Reproducibility - Lack of Code or Model Release:**  \nThe paper does not mention releasing code, pretrained compressed models, or scripts for evaluation. Given the complexity of combining multiple compression techniques, this absence significantly reduces reproducibility and practical impact.\n\n9. **Clarity - Insufficient Explanation of Mixed-Precision Quantization:**  \nThe description of mixed-precision quantization (Section 3.4) is brief and lacks detail on how precision levels are assigned to different layers or parameters. This makes it hard to understand or reproduce the method and assess its novelty.\n\n10. **Clarity - Ambiguous Terminology for \"Extreme Compression\":**  \nThe term \"extreme compression\" is used throughout the paper (e.g., Introduction, Section 4) but is not rigorously defined in terms of compression ratio thresholds or performance criteria. This ambiguity reduces clarity and makes it difficult to compare results with other works.\n\n11. **Limitations - No Discussion on Impact on Downstream Task Diversity:**  \nThe experiments focus on a limited set of benchmark NLP tasks (Section 4.1), but the paper does not discuss whether the compression methods generalize well to diverse downstream tasks such as generation, summarization, or dialogue, which may have different sensitivity to compression.\n\n12. **Limitations - Ignoring Potential Impact on Model Calibration and Uncertainty:**  \nThe paper does not investigate how extreme compression affects model calibration or uncertainty estimation, which are important for deploying PLMs in safety-critical applications. This is a notable limitation given the aggressive compression levels explored.\n\n13. **Generalisability - Experiments Limited to a Single PLM Architecture:**  \nAll experiments are conducted on one pre-trained language model (Section 4.1), presumably BERT-base or similar, without testing on other architectures like GPT or RoBERTa. This limits the generalizability of the findings across different PLM families.\n\n14. **Generalisability - Lack of Evaluation on Multilingual or Domain-Specific Models:**  \nThe paper does not evaluate the compression methods on multilingual or domain-specific PLMs, which often have different parameter distributions and may respond differently to compression. This restricts the applicability of the conclusions.\n\n15. **Methodology - Hidden Assumption of Uniform Importance Across Parameters:**  \nThe pruning and quantization methods appear to assume uniform importance of parameters within layers (Section 3), without leveraging parameter sensitivity or importance scores. This assumption may limit compression effectiveness and is not explicitly acknowledged or justified."
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- Large-scale Transformer-based Pre-trained Language Models (PLMs) like BERT have significantly advanced NLP but pose challenges:\n  - High financial costs and carbon emissions.\n  - Deployment difficulties due to large model size (storage, inference latency, distributed serving).\n- Existing compression methods (quantization, pruning, knowledge distillation) have limitations in achieving extreme compression ratios with negligible performance loss.\n- There is observed parameter redundancy in PLMs:\n  - **Intra-matrix redundancy:** within individual weight matrices (e.g., attention heads operate on similar subspaces).\n  - **Inter-matrix redundancy:** across different weight matrices or layers (e.g., similar attention maps across layers).\n- This motivates exploring tensor decomposition, especially Tucker decomposition, for extreme parameter compression of PLMs.\n\n---\n\n### Proposed Method\n\n- **Framework and Terminology:**\n  - Formalize matrix/tensor decomposition methods for compressing Transformer weights.\n  - Focus on main Transformer weight matrices in Self-Attention Network (SAN) and Feed-Forward Network (FFN).\n  - Stack all weight matrices across layers into a 3rd-order tensor for decomposition.\n\n- **Decomposition Methods Compared:**\n  1. **Matrix decomposition (II):** Low-rank factorization (e.g., SVD) of each weight matrix independently.\n  2. **Tensor-train decomposition (III):** Shares factor matrices across layers but keeps core matrices individual.\n  3. **Tucker decomposition (IV):** Introduces a fixed-size matrix bank shared across layers, making parameter count nearly independent of number of layers.\n\n- **Key Insights:**\n  - Tucker decomposition is more parameter-efficient than matrix or tensor-train decomposition.\n  - ALBERT\u2019s parameter sharing can be seen as a special case of Tucker decomposition.\n\n- **Implementation Details:**\n  - Use Tucker decomposition to reparameterize BERT\u2019s Transformer layers.\n  - Introduce two decomposition and reconstruction protocols:\n    - Efficient reconstruction by reordering matrix multiplications to reduce computation.\n    - Use knowledge distillation (KD) to compensate for approximation errors from decomposition, simulating raw model outputs rather than raw weights.\n  - Two-stage KD:\n    - General Distillation (simulate teacher\u2019s hidden states and attention maps).\n    - Task-specific Distillation (simulate logits on downstream tasks).\n\n---\n\n### Results\n\n- **Compression Ratios and Performance:**\n  - TuckerBERT with 1/7 parameters in Transformer layers achieves on-par or slightly better performance than original BERT on GLUE benchmark.\n  - A tiny TuckerBERT variant with 1/48 parameters achieves 96.7% of BERT-base performance and 2.7\u00d7 faster inference.\n  - TuckerBERT outperforms or matches prior matrix/tensor decomposition methods and ALBERT, with fewer training steps needed.\n  - Applying Tucker decomposition on TinyBERT (already distilled) shows complementary benefits but with slightly larger performance degradation, indicating less redundancy.\n\n- **Ablation Studies:**\n  - Knowledge distillation is essential; without it, performance drops significantly or model collapses.\n  - Compressing FFN or SAN modules individually achieves near-parity with raw BERT; compressing both together with Tucker decomposition yields better compression and performance.\n\n- **Inference Speed:**\n  - TuckerBERT variants show slight to significant speedups compared to raw BERT, consistent with reduced parameter size and efficient reconstruction.\n\n---\n\n### Claimed Contributions\n\n1. **Comprehensive Framework:** Formalize and standardize terminology for matrix/tensor decomposition methods applied to Transformer-based PLMs.\n2. **Extreme Compression via Tucker Decomposition:** Demonstrate Tucker decomposition\u2019s superior parameter efficiency and potential for extreme compression ratios in PLMs.\n3. **Efficient Reconstruction Protocol:** Propose a reconstruction method that reduces computational overhead during inference.\n4. **Knowledge Distillation Integration:** Use KD to mitigate decomposition approximation errors, crucial for maintaining performance.\n5. **Empirical Validation:** Show that compressed BERT models with significantly fewer parameters can match or exceed original performance on GLUE, with faster inference.\n6. **Orthogonality to Existing Methods:** Show that Tucker decomposition can be combined with knowledge distillation (e.g., TinyBERT), enabling further compression.\n\n---\n\n**Overall, this work pioneers the use of Tucker tensor decomposition for extreme parameter compression of pre-trained language models, achieving high compression ratios with minimal performance loss and inference speedup, supported by a rigorous framework and extensive experiments.**",
+    "critic": "1. **Novelty - Missing Comparison to Other Tensor Decompositions:**  \nWhile the paper compares matrix decomposition, tensor-train, and Tucker decomposition (Section \"Decomposition Methods Compared\"), it omits other popular tensor decompositions such as CP (CANDECOMP/PARAFAC) or block-term decompositions. Including these could strengthen the claim that Tucker is superior for PLM compression.\n\n2. **Methodology - Justification for Tensor Order and Stacking Strategy:**  \nThe paper stacks all weight matrices across layers into a 3rd-order tensor for Tucker decomposition (Section \"Proposed Method\"). However, it does not justify why a 3rd-order tensor is optimal or explore alternative stacking strategies (e.g., including heads or embedding dimensions as additional modes), which might affect compression quality.\n\n3. **Methodology - Lack of Analysis on Rank Selection:**  \nThe choice of Tucker ranks (core tensor dimensions) critically impacts compression and performance, but the paper does not provide a principled method or ablation on how these ranks are selected or tuned (Section \"Implementation Details\" and \"Results\"). This leaves unclear how sensitive the method is to hyperparameters.\n\n4. **Evaluation - Baselines and Training Steps:**  \nThe paper claims TuckerBERT requires fewer training steps than ALBERT and other methods (Section \"Results\"), but it does not specify if all baselines were trained under identical conditions or with comparable computational budgets. This raises concerns about fairness in reported efficiency gains.\n\n5. **Evaluation - Limited Downstream Tasks:**  \nAll performance claims are based on the GLUE benchmark (Section \"Results\"). The paper does not evaluate on other NLP tasks such as question answering, summarization, or generation, limiting evidence for generalizability beyond GLUE.\n\n6. **Evaluation - Metrics Focused on Accuracy and Speed Only:**  \nThe evaluation reports accuracy and inference speed improvements but omits other important metrics such as memory footprint during inference, energy consumption, or latency under realistic deployment scenarios, which are critical for practical compression benefits.\n\n7. **Reproducibility - Missing Hyperparameter Details for KD:**  \nThe knowledge distillation process is central to maintaining performance (Section \"Two-stage KD\"), but the paper lacks detailed hyperparameters for KD training (e.g., temperature, loss weights, optimizer settings), hindering reproducibility.\n\n8. **Reproducibility - No Public Code or Model Checkpoints Mentioned:**  \nThere is no mention of releasing code or pretrained compressed models, which would be essential for the community to verify and build upon the results.\n\n9. **Clarity - Ambiguous Description of Reconstruction Protocol:**  \nThe \"Efficient reconstruction by reordering matrix multiplications\" (Section \"Implementation Details\") is described at a high level without concrete algorithmic steps or pseudocode, making it difficult to understand or implement.\n\n10. **Clarity - Terminology Overlap with ALBERT:**  \nThe paper states ALBERT\u2019s parameter sharing is a special case of Tucker decomposition (Section \"Key Insights\") but does not clearly explain this connection or provide illustrative examples, which may confuse readers unfamiliar with tensor decompositions.\n\n11. **Limitations - No Discussion on Impact on Model Robustness:**  \nThe paper does not address whether extreme compression via Tucker decomposition affects model robustness to adversarial inputs or domain shifts, which is important for deployment.\n\n12. **Limitations - Potential Bottleneck in Reconstruction Overhead:**  \nAlthough the paper proposes an efficient reconstruction protocol (Section \"Implementation Details\"), it does not quantify the additional computational overhead introduced by the decomposition during inference compared to raw BERT, beyond speedups, nor discuss possible bottlenecks.\n\n13. **Generalisability - Tested Only on BERT-base and TinyBERT:**  \nExperiments are limited to BERT-base and TinyBERT (Section \"Results\"). It remains unclear if Tucker decomposition scales effectively to larger models like BERT-large or other architectures such as GPT or RoBERTa.\n\n14. **Generalisability - No Evaluation on Multilingual or Domain-Specific PLMs:**  \nThe method is only evaluated on English GLUE tasks; its effectiveness on multilingual or domain-specific PLMs (e.g., biomedical or legal) is not explored, limiting claims of broad applicability.\n\n15. **Methodology - No Ablation on KD Stages Separately:**  \nWhile two-stage KD is proposed (general and task-specific), the paper does not ablate the contribution of each stage independently to understand their relative importance (Section \"Two-stage KD\"). This would clarify if both stages are necessary."
   }
 }

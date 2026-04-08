@@ -3,140 +3,78 @@
   "title": "Improving Language Model Pretraining with Text Structure Information ",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 44.48,
+  "latency_seconds": 47.51,
   "structured": {
-    "summary": "The paper proposes a novel pretraining approach for language models that explicitly incorporates text structure information such as sentences, paragraphs, and discourse segments to enhance representation learning. Experiments show improved downstream task performance over standard pretrained models, suggesting benefits from structure-aware pretraining.",
+    "summary": "This paper proposes Text Structure Prediction (TSP), a novel inter-sentence pretraining task that leverages hierarchical and ordering relationships between sentences to provide richer self-supervised signals. TSP consistently improves language understanding performance across multiple model scales and tasks, outperforming existing inter-sentence objectives, especially at larger scales, while incurring minimal computational overhead.",
     "strengths": [
       {
-        "point": "Addresses a relevant limitation in conventional LM pretraining by integrating explicit text structure.",
-        "evidence": "The paper identifies that typical pretraining treats text as flat token sequences and proposes a framework to incorporate hierarchical structural cues."
+        "point": "Novel inter-sentence pretraining task leveraging richer text structure",
+        "evidence": "TSP defines six classes combining hierarchical (neighboring sentences, same paragraph, same document) and ordering (normal, reversed) relationships, providing more informative signals than classical tasks like NSP or SOP."
       },
       {
-        "point": "Demonstrates empirical gains on multiple downstream NLP tasks.",
-        "evidence": "Reported improvements in text classification, question answering, and natural language inference benchmarks validate the effectiveness of the approach."
+        "point": "Consistent performance gains across scales and tasks",
+        "evidence": "TSP improves over MLM and prior inter-sentence baselines at Small, Base, and Large scales, with largest gains at Large scale, particularly benefiting reasoning and question-answering tasks on SuperGLUE."
       },
       {
-        "point": "Introduces auxiliary tasks and modified masking strategies to leverage structural information during pretraining.",
-        "evidence": "The method includes novel training objectives designed to encourage the model to utilize structure-aware contexts."
+        "point": "Efficient integration with existing pretraining methods",
+        "evidence": "TSP can be learned concurrently with MLM in a single forward pass with negligible overhead and can be combined with other word-level tasks like ELECTRA."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks comparison to prior structure-aware or hierarchical language models.",
-        "evidence": "No evaluation against existing models that incorporate discourse or hierarchical information, weakening the novelty claim."
+        "point": "Lack of comparison to recent or more sophisticated inter-sentence objectives",
+        "evidence": "The paper benchmarks only against classical tasks (NSP, SOP, SSO) and omits recent methods such as contrastive sentence embedding or discourse-aware pretraining, weakening claims of novelty."
       },
       {
-        "point": "Insufficient justification for choice of structural units and annotation methodology.",
-        "evidence": "The paper does not explain why sentences, paragraphs, or discourse segments were selected or how these units were annotated."
+        "point": "Insufficient justification and ablation of key methodological choices",
+        "evidence": "The six-class labeling scheme and fixed 15% partial shuffling rate lack thorough exploration or ablation to assess sensitivity or optimality."
       },
       {
-        "point": "Missing detailed ablation studies isolating the effects of auxiliary tasks and masking variants.",
-        "evidence": "No breakdown of performance gains per auxiliary objective or masking strategy is provided."
+        "point": "Limited evaluation scope and generalizability",
+        "evidence": "Pretraining uses only OpenWebText (~38GB), evaluation is restricted to English SuperGLUE tasks, with no zero/few-shot, multilingual, or generation/domain-specific task assessments."
       },
       {
-        "point": "Baselines do not include strong structure-aware pretraining methods.",
-        "evidence": "Comparisons are only made against standard pretrained LMs without structural objectives, leaving unclear if gains stem from structure or additional supervision."
+        "point": "Reproducibility concerns due to missing implementation details",
+        "evidence": "Details on sentence embedding computation (e.g., token inclusion/exclusion), classifier architecture, and training hyperparameters are insufficiently described."
       },
       {
-        "point": "Evaluation focuses solely on downstream tasks without intrinsic probing of structural understanding.",
-        "evidence": "No intrinsic evaluations such as probing for hierarchical representations or long-range dependency capture are reported."
+        "point": "Clarity issues in task definitions and integration",
+        "evidence": "Ambiguities remain in defining hierarchical relationships (e.g., what constitutes 'neighboring'), paragraph segmentation, and how TSP loss integrates with MLM."
       },
       {
-        "point": "Reproducibility is hindered by missing details on annotation process and hyperparameters.",
-        "evidence": "The paper omits how structural units were identified and lacks hyperparameter settings for auxiliary losses and masking probabilities."
-      },
-      {
-        "point": "Model architecture modifications are ambiguously described.",
-        "evidence": "Insufficient detail on how structural cues are integrated into the model, with unclear diagrams and no pseudocode."
-      },
-      {
-        "point": "No discussion on scalability to larger models or datasets.",
-        "evidence": "The paper does not address whether the approach remains efficient or effective at scale."
-      },
-      {
-        "point": "Potential dependence on annotation quality is unaddressed.",
-        "evidence": "No analysis of robustness to noisy or unavailable structural annotations is provided."
-      },
-      {
-        "point": "Generalisability is limited by experiments only on English and standard domains.",
-        "evidence": "No evaluation on other languages or domain-specific corpora to assess broader applicability."
-      },
-      {
-        "point": "Unclear if benefits apply across model sizes.",
-        "evidence": "The paper does not clarify whether improvements hold for smaller models or only large-scale LMs."
-      },
-      {
-        "point": "No statistical significance testing reported for downstream improvements.",
-        "evidence": "Lack of significance analysis makes it difficult to assess robustness of reported gains."
-      },
-      {
-        "point": "Assumes consistent structural unit definitions across datasets without discussion.",
-        "evidence": "No consideration of variability in paragraph or discourse segment definitions and its impact."
-      },
-      {
-        "point": "Lacks clear theoretical or mechanistic explanation of how structure improves representations.",
-        "evidence": "The paper claims enriched contextual understanding but does not provide detailed insight into the underlying learning dynamics."
+        "point": "No discussion of potential negative transfer or task conflicts",
+        "evidence": "The paper does not analyze whether TSP might degrade performance on certain tasks or conflict with MLM or other objectives."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed method compare to existing hierarchical or discourse-aware pretrained models?",
-        "motivation": "To clarify the novelty and relative advantage of the approach over prior structure-aware LM training methods."
+        "question": "How does TSP compare to more recent inter-sentence pretraining objectives or contrastive learning methods?",
+        "motivation": "Understanding relative performance against state-of-the-art methods is crucial to validate TSP's novelty and effectiveness."
       },
       {
-        "question": "What criteria guided the selection of structural units and how were they annotated?",
-        "motivation": "Understanding annotation methodology is critical for reproducibility and assessing the impact of structural granularity."
+        "question": "How sensitive is TSP performance to the choice of hierarchical granularity, number of classes, and partial shuffling rate?",
+        "motivation": "Ablations on these hyperparameters could inform optimal task design and robustness."
       },
       {
-        "question": "Can the authors provide ablation results isolating the contributions of each auxiliary task and masking strategy?",
-        "motivation": "To better understand which components drive performance improvements."
+        "question": "Does TSP improve zero-shot or few-shot generalization, and does it generalize to non-English languages or generation tasks?",
+        "motivation": "Evaluating broader applicability is important for claims of general-purpose language understanding improvements."
       },
       {
-        "question": "Have intrinsic evaluations been conducted to directly measure the model's encoding of hierarchical or long-range dependencies?",
-        "motivation": "To validate that the model truly captures structural information beyond downstream task gains."
-      },
-      {
-        "question": "How does the approach scale with larger models and datasets, and what are the computational costs?",
-        "motivation": "Scalability is important for practical adoption in large-scale LM training."
-      },
-      {
-        "question": "How sensitive is the method to the quality or availability of structural annotations?",
-        "motivation": "To assess robustness and applicability in scenarios with noisy or missing structure labels."
-      },
-      {
-        "question": "Does the structure-aware pretraining benefit smaller models or is it limited to large LMs?",
-        "motivation": "To understand the general applicability across different model sizes."
-      },
-      {
-        "question": "Are there plans to evaluate the method on non-English languages or domain-specific corpora?",
-        "motivation": "To test generalisability beyond English and standard benchmarks."
+        "question": "Are baseline models trained with matched compute and training steps to ensure fair comparison?",
+        "motivation": "Ensuring comparable training budgets is necessary to attribute gains to the method rather than training differences."
       }
-    ],
-    "scores": {
-      "correctness": 4,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Lacks comparison to prior structure-aware or hierarchical language models.. No evaluation against existing models that incorporate discourse or hierarchical information, weakening the novelty claim.",
-    "point_002": "Insufficient justification for choice of structural units and annotation methodology.. The paper does not explain why sentences, paragraphs, or discourse segments were selected or how these units were annotated.",
-    "point_003": "Missing detailed ablation studies isolating the effects of auxiliary tasks and masking variants.. No breakdown of performance gains per auxiliary objective or masking strategy is provided.",
-    "point_004": "Baselines do not include strong structure-aware pretraining methods.. Comparisons are only made against standard pretrained LMs without structural objectives, leaving unclear if gains stem from structure or additional supervision.",
-    "point_005": "Evaluation focuses solely on downstream tasks without intrinsic probing of structural understanding.. No intrinsic evaluations such as probing for hierarchical representations or long-range dependency capture are reported.",
-    "point_006": "Reproducibility is hindered by missing details on annotation process and hyperparameters.. The paper omits how structural units were identified and lacks hyperparameter settings for auxiliary losses and masking probabilities.",
-    "point_007": "Model architecture modifications are ambiguously described.. Insufficient detail on how structural cues are integrated into the model, with unclear diagrams and no pseudocode.",
-    "point_008": "No discussion on scalability to larger models or datasets.. The paper does not address whether the approach remains efficient or effective at scale.",
-    "point_009": "Potential dependence on annotation quality is unaddressed.. No analysis of robustness to noisy or unavailable structural annotations is provided.",
-    "point_010": "Generalisability is limited by experiments only on English and standard domains.. No evaluation on other languages or domain-specific corpora to assess broader applicability.",
-    "point_011": "Unclear if benefits apply across model sizes.. The paper does not clarify whether improvements hold for smaller models or only large-scale LMs.",
-    "point_012": "No statistical significance testing reported for downstream improvements.. Lack of significance analysis makes it difficult to assess robustness of reported gains.",
-    "point_013": "Assumes consistent structural unit definitions across datasets without discussion.. No consideration of variability in paragraph or discourse segment definitions and its impact.",
-    "point_014": "Lacks clear theoretical or mechanistic explanation of how structure improves representations.. The paper claims enriched contextual understanding but does not provide detailed insight into the underlying learning dynamics."
+    "point_001": "Lack of comparison to recent or more sophisticated inter-sentence objectives. The paper benchmarks only against classical tasks (NSP, SOP, SSO) and omits recent methods such as contrastive sentence embedding or discourse-aware pretraining, weakening claims of novelty.",
+    "point_002": "Insufficient justification and ablation of key methodological choices. The six-class labeling scheme and fixed 15% partial shuffling rate lack thorough exploration or ablation to assess sensitivity or optimality.",
+    "point_003": "Limited evaluation scope and generalizability. Pretraining uses only OpenWebText (~38GB), evaluation is restricted to English SuperGLUE tasks, with no zero/few-shot, multilingual, or generation/domain-specific task assessments.",
+    "point_004": "Reproducibility concerns due to missing implementation details. Details on sentence embedding computation (e.g., token inclusion/exclusion), classifier architecture, and training hyperparameters are insufficiently described.",
+    "point_005": "Clarity issues in task definitions and integration. Ambiguities remain in defining hierarchical relationships (e.g., what constitutes 'neighboring'), paragraph segmentation, and how TSP loss integrates with MLM.",
+    "point_006": "No discussion of potential negative transfer or task conflicts. The paper does not analyze whether TSP might degrade performance on certain tasks or conflict with MLM or other objectives."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nPretraining large language models (LMs) typically relies on vast amounts of raw text data, often treating the input as a flat sequence of tokens without explicitly leveraging the inherent structural information present in natural language texts (e.g., sentences, paragraphs, discourse relations). This lack of structural awareness can limit the model's ability to capture long-range dependencies and hierarchical relationships, potentially affecting downstream task performance. The paper addresses the challenge of incorporating text structure information into the pretraining phase to enhance the language model's understanding and representation capabilities.\n\n**Proposed Method:**  \nThe authors propose a novel pretraining approach that integrates explicit text structure information into the language model training process. Key aspects include:  \n- Annotating or identifying structural units within the text, such as sentences, paragraphs, or discourse segments.  \n- Designing model architectures or training objectives that incorporate these structural cues, enabling the model to learn representations that respect the hierarchical organization of text.  \n- Possibly introducing auxiliary tasks or modified masking strategies that encourage the model to predict or utilize structure-aware contexts during pretraining.  \nThe method aims to enrich the model's contextual understanding by embedding structural signals alongside token-level information.\n\n**Results:**  \nExperiments demonstrate that language models pretrained with the proposed structure-aware approach outperform baseline models trained without explicit structural information. Improvements are observed across various downstream NLP tasks, including but not limited to:  \n- Text classification  \n- Question answering  \n- Natural language inference  \n- Language understanding benchmarks  \nQuantitative metrics show consistent gains, validating the effectiveness of incorporating text structure during pretraining. Ablation studies may further highlight the contribution of different structural components or training strategies.\n\n**Claimed Contributions:**  \n1. Identification of the limitation in conventional language model pretraining regarding the neglect of explicit text structure.  \n2. Introduction of a novel pretraining framework that integrates text structure information to enhance language representation learning.  \n3. Empirical evidence demonstrating that structure-aware pretraining leads to superior performance on multiple downstream tasks compared to standard pretraining methods.  \n4. Insights and analysis on how text structure influences language model learning and generalization.  \n\nOverall, the paper contributes a meaningful advancement in language model pretraining by bridging the gap between raw token sequences and the rich hierarchical structure inherent in natural language.",
-    "critic": "1. **Novelty - Missing Comparison to Prior Structure-Aware Models:**  \nThe paper claims novelty in integrating explicit text structure into pretraining but does not sufficiently compare against prior work that incorporates hierarchical or discourse-level information during LM training (e.g., hierarchical transformers or discourse-aware models). This omission weakens the claim of novelty and leaves unclear how the proposed method advances beyond existing approaches.\n\n2. **Methodology - Lack of Justification for Structural Unit Selection:**  \nWhile the method involves annotating sentences, paragraphs, or discourse segments, the paper does not justify why these particular structural units were chosen over others (e.g., clauses, topics). Section describing the annotation process lacks rationale for the granularity and type of structure used, which could impact model effectiveness.\n\n3. **Methodology - Insufficient Ablation on Auxiliary Tasks:**  \nThe paper mentions auxiliary tasks or modified masking strategies to leverage structure but does not provide detailed ablation studies isolating the impact of each auxiliary task or masking variant. Table 3 (hypothetical) could have broken down performance gains per auxiliary task, but this is missing.\n\n4. **Evaluation - Baselines Lack Structure-Aware Pretraining:**  \nAll baseline models appear to be standard pretrained LMs without any structural information. The paper does not compare against strong baselines that incorporate structure in other ways (e.g., models pretrained with sentence order prediction or segment-level objectives), making it unclear if gains come from structure awareness or simply additional supervision.\n\n5. **Evaluation - Metrics Focused on Downstream Tasks Only:**  \nThe evaluation primarily reports downstream task performance improvements but does not include intrinsic evaluations (e.g., probing tasks for hierarchical understanding or long-range dependency capture) to directly measure if the model better encodes structure as intended.\n\n6. **Reproducibility - Missing Details on Structural Annotation Process:**  \nThe paper does not specify how structural units were identified or annotated\u2014whether manual annotation, heuristic rules, or automatic parsers were used. This omission makes it difficult to reproduce the preprocessing pipeline or assess annotation quality.\n\n7. **Reproducibility - Lack of Hyperparameter Settings for Auxiliary Tasks:**  \nDetails such as loss weights for auxiliary objectives, masking probabilities, or training schedules related to structure-aware components are not provided, hindering replication of the training procedure.\n\n8. **Clarity - Ambiguous Description of Model Architecture Modifications:**  \nThe paper states that the model architecture incorporates structural cues but does not clearly describe how these cues are integrated (e.g., via additional embeddings, modified attention mechanisms). The architectural diagrams or pseudocode are insufficiently detailed.\n\n9. **Clarity - Vague Explanation of How Structure Improves Representations:**  \nWhile the paper claims that structure-aware pretraining enriches contextual understanding, it lacks a clear mechanistic explanation or theoretical insight into how structural signals concretely influence representation learning.\n\n10. **Limitations - No Discussion of Scalability to Larger Models or Corpora:**  \nThe paper does not address whether the proposed structure-aware pretraining approach scales efficiently to very large models or massive datasets, which is critical given the trend in LM development.\n\n11. **Limitations - Potential Dependence on Quality of Structural Annotations Not Addressed:**  \nThe method\u2019s reliance on structural annotations raises concerns about robustness if annotations are noisy or unavailable. The paper does not discuss this limitation or potential mitigation strategies.\n\n12. **Generalisability - Experiments Limited to English and Specific Domains:**  \nAll experiments appear to be conducted on English datasets and standard NLP benchmarks. The paper does not evaluate whether the approach generalizes to other languages with different structural characteristics or to domain-specific corpora.\n\n13. **Generalisability - Unclear if Method Benefits Smaller Models or Only Large LMs:**  \nThe paper does not clarify whether the structure-aware pretraining benefits are consistent across model sizes or only manifest in large-scale LMs, limiting understanding of practical applicability.\n\n14. **Evaluation - No Statistical Significance Testing Reported:**  \nReported improvements on downstream tasks lack statistical significance analysis, making it difficult to assess the robustness of the gains attributed to structure-aware pretraining.\n\n15. **Methodology - Hidden Assumption of Structural Unit Consistency Across Texts:**  \nThe approach assumes that structural units like paragraphs or discourse segments are consistently defined across datasets, but the paper does not discuss variability in structure definitions or its impact on training and evaluation."
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Existing inter-sentence pretraining tasks (e.g., Next Sentence Prediction (NSP), Sentence Order Prediction (SOP), Sentence Structure Objective (SSO)) for general-purpose language models improve performance only at small scales but fail or degrade performance at larger scales.\n- **Motivation:** These existing methods simplify text structure by splitting input into two segments and learning only their relationship, ignoring richer underlying text structure such as hierarchical and ordering relationships between sentences. Text structure contains key clues for identifying concepts and logical relationships, which can provide abundant self-supervised learning signals to improve language understanding, especially at larger model and data scales.\n\n---\n\n### Proposed Method\n\n- **Text Structure Prediction (TSP):** A novel inter-sentence pretraining task designed to leverage richer text structure information.\n- **Key Ideas:**\n  - View text structure along two axes: \n    - **Hierarchy:** Nested groupings of sentences (neighboring sentences, same paragraph, same document).\n    - **Ordering:** Directional order of sentences (normal order, reversed order).\n  - Define **six classes** combining three hierarchical relationships and two ordering directions to classify relationships between sentence pairs.\n  - Input sentences are partially shuffled (15%) and masked (following MLM procedure) to prevent trivial learning.\n  - Sentence embeddings are obtained by averaging contextualized token embeddings from a transformer encoder, allowing cross-sentence contextualization.\n  - A classifier predicts the text structure relationship between sentence pairs using concatenated sentence embeddings.\n- **Training Objective:** Jointly minimize masked language modeling (MLM) loss and TSP classification loss.\n- **Advantages:** \n  - Self-supervised, no external labels needed.\n  - Easily combined with any transformer-based word-level pretraining task.\n  - Negligible additional computational and memory cost.\n  - Can be learned concurrently with other tasks in a single forward pass.\n\n---\n\n### Results\n\n- **Datasets & Evaluation:** Pretrained on OpenWebText (38GB, ~8M documents). Evaluated on SuperGLUE benchmark covering diverse language understanding tasks (natural language inference, reasoning, question answering, word sense disambiguation).\n- **Scales:** Experiments conducted at Small, Base, and Large model/data scales.\n- **Findings:**\n  - Existing inter-sentence tasks (NSP, SOP, SSO) improve performance only at Small scale; fail or degrade performance at larger scales.\n  - TSP consistently improves performance over pure MLM and all baselines at all scales, with the largest gains at Large scale.\n  - TSP particularly benefits reasoning and question-answering tasks, suggesting improved understanding of concepts and logical relationships.\n  - Ablation studies show both hierarchical and ordering relationships contribute to performance gains; discriminating paragraph-level hierarchy is important.\n  - TSP can be combined with other word-level pretraining methods (e.g., ELECTRA) and still improves performance.\n- **Interpretation:** The more complex and informative TSP task provides richer learning signals that better exploit the capacity of larger models and datasets.\n\n---\n\n### Claimed Contributions\n\n1. **Empirical finding:** Existing inter-sentence pretraining tasks are suboptimal, improving only at small scale and failing at larger scales.\n2. **Novel task proposal:** Introduction of Text Structure Prediction (TSP), a self-supervised inter-sentence task leveraging six defined text structure relationships combining hierarchy and ordering.\n3. **Demonstration of effectiveness:** TSP improves language understanding performance across multiple scales and tasks, outperforming existing inter-sentence baselines.\n4. **Scalability:** TSP scales well with model size and data, showing largest improvements at Large scale.\n5. **General applicability:** TSP can be easily integrated with any transformer-based word-level pretraining method with minimal overhead.\n6. **Research direction:** Establishes the potential and encourages further research on exploiting text structure information for general-purpose language model pretraining.\n\n---\n\n**Summary:**  \nThis paper identifies limitations of existing inter-sentence pretraining tasks and proposes Text Structure Prediction (TSP), a novel task that classifies sentence pairs into six text structure-based relationships combining hierarchical and ordering information. TSP provides richer self-supervised signals that improve language understanding performance consistently across model scales, especially at large scale, outperforming prior inter-sentence tasks. The method is computationally efficient, easily combined with existing pretraining tasks, and opens a promising direction for leveraging text structure in language model pretraining.",
+    "critic": "1. **Novelty \u2013 Missing Comparison to Recent Inter-Sentence Objectives:**  \nThe paper compares TSP primarily against classical inter-sentence tasks like NSP, SOP, and SSO but does not discuss or benchmark against more recent or sophisticated inter-sentence objectives (e.g., sentence embedding contrastive learning methods or discourse-aware pretraining tasks). This omission weakens the claim of novelty and leaves unclear whether TSP outperforms the current state-of-the-art inter-sentence pretraining methods.\n\n2. **Methodology \u2013 Justification for Six-Class Labeling Scheme:**  \nThe choice of exactly six classes combining three hierarchical levels and two ordering directions is not sufficiently justified. The paper does not explore whether finer-grained or alternative hierarchical divisions (e.g., sentence-level, paragraph-level, section-level) or more ordering variants could improve performance, nor does it ablate the impact of the number or granularity of classes beyond the brief mention in ablations.\n\n3. **Methodology \u2013 Partial Shuffling Rate Fixed at 15% Without Ablation:**  \nThe authors fix the sentence shuffling rate at 15% to prevent trivial learning but do not provide an ablation study varying this rate. It remains unclear how sensitive TSP\u2019s performance is to this hyperparameter or whether higher or lower shuffling rates might yield better or worse results.\n\n4. **Evaluation \u2013 Limited Dataset Diversity for Pretraining:**  \nPretraining is conducted solely on OpenWebText (~38GB), which is relatively small compared to datasets used in large-scale language model training (e.g., Common Crawl, C4). This limits the generalizability of the findings, especially the claim that TSP scales well with data size, since only one dataset is used and the largest scale is still moderate by modern standards.\n\n5. **Evaluation \u2013 Lack of Zero-Shot or Few-Shot Evaluation:**  \nThe evaluation focuses on fine-tuning performance on SuperGLUE tasks but does not assess zero-shot or few-shot capabilities. Given that TSP aims to improve language understanding, it would be valuable to see if the richer text structure signals also enhance generalization without task-specific fine-tuning.\n\n6. **Evaluation \u2013 Baselines Not Always Matched for Compute or Training Steps:**  \nWhile the paper claims negligible overhead for TSP, it is unclear if baseline models (MLM-only and other inter-sentence tasks) were trained for the same number of steps or with equivalent compute budgets. Without this, performance gains might partially reflect differences in training duration or resource allocation.\n\n7. **Reproducibility \u2013 Missing Details on Sentence Embedding Computation:**  \nThe paper states sentence embeddings are obtained by averaging contextualized token embeddings but does not specify whether special tokens (e.g., [CLS], punctuation) are included or excluded, nor how variable sentence lengths are handled. This detail is important for replicating the embedding extraction process.\n\n8. **Reproducibility \u2013 Lack of Hyperparameter Details for TSP Classifier:**  \nThe architecture and hyperparameters of the classifier predicting the six-class text structure relationship are not described in detail (e.g., number of layers, hidden sizes, activation functions). This omission hinders reproducibility and understanding of the classifier\u2019s capacity and role.\n\n9. **Clarity \u2013 Ambiguity in Definition of Hierarchical Relationships:**  \nThe paper defines hierarchy as \u201cneighboring sentences, same paragraph, same document\u201d but does not clarify how \u201cneighboring\u201d is operationalized (immediate adjacency or within a window?), nor how paragraphs are detected or segmented in the dataset. This ambiguity complicates understanding of the class definitions.\n\n10. **Clarity \u2013 Insufficient Explanation of How TSP Integrates with MLM:**  \nWhile the paper claims TSP can be learned concurrently with MLM in a single forward pass, it lacks a clear explanation or diagram illustrating how the two losses are combined and how the model architecture supports both tasks simultaneously.\n\n11. **Limitations \u2013 No Discussion of Potential Negative Transfer or Task Conflicts:**  \nThe paper does not discuss whether TSP might conflict with MLM or other pretraining objectives in certain scenarios, or if there are cases where adding TSP could degrade performance, especially on tasks unrelated to sentence ordering or hierarchy.\n\n12. **Limitations \u2013 Focus on English Only Without Multilingual Evaluation:**  \nAll experiments are conducted on English data and benchmarks. The paper does not address whether TSP\u2019s hierarchical and ordering assumptions hold or generalize to other languages with different discourse structures, limiting claims of general applicability.\n\n13. **Generalisability \u2013 No Evaluation on Downstream Tasks Beyond SuperGLUE:**  \nThe evaluation is limited to SuperGLUE tasks, which focus on language understanding benchmarks. The paper does not test TSP on generation tasks (e.g., summarization, translation) or domain-specific tasks, leaving open whether TSP benefits extend beyond classification-style tasks.\n\n14. **Generalisability \u2013 Unclear if TSP Benefits Persist with Larger Models Beyond \u2018Large\u2019 Scale:**  \nThe largest scale evaluated is termed \u201cLarge,\u201d but the paper does not specify if this corresponds to state-of-the-art model sizes (e.g., hundreds of millions or billions of parameters). It remains unknown if TSP\u2019s benefits continue or saturate at truly massive scales.\n\n15. **Methodology \u2013 No Analysis of Error Types or Confusion Matrix for TSP Classifier:**  \nThe paper does not provide qualitative or quantitative analysis of which text structure classes are most often confused by the classifier. Such analysis could reveal weaknesses or biases in the task design and inform future improvements."
   }
 }

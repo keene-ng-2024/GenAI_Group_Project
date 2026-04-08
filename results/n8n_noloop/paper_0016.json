@@ -3,106 +3,110 @@
   "title": "Universal Sentence Representations Learning with Conditional Masked Language Model ",
   "platform": "n8n_noloop",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 33.82,
+  "latency_seconds": 36.91,
   "structured": {
-    "summary": "The paper proposes the Conditional Masked Language Model (CMLM), a novel pretraining approach that conditions masked token prediction on sentence-level information to learn universal sentence representations. Experiments show that CMLM embeddings outperform standard MLM and baseline methods on several downstream NLP tasks such as semantic textual similarity, sentiment analysis, and natural language inference.",
+    "summary": "This paper proposes Conditional Masked Language Modeling (CMLM), a novel unsupervised method for learning universal sentence embeddings by conditioning masked token prediction on adjacent sentence embeddings. The approach is extended to multilingual settings with multitask training and fine-tuning, achieving strong performance on English and multilingual benchmarks while addressing language bias via principal component removal.",
     "strengths": [
       {
-        "point": "Novel pretraining objective integrating sentence-level conditioning",
-        "evidence": "CMLM conditions masked token prediction on learned sentence representations, aiming to capture richer global semantics."
+        "point": "Novel unsupervised training paradigm integrating sentence representation learning into MLM training",
+        "evidence": "CMLM conditions masked token prediction on the embedding of an adjacent sentence, enabling effective sentence embeddings without supervision."
       },
       {
-        "point": "Empirical improvements on multiple downstream tasks",
-        "evidence": "CMLM embeddings outperform standard MLM and classical baselines on semantic textual similarity, sentiment analysis, and NLI benchmarks."
+        "point": "Strong empirical results across English and multilingual benchmarks",
+        "evidence": "CMLM outperforms prior unsupervised and supervised models on SentEval, XEVAL, and zero-shot Amazon review sentiment classification tasks."
       },
       {
-        "point": "Joint optimization of token prediction and sentence representation learning",
-        "evidence": "The model is trained to simultaneously predict masked tokens and learn sentence-level embeddings."
+        "point": "Effective multilingual training with multitask learning and fine-tuning",
+        "evidence": "Co-training with bitext retrieval and cross-lingual NLI fine-tuning significantly improves multilingual sentence embeddings, surpassing LASER and mUSE."
+      },
+      {
+        "point": "Identification and mitigation of language bias in multilingual embeddings",
+        "evidence": "Principal component removal reduces same-language clustering and improves cross-lingual retrieval accuracy."
+      },
+      {
+        "point": "Creation of a multilingual evaluation benchmark (XEVAL)",
+        "evidence": "XEVAL extends SentEval tasks to 15 languages, enabling comprehensive multilingual evaluation."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to recent conditional language models and context-aware MLM variants",
-        "evidence": "No discussion or empirical comparison to related approaches such as span-based MLMs or models incorporating document-level context."
+        "point": "Insufficient comparison to recent unsupervised sentence embedding methods",
+        "evidence": "The paper omits discussion and empirical comparison to methods like unsupervised SimCSE and contrastive learning approaches leveraging MLMs."
       },
       {
-        "point": "Insufficient methodological details and ablation studies",
-        "evidence": "No ablation isolating the impact of different conditioning signals; unclear training objective weighting and conditioning mechanism implementation."
+        "point": "Lack of theoretical or intuitive justification for multiple projection spaces",
+        "evidence": "While 15 projections yield best results, the paper does not explain why multiple projections improve embedding quality."
       },
       {
-        "point": "Evaluation limited in scope and rigor",
-        "evidence": "Baselines omit strong recent sentence embedding models like SimCSE; no evaluation on challenging tasks like QA or summarization; no statistical significance testing."
+        "point": "Limited exploration of conditioning on only one adjacent sentence",
+        "evidence": "No experiments or discussion on conditioning on multiple surrounding sentences or broader context."
       },
       {
-        "point": "Reproducibility concerns due to missing hyperparameter details and code release",
-        "evidence": "Key training details such as learning rates, batch sizes, and masking ratios are not provided; no mention of releasing code or pretrained models."
+        "point": "Unclear baseline fine-tuning status and fairness of comparisons",
+        "evidence": "Baselines like mBERT and XLM-R are compared without clarifying if they were fine-tuned or used as-is."
       },
       {
-        "point": "Clarity issues regarding model architecture and conditioning mechanism",
-        "evidence": "Ambiguous description of how sentence-level information conditions token prediction and how sentence representations are learned."
+        "point": "Evaluation lacks diversity in downstream tasks",
+        "evidence": "Focus is on SentEval, XEVAL, and sentiment classification; no evaluation on QA, summarization, or dialogue tasks."
       },
       {
-        "point": "No discussion of computational overhead or potential limitations",
-        "evidence": "Paper does not address increased complexity or training cost, nor potential overfitting to sentence-level signals."
+        "point": "Limited quantitative metrics for semantic preservation after language bias mitigation",
+        "evidence": "PCR is evaluated mainly via retrieval accuracy and visualization without semantic similarity scores pre/post PCR."
       },
       {
-        "point": "Limited generalizability analysis",
-        "evidence": "Experiments conducted only on English datasets without evaluation on multilingual or domain-shifted data."
+        "point": "Insufficient training and reproducibility details",
+        "evidence": "Exact learning rates, optimizer settings, training steps, hardware, vocabulary construction, and tokenization details are missing."
       },
       {
-        "point": "No exploration of alternative masking strategies",
-        "evidence": "Only token masking used; no comparison to span or whole word masking which might affect conditioning."
+        "point": "Ambiguity in sentence embedding computation at inference",
+        "evidence": "Unclear whether embeddings are average pooled vectors, concatenations of projections, or other representations."
+      },
+      {
+        "point": "No analysis of performance variation across low-resource languages",
+        "evidence": "Multilingual model covers 113 languages but lacks discussion on handling truly low-resource languages."
+      },
+      {
+        "point": "No discussion on domain adaptation or applicability beyond MLM-based Transformers",
+        "evidence": "The method is not evaluated on domain-shifted data nor adapted to other architectures or pretraining objectives."
       }
     ],
     "questions": [
       {
-        "question": "How does CMLM compare empirically and conceptually to recent conditional or context-aware MLM variants?",
-        "motivation": "To clarify the novelty and relative advantages of the proposed approach."
+        "question": "How does CMLM compare empirically and conceptually to recent unsupervised sentence embedding methods like unsupervised SimCSE or contrastive learning approaches?",
+        "motivation": "Understanding relative novelty and effectiveness requires direct comparison to state-of-the-art unsupervised methods."
       },
       {
-        "question": "What is the exact mechanism for conditioning token prediction on sentence-level information?",
-        "motivation": "To better understand the model architecture and facilitate reproducibility."
+        "question": "Why does projecting sentence embeddings into multiple subspaces improve masked token prediction and embedding quality?",
+        "motivation": "Clarifying this would provide theoretical insight and guide future architectural choices."
       },
       {
-        "question": "How do different conditioning signals individually contribute to performance?",
-        "motivation": "To assess which components drive improvements and improve interpretability."
+        "question": "Would conditioning on multiple adjacent sentences or larger context improve embedding quality compared to conditioning on only one adjacent sentence?",
+        "motivation": "Exploring richer context could enhance semantic representation, especially for longer documents."
       },
       {
-        "question": "Are the reported performance gains statistically significant?",
-        "motivation": "To evaluate the robustness of empirical results."
+        "question": "How robust are the learned embeddings to domain shifts beyond web text, such as biomedical or legal domains?",
+        "motivation": "Assessing domain generalizability is critical for practical deployment of sentence embeddings."
       },
       {
-        "question": "What are the computational costs and training time compared to standard MLM?",
-        "motivation": "To understand efficiency trade-offs and practical applicability."
-      },
-      {
-        "question": "Does CMLM generalize to other languages or domains beyond English and standard benchmarks?",
-        "motivation": "To assess universality claims and real-world applicability."
-      },
-      {
-        "question": "Will the authors release code and pretrained models to support reproducibility?",
-        "motivation": "To enable verification and adoption by the research community."
+        "question": "What are the exact training hyperparameters and tokenization details to enable reproducibility?",
+        "motivation": "Reproducibility is essential for adoption and further research."
       }
-    ],
-    "scores": {
-      "correctness": 4,
-      "novelty": 3,
-      "recommendation": "borderline",
-      "confidence": 4
-    }
+    ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison to recent conditional language models and context-aware MLM variants. No discussion or empirical comparison to related approaches such as span-based MLMs or models incorporating document-level context.",
-    "point_002": "Insufficient methodological details and ablation studies. No ablation isolating the impact of different conditioning signals; unclear training objective weighting and conditioning mechanism implementation.",
-    "point_003": "Evaluation limited in scope and rigor. Baselines omit strong recent sentence embedding models like SimCSE; no evaluation on challenging tasks like QA or summarization; no statistical significance testing.",
-    "point_004": "Reproducibility concerns due to missing hyperparameter details and code release. Key training details such as learning rates, batch sizes, and masking ratios are not provided; no mention of releasing code or pretrained models.",
-    "point_005": "Clarity issues regarding model architecture and conditioning mechanism. Ambiguous description of how sentence-level information conditions token prediction and how sentence representations are learned.",
-    "point_006": "No discussion of computational overhead or potential limitations. Paper does not address increased complexity or training cost, nor potential overfitting to sentence-level signals.",
-    "point_007": "Limited generalizability analysis. Experiments conducted only on English datasets without evaluation on multilingual or domain-shifted data.",
-    "point_008": "No exploration of alternative masking strategies. Only token masking used; no comparison to span or whole word masking which might affect conditioning."
+    "point_001": "Insufficient comparison to recent unsupervised sentence embedding methods. The paper omits discussion and empirical comparison to methods like unsupervised SimCSE and contrastive learning approaches leveraging MLMs.",
+    "point_002": "Lack of theoretical or intuitive justification for multiple projection spaces. While 15 projections yield best results, the paper does not explain why multiple projections improve embedding quality.",
+    "point_003": "Limited exploration of conditioning on only one adjacent sentence. No experiments or discussion on conditioning on multiple surrounding sentences or broader context.",
+    "point_004": "Unclear baseline fine-tuning status and fairness of comparisons. Baselines like mBERT and XLM-R are compared without clarifying if they were fine-tuned or used as-is.",
+    "point_005": "Evaluation lacks diversity in downstream tasks. Focus is on SentEval, XEVAL, and sentiment classification; no evaluation on QA, summarization, or dialogue tasks.",
+    "point_006": "Limited quantitative metrics for semantic preservation after language bias mitigation. PCR is evaluated mainly via retrieval accuracy and visualization without semantic similarity scores pre/post PCR.",
+    "point_007": "Insufficient training and reproducibility details. Exact learning rates, optimizer settings, training steps, hardware, vocabulary construction, and tokenization details are missing.",
+    "point_008": "Ambiguity in sentence embedding computation at inference. Unclear whether embeddings are average pooled vectors, concatenations of projections, or other representations.",
+    "point_009": "No analysis of performance variation across low-resource languages. Multilingual model covers 113 languages but lacks discussion on handling truly low-resource languages.",
+    "point_010": "No discussion on domain adaptation or applicability beyond MLM-based Transformers. The method is not evaluated on domain-shifted data nor adapted to other architectures or pretraining objectives."
   },
   "transcript": {
-    "reader": "**Problem & Motivation:**  \nThe paper addresses the challenge of learning universal sentence representations that can effectively capture semantic information across diverse natural language processing (NLP) tasks. Existing methods often rely on large-scale pretraining objectives like masked language modeling (MLM) but may not fully leverage contextual dependencies or conditional information within sentences. The motivation is to improve the quality and universality of sentence embeddings by introducing a more context-aware pretraining approach.\n\n**Proposed Method:**  \nThe authors propose a novel pretraining framework called the Conditional Masked Language Model (CMLM). Unlike traditional MLM which predicts masked tokens solely based on their surrounding context, CMLM conditions the prediction of masked tokens on additional sentence-level information. This conditioning enables the model to better capture global sentence semantics and dependencies. The approach involves:  \n- Masking tokens in a sentence as in MLM.  \n- Conditioning the token prediction not only on the visible tokens but also on a learned sentence representation or other conditional signals.  \n- Training the model to jointly optimize token prediction and sentence representation learning.\n\n**Results:**  \nExperiments demonstrate that sentence embeddings learned via CMLM outperform those from standard MLM and other baseline methods on a variety of downstream NLP tasks, including semantic textual similarity, sentiment analysis, and natural language inference benchmarks. The results indicate that CMLM embeddings provide richer semantic information and better generalization across tasks. The paper reports improvements in both unsupervised and supervised evaluation settings, showcasing the versatility of the learned representations.\n\n**Claimed Contributions:**  \n1. Introduction of the Conditional Masked Language Model (CMLM) as a novel pretraining objective for universal sentence representation learning.  \n2. Demonstration that conditioning masked token prediction on sentence-level information enhances the quality of sentence embeddings.  \n3. Empirical evidence that CMLM-based sentence representations achieve superior performance on multiple downstream NLP tasks compared to existing methods.  \n4. Providing insights into how integrating conditional information during pretraining can improve semantic understanding in sentence embeddings.",
-    "critic": "1. **Novelty - Missing Comparison to Conditional Language Models:**  \nThe paper proposes conditioning masked token prediction on sentence-level information but does not compare or discuss prior work on conditional language models or context-aware MLM variants (e.g., span-based MLMs or models incorporating document-level context). This omission weakens the novelty claim in Section 3, as it is unclear how CMLM differs from or improves upon these related approaches.\n\n2. **Methodology - Lack of Ablation on Conditioning Signals:**  \nSection 3 describes conditioning on a learned sentence representation or other conditional signals but does not provide ablation studies isolating the impact of different types of conditioning signals. It remains unclear whether the improvements stem primarily from the sentence representation or other conditional inputs, limiting interpretability.\n\n3. **Methodology - Unclear Training Objective Details:**  \nThe joint optimization of token prediction and sentence representation learning is mentioned but not sufficiently detailed. The paper does not specify whether these objectives are weighted equally or if any curriculum or multi-task learning strategies are employed, leaving a gap in understanding the training dynamics (Section 3).\n\n4. **Evaluation - Baselines Lack Strong Recent Models:**  \nThe experiments compare CMLM mainly against standard MLM and some classical baselines but omit comparisons to recent state-of-the-art universal sentence embedding methods such as SimCSE or sentence transformers fine-tuned on NLI data. This undermines the strength of the empirical claims in Section 4.\n\n5. **Evaluation - Metrics Limited to Standard Benchmarks:**  \nWhile the paper reports improvements on semantic textual similarity, sentiment analysis, and NLI, it does not evaluate on more challenging or diverse tasks like question answering or summarization that could better test the universality of embeddings (Section 4). This limits the scope of the evaluation.\n\n6. **Evaluation - No Statistical Significance Testing:**  \nTables reporting performance gains do not include confidence intervals or significance tests. Without statistical validation, it is difficult to assess whether the reported improvements over baselines are robust or due to random variation (Section 4).\n\n7. **Reproducibility - Missing Hyperparameter Details:**  \nThe paper lacks crucial implementation details such as learning rates, batch sizes, masking ratios, and optimizer configurations used during CMLM training. This omission hinders reproducibility and fair comparison by other researchers (Section 3 and 4).\n\n8. **Reproducibility - No Code or Model Release Mentioned:**  \nThere is no indication that the authors plan to release code or pretrained models, which would be essential for verifying results and facilitating adoption of CMLM in the community (Conclusion).\n\n9. **Clarity - Ambiguous Description of Conditioning Mechanism:**  \nThe mechanism by which the sentence-level information conditions token prediction is vaguely described. It is unclear whether conditioning is implemented via concatenation, attention, or gating, making it difficult to grasp the model architecture fully (Section 3).\n\n10. **Clarity - Insufficient Explanation of Sentence Representation Learning:**  \nThe paper does not clarify how the sentence representation is learned jointly with token prediction\u2014whether it is a separate encoder, pooled output, or learned embedding vector. This lack of detail reduces clarity about the model\u2019s internal structure (Section 3).\n\n11. **Limitations - No Discussion of Computational Overhead:**  \nIntroducing conditioning on sentence-level information likely increases model complexity and training time, but the paper does not discuss computational costs or efficiency trade-offs compared to standard MLM (Section 5 or Conclusion).\n\n12. **Limitations - Potential Overfitting to Sentence-Level Signals:**  \nThe method may bias embeddings towards capturing sentence-level semantics at the expense of token-level nuances or syntactic information, but the paper does not analyze or acknowledge this potential limitation (Section 5).\n\n13. **Generalisability - Limited Evaluation on Languages Beyond English:**  \nAll experiments appear to be conducted on English datasets only. The paper does not address whether CMLM generalizes to other languages or multilingual settings, which is important for universal sentence representations (Section 4).\n\n14. **Generalisability - No Analysis on Domain Shift or Out-of-Domain Data:**  \nThe evaluation focuses on standard NLP benchmarks without testing robustness to domain shifts or noisy inputs. It remains unclear if CMLM embeddings maintain quality in real-world or low-resource scenarios (Section 4).\n\n15. **Methodology - No Comparison Between Masking Strategies:**  \nThe paper uses token masking similar to MLM but does not explore alternative masking strategies (e.g., span masking, whole word masking) that might interact differently with the conditioning mechanism. This limits understanding of design choices (Section 3)."
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Learning high-quality universal sentence representations that capture rich semantic information is crucial for various NLP tasks such as semantic textual similarity and downstream classification. Existing state-of-the-art sentence embedding models often rely on supervised or semi-supervised data (e.g., natural language inference (NLI), question-answer pairs, translation pairs), which are expensive and limited in domain and language coverage.\n\n- **Motivation:** Masked Language Models (MLMs) like BERT, pretrained on large unlabeled corpora, do not directly produce good sentence embeddings without further supervised fine-tuning. There is a need for a fully unsupervised method that can learn effective sentence representations from large-scale unlabeled data, easily extendable to multiple languages and domains.\n\n---\n\n### Proposed Method\n\n- **Conditional Masked Language Modeling (CMLM):**  \n  A novel unsupervised training method integrating sentence representation learning into MLM training by conditioning the MLM prediction of a sentence on the encoded vector of its adjacent sentence.\n\n  - **Architecture:**  \n    - Encode the first sentence \\( s_1 \\) into a sentence vector \\( v \\) via a Transformer encoder and average pooling.  \n    - Project \\( v \\) into multiple subspaces (projections).  \n    - The second sentence \\( s_2 \\) is masked (following BERT\u2019s masking procedure) and encoded by the same Transformer encoder, concatenated with the projected vectors of \\( v \\).  \n    - The model predicts the masked tokens in \\( s_2 \\) conditioned on \\( s_1 \\)\u2019s representation.  \n    - At inference, only the first encoder is used to produce sentence embeddings.\n\n  - **Training details:**  \n    - For English, trained on filtered Common Crawl data with large batch sizes and high masking ratios (31.3%).  \n    - For multilingual, extended to 113 languages with a large vocabulary and similar training setup.\n\n- **Multitask Training:**  \n  - Co-train CMLM with a bitext retrieval (BR) task using parallel bilingual sentence pairs to encourage cross-lingual semantic alignment.  \n  - Fine-tune with cross-lingual NLI data (translated Multi-Genre NLI corpus) to further improve multilingual sentence embeddings.\n\n- **Language Bias Mitigation:**  \n  - Identified a same-language bias in multilingual embeddings, where sentences cluster by language rather than semantics.  \n  - Proposed Principal Component Removal (PCR) to remove the first principal components encoding language identity, improving language-agnostic semantic alignment.\n\n---\n\n### Results\n\n- **English Sentence Embeddings:**  \n  - CMLM outperforms existing unsupervised and supervised models on SentEval benchmark tasks (classification and entailment).  \n  - Outperforms supervised SentBERT on the SICK-E entailment task.\n\n- **Multilingual Sentence Embeddings:**  \n  - CMLM trained on monolingual data outperforms mBERT and XLM-R baselines on a new multilingual benchmark (XEVAL) covering 15 languages.  \n  - Multitask training with bitext retrieval and cross-lingual NLI fine-tuning (S3 strategy) achieves state-of-the-art performance, surpassing LASER and multilingual USE (mUSE) models by significant margins.  \n  - Fine-tuning pretrained mBERT with CMLM and BR (f-mBERT) yields substantial improvements.\n\n- **Zero-shot Transfer Learning:**  \n  - On Amazon reviews sentiment classification, models trained with CMLM and multitask fine-tuning show strong zero-shot transfer to French, German, and Japanese, outperforming existing multilingual sentence embedding models by >5% on non-English languages and >2% on English.\n\n- **Language Agnosticism Analysis:**  \n  - Without PCR, embeddings show strong same-language bias.  \n  - PCR effectively removes this bias, leading to more uniform language distribution in retrieval tasks and improved cross-lingual retrieval accuracy on Tatoeba dataset.\n\n- **Ablation Studies:**  \n  - Using 15 projection spaces yields the best performance.  \n  - Alternative architectural variants (e.g., concatenating projections at output layer) degrade performance.  \n  - Using the average of projected vectors as sentence embedding remains competitive.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Unsupervised Training Method:**  \n   Introduction of Conditional Masked Language Modeling (CMLM) for effective sentence representation learning from large-scale unlabeled corpora, applicable to both monolingual and multilingual settings.\n\n2. **Multitask Training Framework:**  \n   Demonstration that co-training CMLM with bitext retrieval and fine-tuning with cross-lingual NLI data significantly improves multilingual sentence embeddings.\n\n3. **Multilingual Evaluation Benchmark:**  \n   Creation of XEVAL, a multilingual benchmark by translating SentEval tasks into 14 additional languages, enabling fair evaluation of multilingual sentence representations.\n\n4. **Language Bias Mitigation Technique:**  \n   Identification of same-language bias in multilingual embeddings and proposal of a principal component removal method to eliminate language identity information while preserving semantic content.\n\n---\n\n**In summary,** this paper proposes CMLM, a fully unsupervised and scalable method for learning universal sentence embeddings that outperform prior supervised and unsupervised models in English and multilingual contexts. The method is enhanced by multitask training and fine-tuning, and addresses language bias in multilingual embeddings via principal component removal.",
+    "critic": "1. **Novelty - Comparison to Prior Unsupervised Sentence Embedding Methods:**  \nThe paper claims CMLM as a novel unsupervised training method but does not sufficiently compare to or discuss recent unsupervised sentence embedding approaches such as SimCSE (unsupervised variant) or contrastive learning methods that also leverage MLMs without supervision. This omission weakens the novelty claim since these methods also learn sentence embeddings from unlabeled data and have shown strong performance.\n\n2. **Methodology - Justification for Multiple Projection Spaces:**  \nWhile the ablation study shows that using 15 projection spaces yields the best performance, the paper does not provide a theoretical or intuitive justification for why multiple projections improve embedding quality. It remains unclear why projecting the sentence vector into multiple subspaces benefits masked token prediction conditioned on the adjacent sentence.\n\n3. **Methodology - Choice of Conditioning Only on Adjacent Sentence:**  \nThe method conditions masked token prediction in sentence \\( s_2 \\) only on the embedding of the immediately preceding sentence \\( s_1 \\). The paper does not explore or justify why conditioning on only one adjacent sentence is optimal, nor does it consider conditioning on multiple surrounding sentences or the entire paragraph context, which could potentially enrich semantic representation.\n\n4. **Evaluation - Baseline Selection and Fairness:**  \nThe paper compares CMLM to mBERT and XLM-R baselines for multilingual embeddings but does not clarify whether these baselines were fine-tuned or used as-is for sentence embedding extraction. Without fine-tuning or adaptation, these baselines may be at a disadvantage, making the comparison less fair.\n\n5. **Evaluation - Limited Downstream Task Diversity:**  \nThe evaluation focuses heavily on SentEval tasks, XEVAL, and Amazon reviews sentiment classification. However, it lacks evaluation on other important downstream tasks such as question answering, summarization, or dialogue understanding, which would better demonstrate the generalizability of the learned sentence embeddings.\n\n6. **Evaluation - Metrics for Language Bias Mitigation:**  \nThe principal component removal (PCR) technique is evaluated mainly via retrieval accuracy and visualization of language clustering. The paper does not provide quantitative metrics specifically measuring semantic preservation post-PCR, such as semantic textual similarity scores before and after PCR, leaving open the question of whether semantic content is truly preserved.\n\n7. **Reproducibility - Details on Training Hyperparameters:**  \nThe paper mentions large batch sizes and high masking ratios but does not provide exact values for learning rates, optimizer settings, number of training steps, or hardware used. These details are critical for reproducing the training of CMLM models, especially given the scale of data and model.\n\n8. **Reproducibility - Vocabulary and Tokenization Details for Multilingual Model:**  \nFor the multilingual CMLM trained on 113 languages, the paper lacks details on the vocabulary construction, tokenization method, and how language-specific tokens or scripts are handled. This information is essential for replicating the multilingual training setup.\n\n9. **Clarity - Explanation of Projection Concatenation vs. Output Layer Concatenation:**  \nThe paper states that concatenating projections at the output layer degrades performance compared to concatenation before MLM prediction but does not clearly explain the architectural differences or why this design choice matters. A more detailed explanation would help readers understand the model design.\n\n10. **Limitations - Handling of Long Sentences or Documents:**  \nThe method encodes sentences individually and conditions on only one adjacent sentence. The paper does not discuss limitations related to longer documents or discourse-level context, which may be important for certain NLP applications requiring paragraph or document embeddings.\n\n11. **Limitations - Language Coverage and Low-Resource Languages:**  \nAlthough the multilingual model covers 113 languages, the paper does not analyze performance variation across high-resource versus low-resource languages, nor does it discuss how well CMLM handles truly low-resource languages with limited unlabeled data.\n\n12. **Generalisability - Applicability Beyond Masked Language Modeling:**  \nThe paper focuses exclusively on MLM-based Transformer encoders. It does not discuss whether the CMLM training paradigm could be adapted to other architectures or pretraining objectives (e.g., autoregressive models), limiting understanding of its broader applicability.\n\n13. **Generalisability - Domain Adaptation:**  \nThe training data for English is filtered Common Crawl, but the paper does not evaluate or discuss how well the learned embeddings transfer to domains substantially different from web text, such as biomedical or legal text, which is important for practical deployment.\n\n14. **Clarity - Definition and Computation of Sentence Embeddings at Inference:**  \nThe paper states that only the first encoder is used at inference to produce sentence embeddings but does not clearly specify whether the embedding is the average pooled output vector, the concatenation of projections, or another representation, which may confuse readers attempting to implement the method.\n\n15. **Methodology - Impact of Masking Ratio on Embedding Quality:**  \nThe paper uses a high masking ratio (31.3%) but does not provide an ablation or analysis of how different masking ratios affect the quality of sentence embeddings, leaving open whether this hyperparameter is critical or can be tuned for better performance."
   }
 }

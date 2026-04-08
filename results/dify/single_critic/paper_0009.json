@@ -1,31 +1,113 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks sufficient comparison and discussion of prior studies specifically analyzing scaling rules or capacity splits in neural machine translation, which leads to potentially overstated claims of novelty.",
-    "point_002": "The experiments fix internal Transformer layer widths and only scale depth, limiting the generality of the proposed bivariate scaling law and omitting analysis of how width or other architectural choices impact scaling behavior.",
-    "point_003": "The baseline encoder and decoder parameter values used for normalization in the scaling law are not justified or analyzed for sensitivity, undermining confidence in the robustness of the scaling exponents.",
-    "point_004": "There is insufficient clarity on how training, validation, and test splits are constructed with respect to source-original and target-original data, which is critical for interpreting the effects of composition bias.",
-    "point_005": "The study is limited to English–German translation, raising concerns about the generalizability of findings to other language pairs, especially low-resource or typologically different languages.",
-    "point_006": "Evaluation of generation quality relies only on BLEU and BLEURT metrics, without human evaluation or additional metrics like COMET, which could validate claims given known metric biases.",
-    "point_007": "The paper speculates on the impact of decoding hyperparameters such as beam search on generation quality but does not experimentally investigate this, missing an opportunity to strengthen conclusions.",
-    "point_008": "Important training details such as optimizer settings, learning rates, batch sizes, training steps, and early stopping criteria are omitted, limiting reproducibility and understanding of how training protocols affect scaling trends."
-  },
-  "summary": "This paper presents a novel empirical study of scaling laws for encoder-decoder Transformer models in neural machine translation, proposing a bivariate scaling law that models cross-entropy loss as a function of encoder and decoder parameter counts separately. The authors train a large suite of models varying encoder and decoder depths, analyze the impact of data composition bias (natural vs translated text on source and target sides), and examine how improvements in likelihood relate to generation quality measured by BLEU and BLEURT. Key findings include that decoder scaling reduces loss more effectively than encoder scaling, that data naturalness strongly influences scaling gains and saturation points, and that improved likelihood does not always translate to better translation quality depending on test set composition. The study provides practical insights into optimal parameter allocation and highlights challenges in training with synthetic data and evaluation biases.",
+  "summary": "This paper presents a large-scale empirical study of scaling laws for encoder-decoder Transformer models in neural machine translation, proposing a novel bivariate power law that separately models encoder and decoder parameter contributions to cross-entropy loss. It reveals that decoder scaling yields greater loss reduction per parameter and that dataset composition bias (natural vs. translated target text) significantly influences scaling behavior and generation quality metrics.",
   "strengths": [
-    "Proposes and validates a novel bivariate scaling law explicitly modeling encoder and decoder parameter effects on NMT loss.",
-    "Provides comprehensive empirical analysis of composition bias effects on scaling behavior and generation quality.",
-    "Derives analytical formula for optimal encoder-decoder parameter allocation based on scaling exponents.",
-    "Releases generated outputs to facilitate reproducibility and further research."
+    {
+      "point": "Comprehensive empirical evaluation of encoder-decoder scaling laws",
+      "evidence": "Trained ~95 Transformer models varying encoder and decoder depth from 2 to 64 layers, covering 40M to 1.5B parameters, across multiple language directions and diverse datasets."
+    },
+    {
+      "point": "Novel bivariate scaling law capturing distinct encoder and decoder scaling effects",
+      "evidence": "Proposed and validated a power law model \u2014 loss as a function of encoder and decoder sizes separately \u2014 with high predictive accuracy (R^2 > 99%) on held-out symmetric scaling data."
+    },
+    {
+      "point": "Insightful discovery that decoder scaling is more effective per parameter than encoder scaling",
+      "evidence": "Consistently larger decoder scaling exponents (p_d > p_e) and derivation of an optimal encoder-decoder capacity allocation formula."
+    },
+    {
+      "point": "In-depth analysis of dataset composition bias impact on scaling and generation quality",
+      "evidence": "Demonstrated stark differences in scaling curves and BLEU/BLEURT correlations between source-original (translated) and target-original (natural) test sets and training regimes."
+    },
+    {
+      "point": "Careful investigation of the relationship between cross-entropy loss and generation metrics",
+      "evidence": "Showed that for natural target data, BLEU and BLEURT improve with loss reduction, whereas for translated target data, these metrics saturate or degrade despite continued loss improvements."
+    },
+    {
+      "point": "Release of extensive experimental data and generated translations to support future research",
+      "evidence": "Models and translations released publicly, enabling reproducibility and further analysis."
+    }
   ],
   "weaknesses": [
-    "Lacks comparison with prior NMT scaling or capacity allocation studies, making novelty claims less substantiated.",
-    "Restricts scaling experiments to depth variation with fixed widths, limiting generality of conclusions.",
-    "Omits detailed justification and sensitivity analysis for baseline parameter normalization in scaling law.",
-    "Does not include human or more robust evaluation metrics beyond BLEU and BLEURT to assess generation quality."
+    {
+      "point": "Lack of comparison with prior encoder-decoder scaling studies beyond NMT",
+      "evidence": "No discussion or empirical evaluation against existing scaling laws for encoder-decoder architectures from other seq2seq domains or multilingual translation models."
+    },
+    {
+      "point": "Scaling experiments vary only model depth, fixing width and embedding sizes",
+      "evidence": "No ablations on model width or embedding dimension variations, limiting understanding of interactions between different architectural dimensions."
+    },
+    {
+      "point": "Potential confounding effects due to fixed hyperparameters aside from depth",
+      "evidence": "Feedforward sizes, attention heads, dropout rates held constant, raising questions on scaling law generality when all dimensions scale proportionally."
+    },
+    {
+      "point": "Insufficient analysis of why decoder scaling exponent exceeds encoder exponent",
+      "evidence": "Only speculative rationale provided without in-depth examination of decoder attention patterns or output distributions."
+    },
+    {
+      "point": "Evaluation of generation quality lacks human validation",
+      "evidence": "Reliance on BLEU and BLEURT metrics without human studies leaves open whether loss improvements correspond to meaningful translation quality gains."
+    },
+    {
+      "point": "No systematic study of beam search or decoding hyperparameters' influence on generation quality",
+      "evidence": "Claims about architectural effects on BLEU remain speculative without controlled decoding experiments."
+    },
+    {
+      "point": "Limited generalizability due to experiments focused only on English-German language pairs",
+      "evidence": "No evaluation on morphologically rich, low-resource, or typologically diverse languages."
+    },
+    {
+      "point": "Missing details on training stability and optimization challenges for very deep models",
+      "evidence": "No reports on convergence speed, gradient issues, or tuning difficulty for up to 64-layer encoders/decoders."
+    },
+    {
+      "point": "Absence of explicit baseline comparisons with standard Transformer base or big models",
+      "evidence": "No direct baseline results reported to contextualize gains from scaling experiments."
+    },
+    {
+      "point": "Unclear if dataset preprocessing or filtering biases affect composition bias findings",
+      "evidence": "No detailed description of data cleaning or domain overlap controls."
+    },
+    {
+      "point": "No exploration of training data size or quality effects on scaling laws",
+      "evidence": "Experiments conducted with a single very large dataset (~2.2B pairs) only."
+    },
+    {
+      "point": "Lack of uncertainty quantification for BLEU and BLEURT metrics",
+      "evidence": "Scores reported as point estimates without confidence intervals or variance over seeds."
+    },
+    {
+      "point": "Insufficient explanation of baseline parameter sizes used in scaling law fits",
+      "evidence": "No analysis of sensitivity to chosen /u03bNe and /u03bNd values affecting robustness of exponent estimates."
+    },
+    {
+      "point": "Incomplete reporting of training hyperparameters and infrastructure",
+      "evidence": "Details such as optimizer settings, batch sizes, step counts, hardware not exhaustively documented."
+    },
+    {
+      "point": "No discussion of computational or environmental costs of large-scale experiments",
+      "evidence": "Training 95 large models up to 1.5B parameters is compute intensive but resource usage is not reported."
+    }
   ],
   "questions": [
-    "How would the proposed bivariate scaling law perform if model width or other architectural hyperparameters were varied instead of only depth?",
-    "Can the findings on data composition bias and scaling be generalized to other language pairs, particularly low-resource or typologically distinct ones?",
-    "Would incorporating human evaluation or other advanced metrics alter conclusions about the relationship between likelihood improvements and generation quality?",
-    "How sensitive are the scaling exponents and optimal parameter allocations to different training protocols or optimization hyperparameters?"
+    {
+      "question": "How would scaling laws and optimal encoder-decoder allocations change if model width or embedding sizes were varied independently?",
+      "motivation": "Understanding interactions between different architectural dimensions is crucial for generalizing scaling laws beyond depth scaling."
+    },
+    {
+      "question": "Do the discovered scaling laws and composition bias effects generalize to other language pairs, especially morphologically rich or low-resource languages?",
+      "motivation": "Broader applicability of findings is important for designing efficient NMT systems across diverse languages."
+    },
+    {
+      "question": "Can human evaluation confirm that cross-entropy loss reductions and BLEU/BLEURT improvements correspond to meaningful translation quality gains, especially on natural target data?",
+      "motivation": "Automated metrics have known limitations; human judgments would validate practical benefits."
+    },
+    {
+      "question": "What is the impact of decoding strategies and hyperparameters (beam size, length penalties) on generation quality differences observed between encoder- and decoder-scaled models?",
+      "motivation": "Decoding biases may confound architectural scaling effects, so systematic analysis is needed."
+    },
+    {
+      "question": "How sensitive are the fitted scaling law exponents to the choice of baseline encoder and decoder sizes, and how does this affect robustness?",
+      "motivation": "Reliable scaling predictions require understanding parameter fit stability."
+    }
   ]
 }

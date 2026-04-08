@@ -1,36 +1,85 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks explicit comparison to recent generative or autoregressive retrieval approaches, such as T5-based retrieval or generative question answering over KBs, which would clarify GENRE's distinct novelty.",
-    "point_002": "Details on how the prefix trie of approximately 6 million entities is constructed, stored, updated, and its impact on query-time scalability and resource consumption are missing.",
-    "point_003": "No ablation studies are presented to assess the impact of unconstrained decoding or different levels of prefix trie pruning on retrieval accuracy and robustness.",
-    "point_004": "Baseline comparisons may be unfair as they rely on published numbers without ensuring matched fine-tuning or identical candidate entity sets across methods.",
-    "point_005": "Inference speed, latency, and throughput are not reported, leaving practical applicability and computational overhead of autoregressive constrained decoding unquantified.",
-    "point_006": "The evaluation does not separate errors arising from mention detection versus entity disambiguation, limiting insight into which components benefit most from the autoregressive approach.",
-    "point_007": "Critical implementation details such as beam size, pruning thresholds, prefix trie traversal heuristics, and tokenizer specifics are omitted, hindering reproducibility.",
-    "point_008": "The method's handling of newly added entities with potentially unknown tokens to the pretrained tokenizer or decoder is unclear, raising questions about open vocabulary support and incremental KB expansion."
-  },
-  "summary": "This paper proposes GENRE, an autoregressive entity retrieval model that generates entity names token-by-token conditioned on input context, leveraging a pretrained BART sequence-to-sequence architecture and constrained beam search over a prefix trie of valid entity names. By treating entities as compositional sequences rather than atomic labels, GENRE enables fine-grained cross-encoding interactions, reduces memory footprint substantially compared to dense vector retrievers, and supports exact softmax computation without negative sampling. Evaluated on over 20 datasets spanning entity disambiguation, end-to-end linking, and document retrieval tasks, GENRE achieves state-of-the-art or competitive results with orders of magnitude lower memory requirements and facilitates incremental addition of new entities without retraining. The work opens a promising direction for knowledge-intensive retrieval by exploiting the structured nature of entity names via generative modeling.",
-  "strengths": [
-    "Novel formulation of entity retrieval as autoregressive generation of entity names, enabling fine-grained context-entity interaction.",
-    "Significant memory efficiency gains over dense retrieval models, supporting large-scale KBs with millions of entities.",
-    "Unified model architecture successfully applied across multiple retrieval tasks with strong empirical performance.",
-    "Capability to incorporate new entities at inference time without retraining by extending the prefix trie."
-  ],
-  "weaknesses": [
-    "Insufficient methodological details on prefix trie construction, decoding hyperparameters, and tokenizer handling, limiting reproducibility.",
-    "Lack of controlled baseline comparisons with matched fine-tuning and candidate sets raises fairness concerns.",
-    "No reported inference speed or latency benchmarks to assess practical deployment feasibility.",
-    "Limited analysis of error sources in end-to-end linking and absence of ablation studies on decoding constraints.",
-    "No discussion on handling entity synonymy, aliases, or robustness to rare, unseen, and noisy inputs."
-  ],
-  "questions": [
-    "How is the prefix trie constructed, stored, and updated to enable efficient constrained decoding over millions of entities?",
-    "What are the specific decoding hyperparameters such as beam size and pruning thresholds, and how sensitive is performance to these choices?",
-    "Does GENRE support open vocabulary generation for unseen tokens in new entity names, and how are such cases handled during inference?",
-    "What is the inference speed and latency compared to dense retrieval baselines, especially when decoding multiple mentions in a document?",
-    "How does GENRE perform on noisy or informal text input, and can it handle entity synonyms or aliases beyond canonical entity titles?"
-  ],
   "paper_id": "paper_0078",
-  "system": "dify",
-  "title": "Autoregressive Entity Retrieval"
+  "title": "Autoregressive Entity Retrieval",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 175.59,
+  "structured": {
+    "summary": "This paper proposes GENRE, a novel autoregressive sequence-to-sequence approach to entity retrieval that generates entity names token-by-token conditioned on input context. By leveraging constrained beam search over a prefix trie of entity names, GENRE achieves state-of-the-art performance on a broad range of entity disambiguation, linking, and document retrieval tasks while drastically reducing memory footprint compared to traditional embedding-based retrieval methods.",
+    "strengths": [
+      {
+        "point": "Novel formulation of entity retrieval as autoregressive generation of entity names",
+        "evidence": "GENRE models entity retrieval as sequence-to-sequence generation, enabling fine-grained cross-encoding of context and entity tokens and exact softmax training without negative sampling."
+      },
+      {
+        "point": "Strong empirical performance across diverse knowledge-intensive tasks",
+        "evidence": "Achieves new state-of-the-art or highly competitive results on over 20 datasets spanning entity disambiguation, end-to-end linking, and page-level document retrieval, including a +13.7 point improvement in average R-Precision on KILT."
+      },
+      {
+        "point": "Significant memory efficiency over dense embedding retrieval approaches",
+        "evidence": "Memory footprint is roughly 20x smaller (e.g., 2.1GB vs 30+GB), since parameters scale with vocabulary size rather than number of entities."
+      },
+      {
+        "point": "Ability to handle cold-start and unseen entities without retraining",
+        "evidence": "New entities can be incorporated by adding names to the prefix trie, demonstrated by improved retrieval on rare and unseen entities."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to retrieval-augmented generation models like REALM or RAG",
+        "evidence": "No empirical or conceptual discussion distinguishing GENRE from hybrid retrieval-generation paradigms is presented."
+      },
+      {
+        "point": "No quantitative analysis of inference speed, latency, or decoding complexity",
+        "evidence": "Constrained beam search is central to decoding but the paper omits measurements of wall-clock decoding time, throughput, or computational complexity."
+      },
+      {
+        "point": "Insufficient evaluation and analysis of ambiguity and disambiguation challenges",
+        "evidence": "No targeted study on how the model handles ambiguous entity names or confusion between similar entities."
+      },
+      {
+        "point": "Limited discussion on scalability and maintenance of the prefix trie structure",
+        "evidence": "No analysis of trie growth with KB updates, incremental trie maintenance, or impact on decoding efficiency."
+      },
+      {
+        "point": "No exploration of multilingual or cross-lingual retrieval applicability",
+        "evidence": "Experiments are solely on English datasets; challenges of multilingual vocabularies and tokenization are unaddressed."
+      },
+      {
+        "point": "No detailed error analysis or handling of non-entity/noisy inputs",
+        "evidence": "Paper lacks qualitative error taxonomy or discussion of model behavior on queries without valid entities."
+      },
+      {
+        "point": "Reproducibility details incomplete",
+        "evidence": "Hyperparameters such as learning rate schedules, batch sizes, and training epochs per dataset are not fully specified."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does GENRE compare in inference speed and latency to dense embedding retrieval and approximate nearest neighbor methods?",
+        "motivation": "Practical deployment requires understanding of real-time throughput and decoding efficiency."
+      },
+      {
+        "question": "How robust is GENRE to ambiguous entity names and what mechanisms help disambiguate similarly named entities?",
+        "motivation": "Entity ambiguity is common in real-world settings and impacts retrieval accuracy."
+      },
+      {
+        "question": "Can the constrained beam search and prefix trie approach scale to multilingual or very large KBs with frequent updates?",
+        "motivation": "Extending to multilingual or dynamic KBs is critical for broad applicability."
+      },
+      {
+        "question": "Does the pretrained language model bias or hallucination affect reliability of generated entity names?",
+        "motivation": "Understanding model biases is important for trustworthy retrieval."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to retrieval-augmented generation models like REALM or RAG. No empirical or conceptual discussion distinguishing GENRE from hybrid retrieval-generation paradigms is presented",
+    "point_002": "No quantitative analysis of inference speed, latency, or decoding complexity. Constrained beam search is central to decoding but the paper omits measurements of wall-clock decoding time, throughput, or computational complexity",
+    "point_003": "Insufficient evaluation and analysis of ambiguity and disambiguation challenges. No targeted study on how the model handles ambiguous entity names or confusion between similar entities",
+    "point_004": "Limited discussion on scalability and maintenance of the prefix trie structure. No analysis of trie growth with KB updates, incremental trie maintenance, or impact on decoding efficiency",
+    "point_005": "No exploration of multilingual or cross-lingual retrieval applicability. Experiments are solely on English datasets; challenges of multilingual vocabularies and tokenization are unaddressed",
+    "point_006": "No detailed error analysis or handling of non-entity/noisy inputs. Paper lacks qualitative error taxonomy or discussion of model behavior on queries without valid entities",
+    "point_007": "Reproducibility details incomplete. Hyperparameters such as learning rate schedules, batch sizes, and training epochs per dataset are not fully specified"
+  }
 }

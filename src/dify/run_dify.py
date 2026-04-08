@@ -8,10 +8,11 @@ Steps for each paper:
 2. Upload the PDF to Dify file upload API
 3. Run the Dify workflow with the uploaded file
 4. Parse the JSON output
-5. Save to results/dify/paper_XXXX.json
+5. Save to results/dify/<mode>/paper_XXXX.json
 
 Usage:
-    python -m src.dify.run_dify
+    python -m src.dify.run_dify single_critic   # Reader → Critic → Summariser
+    python -m src.dify.run_dify dual_critic     # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 """
 
 from __future__ import annotations
@@ -20,6 +21,7 @@ import difflib
 import json
 import os
 import re
+import sys
 import time
 from pathlib import Path
 
@@ -30,14 +32,15 @@ load_dotenv()
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 
-DIFY_API_KEY = os.environ["DIFY_API_KEY"]
+DIFY_API_KEYS = {
+    "single_critic": os.environ["DIFY_API_KEY_SINGLE"],
+    "dual_critic": os.environ["DIFY_API_KEY_DUAL"],
+}
+
 DIFY_BASE_URL = "https://api.dify.ai/v1"
-HEADERS = {"Authorization": f"Bearer {DIFY_API_KEY}"}
 
 CHECKPOINT_FILE = Path("data/checkpoint.json")
 PAPERS_DIR = Path("data/papers")
-OUTPUT_DIR = Path("results/dify/single_critic")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 SLEEP_BETWEEN_PAPERS = 3  # seconds, to avoid rate limiting
 
@@ -70,14 +73,14 @@ def find_pdf(title: str, pdf_files: list[Path]) -> Path | None:
 
 # ── Dify API calls ──────────────────────────────────────────────────────────────
 
-def upload_file(pdf_path: Path) -> str | None:
+def upload_file(pdf_path: Path, headers: dict) -> str | None:
     """Upload a PDF to Dify and return the upload_file_id."""
     url = f"{DIFY_BASE_URL}/files/upload"
     try:
         with open(pdf_path, "rb") as f:
             response = requests.post(
                 url,
-                headers=HEADERS,
+                headers=headers,
                 files={"file": (pdf_path.name, f, "application/pdf")},
                 data={"user": "automation"},
             )
@@ -88,7 +91,7 @@ def upload_file(pdf_path: Path) -> str | None:
         return None
 
 
-def run_workflow(upload_file_id: str) -> dict | None:
+def run_workflow(upload_file_id: str, headers: dict) -> dict | None:
     """Run the Dify workflow using streaming mode to avoid gateway timeouts."""
     url = f"{DIFY_BASE_URL}/workflows/run"
     payload = {
@@ -105,7 +108,7 @@ def run_workflow(upload_file_id: str) -> dict | None:
     try:
         response = requests.post(
             url,
-            headers={**HEADERS, "Content-Type": "application/json"},
+            headers={**headers, "Content-Type": "application/json"},
             json=payload,
             stream=True,
             timeout=600,  # 10 minutes total
@@ -144,7 +147,6 @@ def parse_output(workflow_response: dict) -> dict | None:
         # Try all output keys
         raw = outputs.get("final_review") or outputs.get("text") or ""
         if not raw:
-            # Print all values to see what we have
             for k, v in outputs.items():
                 print(f"    [DEBUG] {k}: {str(v)[:200]}")
             print(f"    [ERROR] No output found in workflow response")
@@ -164,13 +166,43 @@ def parse_output(workflow_response: dict) -> dict | None:
         return None
 
 
+def build_critique_points(structured: dict) -> dict[str, str]:
+    """Build flat critique_points dict from structured weaknesses for scorer compatibility."""
+    points = {}
+    for i, item in enumerate(structured.get("weaknesses", []), 1):
+        if isinstance(item, str):
+            full = item
+        elif isinstance(item, dict):
+            point_text = item.get("point", "")
+            evidence = item.get("evidence", "")
+            full = f"{point_text}. {evidence}".strip(" .") if evidence else point_text
+        else:
+            continue
+        points[f"point_{i:03d}"] = full
+    return points
+
+
 # ── Main pipeline ───────────────────────────────────────────────────────────────
 
-def main():
+def main(mode: str) -> None:
+    if mode not in ("single_critic", "dual_critic"):
+        print(f"Unknown mode '{mode}'. Use 'single_critic' or 'dual_critic'.")
+        sys.exit(1)
+
+    api_key = DIFY_API_KEYS[mode]
+    if not api_key:
+        print(f"[ERROR] DIFY_API_KEY_{'SINGLE' if mode == 'single_critic' else 'DUAL'} is not set in .env")
+        sys.exit(1)
+    headers = {"Authorization": f"Bearer {api_key}"}
+
+    output_dir = Path(f"results/dify/{mode}")
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     with open(CHECKPOINT_FILE) as f:
         checkpoint = json.load(f)
 
     pdf_files = list(PAPERS_DIR.glob("*.pdf"))
+    print(f"Mode: {mode}")
     print(f"Found {len(pdf_files)} PDFs in {PAPERS_DIR}")
     print(f"Processing {len(checkpoint)} papers...\n")
 
@@ -181,7 +213,7 @@ def main():
     for idx_str, paper in sorted(checkpoint.items(), key=lambda x: int(x[0])):
         idx = int(idx_str)
         paper_id = f"paper_{idx:04d}"
-        output_file = OUTPUT_DIR / f"{paper_id}.json"
+        output_file = output_dir / f"{paper_id}.json"
         title = paper["title"]
 
         # Skip already processed papers
@@ -201,13 +233,13 @@ def main():
         print(f"    PDF: {pdf_path.name}")
 
         # Upload PDF
-        upload_id = upload_file(pdf_path)
+        upload_id = upload_file(pdf_path, headers)
         if upload_id is None:
             failed += 1
             continue
 
         # Run workflow
-        result = run_workflow(upload_id)
+        result = run_workflow(upload_id, headers)
         if result is None:
             failed += 1
             time.sleep(SLEEP_BETWEEN_PAPERS)
@@ -222,31 +254,43 @@ def main():
             continue
 
         # Parse output
-        parsed = parse_output(result)
-        if parsed is None:
+        structured = parse_output(result)
+        if structured is None:
             failed += 1
             time.sleep(SLEEP_BETWEEN_PAPERS)
             continue
 
-        # Add metadata
-        parsed["paper_id"] = paper_id
-        parsed["system"] = "dify"
-        parsed["title"] = title
+        # Extract latency
+        latency = round(result.get("data", {}).get("elapsed_time", 0), 2)
 
-        # Save result
+        # Build critique_points from weaknesses for scorer compatibility
+        critique_points = build_critique_points(structured)
+
+        # Save result in standard format (matches n8n output structure)
+        output = {
+            "paper_id": paper_id,
+            "title": title,
+            "platform": f"dify_{mode}",
+            "model": "gpt-4.1-mini",
+            "latency_seconds": latency,
+            "structured": structured,
+            "critique_points": critique_points,
+        }
+
         with open(output_file, "w") as f:
-            json.dump(parsed, f, indent=2)
+            json.dump(output, f, indent=2)
 
-        latency = result.get("data", {}).get("elapsed_time", 0)
-        print(f"    [OK] Saved → {output_file} (latency: {latency:.1f}s)")
+        n_points = len(critique_points)
+        print(f"    [OK] {n_points} weakness points → {output_file} (latency: {latency:.1f}s)")
         success += 1
 
         time.sleep(SLEEP_BETWEEN_PAPERS)
 
     print(f"\n{'='*50}")
     print(f"Done: {success} succeeded, {skipped} skipped, {failed} failed")
-    print(f"Results saved to: {OUTPUT_DIR}")
+    print(f"Results saved to: {output_dir}")
 
 
 if __name__ == "__main__":
-    main()
+    mode = sys.argv[1] if len(sys.argv) > 1 else "single_critic"
+    main(mode)

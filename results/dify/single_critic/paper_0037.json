@@ -1,37 +1,71 @@
 {
-  "critique_points": {
-    "point_001": "The paper does not sufficiently discuss or empirically compare against prior work on selective multitask learning or curriculum learning methods that also seek task-specific data subsets, limiting clarity on DEFT's novelty.",
-    "point_002": "There is a lack of ablation studies comparing different embedding models or encoder architectures, leaving unclear how sensitive or general DEFT is to the choice of pretrained encoder used for retrieval.",
-    "point_003": "The paper does not provide detailed quantitative ablations or principled guidance on the number of retrieved neighbors and unlabeled query size, nor how stable performance is across tasks with respect to these hyperparameters.",
-    "point_004": "Evaluation is missing comparisons against simpler data selection baselines, such as lexical similarity retrieval methods (e.g., BM25) or majority class baselines, to better understand the gains from dense retrieval.",
-    "point_005": "Few-shot fine-tuning comparisons may not be fully apples-to-apples since it's unclear if computational budgets, initialization, or fine-tuning steps are equivalent across DEFT and baseline methods, possibly confounding reported gains.",
-    "point_006": "Reproducibility is hindered by sparse details on retrieval index construction, including hyperparameters, embedding dimensions, and exact FAISS configurations.",
-    "point_007": "The paper lacks clear recipes or detailed descriptions of prompt templates and example formatting used for retrieval, making faithful replication of embedding and retrieval steps difficult.",
-    "point_008": "There is ambiguity in how generated model outputs are mapped back to discrete labels or numerical scores for evaluation, especially in open-ended tasks, which may bias metric reporting and complicate comparisons."
-  },
-  "summary": "This paper proposes Data-Efficient FineTuning (DEFT), a method that leverages small sets of unlabeled target-task examples to retrieve relevant subsets of multitask training data via dense cross-task nearest neighbor search in embedding space, enabling fine-tuning on only these tailored subsets. DEFT significantly improves zero-shot and few-shot performance over strong multitask baselines while using only a small fraction of the training data, thereby reducing negative interference and training costs. Extensive experiments across diverse NLP benchmarks demonstrate DEFT's effectiveness, highlighting its practical benefits in data efficiency and its complementarity with parameter-efficient fine-tuning.",
-  "strengths": [
-    "Proposes a simple, scalable, and effective retrieval-based method for task-specific data selection that improves data efficiency and performance.",
-    "Demonstrates strong empirical gains across a wide range of NLP tasks and domains with substantially reduced training data and compute.",
-    "Shows complementarity with few-shot parameter-efficient fine-tuning, enabling further performance improvements with small labeled datasets.",
-    "Provides analysis revealing the negative interference in training on large multitask pools and the relevance of small subsets per target task.",
-    "Publicly releases code to support reproducibility and further research."
-  ],
-  "weaknesses": [
-    "Insufficient comparison and discussion of related selective multitask learning and curriculum learning prior work limits understanding of novelty.",
-    "Lacks ablations on embedding model choices and hyperparameter sensitivity for retrieval, which impacts generalizability.",
-    "Missing simpler baseline comparisons (e.g., lexical retrieval methods) to quantify gains attributable purely to dense retrieval.",
-    "Reproducibility is challenged by sparse details on retrieval index construction and prompt example formatting.",
-    "Evaluation ambiguities exist regarding output-to-label mapping and unclear equivalence in few-shot fine-tuning experimental setups."
-  ],
-  "questions": [
-    "How sensitive is DEFT\u2019s performance to the choice of embedding model and retrieval hyperparameters, and can it generalize across different pretrained encoders?",
-    "How does DEFT compare to simpler data selection methods like BM25 or random sampling in terms of retrieval quality and downstream performance?",
-    "Can DEFT be effectively applied to tasks with structured, multimodal, or non-textual inputs, and what adaptations would be necessary?",
-    "How does DEFT perform when only very few or no unlabeled target examples are available, and can it gracefully degrade in such scenarios?",
-    "Could the authors provide more details or recipes regarding prompt templates and example formatting used for retrieval to facilitate exact reproduction?"
-  ],
   "paper_id": "paper_0037",
-  "system": "dify",
-  "title": "Data-Efficient Finetuning Using Cross-Task Nearest Neighbors"
+  "title": "Data-Efficient Finetuning Using Cross-Task Nearest Neighbors",
+  "platform": "dify_single_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 68.3,
+  "structured": {
+    "summary": "This paper proposes DEFT, a method that leverages a small set of unlabeled target task examples to retrieve a relevant subset of instances from large multitask prompted datasets for fine-tuning. Training on these retrieved nearest neighbors yields improved or comparable performance to training on the full multitask pool with significantly less data and compute, particularly benefiting zero-shot and few-shot transfer scenarios.",
+    "strengths": [
+      {
+        "point": "Data-efficient instance-level retrieval improves target-task performance",
+        "evidence": "DEFT models trained on as little as 2-5% of the multitask data outperform baselines trained on the entire dataset on 12 of 14 held-out tasks."
+      },
+      {
+        "point": "Strong empirical gains in zero-shot and few-shot settings",
+        "evidence": "DEFT combined with parameter-efficient few-shot finetuning (IA3) yields 7% average improvement over T0-3B few-shot baselines across multiple datasets."
+      },
+      {
+        "point": "Detailed analysis confirms negative interference from irrelevant data and the utility of targeted retrieval",
+        "evidence": "Only a small fraction of multitask data is retrieved per target, and random or BM25-retrieved subsets perform worse than DEFT's nearest neighbor selection."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to prior instance-level retrieval or example selection methods",
+        "evidence": "The paper lacks discussion or empirical baselines involving other retrieval-augmented or example-based finetuning approaches, potentially overstating novelty."
+      },
+      {
+        "point": "Limited investigation of retrieval design choices and failure modes",
+        "evidence": "Including prompt tokens during retrieval unexpectedly hurts performance but the paper does not deeply analyze why; also, reasons for performance degradation with large neighbor counts remain unexplored."
+      },
+      {
+        "point": "Reproducibility details are incomplete",
+        "evidence": "Key hyperparameters for retriever training, FAISS indexing, and DEFT finetuning (learning rates, epochs) are not fully specified."
+      },
+      {
+        "point": "Evaluation scope and metrics could be broader",
+        "evidence": "Only two multitask pools (P3 and SuperNaturalInstructions) and limited metrics (accuracy, ROUGE-L) are reported; robustness, calibration, or diverse task formats are not evaluated."
+      },
+      {
+        "point": "Scalability and practical applicability concerns unaddressed",
+        "evidence": "The computational cost and feasibility of building and searching large nearest neighbor indices over very large multitask pools in resource-constrained settings is not discussed."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does DEFT compare to other example selection or retrieval-augmented finetuning methods?",
+        "motivation": "Understanding relative gains and complementary benefits requires positioning DEFT against existing retrieval-based approaches."
+      },
+      {
+        "question": "Why does including prompt/instruction tokens in retrieval embeddings degrade performance?",
+        "motivation": "Clarifying this counterintuitive behavior could inform better retrieval design and improve DEFT."
+      },
+      {
+        "question": "What are the practical compute costs and latency overheads introduced by retrieval indexing and nearest neighbor search?",
+        "motivation": "Verifying efficiency claims requires concrete measurements beyond data size reduction."
+      },
+      {
+        "question": "Can DEFT generalize to non-prompted multitask datasets, non-English tasks, or domains with very scarce unlabeled data?",
+        "motivation": "Understanding generalizability is crucial for wider applicability."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to prior instance-level retrieval or example selection methods. The paper lacks discussion or empirical baselines involving other retrieval-augmented or example-based finetuning approaches, potentially overstating novelty",
+    "point_002": "Limited investigation of retrieval design choices and failure modes. Including prompt tokens during retrieval unexpectedly hurts performance but the paper does not deeply analyze why; also, reasons for performance degradation with large neighbor counts remain unexplored",
+    "point_003": "Reproducibility details are incomplete. Key hyperparameters for retriever training, FAISS indexing, and DEFT finetuning (learning rates, epochs) are not fully specified",
+    "point_004": "Evaluation scope and metrics could be broader. Only two multitask pools (P3 and SuperNaturalInstructions) and limited metrics (accuracy, ROUGE-L) are reported; robustness, calibration, or diverse task formats are not evaluated",
+    "point_005": "Scalability and practical applicability concerns unaddressed. The computational cost and feasibility of building and searching large nearest neighbor indices over very large multitask pools in resource-constrained settings is not discussed"
+  }
 }
