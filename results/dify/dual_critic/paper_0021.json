@@ -1,38 +1,63 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks comparisons to recent state-of-the-art OOD detection methods such as Energy-based approaches, Mahalanobis distance-based detectors, and calibration-improving methods like ODIN, which are essential to contextualize CoNAL's empirical gains.",
-    "point_002": "There is no quantitative analysis of the computational cost, API usage, inference latency, or hardware requirements associated with leveraging large language models for label and example generation, leaving practical feasibility unclear.",
-    "point_003": "The paper omits ablation studies varying the hyperparameters and design choices of the Contrastive Confidence Loss, such as weighting balance and margin size, which are necessary to justify the proposed loss formulation.",
-    "point_004": "The criteria and procedure for filtering generated labels in the Novelty Prompting step are unclear and under-specified, impairing reproducibility and raising concerns about consistency across experiments.",
-    "point_005": "A baseline involving fine-tuning on generated novel examples using standard cross-entropy loss without OE or contrastive loss is missing, making it difficult to disentangle gains from data augmentation versus loss function design.",
-    "point_006": "The method for selecting confidence thresholds for abstention during selective classification is not described, complicating reproducibility and practical deployment.",
-    "point_007": "The evaluation lacks testing on authentic or adversarial OOD datasets; reliance on LLM-generated novel examples risks overfitting to distributions close to known classes and limits claims of generalization.",
-    "point_008": "The paper does not discuss scalability issues or computational complexity for large label spaces or high-dimensional tasks, limiting insights into applicability beyond small-scale datasets."
-  },
-  "summary": "This paper presents Contrastive Novelty-Augmented Learning (CoNAL), a novel approach to open-set selective classification in NLP that uses large language models to generate semantically novel label names and examples, then trains classifiers with a contrastive confidence loss to reduce overconfidence on novel classes while maintaining accuracy on known classes. Extensive experiments on multiple NLP datasets demonstrate improvements over prior methods in selective prediction and OOD detection metrics, highlighting the effectiveness of automated novelty prompting and the proposed loss. However, the work would benefit from stronger baselines, clearer methodological details, scalability analyses, and evaluations on authentic OOD data to fully establish its practical impact.",
-  "strengths": [
-    "Innovative use of large language models for automated generation of plausible novel labels and examples to simulate OOD data.",
-    "Introduction of a contrastive confidence loss that flexibly lowers confidence on generated novel examples without degrading in-distribution accuracy.",
-    "Comprehensive empirical evaluation across diverse NLP datasets showing improved selective classification performance.",
-    "Demonstrated robustness to different classifier architectures and smaller-scale LLMs, improving accessibility."
-  ],
-  "weaknesses": [
-    "Lack of comparisons to recent state-of-the-art OOD detection baselines limits assessment of relative performance.",
-    "Insufficient ablation studies and unclear hyperparameter choices for the proposed loss function impede understanding of design decisions.",
-    "Omission of detailed computational cost analysis and practical considerations for LLM usage reduces applicability insights.",
-    "Unclear procedures for label filtering and confidence threshold selection reduce reproducibility and deployment clarity.",
-    "Limited evaluation on authentic or adversarial OOD samples raises concerns about generalization beyond generated distributions.",
-    "No discussion of scalability to large label spaces or high-dimensional problems."
-  ],
-  "questions": [
-    "How does CoNAL perform compared to recent OOD detection methods such as Energy-based models or Mahalanobis detectors on benchmark datasets?",
-    "Can the authors provide quantitative estimates of computational cost, inference latency, and required resources for the LLM-based generation steps?",
-    "What specific criteria, algorithms, or thresholds are used for filtering generated labels to ensure novelty and avoid synonym overlap?",
-    "How are confidence thresholds for abstention chosen or tuned during selective classification to balance coverage and accuracy?",
-    "Has CoNAL been evaluated on real-world or adversarial OOD datasets to verify robustness beyond LLM-generated novel examples?",
-    "How does the method scale computationally and methodologically to tasks with hundreds or thousands of classes?"
-  ],
   "paper_id": "paper_0021",
-  "system": "dify",
-  "title": "Contrastive Novelty Learning: Anticipating Outliers with Large Language Models"
+  "title": "Contrastive Novelty Learning: Anticipating Outliers with Large Language Models",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 125.15,
+  "structured": {
+    "summary": "This paper proposes CoNAL, a novel framework leveraging large language models to generate semantically novel out-of-distribution (OOD) classes and corresponding examples, coupled with a contrastive confidence loss to train classifiers that abstain on OOD inputs. Experiments show improved open-set selective classification and OOD detection performance across multiple NLP datasets without degrading in-distribution accuracy.",
+    "strengths": [
+      {
+        "point": "Innovative use of LLMs for generating novel OOD labels and examples",
+        "evidence": "CoNAL's Novelty Prompting stage uses GPT-3 and GPT-J to create semantically novel and plausible novel class labels and examples, enabling better OOD representation without requiring real OOD data."
+      },
+      {
+        "point": "Contrastive Confidence Loss effectively improves OOD abstention",
+        "evidence": "CCL encourages the model to have relatively lower confidence on generated novel examples than in-distribution examples, outperforming prior methods like Outlier Exposure and ensembles while maintaining in-distribution accuracy."
+      },
+      {
+        "point": "Comprehensive evaluation across diverse datasets and settings",
+        "evidence": "Experiments on four NLP datasets with multiple open-set splits demonstrate consistent gains in OOD detection (5.5% AUROC improvement) and OSSC accuracy (2.3% AUAC improvement), with robustness analyses on generation noise, LLM size, and generation budgets."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparisons to recent NLP-specific OOD detection methods",
+        "evidence": "The paper omits comparisons to energy-based, Mahalanobis distance, spectral normalization, and other contemporary NLP OOD detection approaches, weakening claims of state-of-the-art performance."
+      },
+      {
+        "point": "Insufficient ablation studies on key components and hyperparameters",
+        "evidence": "No ablation or quantitative analysis is provided on the impact of synonym filtering during novel label generation, contrastive loss hyperparameters, or the size and quality of generated novel examples."
+      },
+      {
+        "point": "Dependence on GPT-3 API raises reproducibility and stability concerns",
+        "evidence": "Reliance on GPT-3 for label generation involves opaque, evolving model behavior and training data, complicating exact replication and wider adoption."
+      },
+      {
+        "point": "Limited dataset diversity and artificial open-set splits constrain generalizability",
+        "evidence": "Experiments use only four datasets with artificial splits that may not reflect real-world open-set complexity or semantic novelty of novel classes."
+      },
+      {
+        "point": "No analysis of confidence calibration, error modes, or bias introduced by synthetic data",
+        "evidence": "The work lacks evaluation of calibration metrics on in-distribution data, qualitative error analysis, or discussion of potential biases and artifacts induced by LLM-generated OOD examples."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How sensitive is CoNAL\u2019s performance to the choice and quality of generated novel labels and examples?",
+        "motivation": "Understanding this is critical to assess robustness and guide practical generation strategies or alternative data sources."
+      },
+      {
+        "question": "Can CoNAL generalize to truly novel classes outside LLM knowledge or to other NLP tasks beyond classification?",
+        "motivation": "Evaluating these would clarify the approach\u2019s real-world applicability and limitations."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparisons to recent NLP-specific OOD detection methods. The paper omits comparisons to energy-based, Mahalanobis distance, spectral normalization, and other contemporary NLP OOD detection approaches, weakening claims of state-of-the-art performance",
+    "point_002": "Insufficient ablation studies on key components and hyperparameters. No ablation or quantitative analysis is provided on the impact of synonym filtering during novel label generation, contrastive loss hyperparameters, or the size and quality of generated novel examples",
+    "point_003": "Dependence on GPT-3 API raises reproducibility and stability concerns. Reliance on GPT-3 for label generation involves opaque, evolving model behavior and training data, complicating exact replication and wider adoption",
+    "point_004": "Limited dataset diversity and artificial open-set splits constrain generalizability. Experiments use only four datasets with artificial splits that may not reflect real-world open-set complexity or semantic novelty of novel classes",
+    "point_005": "No analysis of confidence calibration, error modes, or bias introduced by synthetic data. The work lacks evaluation of calibration metrics on in-distribution data, qualitative error analysis, or discussion of potential biases and artifacts induced by LLM-generated OOD examples"
+  }
 }

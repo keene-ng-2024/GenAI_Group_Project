@@ -1,48 +1,67 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks direct experimental comparisons to prior adaptive retrieval or early-exit methods, making it unclear how much novelty or practical advantage the proposed IAPEK framework offers.",
-    "point_002": "IAPEK\u2019s reliance on access to internal PTLM hidden states via the Thrust metric limits applicability to black-box or API-only large language models where such access is unavailable.",
-    "point_003": "The clustering algorithm and hyperparameters used to compute the Thrust score are insufficiently detailed, hindering reproducibility and understanding of sensitivity to these choices.",
-    "point_004": "There is no ablation study varying the number or representativeness of samples used to build clusters, leaving uncertain how cluster quality and Thrust robustness scale with data complexity.",
-    "point_005": "The paper does not clearly define or profile the computational cost metrics underlying reported 'cost-efficiency' gains, undermining claims about practical efficiency improvements.",
-    "point_006": "Thrust is not evaluated in fully zero-shot settings without any task-specific fine-tuning, leaving its generalization to unseen data and tasks uncertain.",
-    "point_007": "Fine-tuning of UnifiedQA models with external knowledge confounds the evaluation of the adaptive retrieval gating, as improvements may stem from fine-tuning rather than gating per se.",
-    "point_008": "It is unclear whether no-retrieval baseline models have equivalent fine-tuning, risking inflated gains attributed to adaptive retrieval due to inconsistent training regimes.",
-    "point_009": "Comparing Thrust to BM25 retrieval scores is inappropriate; better baselines would be intrinsic model confidence or uncertainty metrics to validate Thrust as an internal knowledge estimator.",
-    "point_010": "The evaluation is restricted to factual QA and classification tasks, excluding other knowledge types such as commonsense, procedural, temporal, or multi-hop reasoning, limiting claims of generality.",
-    "point_011": "Failure case analysis is superficial, lacking quantitative or qualitative examination linking errors to Thrust scores or retrieval quality, especially on challenging datasets like ARC-C.",
-    "point_012": "No runtime or memory profiling of Thrust computation across different PTLM sizes is provided, leaving scalability and resource requirements unexamined.",
-    "point_013": "The paper omits details on prompt or input template design affecting PTLM hidden states, which is critical for reproducibility and understanding embedding variability.",
-    "point_014": "The methodology for mapping model outputs to discrete labels in classification tasks is unclear, which affects prediction confidence and the validity of Thrust scores.",
-    "point_015": "Cold-start and domain shift limitations are acknowledged but not quantified or mitigated, with no strategies for continual cluster updating or robustness under distributional changes.",
-    "point_016": "There is no theoretical or statistical analysis of the Thrust score\u2019s properties, stability, or robustness, limiting understanding of when and why it works.",
-    "point_017": "The relationship between Thrust and standard model calibration or confidence measures is unexplored, missing insights on whether Thrust provides complementary knowledge estimation.",
-    "point_018": "Potential biases due to label imbalance affecting cluster quality and Thrust scoring are not discussed or studied.",
-    "point_019": "No end-to-end latency or user experience evaluation is conducted, so practical deployment benefits remain unsubstantiated.",
-    "point_020": "Testing is limited to encoder-decoder and decoder-only PTLM architectures with accessible hidden states, restricting claims of model-agnosticism.",
-    "point_021": "Key hyperparameters and threshold settings for adaptive gating are insufficiently documented, impeding reproducibility and adoption.",
-    "point_022": "The impact of retrieval-augmented input formatting on PTLM hidden states and consequently on Thrust scores is not analyzed, leaving interpretability gaps."
-  },
-  "summary": "This paper proposes IAPEK, a framework for instance-level adaptive retrieval of external knowledge based on a novel unsupervised metric called Thrust, which measures a PTLM\u2019s internal knowledge sufficiency via clustering of hidden states. By selectively retrieving knowledge only when needed, IAPEK aims to improve efficiency and accuracy in knowledge-intensive NLP tasks. Experiments across multiple datasets and models demonstrate that Thrust effectively identifies instances requiring external knowledge, enabling improved cost-accuracy trade-offs compared to indiscriminate retrieval. While promising, the work would benefit from more thorough comparisons to prior adaptive retrieval methods, clearer methodological details, stronger zero-shot and theoretical analyses, and better evaluation of practical deployment considerations.",
-  "strengths": [
-    "Introduces a novel and efficient unsupervised metric (Thrust) to estimate PTLM internal knowledge sufficiency at the instance level.",
-    "Demonstrates that adaptive retrieval based on Thrust can improve efficiency and accuracy across diverse knowledge-intensive NLP tasks compared to naive retrieval."
-  ],
-  "weaknesses": [
-    "Lacks direct experimental comparison to existing adaptive retrieval and early-exit baselines, limiting claims of novelty and practical advantage.",
-    "Relies on access to internal hidden states, restricting applicability to black-box or API-only models.",
-    "Insufficient methodological detail on clustering, output mapping, and thresholding impedes reproducibility.",
-    "Limited zero-shot evaluation and theoretical grounding of Thrust constrain understanding of generalization and robustness.",
-    "No comprehensive profiling of computational cost, latency, or scalability undermines practical deployment claims."
-  ],
-  "questions": [
-    "How does IAPEK compare experimentally to existing adaptive retrieval or early-exit methods that also aim to reduce retrieval costs?",
-    "Can Thrust be approximated or adapted using only output logits or embeddings to enable use with black-box large language models?",
-    "How sensitive is Thrust to clustering hyperparameters, number of samples, and label imbalance, and how does this affect gating decisions?",
-    "Does Thrust provide complementary information beyond standard model confidence or calibration metrics?",
-    "What strategies could be employed to handle cold-start scenarios and domain shifts where cluster centroids may become stale?"
-  ],
   "paper_id": "paper_0061",
-  "system": "dify",
-  "title": "Thrust: Adaptively Propels Large Language Models with External Knowledge"
+  "title": "Thrust: Adaptively Propels Large Language Models with External Knowledge",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 114.09,
+  "structured": {
+    "summary": "This paper proposes Thrust, a novel unsupervised metric that estimates a pretrained language model's internal knowledge sufficiency per input instance by clustering task-specific embeddings. Leveraging Thrust, the authors introduce an adaptive retrieval mechanism (IAPEK) that selectively retrieves external knowledge only when needed, improving downstream task performance and reducing retrieval costs across multiple knowledge-intensive NLP tasks and models.",
+    "strengths": [
+      {
+        "point": "Innovative unsupervised metric (Thrust) for estimating internal knowledge sufficiency",
+        "evidence": "Thrust uses clustering of ~200 task-specific embeddings by class label and weighted distances to cluster centroids to produce a confidence score without requiring supervision."
+      },
+      {
+        "point": "Demonstrated effectiveness of adaptive retrieval guided by Thrust",
+        "evidence": "Experiments show an average 26% performance improvement over naive retrieval across 88% of tasks, especially under retrieval budget constraints."
+      },
+      {
+        "point": "Broad empirical evaluation across diverse tasks and multiple PTLM architectures",
+        "evidence": "Evaluation includes multiple-choice classification and open-domain QA on datasets like AGNews, StrategyQA, HotpotQA, with models ranging from zero-shot T5, GPT-J, OPT to instruction-finetuned UnifiedQA."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison with recent adaptive retrieval methods beyond BM25 baselines",
+        "evidence": "The paper does not benchmark Thrust against state-of-the-art adaptive retrieval approaches involving learned gating or confidence-based retrieval such as RETRO or RAG variants."
+      },
+      {
+        "point": "Lack of formal definition and ablation of Thrust score computation",
+        "evidence": "Thrust's formula is described informally without precise equations, and no ablation is performed to isolate the impact of cluster size weighting or alternative clustering methods."
+      },
+      {
+        "point": "Limited analysis of Thrust\u2019s robustness across retriever types, knowledge domains, and embedding extraction protocols",
+        "evidence": "Experiments rely on Wikipedia knowledge bases and standard retrievers without systematic variation; embedding extraction details like pooling and exact transformer layers are under-specified."
+      },
+      {
+        "point": "Restricted applicability to classification/multiple-choice tasks due to dependence on class-based clustering",
+        "evidence": "The method requires clustering embeddings by discrete class labels, limiting extension to generative or unlabeled tasks."
+      },
+      {
+        "point": "Omission of statistical significance testing and detailed error analysis",
+        "evidence": "Performance gains are reported without confidence intervals or significance tests; limited discussion on failure modes, especially for open-ended datasets like ARC-C."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does Thrust compare quantitatively to recent learned or confidence-based adaptive retrieval methods?",
+        "motivation": "Benchmarking against state-of-the-art would clarify the novelty and practical benefits of the proposed unsupervised approach."
+      },
+      {
+        "question": "Can Thrust be adapted or generalized to generative or unlabeled NLP tasks where class-based clustering is not feasible?",
+        "motivation": "Extending applicability beyond classification would increase the method\u2019s impact and relevance."
+      },
+      {
+        "question": "What is the sensitivity of Thrust to clustering hyperparameters, embedding extraction procedures, and retriever variations?",
+        "motivation": "Understanding robustness to design choices is critical for reproducibility and deployment in diverse settings."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison with recent adaptive retrieval methods beyond BM25 baselines. The paper does not benchmark Thrust against state-of-the-art adaptive retrieval approaches involving learned gating or confidence-based retrieval such as RETRO or RAG variants",
+    "point_002": "Lack of formal definition and ablation of Thrust score computation. Thrust's formula is described informally without precise equations, and no ablation is performed to isolate the impact of cluster size weighting or alternative clustering methods",
+    "point_003": "Limited analysis of Thrust\u2019s robustness across retriever types, knowledge domains, and embedding extraction protocols. Experiments rely on Wikipedia knowledge bases and standard retrievers without systematic variation; embedding extraction details like pooling and exact transformer layers are under-specified",
+    "point_004": "Restricted applicability to classification/multiple-choice tasks due to dependence on class-based clustering. The method requires clustering embeddings by discrete class labels, limiting extension to generative or unlabeled tasks",
+    "point_005": "Omission of statistical significance testing and detailed error analysis. Performance gains are reported without confidence intervals or significance tests; limited discussion on failure modes, especially for open-ended datasets like ARC-C"
+  }
 }

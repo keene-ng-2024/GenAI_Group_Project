@@ -1,28 +1,75 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks explicit discussion or experimental comparison to prior human-in-the-loop fairness methods, limiting clarity on its novelty within the existing literature.",
-    "point_002": "There is no detailed ablation study quantifying the unique contributions of each perturbation type (word replacement, style transfer, GPT-3) to the final fairness improvements.",
-    "point_003": "The evaluation omits a baseline where classifiers are trained solely on filtered word replacement pairs, which is necessary to isolate the impact of generation diversity versus filtering.",
-    "point_004": "Group fairness evaluation is limited, missing standard metrics like demographic parity, equalized odds, and calibration error, thereby providing an incomplete fairness analysis.",
-    "point_005": "Inter-annotator agreement statistics and analyses of annotator demographics are not reported, reducing confidence in the reliability and generalizability of the learned similarity function.",
-    "point_006": "Critical details about the crowdsourcing protocol and quality control measures are omitted, hindering reproducibility and assessment of annotation quality.",
-    "point_007": "The active learning setup using MC dropout is underspecified and lacks comparison to simpler baselines, making it unclear if its complexity yields practical benefits.",
-    "point_008": "Details about hyperparameter tuning, stability, and variability of Counterfactual Logit Pairing training are missing, limiting assessment of robustness and reproducibility."
-  },
-  "summary": "This paper proposes a human-guided framework for specifying and enforcing individual fairness in text classifiers by generating expressive perturbations using word replacement, style transfer, and GPT-3-based modifications, followed by crowdsourced human judgments collected via active learning to learn a similarity function that filters fairness constraints. Applying Counterfactual Logit Pairing on these filtered pairs improves fairness adherence in toxicity classification, demonstrating the value of diverse perturbations and human feedback to bridge the gap between formal fairness definitions and human intuitions.",
-  "strengths": [
-    "The combination of diverse perturbation generation methods (word replacement, style transfer, GPT-3) enriches the expressivity and coverage of fairness constraints.",
-    "The use of active learning to efficiently gather human fairness judgments is a practical and resource-aware approach to learning similarity functions aligned with human intuition."
-  ],
-  "weaknesses": [
-    "The paper lacks comprehensive ablation studies and baseline comparisons that would clarify the unique contributions of each component and the comparative effectiveness of the approach.",
-    "Reproducibility is hampered by missing methodological details regarding crowdsourcing protocols, active learning configurations, and hyperparameter tuning."
-  ],
-  "questions": [
-    "How does the learned similarity function and fairness specification generalize beyond toxicity classification to other NLP tasks involving fairness concerns?",
-    "What is the quantitative annotation cost savings or efficiency gain achieved by the active learning strategy compared to random sampling or simpler uncertainty measures?"
-  ],
   "paper_id": "paper_0056",
-  "system": "dify",
-  "title": "Human-Guided Fair Classification for Natural Language Processing"
+  "title": "Human-Guided Fair Classification for Natural Language Processing",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 149.48,
+  "structured": {
+    "summary": "This paper presents a human-in-the-loop framework for specifying individual fairness constraints in toxicity classification by generating candidate sentence pairs through word replacement, unsupervised style transfer, and GPT-3 zero-shot generation. It leverages crowdsourced human judgments and active learning to train a similarity function that filters valid fairness constraints, which are then used to regularize downstream classifiers via counterfactual logit pairing, resulting in improved individual fairness aligned with human intuition.",
+    "strengths": [
+      {
+        "point": "Innovative combination of generation methods for diverse fairness constraints",
+        "evidence": "The pipeline integrates enriched word replacement lists, style transfer using a multi-headed RoBERTa and BART-based generator, and GPT-3 zero-shot generation to produce a broad and expressive set of candidate pairs beyond brittle word replacement."
+      },
+      {
+        "point": "Human-in-the-loop active learning to capture human-aligned fairness judgments",
+        "evidence": "Crowdsourced labels on candidate pairs enable training a BERT-based similarity classifier that approximates human notions of when sentence pairs should be treated similarly, improving the quality of fairness constraints used for downstream training."
+      },
+      {
+        "point": "Empirical validation showing improved individual fairness in toxicity classification",
+        "evidence": "Experiments demonstrate that classifiers trained with filtered fairness constraints achieve higher individual fairness scores and generalize better across diverse test sets, with ablations showing the benefits of style transfer and GPT-3 generated pairs."
+      },
+      {
+        "point": "Release of code and datasets to support reproducibility and further research",
+        "evidence": "The authors provide open-source implementations and fairness judgment datasets, facilitating transparency and enabling follow-up work in fairness specification."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison to existing individual fairness and semantic similarity methods",
+        "evidence": "The paper does not discuss or empirically compare against prior metric learning or semantic embedding approaches to individual fairness constraint generation, leaving unclear the novelty and relative effectiveness of the proposed pipeline."
+      },
+      {
+        "point": "Insufficient ablation and analysis of generation components and architectural choices",
+        "evidence": "While some results show combined versus individual constraint sets, there is a lack of detailed ablations on the incremental benefits and interactions of word replacement, style transfer, and GPT-3 generation, as well as missing error analysis of the multi-headed RoBERTa demographic detector."
+      },
+      {
+        "point": "Omission of important methodological details impacting reproducibility",
+        "evidence": "Key aspects such as GPT-3 prompt engineering, active learning query strategies, aggregation of crowdsourced labels, and hyperparameter settings for the CLP regularizer are not fully specified, limiting reproducibility and practical adoption."
+      },
+      {
+        "point": "Limited scope of empirical evaluation and generalizability",
+        "evidence": "All experiments focus on toxicity classification without exploring other NLP tasks or domains, which constrains claims about broader applicability of the fairness specification framework."
+      },
+      {
+        "point": "Lack of analysis on the impact of errors and biases in key components",
+        "evidence": "There is no investigation of how demographic mention detection errors propagate to fairness constraints, nor of potential biases in crowdsourced annotations or risks introduced by GPT-3 rewrites substituting sensitive attributes."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does the proposed similarity function and constraint generation pipeline compare quantitatively to existing individual fairness methods based on metric learning or semantic embeddings?",
+        "motivation": "Understanding relative performance would clarify the novelty and practical advantages of the approach and inform its adoption in fairness-critical applications."
+      },
+      {
+        "question": "What are the effects of demographic mention detection errors and crowdsourced annotation biases on the downstream fairness improvements?",
+        "motivation": "Since these components underpin constraint generation and filtering, their reliability critically affects the validity and robustness of the fairness guarantees."
+      },
+      {
+        "question": "Can the framework be adapted or extended to other NLP tasks beyond toxicity classification, and how would fairness definitions and constraints vary?",
+        "motivation": "Demonstrating broader applicability would increase the impact and utility of the approach in diverse high-stakes settings."
+      },
+      {
+        "question": "What are the computational costs and practical deployment considerations of the pipeline, especially regarding GPT-3 usage and active learning with human annotation?",
+        "motivation": "Scalability and cost-effectiveness determine feasibility for real-world fairness auditing and classifier training."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Limited comparison to existing individual fairness and semantic similarity methods. The paper does not discuss or empirically compare against prior metric learning or semantic embedding approaches to individual fairness constraint generation, leaving unclear the novelty and relative effectiveness of the proposed pipeline",
+    "point_002": "Insufficient ablation and analysis of generation components and architectural choices. While some results show combined versus individual constraint sets, there is a lack of detailed ablations on the incremental benefits and interactions of word replacement, style transfer, and GPT-3 generation, as well as missing error analysis of the multi-headed RoBERTa demographic detector",
+    "point_003": "Omission of important methodological details impacting reproducibility. Key aspects such as GPT-3 prompt engineering, active learning query strategies, aggregation of crowdsourced labels, and hyperparameter settings for the CLP regularizer are not fully specified, limiting reproducibility and practical adoption",
+    "point_004": "Limited scope of empirical evaluation and generalizability. All experiments focus on toxicity classification without exploring other NLP tasks or domains, which constrains claims about broader applicability of the fairness specification framework",
+    "point_005": "Lack of analysis on the impact of errors and biases in key components. There is no investigation of how demographic mention detection errors propagate to fairness constraints, nor of potential biases in crowdsourced annotations or risks introduced by GPT-3 rewrites substituting sensitive attributes"
+  }
 }

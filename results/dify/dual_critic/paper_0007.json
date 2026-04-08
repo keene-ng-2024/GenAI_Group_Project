@@ -1,28 +1,84 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks comprehensive comparisons to recent state-of-the-art generative retrieval models with matched model size, pretraining scale, and architectures, making it unclear if gains are due to contextualized embeddings or capacity differences.",
-    "point_002": "The integration of contextualized embeddings into the decoder vocabulary embedding matrix is insufficiently detailed, omitting embedding dimensionality, alignment mechanisms, and handling of multiple embeddings per token, which hinders reproducibility.",
-    "point_003": "The data requirements and construction process for the large-scale contextualized embedding matrix are unclear, including corpus size, update mechanisms for unseen documents, and the practical feasibility of storage and maintenance.",
-    "point_004": "Evaluation is limited to document title and ID retrieval tasks, without experiments on passage-level, multi-modal, or other retrieval targets, restricting evidence for the method's generality.",
-    "point_005": "The paper does not provide quantitative ablations on the trade-offs between clustering granularity, storage efficiency, and retrieval accuracy when reducing the embedding matrix size.",
-    "point_006": "The description and analysis of the token-level contrastive loss are incomplete; formal definitions, sampling strategies, hyperparameters, and comparisons to existing contrastive methods are missing.",
-    "point_007": "Scalability to industrial-scale document collections with millions or billions of documents is not addressed, lacking analysis of storage costs, retrieval latency, and computational overhead.",
-    "point_008": "The zero-shot evaluation protocol and domain shifts are ambiguously defined, making it difficult to interpret the significance and robustness of reported generalization improvements."
-  },
-  "summary": "The paper proposes Contextualized Generative Retrieval (CGR), a novel hybrid retrieval framework that integrates contextualized token embeddings derived from document content as decoder vocabulary embeddings within a generative retrieval model. This approach aims to combine the parametric knowledge of autoregressive sequence generation with non-parametric, fine-grained contextualized embeddings to improve retrieval accuracy and generalization, particularly for knowledge-intensive tasks. Experimental results on document title and ID retrieval benchmarks demonstrate significant gains over prior generative retrieval models and improved zero-shot performance. The work also introduces contrastive learning to enhance embedding space structure and employs clustering to reduce embedding storage. While the method shows promise, the paper requires more comprehensive baseline comparisons, detailed methodological descriptions, scalability analyses, and broader evaluations to fully validate its contributions and practical utility.",
-  "strengths": [
-    "Introduction of a hybrid generative retrieval approach leveraging contextualized token embeddings as decoder vocabulary, which innovatively combines parametric and non-parametric retrieval paradigms.",
-    "Demonstrated empirical improvements over strong generative retrieval baselines across multiple datasets, including improved zero-shot generalization and effective use of contrastive learning."
-  ],
-  "weaknesses": [
-    "Insufficient methodological details on embedding integration, contrastive loss formulation, and embedding matrix construction impede reproducibility and practical understanding.",
-    "Limited evaluation scope, scalability analysis, and missing comparisons to recent state-of-the-art retrieval models and retrieval paradigms restrict assessment of generality and real-world applicability."
-  ],
-  "questions": [
-    "How does CGR\u2019s performance and efficiency compare to recent large-scale generative retrieval models and retrieval-augmented generation methods with matched training data and model sizes?",
-    "What are the practical storage and computational costs of maintaining and querying the large contextualized embedding matrix in industrial-scale retrieval settings, and how does this impact retrieval latency?"
-  ],
   "paper_id": "paper_0007",
-  "system": "dify",
-  "title": "Contextualized Generative Retrieval"
+  "title": "Contextualized Generative Retrieval",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 140.73,
+  "structured": {
+    "summary": "This paper proposes Contextualized Generative Retrieval (CGR), a novel generative retrieval approach that replaces static decoder vocabulary embeddings with contextualized token embeddings derived from document content, effectively combining parametric model knowledge with non-parametric, context-dependent representations. Experiments on Wikipedia-based retrieval benchmarks demonstrate significant improvements over strong baselines like GENRE, especially when augmented with contrastive learning and asynchronous embedding updates.",
+    "strengths": [
+      {
+        "point": "Novel integration of contextualized embeddings into generative retrieval decoder embeddings",
+        "evidence": "CGR replaces vanilla static decoder vocab embeddings with contextualized embeddings extracted from document content via an embedding model."
+      },
+      {
+        "point": "Strong empirical gains on major retrieval benchmarks",
+        "evidence": "CGR achieves ~6% improvement in R-precision on KILT datasets and up to 25% relative improvement in Hits@k on NQ-320k compared to GENRE."
+      },
+      {
+        "point": "Effective use of contrastive pre-training to improve embedding space quality",
+        "evidence": "CGRContra variant with two-step contrastive learning and generative fine-tuning outperforms other variants consistently."
+      },
+      {
+        "point": "Demonstrated embedding compression via clustering with minimal performance loss",
+        "evidence": "K-means clustering per token reduces embedding storage significantly while maintaining retrieval accuracy."
+      },
+      {
+        "point": "Comprehensive qualitative analysis revealing semantic token embedding clusters",
+        "evidence": "Visualization shows token embeddings cluster by meaning depending on document context, supporting model interpretability."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to recent hybrid retrieval models and stronger generative retrieval baselines",
+        "evidence": "No empirical baselines or discussion of methods like RAG, REALM, Fusion-in-Decoder, or enhanced SEAL variants."
+      },
+      {
+        "point": "Insufficient details on embedding model training, context selection, and clustering rationale",
+        "evidence": "Paper omits hyperparameters for EMB training, how document content is truncated or selected, and justification for fixed k=5 clusters."
+      },
+      {
+        "point": "Unclear architectural details on how contextualized embeddings replace decoder vocab embeddings",
+        "evidence": "No explicit explanation of dimensionality matching, embedding layer modifications, or softmax computation over large embedding matrices."
+      },
+      {
+        "point": "Missing evaluation of computational cost, scalability, and handling of dynamic corpora",
+        "evidence": "No discussion on runtime overhead of large embedding matrices, asynchronous EMB updates, or incremental updates for new documents."
+      },
+      {
+        "point": "Limited evaluation scope confined to Wikipedia-based datasets and zero-shot results underreported",
+        "evidence": "Experiments only on KILT, NQ, and TQA; zero-shot protocol and quantitative results are not clearly described."
+      },
+      {
+        "point": "No statistical significance testing or robustness analysis",
+        "evidence": "Performance gains lack confidence intervals; no study on noisy or ambiguous queries."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does CGR compare empirically to recent hybrid retrieval-augmented generation models like RAG or Fusion-in-Decoder?",
+        "motivation": "To position CGR clearly within the current state-of-the-art and validate claimed novelty and advantages."
+      },
+      {
+        "question": "What is the impact of varying the number of clusters (k) on retrieval performance and storage trade-offs?",
+        "motivation": "Understanding this would clarify the design choice and guide practical deployment."
+      },
+      {
+        "question": "Can the authors provide detailed procedures and hyperparameters for EMB training and context selection strategies?",
+        "motivation": "These details are critical for reproducibility and for assessing how context length affects embedding quality."
+      },
+      {
+        "question": "How does CGR handle updates to the document corpus post-training, especially in dynamic or streaming settings?",
+        "motivation": "Practical retrieval systems require efficient incremental updating without full retraining."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to recent hybrid retrieval models and stronger generative retrieval baselines. No empirical baselines or discussion of methods like RAG, REALM, Fusion-in-Decoder, or enhanced SEAL variants",
+    "point_002": "Insufficient details on embedding model training, context selection, and clustering rationale. Paper omits hyperparameters for EMB training, how document content is truncated or selected, and justification for fixed k=5 clusters",
+    "point_003": "Unclear architectural details on how contextualized embeddings replace decoder vocab embeddings. No explicit explanation of dimensionality matching, embedding layer modifications, or softmax computation over large embedding matrices",
+    "point_004": "Missing evaluation of computational cost, scalability, and handling of dynamic corpora. No discussion on runtime overhead of large embedding matrices, asynchronous EMB updates, or incremental updates for new documents",
+    "point_005": "Limited evaluation scope confined to Wikipedia-based datasets and zero-shot results underreported. Experiments only on KILT, NQ, and TQA; zero-shot protocol and quantitative results are not clearly described",
+    "point_006": "No statistical significance testing or robustness analysis. Performance gains lack confidence intervals; no study on noisy or ambiguous queries"
+  }
 }

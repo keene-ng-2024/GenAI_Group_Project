@@ -1,28 +1,90 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks comparisons with recent machine unlearning approaches in NLP that do not require full retraining but do not use gradient ascent, which may limit the novelty claim.",
-    "point_002": "There is insufficient detail and justification on the choice and tuning of gradient ascent hyperparameters such as step size, number of iterations, and stopping criteria, which critically affect forgetting effectiveness and model stability.",
-    "point_003": "The fairness of baseline comparisons is unclear because it is not specified whether Extraction Likelihood and Memorization Accuracy metrics are standardized across all evaluated models and conditions, nor are established privacy metrics like membership inference recall included.",
-    "point_004": "The paper does not compare the proposed gradient ascent unlearning method against simpler fine-tuning baselines such as standard gradient descent or embedding masking, limiting the understanding of its necessity and efficiency.",
-    "point_005": "The methodology does not address the impact of cross-token dependencies within sensitive sequences, nor does it explore whether forgetting tokens independently or in chunks affects privacy or performance.",
-    "point_006": "The evaluation uses a limited set of datasets and tasks, lacking diversity especially in multi-turn or multimodal scenarios, raising questions about the generalizability of the forgetting approach.",
-    "point_007": "Critical reproducibility details like optimizer type, learning rate schedules, batch sizes, and which model parameters are updated during unlearning are missing, impeding replication of results.",
-    "point_008": "The paper does not clearly justify or explain the empirical thresholds chosen for defining 'forgetting' via EL and MA metrics, leaving ambiguity in interpreting sufficient forgetting across different datasets or model sizes."
-  },
-  "summary": "This paper proposes knowledge unlearning, a post hoc gradient ascent based method to efficiently forget specific sensitive token sequences in pretrained large language models without full retraining. By maximizing the negative log-likelihood of target sequences over a few parameter update iterations, the approach significantly reduces privacy risks quantified by novel metrics like Extraction Likelihood and Memorization Accuracy while maintaining or improving overall model performance on various benchmarks. Experiments on GPT-Neo and OPT models demonstrate superior efficiency and privacy-utility trade-offs compared to data preprocessing and differential privacy retraining. The work also highlights factors influencing unlearning effectiveness such as data domain and sequential versus batch unlearning strategies, and contributes open-source code and datasets to facilitate further research.",
-  "strengths": [
-    "Introduces an efficient, practical method for post hoc forgetting in large language models without full retraining.",
-    "Demonstrates significant computational savings and favorable privacy-utility trade-offs compared to prior approaches."
-  ],
-  "weaknesses": [
-    "Lacks comparisons to recent selective forgetting or machine unlearning methods, limiting assessment of novelty and effectiveness.",
-    "Insufficient methodological detail and justification regarding critical hyperparameters and reproducibility aspects."
-  ],
-  "questions": [
-    "How sensitive is the knowledge unlearning method to the choice of gradient ascent step size and number of iterations, and what guidelines can be provided for tuning these parameters?",
-    "Can the approach handle cases where exact sensitive sequences are not fully known or accessible, and how does it generalize to forgetting approximate or related information?"
-  ],
   "paper_id": "paper_0073",
-  "system": "dify",
-  "title": "Knowledge Unlearning for Mitigating Privacy Risks in Language Models"
+  "title": "Knowledge Unlearning for Mitigating Privacy Risks in Language Models",
+  "platform": "dify_single_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 61.85,
+  "structured": {
+    "summary": "The paper proposes knowledge unlearning, a post hoc gradient ascent method on sensitive token sequences to efficiently forget memorized content in pretrained language models without costly retraining. It introduces new evaluation metrics, demonstrates improved privacy-utility trade-offs compared to baselines, and shows domain-dependent effects and downstream task impacts across GPT-Neo models.",
+    "strengths": [
+      {
+        "point": "Efficient post-training unlearning method",
+        "evidence": "Knowledge unlearning requires orders of magnitude less computation (~3.5 million times fewer FLOPs) than retraining with deduplicated data, enabling practical privacy adjustments without full retraining."
+      },
+      {
+        "point": "Novel evaluation metrics for measuring forgetting",
+        "evidence": "Introduces Extraction Likelihood (EL) and Memorization Accuracy (MA) metrics with empirical forgetting thresholds to quantify privacy risks and assess unlearning effectiveness."
+      },
+      {
+        "point": "Strong empirical results showing privacy gains with minimal or positive impact on downstream tasks",
+        "evidence": "Unlearning reduces privacy leakage (lower EL and MA) while often improving language modeling accuracy (+7.9% on Lambada) and maintaining or improving performance on multiple classification and generation benchmarks."
+      },
+      {
+        "point": "Analysis of sequential unlearning and domain effects",
+        "evidence": "Demonstrates sequential unlearning of data chunks stabilizes performance, and shows structured data (emails, code) is easier to unlearn than unstructured natural language."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Missing comparisons with parameter-efficient unlearning or fine-tuning baselines",
+        "evidence": "No experiments comparing against selective freezing, LoRA, prompt-tuning, or influence function-based editing methods which are relevant lightweight privacy-preserving approaches."
+      },
+      {
+        "point": "Limited evaluation against realistic and adaptive extraction attacks",
+        "evidence": "EL and MA metrics rely on known prefixes and full-context settings without testing adaptive, black-box, or generative extraction attacks common in prior memorization literature."
+      },
+      {
+        "point": "Insufficient methodological details and hyperparameter justification",
+        "evidence": "Lack of ablation or justification for gradient ascent step size, iteration count, batch sizes, and missing specifics on token extraction pipeline and decoding parameters."
+      },
+      {
+        "point": "No experiments including retraining with exact data removal as a baseline",
+        "evidence": "While discussed qualitatively, the paper omits empirical comparisons to the gold standard of retraining from scratch after data removal."
+      },
+      {
+        "point": "Ambiguous definitions and unclear thresholding for memorization accuracy",
+        "evidence": "MA metric operationalization and threshold selection procedure are briefly described and lack clarity, impeding reproducibility."
+      },
+      {
+        "point": "Limited generalizability due to experiments only on English GPT-Neo models",
+        "evidence": "Effectiveness on multilingual, domain-specific, or multimodal LMs remains untested and unaddressed."
+      },
+      {
+        "point": "No discussion or analysis of potential negative effects like over-unlearning or impact on fairness",
+        "evidence": "Risks of catastrophic forgetting, degradation of related knowledge, or disparate impacts on demographic groups are not explored."
+      },
+      {
+        "point": "Code and data release details missing in the paper",
+        "evidence": "Paper mentions release but does not provide links or exact configuration details, limiting reproducibility."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does knowledge unlearning compare quantitatively and qualitatively to parameter-efficient fine-tuning or editing methods for privacy?",
+        "motivation": "Understanding the relative strengths and weaknesses against lightweight baselines is crucial for assessing practical adoption."
+      },
+      {
+        "question": "How robust is the unlearning approach under realistic adversarial extraction attacks, including black-box or adaptive methods?",
+        "motivation": "Evaluating against stronger, more practical threat models is essential for validating privacy guarantees."
+      },
+      {
+        "question": "What are the effects of unlearning on model fairness and bias, especially regarding sensitive demographic groups?",
+        "motivation": "Ensuring unlearning does not disproportionately harm or bias certain populations is important for ethical deployment."
+      },
+      {
+        "question": "Can the method be extended and validated on multilingual or domain-specific models?",
+        "motivation": "Demonstrating generalizability is key for broader applicability beyond English GPT-Neo models."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Missing comparisons with parameter-efficient unlearning or fine-tuning baselines. No experiments comparing against selective freezing, LoRA, prompt-tuning, or influence function-based editing methods which are relevant lightweight privacy-preserving approaches",
+    "point_002": "Limited evaluation against realistic and adaptive extraction attacks. EL and MA metrics rely on known prefixes and full-context settings without testing adaptive, black-box, or generative extraction attacks common in prior memorization literature",
+    "point_003": "Insufficient methodological details and hyperparameter justification. Lack of ablation or justification for gradient ascent step size, iteration count, batch sizes, and missing specifics on token extraction pipeline and decoding parameters",
+    "point_004": "No experiments including retraining with exact data removal as a baseline. While discussed qualitatively, the paper omits empirical comparisons to the gold standard of retraining from scratch after data removal",
+    "point_005": "Ambiguous definitions and unclear thresholding for memorization accuracy. MA metric operationalization and threshold selection procedure are briefly described and lack clarity, impeding reproducibility",
+    "point_006": "Limited generalizability due to experiments only on English GPT-Neo models. Effectiveness on multilingual, domain-specific, or multimodal LMs remains untested and unaddressed",
+    "point_007": "No discussion or analysis of potential negative effects like over-unlearning or impact on fairness. Risks of catastrophic forgetting, degradation of related knowledge, or disparate impacts on demographic groups are not explored",
+    "point_008": "Code and data release details missing in the paper. Paper mentions release but does not provide links or exact configuration details, limiting reproducibility"
+  }
 }
