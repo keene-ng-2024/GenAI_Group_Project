@@ -331,6 +331,13 @@ docker run -it --rm \
   -v n8n_data:/home/node/.n8n \
   docker.n8n.io/n8nio/n8n
 
+# Import workflows into n8n (do this once after starting n8n):
+# 1. Open http://localhost:5678 in your browser
+# 2. Go to Workflows → Add Workflow → Import from file
+# 3. Import src/platforms/n8n_workflow.json          (1-round debate)
+# 4. Import src/platforms/n8n_workflow_noloop.json   (no loop)
+# 5. Open each workflow, click Activate (toggle top-right) to publish the webhook
+
 # Run n8n workflows (requires n8n running locally at localhost:5678)
 python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
 python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
