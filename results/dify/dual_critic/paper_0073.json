@@ -1,36 +1,99 @@
 {
-  "critique_points": {
-    "point_001": "The paper lacks comparison with existing unlearning methods beyond Differential Privacy and deduplication baselines, omitting relevant approaches such as influence-function-based forgetting and gradient-based unlearning from continual learning literature, which weakens claims of novelty.",
-    "point_002": "The methodology assumes exact knowledge and correct tokenization of target sequences to be forgotten, a strong and potentially unrealistic assumption that is not addressed or evaluated for robustness against partial, noisy, or approximate forgetting targets.",
-    "point_003": "Ablation studies on critical hyperparameters such as the number of gradient ascent steps per chunk and learning rates are missing, leaving practitioners without guidance on how to balance forgetting effectiveness and utility preservation.",
-    "point_004": "The Differential Privacy Decoding baseline used for privacy comparison is an insufficient proxy for full DP training; the absence of experiments or discussion involving DP-trained models limits the validity of privacy-utility tradeoff claims.",
-    "point_005": "The Extraction Likelihood metric measures privacy risk only through n-gram overlap and does not capture semantic or paraphrased leakage, potentially underestimating memorization and privacy risks.",
-    "point_006": "Utility evaluation is limited to benchmarks that may overlap with training data or rely on superficial cues, lacking zero-shot or strictly out-of-domain tasks that better assess generalization impact after unlearning.",
-    "point_007": "Reproducibility is hindered by sparse details on unlearning fine-tuning hyperparameters, stopping criteria, and the absence of a publicly accessible, well-documented code and data repository with versioning information.",
-    "point_008": "The sequential unlearning procedure is insufficiently explained, lacking concrete algorithmic details such as chunk partitioning, order, and handling of dependencies, which impedes clear understanding and reproducibility.",
-    "point_009": "The method only targets explicit sequences and does not address implicit or concept-level memorization or whether unlearning reduces leakage of semantically related content, limiting comprehensive privacy protection.",
-    "point_010": "There is no analysis of unlearning's impact on model calibration or confidence estimates, which is important to understand side effects on model trustworthiness and safety-critical applications.",
-    "point_011": "Potential security risks arising from the unlearning process, such as adversarial exploitation to manipulate model behavior, are not discussed or mitigated.",
-    "point_012": "The paper does not address legal or compliance aspects regarding verification or certification of unlearning effectiveness for Right To Be Forgotten requests, which is critical for practical deployment.",
-    "point_013": "Scalability of the unlearning method to very large (trillion-parameter) or multimodal models is untested and unanalyzed, with no discussion of computational feasibility or required adaptations.",
-    "point_014": "The deduplication baseline's training details and compute resources are not clearly matched or reported, raising concerns about fair comparison between baselines and the proposed method.",
-    "point_015": "There is an absence of human evaluation or qualitative assessment of generated text quality post-unlearning, which could reveal subtle degradation not captured by automated metrics.",
-    "point_016": "The complementary roles and thresholds of Memorization Accuracy and Extraction Likelihood metrics in defining 'forgotten' status are insufficiently explained or theoretically motivated."
-  },
-  "summary": "This paper proposes a novel post-training method called knowledge unlearning to mitigate privacy risks in large language models by performing gradient ascent on the negative log-likelihood of target sequences to be forgotten. The approach efficiently reduces memorization and extractability of sensitive sequences without requiring expensive retraining, while preserving or improving general model performance across diverse NLP tasks. Empirical results demonstrate that sequential unlearning is more effective and less disruptive than batch unlearning, and that larger models unlearn more efficiently. The work introduces new privacy metrics and provides extensive evaluation against deduplication and differential privacy decoding baselines. However, limitations include assumptions of exact target knowledge, lack of comparison to prior unlearning methods, incomplete robustness and hyperparameter analysis, limited privacy metrics, and missing legal, security, and scalability considerations.",
-  "strengths": [
-    "Introduces an efficient, post hoc method for targeted unlearning of memorized sequences in language models without full retraining.",
-    "Demonstrates that knowledge unlearning can preserve or improve general model utility across multiple NLP benchmarks while reducing privacy risks."
-  ],
-  "weaknesses": [
-    "Lacks comparison and discussion of prior related unlearning methodologies, weakening claims of novelty and relative performance.",
-    "Assumes exact and complete knowledge of sequences to be forgotten without evaluating robustness to partial or noisy inputs, limiting practical applicability."
-  ],
-  "questions": [
-    "How does the proposed knowledge unlearning method compare quantitatively and qualitatively with other prior unlearning approaches such as influence-function or Fisher forgetting methods?",
-    "Can the method effectively handle partial, approximate, or noisy target sequences, and how does this impact unlearning effectiveness and utility preservation?"
-  ],
   "paper_id": "paper_0073",
-  "system": "dify",
-  "title": "Knowledge Unlearning for Mitigating Privacy Risks in Language Models"
+  "title": "Knowledge Unlearning for Mitigating Privacy Risks in Language Models",
+  "platform": "dify_dual_critic",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 126.2,
+  "structured": {
+    "summary": "This paper proposes Knowledge Unlearning, a novel post hoc method to selectively remove memorized sensitive sequences from pretrained large language models by applying gradient ascent on target sequences\u2019 loss. It demonstrates strong privacy gains with minimal or no degradation in general language understanding and generation tasks, offering a computationally efficient alternative to costly retraining or differential privacy decoding methods.",
+    "strengths": [
+      {
+        "point": "Efficient post hoc removal of memorized sequences without full retraining",
+        "evidence": "The method requires orders of magnitude less compute (~3.5 million times fewer FLOPs) than retraining for data deduplication, enabling practical privacy-preserving updates."
+      },
+      {
+        "point": "Maintains or even improves general LM performance after unlearning",
+        "evidence": "Experiments show unlearning preserves or boosts accuracy on nine classification and four dialogue benchmarks, contrasting with Differential Privacy decoding which degrades performance."
+      },
+      {
+        "point": "Introduction of a novel Extraction Likelihood metric for quantifying memorization risk",
+        "evidence": "EL provides a principled way to measure the likelihood that a model will reproduce sensitive sequences, with empirically defined thresholds for forgetting."
+      },
+      {
+        "point": "Demonstration that sequential unlearning is more effective and less harmful than batch unlearning",
+        "evidence": "Sequentially forgetting small chunks preserves general capabilities better and leads to stronger privacy protection than forgetting all target data at once."
+      },
+      {
+        "point": "Comprehensive empirical evaluation across multiple model sizes, target domains, and tasks",
+        "evidence": "Experiments on GPT-Neo and OPT models (125M to 2.7B parameters) using a 15,000 sequence multi-domain benchmark validate effectiveness and reveal domain-dependent unlearning difficulty."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to recent, stronger targeted unlearning or model editing baselines",
+        "evidence": "Paper compares only to data deduplication and DP decoding, omitting methods like targeted pruning, influence-function forgetting, or ROME that represent relevant state-of-the-art baselines."
+      },
+      {
+        "point": "Insufficient ablation and sensitivity analyses on unlearning hyperparameters and training dynamics",
+        "evidence": "Learning rate, number of epochs, and step sizes are fixed without exploration; no study on early stopping or convergence behavior is provided."
+      },
+      {
+        "point": "Limited theoretical or mechanistic explanation for why sequential unlearning outperforms batch",
+        "evidence": "The paper presents empirical results but lacks discussion connecting findings to continual learning or catastrophic forgetting literature."
+      },
+      {
+        "point": "Extraction Likelihood metric\u2019s robustness and generalizability not fully validated",
+        "evidence": "No experiments varying n-gram length, tokenization schemes, or application to diverse languages; interpretability relative to other privacy metrics is unclear."
+      },
+      {
+        "point": "No evaluation on open-ended generation or zero/few-shot settings to assess realistic privacy-performance trade-offs",
+        "evidence": "All evaluations focus on classification and dialogue benchmarks, omitting free text generation tasks where memorization risks are critical."
+      },
+      {
+        "point": "Potential cumulative effects of repeated or large-scale unlearning not examined",
+        "evidence": "Repeated Right To Be Forgotten requests might cause model drift or catastrophic forgetting; no monitoring or mitigation strategies are discussed."
+      },
+      {
+        "point": "Reproducibility hindered by missing low-level implementation details",
+        "evidence": "Missing optimizer types, learning rate schedules, batch sizes, tokenization specifics, and hardware details limit exact replication."
+      },
+      {
+        "point": "Limited generalizability beyond tested model sizes and architectures",
+        "evidence": "Experiments restricted to GPT-Neo and OPT up to 2.7B parameters, no exploration on larger or encoder-decoder models."
+      },
+      {
+        "point": "No human evaluation or qualitative analysis of outputs post-unlearning",
+        "evidence": "Reliance solely on numeric metrics may miss subtle privacy leaks or degradation in fluency and coherence."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does knowledge unlearning compare empirically and computationally to recent targeted model editing or influence-function based unlearning methods?",
+        "motivation": "Benchmarking against stronger baselines is critical to position the method\u2019s privacy-utility trade-offs and practical feasibility."
+      },
+      {
+        "question": "What are the cumulative effects of applying knowledge unlearning repeatedly or at scale on model stability and generalization?",
+        "motivation": "Understanding risks of model drift or catastrophic forgetting is important for real-world deployment where multiple unlearning requests arise."
+      },
+      {
+        "question": "Can the Extraction Likelihood metric be validated across diverse languages, tokenization schemes, and longer sequences to establish its robustness?",
+        "motivation": "Robust, interpretable privacy metrics are essential for reliable evaluation and adoption in varied application contexts."
+      },
+      {
+        "question": "How does knowledge unlearning impact open-ended text generation quality, fluency, and privacy leakage under zero-shot or few-shot prompting?",
+        "motivation": "Free text generation is a primary vector for privacy leaks, so assessment here is necessary for practical relevance."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to recent, stronger targeted unlearning or model editing baselines. Paper compares only to data deduplication and DP decoding, omitting methods like targeted pruning, influence-function forgetting, or ROME that represent relevant state-of-the-art baselines",
+    "point_002": "Insufficient ablation and sensitivity analyses on unlearning hyperparameters and training dynamics. Learning rate, number of epochs, and step sizes are fixed without exploration; no study on early stopping or convergence behavior is provided",
+    "point_003": "Limited theoretical or mechanistic explanation for why sequential unlearning outperforms batch. The paper presents empirical results but lacks discussion connecting findings to continual learning or catastrophic forgetting literature",
+    "point_004": "Extraction Likelihood metric\u2019s robustness and generalizability not fully validated. No experiments varying n-gram length, tokenization schemes, or application to diverse languages; interpretability relative to other privacy metrics is unclear",
+    "point_005": "No evaluation on open-ended generation or zero/few-shot settings to assess realistic privacy-performance trade-offs. All evaluations focus on classification and dialogue benchmarks, omitting free text generation tasks where memorization risks are critical",
+    "point_006": "Potential cumulative effects of repeated or large-scale unlearning not examined. Repeated Right To Be Forgotten requests might cause model drift or catastrophic forgetting; no monitoring or mitigation strategies are discussed",
+    "point_007": "Reproducibility hindered by missing low-level implementation details. Missing optimizer types, learning rate schedules, batch sizes, tokenization specifics, and hardware details limit exact replication",
+    "point_008": "Limited generalizability beyond tested model sizes and architectures. Experiments restricted to GPT-Neo and OPT up to 2.7B parameters, no exploration on larger or encoder-decoder models",
+    "point_009": "No human evaluation or qualitative analysis of outputs post-unlearning. Reliance solely on numeric metrics may miss subtle privacy leaks or degradation in fluency and coherence"
+  }
 }
