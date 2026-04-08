@@ -318,6 +318,19 @@ python -m src.baseline.baseline_critique
 # Run agentic system (multi-agent loop)
 python -m src.agents.orchestrator
 
+# Start n8n locally via Docker (first time sets up persistent volume)
+docker run -it --rm \
+  --name n8n \
+  -p 5678:5678 \
+  -e GENERIC_TIMEZONE="Asia/Singapore" \
+  -e TZ="Asia/Singapore" \
+  -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
+  -e N8n_RUNNERS_ENABLED=true \
+  -e OPENAI_API_KEY=your_openai_api_key \
+  -e N8N_BLOCK_ENV_ACCESS_IN_NODE=false \
+  -v n8n_data:/home/node/.n8n \
+  docker.n8n.io/n8nio/n8n
+
 # Run n8n workflows (requires n8n running locally at localhost:5678)
 python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
 python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
