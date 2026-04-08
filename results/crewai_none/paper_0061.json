@@ -1,0 +1,149 @@
+{
+  "paper_id": "paper_0061",
+  "title": "Thrust: Adaptively Propels Large Language Models with External Knowledge",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 61.49,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "Structured Summary of the Paper \"THRUST: Adaptively Propels Large Language Models with External Knowledge\"\n\n---\n\n### Problem & Motivation\n\nLarge-scale pre-trained language models (PTLMs) have demonstrated strong performance across various natural language processing (NLP) tasks, encoding rich implicit knowledge. However, this knowledge is often opaque, static, and difficult to utilize effectively. To overcome these limitations, external knowledge retrieval from large-scale knowledge bases is commonly employed to augment PTLMs. Despite its benefits, two major challenges arise:\n\n1. **Costly Knowledge Retrieval:** Indexing and retrieving relevant knowledge from large-scale knowledge bases is time-consuming and computationally expensive.\n2. **Noisy and Misleading Knowledge:** Retrieved external knowledge can be noisy or irrelevant, sometimes even degrading model performance.\n\nMoreover, PTLMs with large capacity may already solve many queries without external knowledge, making knowledge retrieval unnecessary in many cases. This motivates the need for an **adaptive mechanism** that selectively applies external knowledge only when it is essential, improving both efficiency and effectiveness.\n\n---\n\n### Proposed Method\n\nThe authors propose **Instance-level Adaptive Propulsion of External Knowledge (IAPEK)**, a framework that adaptively decides whether to augment a given query with external knowledge based on the necessity for that instance.\n\n- **Key Idea:** For each input instance, compute a confidence score indicating how likely the PTLM can solve the query using its internal knowledge alone. External knowledge is only retrieved and used if this confidence is low.\n\n- **Thrust Metric:** To estimate the necessity of external knowledge, the authors design a novel metric called **Thrust**. It leverages the distribution of training instances in the model\u2019s representation space:\n  - Represent all training instances as vectors using the PTLM\u2019s hidden states.\n  - Perform K-means clustering to identify clusters representing the instance distribution.\n  - For a test query, compute the Thrust score based on the weighted distances and directions from the query vector to cluster centers.\n  - Two variants:\n    - **Vectorized Thrust (t_v):** Uses cluster sizes and distances without label information.\n    - **Binary Thrust (t_b):** For binary classification, incorporates cluster labels (+1 or -1) to refine the score.\n\n- **Adaptive Knowledge Injection:** Using Thrust scores, queries are ranked by their need for external knowledge. A threshold (e.g., top 25%) selects instances for knowledge augmentation, while others are processed without external knowledge.\n\n- **No Additional Fine-tuning:** Thrust uses static hidden states and training data representations without requiring model fine-tuning or label information at test time.\n\n---\n\n### Results\n\n- **Benchmark:** The authors construct a large-scale benchmark with 12 knowledge-intensive tasks spanning multiple-choice classification and open-domain question answering. External knowledge sources include human annotations, knowledge graphs, and Wikipedia paragraphs retrieved by DPR.\n\n- **Effectiveness of External Knowledge:**\n  - Zero-shot models often do not consistently benefit from external knowledge; larger models do not guarantee better utilization.\n  - Fine-tuning models on examples containing external knowledge (transfer-learning setting) significantly improves their ability to leverage knowledge.\n\n- **Performance of Thrust:**\n  - Thrust consistently improves cost-efficiency by selectively applying external knowledge to the most necessary instances.\n  - On 88% of evaluated tasks, Thrust yields an average performance improvement of 26% compared to naive knowledge usage.\n  - Gains are more pronounced when knowledge is injected into a smaller portion of instances (e.g., top 25%).\n  - In some cases, Thrust outperforms the strategy of augmenting all instances with external knowledge by avoiding noise.\n  - Failure cases occur on tasks like ARC-Challenge, where external knowledge is less relevant or hard to extract useful information from.\n\n- **Analysis:**\n  - Thrust score distributions reveal task-specific knowledge requirements, e.g., open-domain QA tasks often need external knowledge, while some classification tasks do not.\n  - Ablation on which PTLM layer to use for instance representation shows robustness; early and late layers perform well, while middle layers sometimes degrade performance.\n  \n---\n\n### Claimed Contributions\n\n1. **Instance-level Adaptive Knowledge Propulsion (IAPEK):** A novel framework that adaptively decides when to use external knowledge for each input instance, improving efficiency and reducing noise.\n\n2. **Thrust Metric:** A simple, lightweight, and effective empirical metric to estimate the necessity of external knowledge based on the distribution of training instances in the model\u2019s representation space, without requiring labels or fine-tuning.\n\n3. **Comprehensive Benchmark and Evaluation:** Construction of a diverse benchmark covering multiple task types and knowledge sources, demonstrating the effectiveness of IAPEK and Thrust across various PTLMs and settings.\n\n4. **Empirical Findings:** Demonstration that selectively injecting external knowledge guided by Thrust can significantly improve downstream task performance and cost-efficiency, sometimes outperforming indiscriminate knowledge augmentation.\n\n5. **Insights into Knowledge Usage:** Analysis of task characteristics and model behavior regarding knowledge necessity, providing guidance for real-world deployment of knowledge-enhanced language models under computational constraints.\n\n---\n\n### Summary\n\nThis paper addresses the challenge of efficiently and effectively augmenting large pre-trained language models with external knowledge. By proposing an adaptive instance-level approach guided by the novel Thrust metric, the authors enable selective knowledge injection that improves performance while reducing noise and computational costs. Extensive experiments across diverse tasks and models validate the approach, highlighting its practical value for knowledge-enhanced NLP systems."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty - Insufficient Comparison to Prior Adaptive Retrieval Methods:**  \n   While the paper proposes the Thrust metric for adaptive knowledge injection, it lacks a thorough comparison to existing adaptive retrieval or selective augmentation methods in NLP, such as confidence-based retrieval gating or uncertainty estimation techniques. The Related Work section and experiments do not benchmark against these prior adaptive frameworks, making it unclear how much novelty Thrust offers beyond existing instance-level retrieval gating approaches.\n\n2. **Methodology - Justification for K-means Clustering and Cluster Number Choice Missing:**  \n   The method relies heavily on K-means clustering of training instance representations to compute Thrust scores, but the paper does not justify the choice of K-means over other clustering algorithms or representation learning methods. Additionally, the number of clusters (K) used is not discussed or ablated, leaving open whether the method is sensitive to this hyperparameter or if it generalizes across tasks with different cluster granularities.\n\n3. **Methodology - Lack of Ablation on Thrust Variants and Threshold Selection:**  \n   The paper introduces two Thrust variants (vectorized t_v and binary t_b) but does not provide a detailed ablation comparing their relative effectiveness across tasks. Similarly, the choice of threshold for selecting the top 25% of instances for knowledge injection appears arbitrary, with no analysis on how performance varies with different thresholds or adaptive thresholding strategies.\n\n4. **Evaluation - Baselines Do Not Include Stronger Retrieval or Fusion Methods:**  \n   The evaluation compares Thrust mainly against naive knowledge augmentation (applying external knowledge to all instances). However, it omits comparisons to stronger baselines such as learned retrieval policies, confidence-based selective retrieval, or more sophisticated knowledge fusion models that might also reduce noise and cost. This limits the strength of the empirical claims about Thrust\u2019s superiority.\n\n5. **Evaluation - Limited Metrics Focused on Accuracy and Cost, Ignoring Retrieval Quality:**  \n   The reported metrics focus on downstream task accuracy improvements and computational cost savings but do not evaluate the quality or relevance of the retrieved knowledge itself. Metrics such as retrieval precision, recall, or knowledge relevance scores would provide deeper insight into how well Thrust identifies truly necessary knowledge.\n\n6. **Evaluation - Failure Cases Not Analyzed in Depth:**  \n   The paper mentions failure cases on tasks like ARC-Challenge where Thrust underperforms but does not analyze why the method fails or how it might be improved. A more detailed error analysis or qualitative examples would strengthen understanding of the method\u2019s limitations.\n\n7. **Reproducibility - Missing Details on Representation Extraction and Clustering Pipeline:**  \n   The paper does not provide sufficient implementation details on how hidden states are extracted (e.g., which layer exactly, pooling strategy), how vectors are normalized before clustering, or the clustering initialization and convergence criteria. These details are crucial for reproducing the Thrust metric computation.\n\n8. **Reproducibility - No Public Code or Benchmark Release Mentioned:**  \n   Although the paper claims to construct a large-scale benchmark spanning 12 tasks, it does not mention releasing the benchmark dataset, code for Thrust computation, or scripts for reproducing experiments. This omission hinders reproducibility and adoption by the community.\n\n9. **Clarity - Explanation of Thrust Metric Formula and Intuition Could Be Improved:**  \n   The description of how the Thrust score is computed from weighted distances and directions to cluster centers is somewhat abstract and mathematical, lacking intuitive explanations or visualizations. Readers may struggle to grasp why this metric effectively captures knowledge necessity without clearer motivation or examples.\n\n10. **Clarity - Ambiguity in How Label Information Is Incorporated in Binary Thrust:**  \n    The binary Thrust variant is said to incorporate cluster labels (+1 or -1), but the paper does not clearly explain how these labels are assigned or derived from training data clusters, nor how they influence the score calculation. This ambiguity reduces clarity on the method\u2019s operation for classification tasks.\n\n11. **Limitations - Assumes Training Data Distribution Reflects Knowledge Necessity at Test Time:**  \n    The approach assumes that the distribution of training instances in representation space reliably indicates when external knowledge is needed for test queries. This assumption may not hold if test data distribution shifts or contains novel instances, limiting the method\u2019s robustness in real-world deployment.\n\n12. **Limitations - Does Not Address Dynamic or Contextual Knowledge Needs Within Instances:**  \n    Thrust computes a static score per instance without considering dynamic context or partial knowledge needs within a query. Complex queries might require partial knowledge augmentation, which the binary decision framework cannot capture, potentially limiting effectiveness.\n\n13. **Generalisability - Evaluated Only on PTLMs and Tasks with Available External Knowledge:**  \n    The experiments focus on PTLMs and tasks where external knowledge sources like Wikipedia or knowledge graphs are available. It remains unclear how well Thrust generalizes to other model architectures, languages, or domains lacking structured external knowledge.\n\n14. **Generalisability - No Evaluation on Real-Time or Low-Latency Settings:**  \n    Although the paper claims cost-efficiency improvements, it does not evaluate Thrust in real-time or low-latency scenarios where retrieval speed is critical. The overhead of computing Thrust scores and clustering may offset gains, which is not analyzed.\n\n15. **Methodology - No Discussion on Potential Biases Introduced by Clustering:**  \n    Clustering training instances may introduce biases if clusters correspond to dominant classes or frequent patterns, potentially disadvantaging rare or outlier instances. The paper does not discuss or mitigate such biases, which could affect fairness and robustness."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes IAPEK, an instance-level adaptive framework that selectively injects external knowledge into large pre-trained language models using a novel metric called Thrust, which estimates knowledge necessity based on training instance distributions in representation space. Extensive experiments on a diverse benchmark demonstrate that Thrust improves task performance and computational efficiency by avoiding unnecessary knowledge retrieval and noise.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel adaptive framework for selective knowledge injection\",\n      \"evidence\": \"IAPEK adaptively decides when to augment queries with external knowledge, improving efficiency and reducing noise compared to naive augmentation.\"\n    },\n    {\n      \"point\": \"Introduction of the Thrust metric leveraging instance distributions\",\n      \"evidence\": \"Thrust uses K-means clustering of training instance representations to estimate knowledge necessity without requiring labels or fine-tuning.\"\n    },\n    {\n      \"point\": \"Comprehensive evaluation across 12 diverse knowledge-intensive tasks\",\n      \"evidence\": \"The authors construct a large-scale benchmark covering multiple-choice classification and open-domain QA with various external knowledge sources.\"\n    },\n    {\n      \"point\": \"Empirical demonstration of improved cost-efficiency and performance\",\n      \"evidence\": \"Thrust yields an average 26% performance improvement on 88% of tasks by selectively injecting knowledge into a subset of instances.\"\n    },\n    {\n      \"point\": \"Insightful analysis of task-specific knowledge needs and model layer effects\",\n      \"evidence\": \"Analysis shows open-domain QA tasks benefit more from external knowledge and that early or late PTLM layers provide robust instance representations.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Insufficient comparison to prior adaptive retrieval or selective augmentation methods\",\n      \"evidence\": \"The paper lacks benchmarking against existing adaptive retrieval frameworks such as confidence-based gating or uncertainty estimation.\"\n    },\n    {\n      \"point\": \"Lack of justification and ablation for clustering choices\",\n      \"evidence\": \"No rationale is provided for using K-means or the number of clusters, nor is sensitivity to these hyperparameters analyzed.\"\n    },\n    {\n      \"point\": \"No detailed ablation on Thrust variants and threshold selection\",\n      \"evidence\": \"The relative effectiveness of vectorized versus binary Thrust and the impact of different selection thresholds are not thoroughly studied.\"\n    },\n    {\n      \"point\": \"Evaluation omits stronger retrieval and fusion baselines\",\n      \"evidence\": \"Comparisons are limited to naive knowledge augmentation, missing more sophisticated learned retrieval or fusion methods.\"\n    },\n    {\n      \"point\": \"Metrics do not assess retrieval quality or knowledge relevance\",\n      \"evidence\": \"Reported metrics focus on accuracy and cost but omit retrieval precision, recall, or relevance measures.\"\n    },\n    {\n      \"point\": \"Failure cases are mentioned but not deeply analyzed\",\n      \"evidence\": \"Tasks like ARC-Challenge where Thrust underperforms lack detailed error analysis or qualitative insights.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing implementation details and code release\",\n      \"evidence\": \"Details on representation extraction, clustering pipeline, and public release of code or benchmark are absent.\"\n    },\n    {\n      \"point\": \"Clarity issues in explaining Thrust computation and label incorporation\",\n      \"evidence\": \"The mathematical description is abstract without intuitive explanation or visualization; binary Thrust label usage is ambiguous.\"\n    },\n    {\n      \"point\": \"Assumes training data distribution reflects test-time knowledge needs\",\n      \"evidence\": \"This assumption may not hold under distribution shifts or novel test instances, limiting robustness.\"\n    },\n    {\n      \"point\": \"Does not consider dynamic or partial knowledge needs within instances\",\n      \"evidence\": \"Thrust computes a static score per instance, unable to capture nuanced or context-dependent knowledge requirements.\"\n    },\n    {\n      \"point\": \"Limited generalizability evaluation beyond PTLMs and known knowledge sources\",\n      \"evidence\": \"No experiments on other model architectures, languages, or domains lacking structured external knowledge.\"\n    },\n    {\n      \"point\": \"No evaluation in real-time or low-latency retrieval settings\",\n      \"evidence\": \"Potential overhead of clustering and Thrust computation is not analyzed in latency-critical scenarios.\"\n    },\n    {\n      \"point\": \"Potential biases introduced by clustering are not addressed\",\n      \"evidence\": \"Clusters may reflect dominant classes, disadvantaging rare or outlier instances, but this is not discussed.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does Thrust compare quantitatively to existing adaptive retrieval or selective augmentation methods?\",\n      \"motivation\": \"Benchmarking against prior adaptive frameworks is necessary to establish the novelty and practical advantage of Thrust.\"\n    },\n    {\n      \"question\": \"How sensitive is the method to the choice of clustering algorithm, number of clusters, and threshold for knowledge injection?\",\n      \"motivation\": \"Understanding hyperparameter sensitivity is crucial for robustness and applicability across diverse tasks.\"\n    },\n    {\n      \"question\": \"Can Thrust be extended to handle dynamic or partial knowledge needs within a single instance?\",\n      \"motivation\": \"Many real-world queries may require nuanced knowledge augmentation beyond a binary decision.\"\n    },\n    {\n      \"question\": \"What is the computational overhead of computing Thrust scores and clustering in real-time or low-latency applications?\",\n      \"motivation\": \"Efficiency claims must be validated in practical deployment scenarios where speed is critical.\"\n    },\n    {\n      \"question\": \"How does the method perform under distribution shifts or with novel test instances not well represented in training clusters?\",\n      \"motivation\": \"Robustness to domain shifts is important for real-world adoption.\"\n    },\n    {\n      \"question\": \"Are there plans to release code and benchmark datasets to facilitate reproducibility and community adoption?\",\n      \"motivation\": \"Open resources are essential for verifying results and enabling further research.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes IAPEK, an instance-level adaptive framework that selectively injects external knowledge into large pre-trained language models using a novel metric called Thrust, which estimates knowledge necessity based on training instance distributions in representation space. Extensive experiments on a diverse benchmark demonstrate that Thrust improves task performance and computational efficiency by avoiding unnecessary knowledge retrieval and noise.",
+    "strengths": [
+      {
+        "point": "Novel adaptive framework for selective knowledge injection",
+        "evidence": "IAPEK adaptively decides when to augment queries with external knowledge, improving efficiency and reducing noise compared to naive augmentation."
+      },
+      {
+        "point": "Introduction of the Thrust metric leveraging instance distributions",
+        "evidence": "Thrust uses K-means clustering of training instance representations to estimate knowledge necessity without requiring labels or fine-tuning."
+      },
+      {
+        "point": "Comprehensive evaluation across 12 diverse knowledge-intensive tasks",
+        "evidence": "The authors construct a large-scale benchmark covering multiple-choice classification and open-domain QA with various external knowledge sources."
+      },
+      {
+        "point": "Empirical demonstration of improved cost-efficiency and performance",
+        "evidence": "Thrust yields an average 26% performance improvement on 88% of tasks by selectively injecting knowledge into a subset of instances."
+      },
+      {
+        "point": "Insightful analysis of task-specific knowledge needs and model layer effects",
+        "evidence": "Analysis shows open-domain QA tasks benefit more from external knowledge and that early or late PTLM layers provide robust instance representations."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to prior adaptive retrieval or selective augmentation methods",
+        "evidence": "The paper lacks benchmarking against existing adaptive retrieval frameworks such as confidence-based gating or uncertainty estimation."
+      },
+      {
+        "point": "Lack of justification and ablation for clustering choices",
+        "evidence": "No rationale is provided for using K-means or the number of clusters, nor is sensitivity to these hyperparameters analyzed."
+      },
+      {
+        "point": "No detailed ablation on Thrust variants and threshold selection",
+        "evidence": "The relative effectiveness of vectorized versus binary Thrust and the impact of different selection thresholds are not thoroughly studied."
+      },
+      {
+        "point": "Evaluation omits stronger retrieval and fusion baselines",
+        "evidence": "Comparisons are limited to naive knowledge augmentation, missing more sophisticated learned retrieval or fusion methods."
+      },
+      {
+        "point": "Metrics do not assess retrieval quality or knowledge relevance",
+        "evidence": "Reported metrics focus on accuracy and cost but omit retrieval precision, recall, or relevance measures."
+      },
+      {
+        "point": "Failure cases are mentioned but not deeply analyzed",
+        "evidence": "Tasks like ARC-Challenge where Thrust underperforms lack detailed error analysis or qualitative insights."
+      },
+      {
+        "point": "Reproducibility hindered by missing implementation details and code release",
+        "evidence": "Details on representation extraction, clustering pipeline, and public release of code or benchmark are absent."
+      },
+      {
+        "point": "Clarity issues in explaining Thrust computation and label incorporation",
+        "evidence": "The mathematical description is abstract without intuitive explanation or visualization; binary Thrust label usage is ambiguous."
+      },
+      {
+        "point": "Assumes training data distribution reflects test-time knowledge needs",
+        "evidence": "This assumption may not hold under distribution shifts or novel test instances, limiting robustness."
+      },
+      {
+        "point": "Does not consider dynamic or partial knowledge needs within instances",
+        "evidence": "Thrust computes a static score per instance, unable to capture nuanced or context-dependent knowledge requirements."
+      },
+      {
+        "point": "Limited generalizability evaluation beyond PTLMs and known knowledge sources",
+        "evidence": "No experiments on other model architectures, languages, or domains lacking structured external knowledge."
+      },
+      {
+        "point": "No evaluation in real-time or low-latency retrieval settings",
+        "evidence": "Potential overhead of clustering and Thrust computation is not analyzed in latency-critical scenarios."
+      },
+      {
+        "point": "Potential biases introduced by clustering are not addressed",
+        "evidence": "Clusters may reflect dominant classes, disadvantaging rare or outlier instances, but this is not discussed."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does Thrust compare quantitatively to existing adaptive retrieval or selective augmentation methods?",
+        "motivation": "Benchmarking against prior adaptive frameworks is necessary to establish the novelty and practical advantage of Thrust."
+      },
+      {
+        "question": "How sensitive is the method to the choice of clustering algorithm, number of clusters, and threshold for knowledge injection?",
+        "motivation": "Understanding hyperparameter sensitivity is crucial for robustness and applicability across diverse tasks."
+      },
+      {
+        "question": "Can Thrust be extended to handle dynamic or partial knowledge needs within a single instance?",
+        "motivation": "Many real-world queries may require nuanced knowledge augmentation beyond a binary decision."
+      },
+      {
+        "question": "What is the computational overhead of computing Thrust scores and clustering in real-time or low-latency applications?",
+        "motivation": "Efficiency claims must be validated in practical deployment scenarios where speed is critical."
+      },
+      {
+        "question": "How does the method perform under distribution shifts or with novel test instances not well represented in training clusters?",
+        "motivation": "Robustness to domain shifts is important for real-world adoption."
+      },
+      {
+        "question": "Are there plans to release code and benchmark datasets to facilitate reproducibility and community adoption?",
+        "motivation": "Open resources are essential for verifying results and enabling further research."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to prior adaptive retrieval or selective augmentation methods. The paper lacks benchmarking against existing adaptive retrieval frameworks such as confidence-based gating or uncertainty estimation",
+    "point_002": "Lack of justification and ablation for clustering choices. No rationale is provided for using K-means or the number of clusters, nor is sensitivity to these hyperparameters analyzed",
+    "point_003": "No detailed ablation on Thrust variants and threshold selection. The relative effectiveness of vectorized versus binary Thrust and the impact of different selection thresholds are not thoroughly studied",
+    "point_004": "Evaluation omits stronger retrieval and fusion baselines. Comparisons are limited to naive knowledge augmentation, missing more sophisticated learned retrieval or fusion methods",
+    "point_005": "Metrics do not assess retrieval quality or knowledge relevance. Reported metrics focus on accuracy and cost but omit retrieval precision, recall, or relevance measures",
+    "point_006": "Failure cases are mentioned but not deeply analyzed. Tasks like ARC-Challenge where Thrust underperforms lack detailed error analysis or qualitative insights",
+    "point_007": "Reproducibility hindered by missing implementation details and code release. Details on representation extraction, clustering pipeline, and public release of code or benchmark are absent",
+    "point_008": "Clarity issues in explaining Thrust computation and label incorporation. The mathematical description is abstract without intuitive explanation or visualization; binary Thrust label usage is ambiguous",
+    "point_009": "Assumes training data distribution reflects test-time knowledge needs. This assumption may not hold under distribution shifts or novel test instances, limiting robustness",
+    "point_010": "Does not consider dynamic or partial knowledge needs within instances. Thrust computes a static score per instance, unable to capture nuanced or context-dependent knowledge requirements",
+    "point_011": "Limited generalizability evaluation beyond PTLMs and known knowledge sources. No experiments on other model architectures, languages, or domains lacking structured external knowledge",
+    "point_012": "No evaluation in real-time or low-latency retrieval settings. Potential overhead of clustering and Thrust computation is not analyzed in latency-critical scenarios",
+    "point_013": "Potential biases introduced by clustering are not addressed. Clusters may reflect dominant classes, disadvantaging rare or outlier instances, but this is not discussed"
+  }
+}

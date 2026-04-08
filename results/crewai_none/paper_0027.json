@@ -1,0 +1,149 @@
+{
+  "paper_id": "paper_0027",
+  "title": "Improving Language Model Pretraining with Text Structure Information ",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 58.58,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nGeneral-purpose pretrained language models, such as BERT, utilize both word-level and inter-sentence pretraining tasks to facilitate language understanding. While word-level tasks like Masked Language Modeling (MLM) focus on predicting masked words, inter-sentence tasks aim to learn relationships between sentences to capture higher-level language understanding. The classic inter-sentence task, Next Sentence Prediction (NSP), has been shown to provide limited or no improvement, especially at larger model scales. Other inter-sentence tasks like Sentence Order Prediction (SOP) and Sentence Structure Objective (SSO) also fail to consistently improve performance at larger scales.\n\nThe authors identify a key limitation: existing inter-sentence tasks simplify complex text structures into relationships between only two segments, ignoring the rich underlying text structure such as hierarchical and ordering relationships among sentences. Text structure\u2014comprising nested groupings like paragraphs and sections, and logical ordering such as chronological or cause-effect relations\u2014provides abundant clues for understanding key concepts and relationships in texts. The motivation is to leverage this text structure information to provide richer self-supervised learning signals that can improve language model pretraining, especially at larger scales.\n\n---\n\n### Proposed Method\n\nThe authors propose **Text Structure Prediction (TSP)**, a novel inter-sentence pretraining task designed to exploit text structure information. TSP classifies pairs of sentences according to six defined text structure relationships that combine hierarchical and ordering aspects:\n\n- **Hierarchical relationships (3 classes):**\n  1. Neighbor (two sentences are adjacent)\n  2. Same paragraph (two sentences in the same paragraph but not adjacent)\n  3. Same document (two sentences in the same document but neither adjacent nor in the same paragraph)\n\n- **Ordering relationships (2 classes):**\n  1. Normal order (sentences appear in forward order)\n  2. Reverse order (sentences appear in reverse order)\n\nThese combine to form six classes representing the text structure relationships between sentence pairs.\n\n**Framework details:**\n\n- Input sequences are segmented into sentences using NLTK. To prevent trivial learning, only 15% of sentences are shuffled, and 15% of tokens are masked following BERT\u2019s MLM procedure.\n- Sentence embeddings are obtained by averaging the contextualized token representations from a transformer encoder. Because the entire sequence is encoded together, sentence embeddings are contextualized with respect to other sentences.\n- Sentence pairs are classified into one of the six text structure relationship classes using a lightweight classifier on concatenated sentence embeddings.\n- The TSP loss (cross-entropy over the six classes) is combined with the MLM loss for joint training.\n\nAdvantages of TSP include being self-supervised, easily combinable with any transformer-based encoder, requiring negligible additional computation, and providing richer learning signals by explicitly modeling text structure.\n\n---\n\n### Results\n\n- **Datasets and Evaluation:** Models were pretrained on OpenWebText (38GB of Reddit-based documents) and evaluated on the SuperGLUE benchmark, which covers diverse language understanding tasks including natural language inference, multiple-choice reasoning, question answering, and word sense disambiguation.\n\n- **Scales:** Experiments were conducted at three model scales (Small, Base, Large), following BERT and ELECTRA settings.\n\n- **Findings:**\n  - Existing inter-sentence tasks (NSP, SOP, SSO) improved performance only at the Small scale but failed to improve or even degraded performance at Base and Large scales.\n  - TSP consistently improved performance over pure MLM and outperformed all inter-sentence baselines at all scales, with the largest gains at the Large scale.\n  - TSP showed particular strength on reasoning and question-answering tasks (e.g., CB, RTE, COPA, MultiRC, BoolQ), which align with its design to capture hierarchical and ordering relationships.\n  - On the WiC task (word sense disambiguation), TSP\u2019s performance improved with scale, being the best at Large scale, suggesting that complex sentence-level learning benefits larger models even on word-level tasks.\n  - Ablation studies confirmed that both hierarchical and ordering relationships contribute to TSP\u2019s effectiveness.\n  - Additional experiments demonstrated that TSP can be combined with other word-level pretraining methods like ELECTRA, still yielding improvements.\n\n---\n\n### Claimed Contributions\n\n1. **Empirical Finding:** Existing inter-sentence pretraining tasks (NSP, SOP, SSO) do not significantly improve or even degrade performance at larger model scales, highlighting their limitations.\n\n2. **Novel Task Proposal:** Introduction of Text Structure Prediction (TSP), a self-supervised inter-sentence pretraining task that leverages rich text structure information by classifying sentence pairs into six hierarchical and ordering relationship classes.\n\n3. **Demonstration of Effectiveness:** Experimental evidence that TSP improves language understanding performance across multiple scales (Small, Base, Large) and outperforms existing inter-sentence tasks on the SuperGLUE benchmark.\n\n4. **Scalability and Generality:** TSP scales well with model size and training data, providing larger gains at larger scales, and can be easily integrated with various word-level pretraining methods with negligible overhead.\n\n5. **Research Direction:** The work highlights the potential and importance of exploiting text structure information in language model pretraining, encouraging further research in this direction.\n\n---\n\n**In summary,** this paper identifies the shortcomings of existing inter-sentence pretraining tasks, proposes a novel Text Structure Prediction task that leverages hierarchical and ordering relationships between sentences, and empirically demonstrates its superiority and scalability for improving general-purpose language model pretraining."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty - Limited Comparison to Recent Structural Pretraining Methods:**  \nWhile the paper positions TSP as a novel inter-sentence task leveraging hierarchical and ordering relationships, it does not sufficiently compare or discuss recent related work that also exploits document or discourse structure in pretraining, such as models incorporating discourse parsing or paragraph-level objectives. The absence of such comparisons (in the Problem & Motivation or Related Work sections) weakens the claim of novelty and leaves unclear how TSP advances beyond these prior approaches.\n\n2. **Methodology - Justification for Sentence Pair Sampling and Shuffling Rates:**  \nThe authors mention that only 15% of sentences are shuffled and 15% of tokens masked (Section Proposed Method), but there is no ablation or justification for these specific percentages. It is unclear how sensitive TSP\u2019s performance is to these hyperparameters, or whether higher or lower shuffling rates might yield better or worse results. This missing analysis limits understanding of the robustness and tuning requirements of TSP.\n\n3. **Methodology - Sentence Embedding via Averaging Token Representations:**  \nThe approach averages token embeddings to obtain sentence embeddings, which may dilute important token-level nuances or syntactic cues. The paper does not explore alternative sentence embedding strategies (e.g., using [CLS] tokens, attention pooling) or justify why averaging is optimal. This design choice could impact the quality of sentence representations used for classification.\n\n4. **Evaluation - Lack of Evaluation on Downstream Tasks Beyond SuperGLUE:**  \nAll evaluations are conducted on SuperGLUE tasks, which focus on sentence-level and reasoning benchmarks. The paper does not evaluate TSP on other downstream tasks that might benefit from text structure understanding, such as summarization, document-level QA, or discourse parsing. This limits claims about the general applicability of TSP beyond SuperGLUE.\n\n5. **Evaluation - Baseline Comparisons May Not Be Fully Fair at Larger Scales:**  \nThe paper reports that NSP, SOP, and SSO degrade performance at Base and Large scales, but it is unclear if these baselines were re-tuned or optimized for larger models and datasets. Without ensuring that baseline tasks receive comparable hyperparameter tuning and training budgets, the comparisons may not be apples-to-apples, potentially overstating TSP\u2019s gains.\n\n6. **Evaluation - Metrics Focus Solely on Accuracy/Task Scores Without Analysis of Learned Representations:**  \nThe evaluation focuses on downstream task performance improvements but does not analyze the learned sentence embeddings or model internals to verify that TSP indeed captures hierarchical and ordering relationships as intended. Probing tasks or visualization of learned representations would strengthen claims about what TSP learns.\n\n7. **Reproducibility - Missing Details on Training Hyperparameters and Infrastructure:**  \nThe paper lacks detailed information on training hyperparameters such as learning rates, batch sizes, number of training steps, optimizer settings, and hardware used. These details are critical for reproducibility but are not explicitly stated in the summary or experimental sections.\n\n8. **Reproducibility - No Public Code or Pretrained Models Provided:**  \nThere is no mention of releasing code, pretrained checkpoints, or scripts for TSP, which hinders reproducibility and adoption by the community. Given the novelty and claimed benefits, providing these resources would be important.\n\n9. **Clarity - Ambiguity in Definition of the Six Classes for TSP:**  \nThe description of the six classes combines hierarchical and ordering relationships but is somewhat confusing. For example, it is unclear if ordering relationships apply independently within each hierarchical class or if the six classes are formed by all combinations. A clearer formal definition or a table illustrating the class definitions would improve understanding.\n\n10. **Clarity - Insufficient Explanation of How Sentence Pairs Are Sampled for Classification:**  \nThe paper does not clearly explain how sentence pairs are selected for the TSP classification task during training. Are all pairs within a document considered, or only certain pairs (e.g., adjacent, random)? This affects the distribution of classes and difficulty of the task but is not detailed.\n\n11. **Limitations - Ignoring Cross-Document or Global Contextual Relationships:**  \nTSP focuses on sentence pairs within a single document but does not consider relationships across documents or global discourse structures. This limits the scope of text structure modeling and may restrict benefits to tasks requiring broader context.\n\n12. **Limitations - Potential Sensitivity to Sentence Segmentation Quality:**  \nThe method relies on NLTK for sentence segmentation, but the paper does not discuss how segmentation errors or domain shifts might affect TSP\u2019s effectiveness. In noisy or informal text, sentence boundaries can be ambiguous, potentially degrading the quality of the structural labels.\n\n13. **Generalisability - Experiments Limited to English and Reddit-Derived Pretraining Data:**  \nPretraining is conducted solely on OpenWebText, which is Reddit-based English data. The paper does not explore whether TSP generalizes to other languages, domains, or more formal corpora, limiting claims about broad applicability.\n\n14. **Generalisability - No Analysis of TSP\u2019s Effectiveness on Non-Transformer Architectures:**  \nWhile the paper claims TSP can be combined with any transformer-based encoder, it does not test or discuss applicability to other architectures (e.g., RNNs, convolutional models) or newer transformer variants, leaving open questions about generality.\n\n15. **Methodology - Combining Hierarchical and Ordering Relationships into a Single Classification Task:**  \nThe paper combines hierarchical and ordering relationships into a single 6-class classification problem but does not explore whether separating these into multiple tasks or using multi-task learning might yield better performance. This design choice is not justified or ablated."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes Text Structure Prediction (TSP), a novel inter-sentence pretraining task that leverages hierarchical and ordering relationships between sentence pairs to improve language model pretraining. Experiments on SuperGLUE across multiple model scales demonstrate that TSP outperforms existing inter-sentence tasks and scales well, providing richer learning signals for language understanding.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel inter-sentence pretraining task leveraging rich text structure\",\n      \"evidence\": \"TSP classifies sentence pairs into six classes combining hierarchical and ordering relationships, explicitly modeling text structure beyond simple adjacency.\"\n    },\n    {\n      \"point\": \"Consistent performance improvements across model scales\",\n      \"evidence\": \"TSP outperforms NSP, SOP, and SSO at Small, Base, and Large scales on SuperGLUE, with largest gains at Large scale.\"\n    },\n    {\n      \"point\": \"Compatibility and scalability with existing pretraining methods\",\n      \"evidence\": \"TSP can be combined with word-level pretraining methods like ELECTRA with negligible overhead and still yields improvements.\"\n    },\n    {\n      \"point\": \"Comprehensive empirical evaluation\",\n      \"evidence\": \"Experiments include ablations on hierarchical vs ordering relationships and evaluations on diverse SuperGLUE tasks, showing strengths on reasoning and QA.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited comparison to recent structural pretraining methods\",\n      \"evidence\": \"The paper lacks discussion or comparison with recent models that incorporate discourse parsing or paragraph-level objectives, weakening novelty claims.\"\n    },\n    {\n      \"point\": \"Insufficient justification for sentence pair sampling and shuffling rates\",\n      \"evidence\": \"No ablation or analysis is provided on the choice of 15% sentence shuffling and 15% token masking rates, limiting understanding of hyperparameter sensitivity.\"\n    },\n    {\n      \"point\": \"Simplistic sentence embedding via averaging token representations\",\n      \"evidence\": \"The method averages token embeddings to form sentence embeddings without exploring alternatives or justifying this choice, which may dilute important information.\"\n    },\n    {\n      \"point\": \"Evaluation limited to SuperGLUE tasks\",\n      \"evidence\": \"No experiments on downstream tasks that require broader text structure understanding such as summarization or document-level QA.\"\n    },\n    {\n      \"point\": \"Baseline comparisons may not be fully fair at larger scales\",\n      \"evidence\": \"Unclear if baselines like NSP, SOP, and SSO were re-tuned or optimized for Base and Large scales, possibly overstating TSP's gains.\"\n    },\n    {\n      \"point\": \"Lack of analysis on learned representations\",\n      \"evidence\": \"No probing tasks or visualization to verify that TSP captures hierarchical and ordering relationships as intended.\"\n    },\n    {\n      \"point\": \"Reproducibility concerns due to missing training details and code\",\n      \"evidence\": \"Training hyperparameters and infrastructure details are not fully disclosed, and no code or pretrained models are released.\"\n    },\n    {\n      \"point\": \"Ambiguity in definition and sampling of TSP classes\",\n      \"evidence\": \"The six classes combining hierarchical and ordering relationships are not clearly defined, and sentence pair sampling strategy is not detailed.\"\n    },\n    {\n      \"point\": \"Limited scope ignoring cross-document or global context\",\n      \"evidence\": \"TSP focuses only on sentence pairs within a single document, missing broader discourse or cross-document relationships.\"\n    },\n    {\n      \"point\": \"Potential sensitivity to sentence segmentation quality\",\n      \"evidence\": \"Reliance on NLTK for sentence segmentation is not discussed in terms of robustness to errors or domain shifts.\"\n    },\n    {\n      \"point\": \"Generalisability limited to English and Reddit-based data\",\n      \"evidence\": \"Pretraining only on OpenWebText (Reddit-derived English data) without evaluation on other languages or domains.\"\n    },\n    {\n      \"point\": \"No exploration of applicability beyond transformer architectures\",\n      \"evidence\": \"Claims of compatibility with any transformer-based encoder are not tested on other architectures or newer variants.\"\n    },\n    {\n      \"point\": \"No ablation on combining hierarchical and ordering relationships into a single task\",\n      \"evidence\": \"The design choice to merge these relationships into one 6-class classification is not justified or compared to multi-task alternatives.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How sensitive is TSP performance to the sentence shuffling and token masking rates?\",\n      \"motivation\": \"Understanding hyperparameter sensitivity is important for robustness and tuning in different settings.\"\n    },\n    {\n      \"question\": \"Would separating hierarchical and ordering relationships into multiple tasks improve performance?\",\n      \"motivation\": \"Exploring alternative task formulations could yield better learning signals or insights into the contributions of each relationship type.\"\n    },\n    {\n      \"question\": \"How does TSP perform on downstream tasks requiring broader text structure understanding, such as summarization or document-level QA?\",\n      \"motivation\": \"Evaluating on diverse tasks would clarify the general applicability and benefits of TSP beyond SuperGLUE.\"\n    },\n    {\n      \"question\": \"Can TSP be effectively applied to non-English languages or domains with different text structures?\",\n      \"motivation\": \"Assessing generalizability is critical for wider adoption and understanding limitations.\"\n    },\n    {\n      \"question\": \"What is the impact of sentence segmentation errors on TSP\u2019s effectiveness?\",\n      \"motivation\": \"Robustness to noisy or informal text is important for real-world applications.\"\n    },\n    {\n      \"question\": \"Are the baseline inter-sentence tasks fairly optimized at larger scales for a valid comparison?\",\n      \"motivation\": \"Ensuring fair baselines is necessary to validate claims of TSP\u2019s superiority.\"\n    },\n    {\n      \"question\": \"What insights can be gained from analyzing the learned sentence embeddings or model internals?\",\n      \"motivation\": \"Understanding what TSP actually learns would strengthen claims about capturing text structure.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes Text Structure Prediction (TSP), a novel inter-sentence pretraining task that leverages hierarchical and ordering relationships between sentence pairs to improve language model pretraining. Experiments on SuperGLUE across multiple model scales demonstrate that TSP outperforms existing inter-sentence tasks and scales well, providing richer learning signals for language understanding.",
+    "strengths": [
+      {
+        "point": "Novel inter-sentence pretraining task leveraging rich text structure",
+        "evidence": "TSP classifies sentence pairs into six classes combining hierarchical and ordering relationships, explicitly modeling text structure beyond simple adjacency."
+      },
+      {
+        "point": "Consistent performance improvements across model scales",
+        "evidence": "TSP outperforms NSP, SOP, and SSO at Small, Base, and Large scales on SuperGLUE, with largest gains at Large scale."
+      },
+      {
+        "point": "Compatibility and scalability with existing pretraining methods",
+        "evidence": "TSP can be combined with word-level pretraining methods like ELECTRA with negligible overhead and still yields improvements."
+      },
+      {
+        "point": "Comprehensive empirical evaluation",
+        "evidence": "Experiments include ablations on hierarchical vs ordering relationships and evaluations on diverse SuperGLUE tasks, showing strengths on reasoning and QA."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison to recent structural pretraining methods",
+        "evidence": "The paper lacks discussion or comparison with recent models that incorporate discourse parsing or paragraph-level objectives, weakening novelty claims."
+      },
+      {
+        "point": "Insufficient justification for sentence pair sampling and shuffling rates",
+        "evidence": "No ablation or analysis is provided on the choice of 15% sentence shuffling and 15% token masking rates, limiting understanding of hyperparameter sensitivity."
+      },
+      {
+        "point": "Simplistic sentence embedding via averaging token representations",
+        "evidence": "The method averages token embeddings to form sentence embeddings without exploring alternatives or justifying this choice, which may dilute important information."
+      },
+      {
+        "point": "Evaluation limited to SuperGLUE tasks",
+        "evidence": "No experiments on downstream tasks that require broader text structure understanding such as summarization or document-level QA."
+      },
+      {
+        "point": "Baseline comparisons may not be fully fair at larger scales",
+        "evidence": "Unclear if baselines like NSP, SOP, and SSO were re-tuned or optimized for Base and Large scales, possibly overstating TSP's gains."
+      },
+      {
+        "point": "Lack of analysis on learned representations",
+        "evidence": "No probing tasks or visualization to verify that TSP captures hierarchical and ordering relationships as intended."
+      },
+      {
+        "point": "Reproducibility concerns due to missing training details and code",
+        "evidence": "Training hyperparameters and infrastructure details are not fully disclosed, and no code or pretrained models are released."
+      },
+      {
+        "point": "Ambiguity in definition and sampling of TSP classes",
+        "evidence": "The six classes combining hierarchical and ordering relationships are not clearly defined, and sentence pair sampling strategy is not detailed."
+      },
+      {
+        "point": "Limited scope ignoring cross-document or global context",
+        "evidence": "TSP focuses only on sentence pairs within a single document, missing broader discourse or cross-document relationships."
+      },
+      {
+        "point": "Potential sensitivity to sentence segmentation quality",
+        "evidence": "Reliance on NLTK for sentence segmentation is not discussed in terms of robustness to errors or domain shifts."
+      },
+      {
+        "point": "Generalisability limited to English and Reddit-based data",
+        "evidence": "Pretraining only on OpenWebText (Reddit-derived English data) without evaluation on other languages or domains."
+      },
+      {
+        "point": "No exploration of applicability beyond transformer architectures",
+        "evidence": "Claims of compatibility with any transformer-based encoder are not tested on other architectures or newer variants."
+      },
+      {
+        "point": "No ablation on combining hierarchical and ordering relationships into a single task",
+        "evidence": "The design choice to merge these relationships into one 6-class classification is not justified or compared to multi-task alternatives."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How sensitive is TSP performance to the sentence shuffling and token masking rates?",
+        "motivation": "Understanding hyperparameter sensitivity is important for robustness and tuning in different settings."
+      },
+      {
+        "question": "Would separating hierarchical and ordering relationships into multiple tasks improve performance?",
+        "motivation": "Exploring alternative task formulations could yield better learning signals or insights into the contributions of each relationship type."
+      },
+      {
+        "question": "How does TSP perform on downstream tasks requiring broader text structure understanding, such as summarization or document-level QA?",
+        "motivation": "Evaluating on diverse tasks would clarify the general applicability and benefits of TSP beyond SuperGLUE."
+      },
+      {
+        "question": "Can TSP be effectively applied to non-English languages or domains with different text structures?",
+        "motivation": "Assessing generalizability is critical for wider adoption and understanding limitations."
+      },
+      {
+        "question": "What is the impact of sentence segmentation errors on TSP\u2019s effectiveness?",
+        "motivation": "Robustness to noisy or informal text is important for real-world applications."
+      },
+      {
+        "question": "Are the baseline inter-sentence tasks fairly optimized at larger scales for a valid comparison?",
+        "motivation": "Ensuring fair baselines is necessary to validate claims of TSP\u2019s superiority."
+      },
+      {
+        "question": "What insights can be gained from analyzing the learned sentence embeddings or model internals?",
+        "motivation": "Understanding what TSP actually learns would strengthen claims about capturing text structure."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Limited comparison to recent structural pretraining methods. The paper lacks discussion or comparison with recent models that incorporate discourse parsing or paragraph-level objectives, weakening novelty claims",
+    "point_002": "Insufficient justification for sentence pair sampling and shuffling rates. No ablation or analysis is provided on the choice of 15% sentence shuffling and 15% token masking rates, limiting understanding of hyperparameter sensitivity",
+    "point_003": "Simplistic sentence embedding via averaging token representations. The method averages token embeddings to form sentence embeddings without exploring alternatives or justifying this choice, which may dilute important information",
+    "point_004": "Evaluation limited to SuperGLUE tasks. No experiments on downstream tasks that require broader text structure understanding such as summarization or document-level QA",
+    "point_005": "Baseline comparisons may not be fully fair at larger scales. Unclear if baselines like NSP, SOP, and SSO were re-tuned or optimized for Base and Large scales, possibly overstating TSP's gains",
+    "point_006": "Lack of analysis on learned representations. No probing tasks or visualization to verify that TSP captures hierarchical and ordering relationships as intended",
+    "point_007": "Reproducibility concerns due to missing training details and code. Training hyperparameters and infrastructure details are not fully disclosed, and no code or pretrained models are released",
+    "point_008": "Ambiguity in definition and sampling of TSP classes. The six classes combining hierarchical and ordering relationships are not clearly defined, and sentence pair sampling strategy is not detailed",
+    "point_009": "Limited scope ignoring cross-document or global context. TSP focuses only on sentence pairs within a single document, missing broader discourse or cross-document relationships",
+    "point_010": "Potential sensitivity to sentence segmentation quality. Reliance on NLTK for sentence segmentation is not discussed in terms of robustness to errors or domain shifts",
+    "point_011": "Generalisability limited to English and Reddit-based data. Pretraining only on OpenWebText (Reddit-derived English data) without evaluation on other languages or domains",
+    "point_012": "No exploration of applicability beyond transformer architectures. Claims of compatibility with any transformer-based encoder are not tested on other architectures or newer variants",
+    "point_013": "No ablation on combining hierarchical and ordering relationships into a single task. The design choice to merge these relationships into one 6-class classification is not justified or compared to multi-task alternatives"
+  }
+}

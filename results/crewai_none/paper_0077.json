@@ -1,0 +1,162 @@
+{
+  "paper_id": "paper_0077",
+  "title": "Differentially Private Fine-tuning of Language Models",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 71.32,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nDeep learning models, especially large-scale pre-trained language models (LLMs) like BERT and GPT, have achieved state-of-the-art performance in many NLP tasks. However, training these models on sensitive data risks leaking private information. Differential Privacy (DP) offers strong privacy guarantees by limiting the influence of any individual training example on the model, but typically at the cost of reduced accuracy and increased computational overhead.\n\nFine-tuning large pre-trained models privately is challenging because:\n\n- DP training introduces noise proportional to model size, which can overwhelm signal in large models.\n- Full fine-tuning of all parameters under DP is computationally expensive and memory-intensive.\n- Smaller private models often perform better under DP due to less noise, but this contradicts the known benefits of larger models in non-private settings.\n- There is a scarcity of large private datasets, but public pre-training on massive datasets followed by private fine-tuning on smaller datasets is a promising paradigm.\n\nThe motivation is to develop simpler, more efficient, and effective algorithms for differentially private fine-tuning of large language models that achieve strong privacy-utility tradeoffs while reducing computational and memory costs.\n\n---\n\n### Proposed Method\n\nThe authors propose a **meta-framework** for differentially private fine-tuning inspired by parameter-efficient fine-tuning methods. The key idea is:\n\n- Instead of fine-tuning all parameters of the pre-trained model, introduce a small set of additional trainable parameters \\(\\theta\\) with dimension much smaller than the original model parameters \\(W_{PT}\\).\n- Fine-tune only these additional parameters \\(\\theta\\) using DP stochastic gradient descent (DPSGD), while freezing the original pre-trained weights \\(W_{PT}\\).\n- The fine-tuned weights are expressed as \\(W_{FT} = W_{PT} + \\pi(\\theta)\\), where \\(\\pi(\\theta)\\) is a small additive correction.\n\nThis approach confines updates to a low-dimensional manifold around the pre-trained weights, reducing noise impact and preserving pre-trained knowledge.\n\n**Instantiations of the meta-framework include:**\n\n1. **Low-Rank Adaptation (LoRA):** Adds low-rank matrices \\(L_i R_i\\) as corrections to weight matrices in Transformer layers, with small rank \\(r\\) (e.g., 4, 16, 64). Only these low-rank matrices are trained privately.\n\n2. **Adapters:** Adds small bottleneck layers with residual connections after attention and feed-forward layers. Only adapter parameters and layer norms are trained.\n\n3. **Compacters:** Improves parameter efficiency of adapters by replacing dense matrices with tensor products of smaller matrices via low-rank parameterized hypercomplex multiplication (LPHM), drastically reducing trainable parameters.\n\n**Advantages of this approach:**\n\n- Updates only a tiny fraction (0.05% to 1%) of parameters, reducing noise and computational cost.\n- Enables modular, plug-in style fine-tuning for multiple downstream tasks without storing full copies of the model.\n- Reduces memory footprint by computing per-example gradients in a lower-dimensional space.\n- Potentially more communication-efficient in distributed/federated learning.\n\nThe authors also compare their methods to prior baselines:\n\n- Full fine-tuning with DPSGD updates all parameters, incurring high noise and cost.\n- Reparametrized Gradient Perturbation (RGP) uses low-rank gradient projections but requires decompositions each iteration and updates all parameters.\n- LoRA simplifies RGP by freezing pre-trained weights and only training low-rank corrections, improving speed, memory, and utility.\n\n---\n\n### Results\n\nThe authors conduct extensive experiments on both language understanding and natural language generation tasks, demonstrating state-of-the-art privacy-utility tradeoffs and efficiency.\n\n**Language Understanding (RoBERTa models on GLUE tasks):**\n\n- Tasks: MNLI, QQP, QNLI, SST-2.\n- Models: RoBERTa-Base (125M params), RoBERTa-Large (355M params).\n- Privacy budgets: \\(\\varepsilon \\approx 6.7\\), \\(\\delta = 10^{-6}\\) or \\(10^{-5}\\).\n- Results:\n  - On MNLI, RoBERTa-Large achieves 87.8% accuracy privately vs. 90.2% non-private.\n  - RoBERTa-Base achieves 83.5% accuracy privately.\n  - Parameter-efficient methods (adapters, LoRA, Compacters) outperform full fine-tuning and RGP baselines.\n  - Larger models consistently yield better private accuracy.\n  - Private adapters perform best on RoBERTa-Base; LoRA performs best on RoBERTa-Large.\n  - New privacy accounting techniques contribute to improved \\(\\varepsilon\\) values.\n\n**Natural Language Generation (GPT-2 models on E2E dataset):**\n\n- Models: GPT-2 Small (117M), Medium (345M), Large (774M).\n- Fine-tuning with LoRA only due to cost.\n- Privacy budget: \\(\\varepsilon = 5.4\\), \\(\\delta = 10^{-5}\\).\n- Results:\n  - ROUGE-L scores approach non-private levels: 0.6755 (private) vs. 0.72 (non-private) for GPT-2 Large.\n  - Larger GPT-2 models yield better private generation quality.\n  - First demonstration of private fine-tuning of GPT-2 Large.\n\n**Efficiency:**\n\n- DP LoRA reduces memory cost by ~33% and training speed by ~8% compared to RGP.\n- Training only a small fraction of parameters reduces computational overhead and memory footprint.\n- Enables modular fine-tuning with small parameter sets per downstream task.\n\n---\n\n### Claimed Contributions\n\n1. **State-of-the-art privacy-utility tradeoffs:** The proposed parameter-efficient private fine-tuning methods achieve accuracy close to non-private models on standard NLP benchmarks, surpassing prior private fine-tuning work (e.g., Yu et al. 2021b).\n\n2. **Demonstration that larger models are better for private fine-tuning:** Contrary to prior beliefs that smaller models perform better under DP, the authors show that larger models maintain higher accuracy even with privacy constraints.\n\n3. **Simpler, sparser, and faster algorithms:** By fine-tuning only a small fraction of parameters, the methods reduce computational and memory costs, making private fine-tuning more practical.\n\n4. **A general meta-framework for private fine-tuning:** Abstracting recent parameter-efficient fine-tuning methods into a unified framework that can be instantiated with LoRA, adapters, and Compacters.\n\n5. **First private fine-tuning of GPT-2 Large:** Establishing a new benchmark for private fine-tuning of large generative language models.\n\n6. **Improved privacy accounting:** Use of advanced privacy accounting techniques (Fourier accountant) to achieve tighter privacy guarantees.\n\n7. **Modular and practical approach:** The framework supports plug-in style fine-tuning for multiple downstream tasks without duplicating full model weights.\n\n8. **Benchmark and foundation for future work:** The paper sets a new standard for private fine-tuning and encourages further research at the intersection of large language models and differential privacy.\n\n---\n\n**In summary**, this work presents a novel, efficient, and effective approach to differentially private fine-tuning of large language models by leveraging parameter-efficient tuning methods. It achieves near non-private accuracy on multiple NLP tasks, demonstrates the benefits of larger models under DP, and significantly reduces computational overhead, establishing new benchmarks and directions for private machine learning research."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty \u2013 Limited comparison to recent parameter-efficient DP fine-tuning methods:**  \nWhile the paper compares to Reparametrized Gradient Perturbation (RGP) and full fine-tuning baselines, it does not discuss or compare against other recent parameter-efficient DP fine-tuning approaches beyond RGP, such as DP-Adapter or DP-Prefix Tuning variants that have appeared in recent literature. This omission weakens the claim of state-of-the-art privacy-utility tradeoffs (Section \u201cProposed Method\u201d and \u201cResults\u201d).\n\n2. **Methodology \u2013 Lack of ablation on the choice of \\(\\pi(\\theta)\\) parameterization:**  \nThe meta-framework hinges on the additive correction \\(W_{FT} = W_{PT} + \\pi(\\theta)\\), but the paper only instantiates \\(\\pi(\\theta)\\) with LoRA, adapters, and Compacters. There is no ablation or justification on why additive corrections are preferable to other parameter-efficient schemes such as prefix tuning or prompt tuning, which might also reduce noise impact under DP.\n\n3. **Methodology \u2013 Missing analysis on the impact of rank \\(r\\) in LoRA under DP:**  \nAlthough LoRA is used with ranks \\(r=4,16,64\\), the paper does not provide a systematic study of how rank affects privacy-utility tradeoffs or noise sensitivity. This is important because rank controls the number of trainable parameters and thus noise magnitude in DPSGD (Section \u201cProposed Method\u201d and \u201cResults\u201d).\n\n4. **Evaluation \u2013 Baselines may not be fully optimized for DP:**  \nThe full fine-tuning baseline and RGP baseline are described but it is unclear if these baselines were tuned with the same level of hyperparameter optimization (learning rate, clipping norm, batch size) as the proposed methods. Without this, the superiority claims of parameter-efficient methods could be partly due to suboptimal baseline tuning (Section \u201cResults\u201d).\n\n5. **Evaluation \u2013 Limited task diversity and dataset scale:**  \nExperiments are restricted to GLUE tasks for understanding and E2E dataset for generation, both relatively small and standard benchmarks. The paper does not evaluate on larger, more diverse datasets or tasks (e.g., question answering, summarization, or real-world private datasets), limiting claims about generalizability (Section \u201cResults\u201d).\n\n6. **Evaluation \u2013 Metrics focus on accuracy and ROUGE-L only:**  \nThe evaluation uses accuracy for GLUE and ROUGE-L for E2E generation but does not consider other relevant metrics such as F1, precision/recall, or human evaluation for generation quality. This narrow metric choice may miss nuanced impacts of DP noise on model behavior (Section \u201cResults\u201d).\n\n7. **Reproducibility \u2013 Missing detailed hyperparameter settings for DP training:**  \nThe paper does not provide comprehensive details on key DP hyperparameters such as clipping norm values, noise multipliers, batch sizes, number of epochs, or gradient accumulation steps used for each method and model size. These details are critical for reproducing the privacy-utility tradeoffs reported (Section \u201cResults\u201d and \u201cProposed Method\u201d).\n\n8. **Reproducibility \u2013 Lack of code release or pseudocode for meta-framework:**  \nNo mention is made of releasing code or detailed pseudocode for implementing the meta-framework or the privacy accounting techniques (Fourier accountant). This omission hinders reproducibility and adoption by the community (Section \u201cContributions\u201d).\n\n9. **Clarity \u2013 Insufficient explanation of privacy accounting improvements:**  \nThe paper claims improved privacy accounting via the Fourier accountant but does not clearly explain how it differs from or improves upon standard moments accountant or RDP methods. The impact of this improvement on final \\(\\varepsilon\\) values is not quantified separately (Section \u201cResults\u201d and \u201cContributions\u201d).\n\n10. **Clarity \u2013 Ambiguity in the modularity claim for multi-task fine-tuning:**  \nThe paper states that the approach supports modular plug-in fine-tuning for multiple downstream tasks without storing full model copies, but does not clarify how parameter sets \\(\\theta\\) are managed or combined when multiple tasks are involved. It is unclear if interference or parameter sharing issues arise (Section \u201cProposed Method\u201d and \u201cContributions\u201d).\n\n11. **Limitations \u2013 No discussion on privacy leakage through model outputs:**  \nThe paper focuses on DP training guarantees but does not discuss potential privacy risks from model outputs or membership inference attacks post fine-tuning, which remain relevant in private NLP models (Section \u201cLimitations\u201d is absent).\n\n12. **Limitations \u2013 Computational cost still significant for largest models:**  \nAlthough the method reduces memory and computation compared to full fine-tuning, the reported ~8% speedup and 33% memory reduction (Section \u201cResults\u201d) may still be insufficient for very large models or resource-constrained environments. The paper does not discuss scalability beyond GPT-2 Large or potential bottlenecks.\n\n13. **Generalisability \u2013 Unclear if approach extends to non-Transformer architectures:**  \nAll experiments and methods focus on Transformer-based models (RoBERTa, GPT-2). It is not discussed whether the meta-framework or parameter-efficient DP fine-tuning would be effective for other architectures like RNNs, CNNs, or multimodal models (Section \u201cProposed Method\u201d and \u201cResults\u201d).\n\n14. **Generalisability \u2013 No evaluation on federated or distributed learning despite claims:**  \nThe paper mentions potential communication efficiency benefits in federated settings but does not provide experiments or analysis in such environments. This leaves the claim speculative without empirical support (Section \u201cProposed Method\u201d).\n\n15. **Methodology \u2013 No analysis of privacy-utility tradeoff across different \\(\\varepsilon\\) values:**  \nExperiments focus on a narrow range of privacy budgets (\\(\\varepsilon \\approx 5.4\\) to 6.7). The paper does not explore how the methods perform under stricter privacy constraints (lower \\(\\varepsilon\\)) or more relaxed ones, which is important for understanding robustness and practical deployment (Section \u201cResults\u201d)."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes a meta-framework for differentially private fine-tuning of large language models using parameter-efficient tuning methods such as LoRA, adapters, and Compacters. The approach achieves strong privacy-utility tradeoffs with reduced computational and memory costs, demonstrating state-of-the-art results on GLUE and E2E benchmarks and establishing the first private fine-tuning of GPT-2 Large.\",\n  \"strengths\": [\n    {\n      \"point\": \"Achieves state-of-the-art privacy-utility tradeoffs\",\n      \"evidence\": \"Parameter-efficient methods outperform full fine-tuning and RGP baselines on GLUE tasks and E2E generation, with private accuracy close to non-private models.\"\n    },\n    {\n      \"point\": \"Demonstrates benefits of larger models under differential privacy\",\n      \"evidence\": \"Larger RoBERTa and GPT-2 models consistently yield better private accuracy and generation quality, contrary to prior beliefs favoring smaller models.\"\n    },\n    {\n      \"point\": \"Proposes a general and modular meta-framework\",\n      \"evidence\": \"Abstracts parameter-efficient fine-tuning methods into a unified framework instantiated by LoRA, adapters, and Compacters, enabling plug-in style fine-tuning for multiple tasks.\"\n    },\n    {\n      \"point\": \"Reduces computational and memory overhead\",\n      \"evidence\": \"DP LoRA reduces memory cost by ~33% and training speed by ~8% compared to RGP, training only a small fraction of parameters.\"\n    },\n    {\n      \"point\": \"Introduces improved privacy accounting\",\n      \"evidence\": \"Use of Fourier accountant leads to tighter privacy guarantees and improved epsilon values.\"\n    },\n    {\n      \"point\": \"First demonstration of private fine-tuning of GPT-2 Large\",\n      \"evidence\": \"Achieves ROUGE-L scores close to non-private levels on E2E dataset with GPT-2 Large under DP.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited comparison to recent parameter-efficient DP fine-tuning methods\",\n      \"evidence\": \"No comparison or discussion of methods like DP-Adapter or DP-Prefix Tuning beyond RGP.\"\n    },\n    {\n      \"point\": \"Lack of ablation on choice of parameterization \\u03c0(\\u03b8)\",\n      \"evidence\": \"Only LoRA, adapters, and Compacters are instantiated without justification or comparison to prefix or prompt tuning.\"\n    },\n    {\n      \"point\": \"Missing analysis of rank r impact in LoRA under DP\",\n      \"evidence\": \"No systematic study on how rank affects privacy-utility tradeoffs or noise sensitivity.\"\n    },\n    {\n      \"point\": \"Unclear if baselines are fully optimized for DP\",\n      \"evidence\": \"No detailed hyperparameter tuning reported for full fine-tuning and RGP baselines, possibly biasing results.\"\n    },\n    {\n      \"point\": \"Limited task diversity and dataset scale\",\n      \"evidence\": \"Experiments restricted to GLUE and E2E datasets, lacking larger or more diverse benchmarks.\"\n    },\n    {\n      \"point\": \"Evaluation metrics are narrow\",\n      \"evidence\": \"Only accuracy and ROUGE-L used; no F1, precision/recall, or human evaluation.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing hyperparameter details and code\",\n      \"evidence\": \"Key DP hyperparameters and privacy accounting implementation details not fully disclosed; no code or pseudocode released.\"\n    },\n    {\n      \"point\": \"Insufficient explanation of privacy accounting improvements\",\n      \"evidence\": \"Fourier accountant benefits not clearly quantified or contrasted with standard methods.\"\n    },\n    {\n      \"point\": \"Ambiguity in modularity claim for multi-task fine-tuning\",\n      \"evidence\": \"No clarity on how multiple \\u03b8 parameter sets are managed or combined across tasks.\"\n    },\n    {\n      \"point\": \"No discussion on privacy leakage via model outputs\",\n      \"evidence\": \"Paper lacks analysis of post-training privacy risks such as membership inference attacks.\"\n    },\n    {\n      \"point\": \"Computational cost still significant for largest models\",\n      \"evidence\": \"Reported ~8% speedup and 33% memory reduction may be insufficient for very large or resource-constrained settings.\"\n    },\n    {\n      \"point\": \"Generalisability to non-Transformer architectures unclear\",\n      \"evidence\": \"No experiments or discussion on applicability to RNNs, CNNs, or multimodal models.\"\n    },\n    {\n      \"point\": \"No empirical evaluation in federated or distributed learning\",\n      \"evidence\": \"Claims of communication efficiency remain speculative without experiments.\"\n    },\n    {\n      \"point\": \"No analysis across different privacy budgets \\u03b5\",\n      \"evidence\": \"Experiments focus on narrow \\u03b5 range (~5.4 to 6.7), lacking robustness checks under stricter or relaxed privacy constraints.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does the choice of \\u03c0(\\u03b8) parameterization affect privacy-utility tradeoffs?\",\n      \"motivation\": \"Understanding whether additive corrections outperform other parameter-efficient schemes like prefix or prompt tuning could guide method selection.\"\n    },\n    {\n      \"question\": \"Are the baselines fully optimized for DP to ensure fair comparison?\",\n      \"motivation\": \"Without thorough hyperparameter tuning of baselines, claims of superiority may be overstated.\"\n    },\n    {\n      \"question\": \"How does the approach perform under stricter privacy budgets (lower \\u03b5)?\",\n      \"motivation\": \"Evaluating robustness across a wider privacy range is critical for practical deployment.\"\n    },\n    {\n      \"question\": \"Can the meta-framework be extended effectively to non-Transformer architectures or multimodal models?\",\n      \"motivation\": \"Broader applicability would increase impact and relevance.\"\n    },\n    {\n      \"question\": \"How are multiple parameter sets \\u03b8 managed in modular multi-task fine-tuning to avoid interference?\",\n      \"motivation\": \"Clarifying this is important for scalability and practical use in multi-task settings.\"\n    },\n    {\n      \"question\": \"What are the privacy risks from model outputs post fine-tuning, and how can they be mitigated?\",\n      \"motivation\": \"Addressing output leakage is essential for end-to-end privacy guarantees.\"\n    },\n    {\n      \"question\": \"Will the claimed communication efficiency benefits hold in real federated or distributed learning scenarios?\",\n      \"motivation\": \"Empirical validation is needed to support claims and guide deployment.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes a meta-framework for differentially private fine-tuning of large language models using parameter-efficient tuning methods such as LoRA, adapters, and Compacters. The approach achieves strong privacy-utility tradeoffs with reduced computational and memory costs, demonstrating state-of-the-art results on GLUE and E2E benchmarks and establishing the first private fine-tuning of GPT-2 Large.",
+    "strengths": [
+      {
+        "point": "Achieves state-of-the-art privacy-utility tradeoffs",
+        "evidence": "Parameter-efficient methods outperform full fine-tuning and RGP baselines on GLUE tasks and E2E generation, with private accuracy close to non-private models."
+      },
+      {
+        "point": "Demonstrates benefits of larger models under differential privacy",
+        "evidence": "Larger RoBERTa and GPT-2 models consistently yield better private accuracy and generation quality, contrary to prior beliefs favoring smaller models."
+      },
+      {
+        "point": "Proposes a general and modular meta-framework",
+        "evidence": "Abstracts parameter-efficient fine-tuning methods into a unified framework instantiated by LoRA, adapters, and Compacters, enabling plug-in style fine-tuning for multiple tasks."
+      },
+      {
+        "point": "Reduces computational and memory overhead",
+        "evidence": "DP LoRA reduces memory cost by ~33% and training speed by ~8% compared to RGP, training only a small fraction of parameters."
+      },
+      {
+        "point": "Introduces improved privacy accounting",
+        "evidence": "Use of Fourier accountant leads to tighter privacy guarantees and improved epsilon values."
+      },
+      {
+        "point": "First demonstration of private fine-tuning of GPT-2 Large",
+        "evidence": "Achieves ROUGE-L scores close to non-private levels on E2E dataset with GPT-2 Large under DP."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison to recent parameter-efficient DP fine-tuning methods",
+        "evidence": "No comparison or discussion of methods like DP-Adapter or DP-Prefix Tuning beyond RGP."
+      },
+      {
+        "point": "Lack of ablation on choice of parameterization \u03c0(\u03b8)",
+        "evidence": "Only LoRA, adapters, and Compacters are instantiated without justification or comparison to prefix or prompt tuning."
+      },
+      {
+        "point": "Missing analysis of rank r impact in LoRA under DP",
+        "evidence": "No systematic study on how rank affects privacy-utility tradeoffs or noise sensitivity."
+      },
+      {
+        "point": "Unclear if baselines are fully optimized for DP",
+        "evidence": "No detailed hyperparameter tuning reported for full fine-tuning and RGP baselines, possibly biasing results."
+      },
+      {
+        "point": "Limited task diversity and dataset scale",
+        "evidence": "Experiments restricted to GLUE and E2E datasets, lacking larger or more diverse benchmarks."
+      },
+      {
+        "point": "Evaluation metrics are narrow",
+        "evidence": "Only accuracy and ROUGE-L used; no F1, precision/recall, or human evaluation."
+      },
+      {
+        "point": "Reproducibility hindered by missing hyperparameter details and code",
+        "evidence": "Key DP hyperparameters and privacy accounting implementation details not fully disclosed; no code or pseudocode released."
+      },
+      {
+        "point": "Insufficient explanation of privacy accounting improvements",
+        "evidence": "Fourier accountant benefits not clearly quantified or contrasted with standard methods."
+      },
+      {
+        "point": "Ambiguity in modularity claim for multi-task fine-tuning",
+        "evidence": "No clarity on how multiple \u03b8 parameter sets are managed or combined across tasks."
+      },
+      {
+        "point": "No discussion on privacy leakage via model outputs",
+        "evidence": "Paper lacks analysis of post-training privacy risks such as membership inference attacks."
+      },
+      {
+        "point": "Computational cost still significant for largest models",
+        "evidence": "Reported ~8% speedup and 33% memory reduction may be insufficient for very large or resource-constrained settings."
+      },
+      {
+        "point": "Generalisability to non-Transformer architectures unclear",
+        "evidence": "No experiments or discussion on applicability to RNNs, CNNs, or multimodal models."
+      },
+      {
+        "point": "No empirical evaluation in federated or distributed learning",
+        "evidence": "Claims of communication efficiency remain speculative without experiments."
+      },
+      {
+        "point": "No analysis across different privacy budgets \u03b5",
+        "evidence": "Experiments focus on narrow \u03b5 range (~5.4 to 6.7), lacking robustness checks under stricter or relaxed privacy constraints."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does the choice of \u03c0(\u03b8) parameterization affect privacy-utility tradeoffs?",
+        "motivation": "Understanding whether additive corrections outperform other parameter-efficient schemes like prefix or prompt tuning could guide method selection."
+      },
+      {
+        "question": "Are the baselines fully optimized for DP to ensure fair comparison?",
+        "motivation": "Without thorough hyperparameter tuning of baselines, claims of superiority may be overstated."
+      },
+      {
+        "question": "How does the approach perform under stricter privacy budgets (lower \u03b5)?",
+        "motivation": "Evaluating robustness across a wider privacy range is critical for practical deployment."
+      },
+      {
+        "question": "Can the meta-framework be extended effectively to non-Transformer architectures or multimodal models?",
+        "motivation": "Broader applicability would increase impact and relevance."
+      },
+      {
+        "question": "How are multiple parameter sets \u03b8 managed in modular multi-task fine-tuning to avoid interference?",
+        "motivation": "Clarifying this is important for scalability and practical use in multi-task settings."
+      },
+      {
+        "question": "What are the privacy risks from model outputs post fine-tuning, and how can they be mitigated?",
+        "motivation": "Addressing output leakage is essential for end-to-end privacy guarantees."
+      },
+      {
+        "question": "Will the claimed communication efficiency benefits hold in real federated or distributed learning scenarios?",
+        "motivation": "Empirical validation is needed to support claims and guide deployment."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Limited comparison to recent parameter-efficient DP fine-tuning methods. No comparison or discussion of methods like DP-Adapter or DP-Prefix Tuning beyond RGP",
+    "point_002": "Lack of ablation on choice of parameterization \u03c0(\u03b8). Only LoRA, adapters, and Compacters are instantiated without justification or comparison to prefix or prompt tuning",
+    "point_003": "Missing analysis of rank r impact in LoRA under DP. No systematic study on how rank affects privacy-utility tradeoffs or noise sensitivity",
+    "point_004": "Unclear if baselines are fully optimized for DP. No detailed hyperparameter tuning reported for full fine-tuning and RGP baselines, possibly biasing results",
+    "point_005": "Limited task diversity and dataset scale. Experiments restricted to GLUE and E2E datasets, lacking larger or more diverse benchmarks",
+    "point_006": "Evaluation metrics are narrow. Only accuracy and ROUGE-L used; no F1, precision/recall, or human evaluation",
+    "point_007": "Reproducibility hindered by missing hyperparameter details and code. Key DP hyperparameters and privacy accounting implementation details not fully disclosed; no code or pseudocode released",
+    "point_008": "Insufficient explanation of privacy accounting improvements. Fourier accountant benefits not clearly quantified or contrasted with standard methods",
+    "point_009": "Ambiguity in modularity claim for multi-task fine-tuning. No clarity on how multiple \u03b8 parameter sets are managed or combined across tasks",
+    "point_010": "No discussion on privacy leakage via model outputs. Paper lacks analysis of post-training privacy risks such as membership inference attacks",
+    "point_011": "Computational cost still significant for largest models. Reported ~8% speedup and 33% memory reduction may be insufficient for very large or resource-constrained settings",
+    "point_012": "Generalisability to non-Transformer architectures unclear. No experiments or discussion on applicability to RNNs, CNNs, or multimodal models",
+    "point_013": "No empirical evaluation in federated or distributed learning. Claims of communication efficiency remain speculative without experiments",
+    "point_014": "No analysis across different privacy budgets \u03b5. Experiments focus on narrow \u03b5 range (~5.4 to 6.7), lacking robustness checks under stricter or relaxed privacy constraints"
+  }
+}

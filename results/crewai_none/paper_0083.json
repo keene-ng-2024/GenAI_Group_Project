@@ -1,0 +1,150 @@
+{
+  "paper_id": "paper_0083",
+  "title": "Deepening Hidden Representations from Pre-trained Language Models ",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 90.3,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nTransformer-based pre-trained language models (e.g., BERT, RoBERTa, XLNet) have demonstrated strong capabilities in learning contextualized language representations and have achieved state-of-the-art results across various natural language processing (NLP) tasks. Typically, these models are fine-tuned on downstream tasks by using only the output of the encoder\u2019s final layer as the input to task-specific layers.\n\nHowever, this approach may limit the representational power of the model because:\n\n- The final layer\u2019s output may not always be the best or most transferable representation for all downstream tasks.\n- Prior work (Devlin et al., 2019; Peters et al., 2018b) shows that intermediate layers often contain complementary or more transferable information than the last layer.\n- Using only the last layer ignores potentially useful information encoded in the hidden layers.\n\nThus, the motivation is to leverage the rich information contained in all hidden layers of the Transformer encoder to deepen and refine the learned language representations, potentially improving downstream task performance.\n\n---\n\n### Proposed Method\n\nThe authors propose a novel enhancement component called **HIdden Representation Extractor (HIRE)**, which adaptively extracts complementary information from all hidden layers of a Transformer-based encoder to refine the language representation. The method consists of three main components:\n\n1. **Transformer-based Encoder Backbone**  \n   - Uses RoBERTa LARGE as the backbone encoder with 24 Transformer layers.\n   - Produces preliminary representation \\( R \\) from the final layer output.\n\n2. **Hidden Representation Extractor (HIRE)**  \n   - Takes as input the hidden states from all layers \\( \\{H_0, H_1, ..., H_l\\} \\), where \\( H_0 \\) is the input embedding and \\( l \\) is the number of layers.\n   - Summarizes each hidden state \\( H_i \\) into a fixed-size vector \\( u_i \\) using a 2-layer bidirectional GRU.\n   - Computes an adaptive importance score \\( \\alpha_i \\) for each layer\u2019s hidden state via a trainable linear transformation followed by a softmax normalization, producing weights \\( s_i \\).\n   - Generates a complementary representation \\( A \\) as a weighted sum of all hidden states:  \n     \\[\n     A = \\sum_{i=0}^l s_i H_i\n     \\]\n   - This complementary representation captures information not present in the final layer output.\n\n3. **Fusion Network**  \n   - Combines the preliminary representation \\( R \\) and the complementary representation \\( A \\) via concatenation and element-wise multiplication:  \n     \\[\n     M = [R; A; R \\circ A]\n     \\]\n   - Passes \\( M \\) through a 2-layer bidirectional GRU to fuse the information, producing the final refined contextualized representation \\( F \\).\n\n4. **Output Layer**  \n   - Task-specific output layers for classification or regression.\n   - For classification, uses the first token\u2019s representation \\( c \\) from \\( F \\), passes it through a feed-forward network, and applies softmax for label prediction.\n   - For regression, outputs a scalar prediction similarly.\n\n5. **Training**  \n   - Uses cross-entropy loss for classification tasks.\n   - Uses mean squared error (MSE) loss for regression tasks.\n   - Fine-tunes the entire model end-to-end on downstream tasks.\n\nThe key idea is that HIRE dynamically learns to weight and extract useful information from all hidden layers, complementing the final layer output, and the fusion network integrates these signals to produce a more powerful representation.\n\n---\n\n### Results\n\n- **Datasets:** Evaluated on the GLUE benchmark, which includes 9 diverse natural language understanding tasks (single-sentence, similarity/paraphrase, and natural language inference tasks).\n\n- **Main Findings:**\n  - RoBERTa+HIRE outperforms the RoBERTa baseline on 5 out of 9 GLUE tasks on the development set, with improvements such as:\n    - +1.7 points on CoLA (Matthews correlation)\n    - +0.4 points on SST-2 (accuracy)\n    - +0.5/0.2 points on MNLI (matched/mismatched accuracy)\n    - +0.3 points on QNLI (accuracy)\n  - Matches RoBERTa on MRPC, STS-B, and RTE tasks.\n  - On the GLUE test set leaderboard, RoBERTa+HIRE achieves comparable or better results than RoBERTa, including state-of-the-art performance on SST-2 with 97.1 accuracy.\n  - Improvements are achieved without modifying the Transformer encoder architecture or pre-training procedure.\n\n- **Ablation Studies:**\n  - Removing HIRE causes significant performance drops (e.g., -1.2 on CoLA, -0.9 on STS-B).\n  - Removing the fusion network also degrades performance, indicating both components are important.\n  - Fixed importance scores (e.g., averaging or random) for hidden layers perform worse than the adaptive weighting mechanism, confirming the benefit of dynamic importance assignment.\n  - Two-layer GRU in the fusion network yields better results than 0, 1, or 3 layers.\n\n- **Analysis:**\n  - Importance scores vary across tasks and examples, demonstrating HIRE\u2019s ability to adaptively leverage different layers depending on the input and task.\n  - For most tasks, layers below the final layer contribute most to the complementary representation.\n  - For some tasks (STS-B, RTE), all layers contribute more evenly.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Enhancement Component (HIRE):**  \n   Introduces the Hidden Representation Extractor that adaptively extracts complementary information from all hidden layers of Transformer-based pre-trained language models, rather than relying solely on the final layer output.\n\n2. **Fusion Network:**  \n   Proposes a lightweight fusion network that effectively integrates the complementary representation from HIRE with the final layer output to produce a refined contextualized language representation.\n\n3. **Empirical Validation:**  \n   Demonstrates that the proposed method improves performance on multiple natural language understanding tasks in the GLUE benchmark, achieving state-of-the-art results on SST-2 without changing the backbone Transformer architecture or pre-training.\n\n4. **Dynamic Layer Importance:**  \n   Shows that dynamically weighting hidden layers per example and task is more effective than fixed or uniform weighting, highlighting the adaptability of the approach.\n\n5. **General Applicability:**  \n   Provides a general and effective method to deepen hidden representations from pre-trained language models that can be applied to various downstream tasks.\n\n---\n\n**In summary,** this paper proposes HIRE, an adaptive mechanism to leverage all hidden layers of Transformer-based pre-trained models, combined with a fusion network, to refine language representations and improve downstream task performance, validated on the GLUE benchmark with strong empirical results."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty: Insufficient comparison with prior layer-aggregation methods**  \n   The paper claims novelty in adaptively extracting complementary information from all hidden layers, yet it does not adequately compare or discuss prior works that also leverage intermediate layers of Transformers, such as ELMo (Peters et al., 2018b) or methods using layer-wise attention or weighted sums (e.g., Peters et al., 2018a; Clark et al., 2019). While the paper cites Devlin et al. (2019) and Peters et al. (2018b) to motivate the approach, it lacks a thorough empirical or conceptual comparison to these existing aggregation techniques, which weakens the claim of novelty (see Problem & Motivation and Claimed Contributions).\n\n2. **Methodology: Lack of justification for using a 2-layer bidirectional GRU in HIRE and fusion network**  \n   The choice of a 2-layer bidirectional GRU both for summarizing each hidden state into \\( u_i \\) and for the fusion network is not well justified. Although ablation studies show that 2 layers outperform 0, 1, or 3 layers in the fusion network, the rationale behind this architecture choice, why GRUs are preferred over simpler alternatives (e.g., feed-forward layers or self-attention), or why the same architecture is used for summarization and fusion is not discussed (see Proposed Method and Ablation Studies).\n\n3. **Methodology: Potential redundancy in concatenation and element-wise multiplication in fusion input**  \n   The fusion network input \\( M = [R; A; R \\circ A] \\) concatenates the preliminary representation, complementary representation, and their element-wise product. The paper does not analyze whether all three components are necessary or if some are redundant. An ablation removing either concatenation or element-wise multiplication could clarify the contribution of each component to the final performance (see Proposed Method and Ablation Studies).\n\n4. **Evaluation: Limited task diversity in GLUE benchmark evaluation**  \n   The evaluation is restricted to the GLUE benchmark, which, while diverse, focuses mainly on English natural language understanding tasks. The paper does not evaluate or discuss performance on other types of tasks such as question answering, summarization, or generation, nor on other languages or domains, limiting claims about general applicability (see Results and Claimed Contributions).\n\n5. **Evaluation: Lack of comparison with stronger or more recent baselines**  \n   The main baseline is RoBERTa LARGE without any layer aggregation. The paper does not compare against other recent methods that leverage intermediate layers or use more advanced fusion techniques (e.g., layer-wise attention, adapters, or multi-layer feature fusion). This omission makes it unclear whether HIRE provides a meaningful improvement over the current state-of-the-art beyond vanilla RoBERTa (see Results and Claimed Contributions).\n\n6. **Evaluation: No statistical significance testing reported**  \n   The reported improvements on GLUE tasks are relatively modest (e.g., +0.4 accuracy on SST-2, +0.5 on MNLI). The paper does not report confidence intervals or statistical significance tests to verify that these gains are robust and not due to random variation, which is important given the small magnitude of improvements (see Results).\n\n7. **Reproducibility: Missing hyperparameter details for HIRE and fusion network**  \n   The paper does not provide detailed hyperparameters for the HIRE module and fusion network, such as GRU hidden sizes, dropout rates, learning rates specific to these components, or training epochs. Without these details, reproducing the exact setup and results is challenging (see Proposed Method and Training).\n\n8. **Reproducibility: No mention of computational overhead or training/inference cost**  \n   Incorporating HIRE and the fusion network adds complexity, but the paper does not report the impact on training time, memory usage, or inference latency compared to the RoBERTa baseline. This information is crucial for assessing practical applicability (see Results and Methodology).\n\n9. **Clarity: Ambiguity in notation and explanation of importance scores**  \n   The description of importance scores \\( \\alpha_i \\) and their normalization into weights \\( s_i \\) is somewhat confusing. It is unclear whether \\( \\alpha_i \\) are scalar scores per layer or vectors, and how exactly the softmax is applied (over layers or over vector dimensions). A more precise mathematical formulation or illustrative example would improve clarity (see Proposed Method, HIRE component).\n\n10. **Clarity: Insufficient explanation of how complementary representation \\( A \\) differs from final layer output \\( R \\)**  \n    The paper claims that \\( A \\) captures complementary information not present in \\( R \\), but does not provide qualitative analysis or visualization to substantiate this claim. For example, attention maps, layer importance distributions, or case studies illustrating what information \\( A \\) adds would strengthen understanding (see Analysis).\n\n11. **Limitations: No discussion on potential overfitting or robustness issues**  \n    The method introduces additional parameters and complexity, which could increase the risk of overfitting, especially on smaller GLUE tasks like RTE or MRPC. The paper does not discuss whether HIRE affects model robustness or generalization beyond the reported metrics (see Results and Limitations).\n\n12. **Limitations: No exploration of failure cases or tasks where HIRE does not improve performance**  \n    While the paper notes that RoBERTa+HIRE matches but does not improve on MRPC, STS-B, and RTE, it does not analyze why HIRE fails to provide gains on these tasks or whether certain task characteristics limit its effectiveness (see Results).\n\n13. **Generalisability: Unclear if HIRE applies to other Transformer architectures or modalities**  \n    The experiments are solely conducted with RoBERTa LARGE. The paper does not investigate whether HIRE generalizes to other Transformer-based models like BERT, XLNet, or multimodal Transformers, limiting the scope of its claimed general applicability (see Claimed Contributions and Results).\n\n14. **Generalisability: No evaluation on out-of-domain or low-resource settings**  \n    The paper does not test HIRE\u2019s effectiveness in out-of-domain scenarios or low-resource settings, where leveraging intermediate layers might be more beneficial. This limits understanding of the method\u2019s robustness and practical utility (see Results and Claimed Contributions).\n\n15. **Methodology: Assumption that all hidden states have the same dimensionality and can be directly weighted and summed**  \n    The method sums weighted hidden states \\( H_i \\) directly, assuming they share the same dimensionality and semantic alignment. While this holds for standard Transformer layers, the paper does not discuss potential issues if applied to models with varying layer sizes or architectures, which could limit applicability (see Proposed Method, HIRE component)."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes HIRE, a Hidden Representation Extractor that adaptively aggregates information from all hidden layers of Transformer-based pre-trained language models, combined with a fusion network to refine contextualized representations. Evaluated on the GLUE benchmark, the method improves performance on several tasks without modifying the backbone architecture or pre-training procedure.\",\n  \"strengths\": [\n    {\n      \"point\": \"Adaptive aggregation of hidden layers\",\n      \"evidence\": \"HIRE dynamically computes importance scores for each hidden layer and produces a complementary representation that improves downstream task performance.\"\n    },\n    {\n      \"point\": \"Effective fusion network design\",\n      \"evidence\": \"The fusion network combining the final layer output and complementary representation via concatenation and element-wise multiplication yields better results than ablations without fusion.\"\n    },\n    {\n      \"point\": \"Empirical improvements on GLUE benchmark\",\n      \"evidence\": \"RoBERTa+HIRE outperforms the RoBERTa baseline on 5 out of 9 GLUE tasks and achieves state-of-the-art accuracy on SST-2.\"\n    },\n    {\n      \"point\": \"Comprehensive ablation studies\",\n      \"evidence\": \"Ablations show the importance of adaptive weighting, the fusion network, and the 2-layer GRU architecture.\"\n    },\n    {\n      \"point\": \"Demonstration of dynamic layer importance\",\n      \"evidence\": \"Analysis reveals that layer importance varies by task and example, supporting the adaptability of HIRE.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Insufficient comparison with prior layer-aggregation methods\",\n      \"evidence\": \"The paper does not adequately compare or discuss prior works like ELMo or layer-wise attention methods, weakening the novelty claim.\"\n    },\n    {\n      \"point\": \"Lack of justification for architectural choices\",\n      \"evidence\": \"The rationale for using a 2-layer bidirectional GRU for both summarization and fusion is not well explained, nor why GRUs are preferred over simpler alternatives.\"\n    },\n    {\n      \"point\": \"Potential redundancy in fusion input components\",\n      \"evidence\": \"No ablation study examines whether concatenation and element-wise multiplication in fusion input are both necessary.\"\n    },\n    {\n      \"point\": \"Limited evaluation scope\",\n      \"evidence\": \"Experiments are restricted to the GLUE benchmark with RoBERTa LARGE; no evaluation on other tasks, languages, modalities, or out-of-domain settings.\"\n    },\n    {\n      \"point\": \"Lack of comparison with stronger or more recent baselines\",\n      \"evidence\": \"The main baseline is vanilla RoBERTa LARGE without layer aggregation; no comparisons to other advanced fusion or intermediate layer leveraging methods.\"\n    },\n    {\n      \"point\": \"No statistical significance testing reported\",\n      \"evidence\": \"Reported improvements are modest and no confidence intervals or significance tests are provided.\"\n    },\n    {\n      \"point\": \"Reproducibility concerns due to missing hyperparameter details\",\n      \"evidence\": \"Details such as GRU hidden sizes, dropout rates, and training specifics for HIRE and fusion network are omitted.\"\n    },\n    {\n      \"point\": \"No reporting of computational overhead\",\n      \"evidence\": \"The paper does not discuss training or inference time, memory usage, or latency impacts introduced by HIRE.\"\n    },\n    {\n      \"point\": \"Ambiguity in notation and explanation of importance scores\",\n      \"evidence\": \"The description of importance scores and their normalization is unclear and could benefit from more precise mathematical formulation.\"\n    },\n    {\n      \"point\": \"Insufficient qualitative analysis of complementary representation\",\n      \"evidence\": \"No visualization or case studies are provided to illustrate how the complementary representation differs from the final layer output.\"\n    },\n    {\n      \"point\": \"No discussion of overfitting or robustness\",\n      \"evidence\": \"Potential risks of overfitting due to added parameters and complexity are not addressed.\"\n    },\n    {\n      \"point\": \"No analysis of failure cases\",\n      \"evidence\": \"Tasks where HIRE does not improve performance are not examined to understand limitations.\"\n    },\n    {\n      \"point\": \"Unclear generalizability beyond RoBERTa\",\n      \"evidence\": \"No experiments on other Transformer architectures or modalities are conducted.\"\n    },\n    {\n      \"point\": \"Assumption of uniform hidden state dimensionality\",\n      \"evidence\": \"The method assumes all hidden states have the same size and semantic alignment without discussing implications for other architectures.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does HIRE compare empirically and conceptually to prior layer aggregation methods like ELMo or layer-wise attention?\",\n      \"motivation\": \"Clarifying this would strengthen the novelty claim and position the contribution relative to existing work.\"\n    },\n    {\n      \"question\": \"What is the computational cost (training/inference time, memory) introduced by HIRE compared to the baseline?\",\n      \"motivation\": \"Understanding overhead is crucial for assessing practical applicability.\"\n    },\n    {\n      \"question\": \"Would HIRE generalize effectively to other Transformer models or tasks beyond GLUE, such as question answering or multilingual settings?\",\n      \"motivation\": \"Demonstrating broader applicability would increase the impact and utility of the method.\"\n    },\n    {\n      \"question\": \"Can the authors provide qualitative analyses or visualizations to illustrate what complementary information HIRE captures?\",\n      \"motivation\": \"This would improve interpretability and understanding of the method's benefits.\"\n    },\n    {\n      \"question\": \"Are the reported performance gains statistically significant?\",\n      \"motivation\": \"Given the modest improvements, significance testing is important to confirm robustness.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes HIRE, a Hidden Representation Extractor that adaptively aggregates information from all hidden layers of Transformer-based pre-trained language models, combined with a fusion network to refine contextualized representations. Evaluated on the GLUE benchmark, the method improves performance on several tasks without modifying the backbone architecture or pre-training procedure.",
+    "strengths": [
+      {
+        "point": "Adaptive aggregation of hidden layers",
+        "evidence": "HIRE dynamically computes importance scores for each hidden layer and produces a complementary representation that improves downstream task performance."
+      },
+      {
+        "point": "Effective fusion network design",
+        "evidence": "The fusion network combining the final layer output and complementary representation via concatenation and element-wise multiplication yields better results than ablations without fusion."
+      },
+      {
+        "point": "Empirical improvements on GLUE benchmark",
+        "evidence": "RoBERTa+HIRE outperforms the RoBERTa baseline on 5 out of 9 GLUE tasks and achieves state-of-the-art accuracy on SST-2."
+      },
+      {
+        "point": "Comprehensive ablation studies",
+        "evidence": "Ablations show the importance of adaptive weighting, the fusion network, and the 2-layer GRU architecture."
+      },
+      {
+        "point": "Demonstration of dynamic layer importance",
+        "evidence": "Analysis reveals that layer importance varies by task and example, supporting the adaptability of HIRE."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison with prior layer-aggregation methods",
+        "evidence": "The paper does not adequately compare or discuss prior works like ELMo or layer-wise attention methods, weakening the novelty claim."
+      },
+      {
+        "point": "Lack of justification for architectural choices",
+        "evidence": "The rationale for using a 2-layer bidirectional GRU for both summarization and fusion is not well explained, nor why GRUs are preferred over simpler alternatives."
+      },
+      {
+        "point": "Potential redundancy in fusion input components",
+        "evidence": "No ablation study examines whether concatenation and element-wise multiplication in fusion input are both necessary."
+      },
+      {
+        "point": "Limited evaluation scope",
+        "evidence": "Experiments are restricted to the GLUE benchmark with RoBERTa LARGE; no evaluation on other tasks, languages, modalities, or out-of-domain settings."
+      },
+      {
+        "point": "Lack of comparison with stronger or more recent baselines",
+        "evidence": "The main baseline is vanilla RoBERTa LARGE without layer aggregation; no comparisons to other advanced fusion or intermediate layer leveraging methods."
+      },
+      {
+        "point": "No statistical significance testing reported",
+        "evidence": "Reported improvements are modest and no confidence intervals or significance tests are provided."
+      },
+      {
+        "point": "Reproducibility concerns due to missing hyperparameter details",
+        "evidence": "Details such as GRU hidden sizes, dropout rates, and training specifics for HIRE and fusion network are omitted."
+      },
+      {
+        "point": "No reporting of computational overhead",
+        "evidence": "The paper does not discuss training or inference time, memory usage, or latency impacts introduced by HIRE."
+      },
+      {
+        "point": "Ambiguity in notation and explanation of importance scores",
+        "evidence": "The description of importance scores and their normalization is unclear and could benefit from more precise mathematical formulation."
+      },
+      {
+        "point": "Insufficient qualitative analysis of complementary representation",
+        "evidence": "No visualization or case studies are provided to illustrate how the complementary representation differs from the final layer output."
+      },
+      {
+        "point": "No discussion of overfitting or robustness",
+        "evidence": "Potential risks of overfitting due to added parameters and complexity are not addressed."
+      },
+      {
+        "point": "No analysis of failure cases",
+        "evidence": "Tasks where HIRE does not improve performance are not examined to understand limitations."
+      },
+      {
+        "point": "Unclear generalizability beyond RoBERTa",
+        "evidence": "No experiments on other Transformer architectures or modalities are conducted."
+      },
+      {
+        "point": "Assumption of uniform hidden state dimensionality",
+        "evidence": "The method assumes all hidden states have the same size and semantic alignment without discussing implications for other architectures."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does HIRE compare empirically and conceptually to prior layer aggregation methods like ELMo or layer-wise attention?",
+        "motivation": "Clarifying this would strengthen the novelty claim and position the contribution relative to existing work."
+      },
+      {
+        "question": "What is the computational cost (training/inference time, memory) introduced by HIRE compared to the baseline?",
+        "motivation": "Understanding overhead is crucial for assessing practical applicability."
+      },
+      {
+        "question": "Would HIRE generalize effectively to other Transformer models or tasks beyond GLUE, such as question answering or multilingual settings?",
+        "motivation": "Demonstrating broader applicability would increase the impact and utility of the method."
+      },
+      {
+        "question": "Can the authors provide qualitative analyses or visualizations to illustrate what complementary information HIRE captures?",
+        "motivation": "This would improve interpretability and understanding of the method's benefits."
+      },
+      {
+        "question": "Are the reported performance gains statistically significant?",
+        "motivation": "Given the modest improvements, significance testing is important to confirm robustness."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison with prior layer-aggregation methods. The paper does not adequately compare or discuss prior works like ELMo or layer-wise attention methods, weakening the novelty claim",
+    "point_002": "Lack of justification for architectural choices. The rationale for using a 2-layer bidirectional GRU for both summarization and fusion is not well explained, nor why GRUs are preferred over simpler alternatives",
+    "point_003": "Potential redundancy in fusion input components. No ablation study examines whether concatenation and element-wise multiplication in fusion input are both necessary",
+    "point_004": "Limited evaluation scope. Experiments are restricted to the GLUE benchmark with RoBERTa LARGE; no evaluation on other tasks, languages, modalities, or out-of-domain settings",
+    "point_005": "Lack of comparison with stronger or more recent baselines. The main baseline is vanilla RoBERTa LARGE without layer aggregation; no comparisons to other advanced fusion or intermediate layer leveraging methods",
+    "point_006": "No statistical significance testing reported. Reported improvements are modest and no confidence intervals or significance tests are provided",
+    "point_007": "Reproducibility concerns due to missing hyperparameter details. Details such as GRU hidden sizes, dropout rates, and training specifics for HIRE and fusion network are omitted",
+    "point_008": "No reporting of computational overhead. The paper does not discuss training or inference time, memory usage, or latency impacts introduced by HIRE",
+    "point_009": "Ambiguity in notation and explanation of importance scores. The description of importance scores and their normalization is unclear and could benefit from more precise mathematical formulation",
+    "point_010": "Insufficient qualitative analysis of complementary representation. No visualization or case studies are provided to illustrate how the complementary representation differs from the final layer output",
+    "point_011": "No discussion of overfitting or robustness. Potential risks of overfitting due to added parameters and complexity are not addressed",
+    "point_012": "No analysis of failure cases. Tasks where HIRE does not improve performance are not examined to understand limitations",
+    "point_013": "Unclear generalizability beyond RoBERTa. No experiments on other Transformer architectures or modalities are conducted",
+    "point_014": "Assumption of uniform hidden state dimensionality. The method assumes all hidden states have the same size and semantic alignment without discussing implications for other architectures"
+  }
+}

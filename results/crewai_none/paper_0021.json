@@ -1,0 +1,155 @@
+{
+  "paper_id": "paper_0021",
+  "title": "Contrastive Novelty Learning: Anticipating Outliers with Large Language Models",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 74.44,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nText classification models often face the challenge of encountering novel classes at test time that were not present during training, a scenario known as open-set label shift. Standard classifiers cannot correctly predict these novel class examples and tend to be overly confident in their incorrect predictions, which undermines reliability. Selective prediction, where models abstain from low-confidence predictions, offers a potential solution, but existing methods struggle because models remain overconfident on out-of-distribution (OOD) examples that resemble in-distribution (ID) data. The problem is further complicated in text classification due to the discrete nature of text, making it difficult to generate representative OOD examples by simple perturbations. There is a need for methods that can anticipate novel classes and improve model abstention on such examples without sacrificing accuracy on known classes.\n\n---\n\n### Proposed Method\n\nThe authors propose **Contrastive Novelty Learning (CNL)**, a two-step approach designed to improve open-set selective classification (OSSC) by generating representative OOD examples and training classifiers to reduce confidence on these examples relative to ID examples.\n\n1. **Novelty Prompting (NP):**  \n   - **Label Generation:** Using a large language model (LLM), specifically GPT-3 Davinci, the method generates a diverse set of novel class labels related to but distinct from the known ID labels. This is done by prompting the LLM to extend the closed-set label set with plausible novel labels, filtering out synonyms and labels too close to ID classes to ensure semantic novelty.  \n   - **Example Generation:** Conditioned on each novel label, a smaller LLM (GPT-J 6B) generates text examples that resemble the style and format of the original dataset, ensuring plausibility. The prompt includes examples from ID classes to guide generation.\n\n2. **Contrastive Confidence Loss (CCL) Training:**  \n   - Instead of forcing the model to output uniform distributions on OOD examples (as in Outlier Exposure), CCL encourages the model to have lower confidence on generated novel examples than on any ID example, but does not require minimal confidence on all OOD examples.  \n   - Formally, the loss penalizes cases where the maximum softmax probability (confidence) on an OOD example exceeds that on any ID example, allowing the model to learn a relative confidence ordering.  \n   - This approach is more flexible and robust to noise in generated examples, maintaining ID accuracy while improving OOD detection.\n\nThe overall pipeline leverages LLMs as a \"teacher\" to generate novel examples, which are then used to train a \"student\" classifier with the contrastive objective, improving selective prediction without modifying the classifier architecture.\n\n---\n\n### Results\n\n- **Datasets & Evaluation:**  \n  Experiments were conducted on 14 splits across 4 NLP datasets: AGNews, TREC-10, TACRED, and Emotion. The evaluation metrics include Area Under the Accuracy-Coverage Curve (AUAC) for selective prediction and Area Under the ROC Curve (AUROC) for OOD detection.\n\n- **Performance Gains:**  \n  - CNL improved selective prediction performance by an average of **2.3% AUAC** over the best prior method (Contrastive training) across datasets.  \n  - It also improved OOD detection by **5.5% AUROC** over the best baseline (kFolden).  \n  - These improvements were achieved **without any loss in ID classification accuracy**, unlike Outlier Exposure which often degraded accuracy.  \n  - CNL outperformed strong baselines including vanilla training, label smoothing, kFolden ensembles, contrastive training, and Outlier Exposure combined with various novel data sources.\n\n- **Ablations and Analysis:**  \n  - Using only zero-shot or few-shot prompting for novel example generation still improved performance over vanilla training, but full Novelty Prompting was best.  \n  - Larger LLMs for generation yielded better novel examples and improved results, though even smaller models provided gains.  \n  - The method generalized across classifier architectures, improving performance for BERT-base, RoBERTa-base, and RoBERTa-large.  \n  - A relatively small number of generated novel examples (as few as 1000) sufficed to improve selective prediction, making the approach efficient.  \n  - Manual analysis showed that Novelty Prompting generated a higher proportion of truly novel class examples compared to few-shot data augmentation, explaining its superior performance.\n\n- **Challenging Dataset (TACRED):**  \n  - TACRED exhibited strong OOD overconfidence, with most baselines performing worse than random for OOD detection.  \n  - CNL improved performance but highlighted remaining challenges and headroom for future work.\n\n---\n\n### Claimed Contributions\n\n1. **Contrastive Novelty Learning (CNL):**  \n   A novel framework combining automatic generation of plausible and semantically novel OOD examples using large language models with a contrastive confidence loss that trains classifiers to reduce confidence on these examples relative to ID examples.\n\n2. **Novelty Prompting:**  \n   A two-step LLM-based method to generate novel class labels and corresponding text examples that are both plausible (style-consistent) and semantically novel, addressing the discrete and complex nature of text data.\n\n3. **Contrastive Confidence Loss (CCL):**  \n   A new training objective that encourages relative confidence ordering between ID and OOD examples, avoiding the pitfalls of strict uniform confidence enforcement on OOD data and maintaining ID accuracy.\n\n4. **Empirical Validation:**  \n   Extensive experiments across multiple datasets and splits demonstrating that CNL significantly improves open-set selective classification and OOD detection metrics over strong baselines without sacrificing in-distribution accuracy.\n\n5. **Modularity and Extensibility:**  \n   CNL is model-agnostic and does not require architectural changes, making it compatible with various classifiers and training objectives.\n\n6. **Insight into LLM Use for Novelty Generation:**  \n   Demonstrates the utility of large language models not only for few-shot learning but also for anticipating and simulating distribution shifts by generating novel classes and examples, opening avenues for future research in distribution shift adaptation.\n\n---\n\n**In summary,** this work introduces a novel, effective method to anticipate and handle novel classes in text classification by leveraging large language models for generating representative OOD examples and training classifiers with a contrastive loss to improve selective prediction and OOD detection, achieving state-of-the-art results without compromising accuracy on known classes."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty Comparison Missing with Recent OOD Detection Methods**  \n   While the paper compares CNL against several baselines including Outlier Exposure and contrastive training, it does not discuss or benchmark against more recent or advanced OOD detection methods specifically designed for NLP, such as energy-based models or deep ensembles beyond kFolden. This omission (see Results section) limits understanding of how CNL stands relative to the current state-of-the-art in OOD detection beyond the selected baselines.\n\n2. **Justification for Choice of LLMs and Prompting Strategy**  \n   The method relies heavily on GPT-3 Davinci for label generation and GPT-J 6B for example generation (Proposed Method). However, the paper provides limited rationale for this particular combination of LLMs or for the prompt design choices. For instance, why not use the same LLM for both steps or explore prompt engineering variations systematically? The ablation on zero-shot vs few-shot prompting is brief and does not fully explore prompt sensitivity.\n\n3. **Assumption that Generated Novel Labels Are Truly Novel**  \n   The Novelty Prompting step filters out synonyms and close labels but the criteria for semantic novelty are not rigorously defined or quantitatively evaluated (Proposed Method, Ablations). Without a clear semantic distance metric or human evaluation, it is unclear how well the generated labels cover truly novel classes rather than near-ID variants, which could affect the validity of the OOD examples.\n\n4. **Limited Analysis of Generated Example Quality and Diversity**  \n   Although the paper claims that Novelty Prompting produces plausible and style-consistent examples (Ablations, Manual Analysis), there is no quantitative evaluation of the linguistic quality, diversity, or representativeness of these generated examples. Metrics such as perplexity, diversity scores, or human ratings would strengthen claims about the usefulness of generated data.\n\n5. **Contrastive Confidence Loss (CCL) Hyperparameter Sensitivity Not Explored**  \n   The CCL objective is central to the method, but the paper does not report any sensitivity analysis on its hyperparameters (e.g., margin thresholds, weighting relative to classification loss). This leaves open questions about the stability and robustness of training with CCL across datasets and architectures (Proposed Method, Ablations).\n\n6. **Potential Overfitting to Generated OOD Examples**  \n   Since the training uses generated novel examples as OOD proxies, there is a risk that the model learns to detect artifacts specific to the generated data rather than general OOD characteristics. The paper does not investigate whether CNL improves detection on truly unseen, real-world OOD data outside the generated distribution (Evaluation, Limitations).\n\n7. **Evaluation Metrics Focused on AUAC and AUROC Only**  \n   The evaluation relies primarily on AUAC for selective prediction and AUROC for OOD detection (Results). While these are standard, additional metrics such as F1-score on OOD detection, calibration error, or coverage at fixed accuracy thresholds could provide a more nuanced understanding of performance, especially since selective prediction involves trade-offs.\n\n8. **Baselines May Not Be Fully Optimized or Comparable**  \n   The paper compares against Outlier Exposure and contrastive training baselines but does not clarify if these baselines were tuned to the same extent as CNL, particularly regarding the amount and quality of OOD data used. For example, Outlier Exposure is known to be sensitive to OOD data source, but the paper only mentions \"various novel data sources\" without detailed baseline configurations (Results).\n\n9. **Reproducibility: Missing Details on Prompt Templates and Filtering Criteria**  \n   The paper does not provide exact prompt templates used for label and example generation, nor the filtering heuristics or thresholds applied to discard synonyms or near-ID labels (Proposed Method). These details are crucial for replicating the Novelty Prompting step and verifying the novelty of generated classes.\n\n10. **Reproducibility: Lack of Training Hyperparameters and Computational Cost Reporting**  \n    There is no detailed description of training hyperparameters for the student classifiers (learning rates, batch sizes, epochs) or the computational resources required for generating novel examples and training with CCL (Results, Proposed Method). This omission hinders reproducibility and assessment of method practicality.\n\n11. **Clarity: Ambiguity in Definition of \"Relative Confidence Ordering\"**  \n    The paper introduces the Contrastive Confidence Loss as encouraging a relative confidence ordering between ID and OOD examples but does not clearly formalize or illustrate this concept beyond the loss formula (Proposed Method). A more intuitive explanation or visualization would help readers understand how this differs from uniform confidence enforcement.\n\n12. **Limitations: No Discussion on Scalability to Large Label Sets or Multi-label Tasks**  \n    The experiments focus on datasets with relatively small closed sets and single-label classification (Datasets & Evaluation). The paper does not discuss how CNL would scale to tasks with very large label spaces or multi-label classification, where generating and filtering novel labels and examples could be more challenging.\n\n13. **Generalisability: Limited to Text Classification, No Exploration Beyond NLP**  \n    Although the method is claimed to be model-agnostic, all experiments are confined to text classification datasets (Results). There is no empirical evidence or discussion on whether CNL could generalize to other modalities such as vision or speech, where OOD detection challenges differ substantially.\n\n14. **Handling of TACRED Dataset Highlights Remaining Challenges but No Proposed Remedies**  \n    The paper notes that TACRED is particularly challenging with strong OOD overconfidence and that CNL improves but does not solve this issue (Results). However, it does not analyze why TACRED is harder or propose modifications to CNL to better handle such difficult cases, leaving a gap in addressing failure modes.\n\n15. **No User Study or Real-world Deployment Scenario to Validate Selective Prediction Utility**  \n    While the paper focuses on improving selective prediction metrics, it does not include any user-centric evaluation or case study demonstrating how improved abstention translates to practical benefits in real-world text classification applications (Motivation, Results). This limits understanding of the method\u2019s impact beyond benchmark metrics."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes Contrastive Novelty Learning (CNL), a method that leverages large language models to generate semantically novel out-of-distribution (OOD) examples for text classification and trains classifiers with a contrastive confidence loss to improve selective prediction and OOD detection. Experiments on multiple NLP datasets demonstrate that CNL outperforms strong baselines without sacrificing in-distribution accuracy.\",\n  \"strengths\": [\n    {\n      \"point\": \"Innovative use of large language models for generating novel OOD examples\",\n      \"evidence\": \"The Novelty Prompting approach uses GPT-3 Davinci and GPT-J 6B to generate semantically novel labels and plausible, style-consistent text examples, addressing the discrete nature of text data.\"\n    },\n    {\n      \"point\": \"Contrastive Confidence Loss (CCL) effectively improves selective prediction\",\n      \"evidence\": \"CCL encourages a relative confidence ordering between ID and OOD examples, avoiding uniform confidence enforcement pitfalls and maintaining ID accuracy while improving OOD detection.\"\n    },\n    {\n      \"point\": \"Strong empirical validation across multiple datasets and architectures\",\n      \"evidence\": \"CNL improves AUAC by 2.3% and AUROC by 5.5% over baselines on 14 splits from 4 datasets, generalizes across BERT and RoBERTa variants, and requires relatively few generated examples.\"\n    },\n    {\n      \"point\": \"Modular and model-agnostic framework\",\n      \"evidence\": \"CNL does not require architectural changes and can be integrated with various classifiers and training objectives.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Lack of comparison with recent advanced OOD detection methods\",\n      \"evidence\": \"The paper does not benchmark against newer NLP-specific OOD methods such as energy-based models or deep ensembles beyond kFolden.\"\n    },\n    {\n      \"point\": \"Limited justification and exploration of LLM and prompting choices\",\n      \"evidence\": \"The rationale for using GPT-3 Davinci for label generation and GPT-J 6B for example generation is not fully explained, nor is prompt sensitivity systematically studied.\"\n    },\n    {\n      \"point\": \"Unclear semantic novelty criteria for generated labels\",\n      \"evidence\": \"Filtering of synonyms and near-ID labels lacks rigorous semantic distance metrics or human evaluation to confirm true novelty.\"\n    },\n    {\n      \"point\": \"No quantitative evaluation of generated example quality and diversity\",\n      \"evidence\": \"Claims of plausibility and style consistency are supported only by manual analysis without metrics like perplexity or diversity scores.\"\n    },\n    {\n      \"point\": \"No hyperparameter sensitivity analysis for Contrastive Confidence Loss\",\n      \"evidence\": \"The paper does not report experiments varying CCL margin thresholds or weighting, leaving robustness questions unanswered.\"\n    },\n    {\n      \"point\": \"Potential overfitting to generated OOD examples not investigated\",\n      \"evidence\": \"There is no evaluation on truly unseen, real-world OOD data outside the generated distribution to assess generalization.\"\n    },\n    {\n      \"point\": \"Evaluation metrics limited to AUAC and AUROC\",\n      \"evidence\": \"Additional metrics such as F1-score, calibration error, or coverage at fixed accuracy could provide deeper insight.\"\n    },\n    {\n      \"point\": \"Baseline tuning and comparability unclear\",\n      \"evidence\": \"Details on baseline optimization, especially Outlier Exposure configurations, are insufficient.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing prompt templates and filtering details\",\n      \"evidence\": \"Exact prompts and synonym filtering heuristics are not provided.\"\n    },\n    {\n      \"point\": \"Training hyperparameters and computational costs not reported\",\n      \"evidence\": \"Lack of details on learning rates, batch sizes, epochs, and resource requirements limits reproducibility.\"\n    },\n    {\n      \"point\": \"Ambiguity in explanation of relative confidence ordering\",\n      \"evidence\": \"The concept is introduced but not clearly formalized or illustrated beyond the loss formula.\"\n    },\n    {\n      \"point\": \"No discussion on scalability to large label sets or multi-label tasks\",\n      \"evidence\": \"Experiments focus on small closed sets and single-label classification without addressing more complex scenarios.\"\n    },\n    {\n      \"point\": \"Limited generalizability beyond text classification\",\n      \"evidence\": \"No experiments or discussion on applying CNL to other modalities like vision or speech.\"\n    },\n    {\n      \"point\": \"Challenges on TACRED dataset not fully analyzed or addressed\",\n      \"evidence\": \"CNL improves but does not solve OOD overconfidence on TACRED, with no proposed remedies.\"\n    },\n    {\n      \"point\": \"No user study or real-world deployment validation\",\n      \"evidence\": \"Selective prediction improvements are not demonstrated in practical application scenarios.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does CNL compare to more recent or advanced NLP-specific OOD detection methods?\",\n      \"motivation\": \"Benchmarking against state-of-the-art methods is necessary to position CNL's contributions and effectiveness.\"\n    },\n    {\n      \"question\": \"How sensitive is CNL to the choice of LLMs and prompt designs for novelty generation?\",\n      \"motivation\": \"Understanding prompt and model sensitivity is crucial for reproducibility and potential improvements.\"\n    },\n    {\n      \"question\": \"Can the semantic novelty of generated labels and examples be quantitatively validated?\",\n      \"motivation\": \"Quantitative or human evaluation would strengthen claims about the quality and usefulness of generated OOD data.\"\n    },\n    {\n      \"question\": \"Does CNL generalize to real-world OOD data beyond the generated examples?\",\n      \"motivation\": \"Evaluating on truly unseen OOD distributions is important to assess practical utility and avoid overfitting.\"\n    },\n    {\n      \"question\": \"What are the computational costs and training requirements for CNL?\",\n      \"motivation\": \"Resource considerations affect the method's applicability in real-world settings.\"\n    },\n    {\n      \"question\": \"How does CNL scale to large label spaces or multi-label classification tasks?\",\n      \"motivation\": \"Scalability is important for broader applicability beyond small closed-set problems.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes Contrastive Novelty Learning (CNL), a method that leverages large language models to generate semantically novel out-of-distribution (OOD) examples for text classification and trains classifiers with a contrastive confidence loss to improve selective prediction and OOD detection. Experiments on multiple NLP datasets demonstrate that CNL outperforms strong baselines without sacrificing in-distribution accuracy.",
+    "strengths": [
+      {
+        "point": "Innovative use of large language models for generating novel OOD examples",
+        "evidence": "The Novelty Prompting approach uses GPT-3 Davinci and GPT-J 6B to generate semantically novel labels and plausible, style-consistent text examples, addressing the discrete nature of text data."
+      },
+      {
+        "point": "Contrastive Confidence Loss (CCL) effectively improves selective prediction",
+        "evidence": "CCL encourages a relative confidence ordering between ID and OOD examples, avoiding uniform confidence enforcement pitfalls and maintaining ID accuracy while improving OOD detection."
+      },
+      {
+        "point": "Strong empirical validation across multiple datasets and architectures",
+        "evidence": "CNL improves AUAC by 2.3% and AUROC by 5.5% over baselines on 14 splits from 4 datasets, generalizes across BERT and RoBERTa variants, and requires relatively few generated examples."
+      },
+      {
+        "point": "Modular and model-agnostic framework",
+        "evidence": "CNL does not require architectural changes and can be integrated with various classifiers and training objectives."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison with recent advanced OOD detection methods",
+        "evidence": "The paper does not benchmark against newer NLP-specific OOD methods such as energy-based models or deep ensembles beyond kFolden."
+      },
+      {
+        "point": "Limited justification and exploration of LLM and prompting choices",
+        "evidence": "The rationale for using GPT-3 Davinci for label generation and GPT-J 6B for example generation is not fully explained, nor is prompt sensitivity systematically studied."
+      },
+      {
+        "point": "Unclear semantic novelty criteria for generated labels",
+        "evidence": "Filtering of synonyms and near-ID labels lacks rigorous semantic distance metrics or human evaluation to confirm true novelty."
+      },
+      {
+        "point": "No quantitative evaluation of generated example quality and diversity",
+        "evidence": "Claims of plausibility and style consistency are supported only by manual analysis without metrics like perplexity or diversity scores."
+      },
+      {
+        "point": "No hyperparameter sensitivity analysis for Contrastive Confidence Loss",
+        "evidence": "The paper does not report experiments varying CCL margin thresholds or weighting, leaving robustness questions unanswered."
+      },
+      {
+        "point": "Potential overfitting to generated OOD examples not investigated",
+        "evidence": "There is no evaluation on truly unseen, real-world OOD data outside the generated distribution to assess generalization."
+      },
+      {
+        "point": "Evaluation metrics limited to AUAC and AUROC",
+        "evidence": "Additional metrics such as F1-score, calibration error, or coverage at fixed accuracy could provide deeper insight."
+      },
+      {
+        "point": "Baseline tuning and comparability unclear",
+        "evidence": "Details on baseline optimization, especially Outlier Exposure configurations, are insufficient."
+      },
+      {
+        "point": "Reproducibility hindered by missing prompt templates and filtering details",
+        "evidence": "Exact prompts and synonym filtering heuristics are not provided."
+      },
+      {
+        "point": "Training hyperparameters and computational costs not reported",
+        "evidence": "Lack of details on learning rates, batch sizes, epochs, and resource requirements limits reproducibility."
+      },
+      {
+        "point": "Ambiguity in explanation of relative confidence ordering",
+        "evidence": "The concept is introduced but not clearly formalized or illustrated beyond the loss formula."
+      },
+      {
+        "point": "No discussion on scalability to large label sets or multi-label tasks",
+        "evidence": "Experiments focus on small closed sets and single-label classification without addressing more complex scenarios."
+      },
+      {
+        "point": "Limited generalizability beyond text classification",
+        "evidence": "No experiments or discussion on applying CNL to other modalities like vision or speech."
+      },
+      {
+        "point": "Challenges on TACRED dataset not fully analyzed or addressed",
+        "evidence": "CNL improves but does not solve OOD overconfidence on TACRED, with no proposed remedies."
+      },
+      {
+        "point": "No user study or real-world deployment validation",
+        "evidence": "Selective prediction improvements are not demonstrated in practical application scenarios."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does CNL compare to more recent or advanced NLP-specific OOD detection methods?",
+        "motivation": "Benchmarking against state-of-the-art methods is necessary to position CNL's contributions and effectiveness."
+      },
+      {
+        "question": "How sensitive is CNL to the choice of LLMs and prompt designs for novelty generation?",
+        "motivation": "Understanding prompt and model sensitivity is crucial for reproducibility and potential improvements."
+      },
+      {
+        "question": "Can the semantic novelty of generated labels and examples be quantitatively validated?",
+        "motivation": "Quantitative or human evaluation would strengthen claims about the quality and usefulness of generated OOD data."
+      },
+      {
+        "question": "Does CNL generalize to real-world OOD data beyond the generated examples?",
+        "motivation": "Evaluating on truly unseen OOD distributions is important to assess practical utility and avoid overfitting."
+      },
+      {
+        "question": "What are the computational costs and training requirements for CNL?",
+        "motivation": "Resource considerations affect the method's applicability in real-world settings."
+      },
+      {
+        "question": "How does CNL scale to large label spaces or multi-label classification tasks?",
+        "motivation": "Scalability is important for broader applicability beyond small closed-set problems."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison with recent advanced OOD detection methods. The paper does not benchmark against newer NLP-specific OOD methods such as energy-based models or deep ensembles beyond kFolden",
+    "point_002": "Limited justification and exploration of LLM and prompting choices. The rationale for using GPT-3 Davinci for label generation and GPT-J 6B for example generation is not fully explained, nor is prompt sensitivity systematically studied",
+    "point_003": "Unclear semantic novelty criteria for generated labels. Filtering of synonyms and near-ID labels lacks rigorous semantic distance metrics or human evaluation to confirm true novelty",
+    "point_004": "No quantitative evaluation of generated example quality and diversity. Claims of plausibility and style consistency are supported only by manual analysis without metrics like perplexity or diversity scores",
+    "point_005": "No hyperparameter sensitivity analysis for Contrastive Confidence Loss. The paper does not report experiments varying CCL margin thresholds or weighting, leaving robustness questions unanswered",
+    "point_006": "Potential overfitting to generated OOD examples not investigated. There is no evaluation on truly unseen, real-world OOD data outside the generated distribution to assess generalization",
+    "point_007": "Evaluation metrics limited to AUAC and AUROC. Additional metrics such as F1-score, calibration error, or coverage at fixed accuracy could provide deeper insight",
+    "point_008": "Baseline tuning and comparability unclear. Details on baseline optimization, especially Outlier Exposure configurations, are insufficient",
+    "point_009": "Reproducibility hindered by missing prompt templates and filtering details. Exact prompts and synonym filtering heuristics are not provided",
+    "point_010": "Training hyperparameters and computational costs not reported. Lack of details on learning rates, batch sizes, epochs, and resource requirements limits reproducibility",
+    "point_011": "Ambiguity in explanation of relative confidence ordering. The concept is introduced but not clearly formalized or illustrated beyond the loss formula",
+    "point_012": "No discussion on scalability to large label sets or multi-label tasks. Experiments focus on small closed sets and single-label classification without addressing more complex scenarios",
+    "point_013": "Limited generalizability beyond text classification. No experiments or discussion on applying CNL to other modalities like vision or speech",
+    "point_014": "Challenges on TACRED dataset not fully analyzed or addressed. CNL improves but does not solve OOD overconfidence on TACRED, with no proposed remedies",
+    "point_015": "No user study or real-world deployment validation. Selective prediction improvements are not demonstrated in practical application scenarios"
+  }
+}

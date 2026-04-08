@@ -1,0 +1,151 @@
+{
+  "paper_id": "paper_0098",
+  "title": "Examining Scaling and Transfer of Language Model Architectures for Machine Translation",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 63.79,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nNatural language understanding and generation models typically follow two dominant architectural paradigms: language models (LMs) that process concatenated sequences in a single stack of layers, and encoder-decoder models (EncDec) that utilize separate layer stacks for input and output processing. In neural machine translation (NMT), the encoder-decoder architecture has been the dominant approach across all translation tasks. However, there has been limited investigation into the performance of language models for translation, especially under varying model sizes and data conditions.\n\nNeural models exhibit scaling laws where the impact of added parameters on performance varies across architectures. Understanding how the inductive biases of LMs and EncDec differ and how these differences affect translation performance as models scale is an open question. Additionally, the role of architectural design choices in bilingual, massively multilingual, and zero-shot translation tasks remains underexplored.\n\nThe motivation of this work is to systematically examine the role of architectural design choices in LMs for translation, compare them with EncDec models under various data conditions and model sizes, and understand their scaling and transfer properties, especially for zero-shot translation.\n\n---\n\n### Proposed Method\n\nThe authors conduct a comprehensive empirical study comparing language model architectures and encoder-decoder architectures for machine translation. The key components of their methodology include:\n\n- **Architectural Variants:**\n  - **Encoder-Decoder (EncDec):** Traditional Transformer-based model with separate encoder and decoder stacks.\n  - **Language Models (LMs):** Single module processing concatenated source and target sequences with different masking strategies:\n    - **PrefixLM:** Uses full-visible masking on the source sequence, allowing bidirectional context.\n    - **CausalLM:** Applies causal (unidirectional) masking on both source and target sequences.\n  - Extensions to LMs:\n    - **TopOnly:** Uses only top-layer source encodings for target generation, mimicking EncDec.\n    - **TgtOnly:** Optimizes CausalLM only with the target translation objective, removing source-side language modeling loss.\n\n- **Scaling Strategies:**\n  - Increasing model depth (more layers).\n  - Increasing model width (larger feed-forward dimensions).\n\n- **Tasks and Data:**\n  - Bilingual translation on WMT14 En-Fr, WMT14 En-De, WMT19 En-Zh, and an in-house Web En-De dataset.\n  - Massively multilingual translation on OPUS-100 corpus (100 languages).\n  - Evaluation on supervised bilingual, multilingual, and zero-shot translation tasks.\n\n- **Evaluation Metrics:**\n  - Test log-perplexity (PPL).\n  - SacreBLEU scores.\n  - Translation language accuracy (to measure off-target translations).\n\n- **Experimental Setup:**\n  - Systematic variation of model sizes from small to large.\n  - Analysis of scaling laws using power-law fits.\n  - Examination of cross-lingual transfer and zero-shot translation performance.\n  - Computational efficiency measured in FLOPs.\n\n---\n\n### Results\n\n- **Scaling Behavior:**\n  - Architectural differences significantly impact translation quality at small model scales.\n  - As model size increases, the performance gap between LMs and EncDec narrows.\n  - PrefixLM variants outperform CausalLM variants consistently.\n  - Increasing depth benefits translation more than increasing width.\n  - Adding source-side language modeling loss to CausalLM does not improve translation quality.\n  - LMs and EncDec models follow different scaling laws, but converge in performance at large scales.\n\n- **Cross-lingual Transfer:**\n  - EncDec models dominate supervised bilingual and multilingual translation quality across model sizes.\n  - PrefixLM LMs excel in zero-shot translation, outperforming EncDec significantly in BLEU scores.\n  - PrefixLM reduces off-target translations in zero-shot settings, improving translation language accuracy.\n  - CausalLM models perform poorly on zero-shot translation regardless of source-side loss.\n\n- **Multilingual Translation:**\n  - On massively multilingual OPUS-100, EncDec outperforms LMs on supervised directions, especially for low-resource languages and XX\u2192En translation.\n  - PrefixLM performs comparably to EncDec on supervised directions and better on zero-shot directions.\n  - CausalLM underperforms compared to PrefixLM and EncDec.\n\n- **Computational Efficiency:**\n  - EncDec models require less computation (FLOPs) than LMs for similar performance.\n  - LMs need to be wider or deeper to match EncDec performance, which increases computational cost.\n  - Adding source-side loss to CausalLM further reduces efficiency.\n\n- **Additional Observations:**\n  - Scaling benefits both model types but architectural advantages diminish at large scale.\n  - Sentence length and test sample originality have minimal effect on scaling properties.\n  - EncDec allows flexible decoder designs (e.g., shallow decoders) for faster inference, which is not feasible for LMs.\n\n---\n\n### Claimed Contributions\n\n1. **Comprehensive Study of LM Architectures for Translation:** The paper systematically investigates language model architectures for machine translation across bilingual, multilingual, and zero-shot tasks under varying data conditions and model sizes.\n\n2. **Scaling Analysis:** It reveals that architectural differences between LMs and EncDec matter most at small scales but become less significant as models grow larger, with LMs closing the performance gap.\n\n3. **Architectural Insights:**\n   - PrefixLM (full-visible masking) consistently outperforms CausalLM (causal masking).\n   - Increasing model depth is more beneficial than increasing width for translation tasks.\n   - Source-side language modeling loss in CausalLM does not improve translation quality.\n\n4. **Cross-lingual Transfer Findings:**\n   - EncDec models dominate supervised translation quality.\n   - PrefixLM models excel in zero-shot translation by reducing off-target translations, a key bottleneck in zero-shot settings.\n\n5. **Practical Recommendations:**\n   - For major language pairs or small on-device models, EncDec remains the preferred architecture.\n   - For giant multilingual models with a focus on zero-shot transfer, LMs, particularly PrefixLM, are effective.\n\n6. **Computational Efficiency Considerations:** The study highlights that LMs lag behind EncDec in computational efficiency, motivating future work on more efficient LM architectures for translation.\n\n7. **Future Directions:** The authors propose developing more efficient LM architectures and exploring the applicability of translation-optimized LMs to downstream monolingual and cross-lingual tasks.\n\n---\n\n**In summary, this work provides a detailed empirical comparison of language model and encoder-decoder architectures for machine translation, emphasizing the effects of architectural choices and scaling on performance and transfer, and offering guidance for model selection in different translation scenarios.**"
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty \u2013 Limited Comparison to Prior LM-based Translation Work:**  \n   While the paper claims a comprehensive study of LM architectures for translation, it lacks a detailed comparison to prior work that explored language models for translation, such as recent decoder-only or prefix-based models in multilingual settings (e.g., GPT-based translation or mT5). The paper does not sufficiently position its contributions relative to these existing LM translation approaches, which weakens the novelty claim (see Problem & Motivation and Claimed Contributions).\n\n2. **Methodology \u2013 Lack of Ablation on Masking Strategies Beyond PrefixLM and CausalLM:**  \n   The study focuses primarily on two masking strategies (PrefixLM and CausalLM) but does not explore intermediate or hybrid masking schemes (e.g., partial bidirectional masking or segment-level masking). This limits understanding of whether the observed performance differences are due solely to masking or other architectural factors (see Proposed Method: Architectural Variants).\n\n3. **Methodology \u2013 Insufficient Justification for TopOnly and TgtOnly Variants:**  \n   The rationale behind the TopOnly and TgtOnly LM variants is briefly mentioned but not thoroughly justified or motivated. It is unclear why these variants were chosen and how they relate to practical translation scenarios or model design principles, reducing clarity on their role in the study (see Proposed Method: Architectural Variants).\n\n4. **Evaluation \u2013 Missing Baselines with Pretrained Models:**  \n   The experiments appear to train all models from scratch on translation data without including pretrained LMs or EncDec models. Given the prevalence of pretrained models in translation, the absence of such baselines limits the practical relevance and fairness of comparisons (see Experimental Setup and Results).\n\n5. **Evaluation \u2013 Limited Metrics for Translation Quality:**  \n   The evaluation relies mainly on SacreBLEU and test log-perplexity. While BLEU is standard, it is known to have limitations, especially for zero-shot and multilingual translation. The paper does not include other metrics such as chrF, COMET, or human evaluation, which could provide a more nuanced assessment of translation quality and off-target errors (see Evaluation Metrics).\n\n6. **Evaluation \u2013 Off-Target Translation Metric Details Are Sparse:**  \n   The paper reports translation language accuracy to measure off-target translations but does not provide detailed methodology or examples of how this metric is computed or validated. This lack of detail makes it difficult to assess the reliability of the zero-shot translation findings (see Results: Cross-lingual Transfer).\n\n7. **Reproducibility \u2013 Missing Hyperparameter and Training Details:**  \n   The paper does not provide comprehensive details on training hyperparameters such as learning rates, batch sizes, optimizer settings, or training duration for each model variant and scale. This omission hinders reproducibility and fair comparison (see Experimental Setup).\n\n8. **Reproducibility \u2013 Lack of Code or Model Checkpoints:**  \n   There is no mention of releasing code, model configurations, or trained checkpoints, which would be critical for the community to verify and build upon the findings, especially given the extensive empirical nature of the study.\n\n9. **Clarity \u2013 Ambiguous Description of Scaling Laws Analysis:**  \n   The paper states that scaling laws are analyzed using power-law fits but does not clearly explain the fitting procedure, the data points used, or the statistical significance of the fits. This makes it difficult to interpret the robustness of the scaling conclusions (see Results: Scaling Behavior).\n\n10. **Clarity \u2013 Insufficient Explanation of Computational Efficiency Measurements:**  \n    The FLOPs comparison between EncDec and LM models is presented but lacks details on how FLOPs were computed (e.g., training vs. inference, batch size, sequence length). Without this, the computational efficiency claims are less convincing (see Results: Computational Efficiency).\n\n11. **Limitations \u2013 No Discussion on Real-World Deployment Constraints:**  \n    Although the paper mentions on-device models and inference speed, it does not discuss practical deployment challenges such as memory footprint, latency, or hardware constraints, which are critical for choosing architectures in production (see Claimed Contributions: Practical Recommendations).\n\n12. **Limitations \u2013 Zero-Shot Translation Focus Limited to OPUS-100:**  \n    The zero-shot translation experiments are conducted primarily on OPUS-100. The paper does not explore whether the zero-shot advantages of PrefixLM generalize to other multilingual datasets or domains, limiting the generalizability of the findings (see Results: Multilingual Translation).\n\n13. **Generalisability \u2013 Lack of Analysis on Language Families or Typological Diversity:**  \n    The study aggregates results across many languages but does not analyze performance variations by language family, script, or typological features. Such analysis could reveal whether architectural benefits hold uniformly or vary across linguistic characteristics (see Results: Multilingual Translation).\n\n14. **Generalisability \u2013 No Evaluation on Downstream or Monolingual Tasks:**  \n    Although future directions mention applying translation-optimized LMs to downstream tasks, the current study does not evaluate whether the architectural insights transfer to monolingual language understanding or generation tasks, limiting the scope of conclusions (see Claimed Contributions: Future Directions).\n\n15. **Methodology \u2013 Fixed Tokenization and Vocabulary Across Architectures Not Discussed:**  \n    The paper does not specify whether the same tokenization and vocabulary were used for all architectures. Differences here could bias results, especially in multilingual settings where vocabulary coverage impacts performance (see Experimental Setup and Results)."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper presents a comprehensive empirical study comparing language model (LM) architectures and encoder-decoder (EncDec) architectures for machine translation across bilingual, multilingual, and zero-shot tasks. It analyzes the impact of architectural choices and scaling on translation quality, cross-lingual transfer, and computational efficiency, providing practical recommendations for model selection in different scenarios.\",\n  \"strengths\": [\n    {\n      \"point\": \"Comprehensive empirical comparison of LM and EncDec architectures for translation\",\n      \"evidence\": \"Systematic experiments across multiple datasets (WMT14 En-Fr, En-De, WMT19 En-Zh, OPUS-100) and tasks (bilingual, multilingual, zero-shot) with varying model sizes.\"\n    },\n    {\n      \"point\": \"Insightful scaling analysis revealing how architectural differences diminish at large scale\",\n      \"evidence\": \"Results show that while EncDec outperforms LMs at small scales, LMs close the performance gap as model size increases, with PrefixLM consistently outperforming CausalLM.\"\n    },\n    {\n      \"point\": \"Identification of PrefixLM as a superior masking strategy for zero-shot translation\",\n      \"evidence\": \"PrefixLM models achieve better zero-shot BLEU scores and reduce off-target translations compared to CausalLM and EncDec.\"\n    },\n    {\n      \"point\": \"Practical recommendations based on empirical findings\",\n      \"evidence\": \"Suggests EncDec for major language pairs and small on-device models, and PrefixLM for large multilingual zero-shot models.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited comparison to prior LM-based translation work\",\n      \"evidence\": \"The paper does not sufficiently position its contributions relative to existing LM translation approaches such as GPT-based or mT5 models.\"\n    },\n    {\n      \"point\": \"Lack of ablation on masking strategies beyond PrefixLM and CausalLM\",\n      \"evidence\": \"No exploration of intermediate or hybrid masking schemes to isolate the effect of masking from other architectural factors.\"\n    },\n    {\n      \"point\": \"Insufficient justification for TopOnly and TgtOnly LM variants\",\n      \"evidence\": \"The rationale and practical relevance of these variants are not clearly explained.\"\n    },\n    {\n      \"point\": \"Missing baselines with pretrained models\",\n      \"evidence\": \"All models are trained from scratch without comparison to pretrained LMs or EncDec models, limiting practical relevance.\"\n    },\n    {\n      \"point\": \"Limited evaluation metrics for translation quality\",\n      \"evidence\": \"Relies mainly on SacreBLEU and perplexity without including metrics like chrF, COMET, or human evaluation.\"\n    },\n    {\n      \"point\": \"Sparse details on off-target translation metric\",\n      \"evidence\": \"Methodology and validation of translation language accuracy metric are not sufficiently described.\"\n    },\n    {\n      \"point\": \"Reproducibility concerns due to missing hyperparameter and training details\",\n      \"evidence\": \"No comprehensive information on learning rates, batch sizes, optimizer settings, or training duration.\"\n    },\n    {\n      \"point\": \"No release of code or model checkpoints\",\n      \"evidence\": \"Absence of code or trained model availability hinders verification and further research.\"\n    },\n    {\n      \"point\": \"Ambiguous description of scaling laws analysis\",\n      \"evidence\": \"Lacks clear explanation of fitting procedures and statistical significance.\"\n    },\n    {\n      \"point\": \"Insufficient explanation of computational efficiency measurements\",\n      \"evidence\": \"Details on FLOPs computation (training vs inference, batch size, sequence length) are missing.\"\n    },\n    {\n      \"point\": \"No discussion on real-world deployment constraints\",\n      \"evidence\": \"Practical issues like memory footprint, latency, and hardware constraints are not addressed.\"\n    },\n    {\n      \"point\": \"Zero-shot translation experiments limited to OPUS-100\",\n      \"evidence\": \"No evaluation on other multilingual datasets or domains to test generalizability.\"\n    },\n    {\n      \"point\": \"Lack of analysis on language families or typological diversity\",\n      \"evidence\": \"No breakdown of performance variations by linguistic characteristics.\"\n    },\n    {\n      \"point\": \"No evaluation on downstream or monolingual tasks\",\n      \"evidence\": \"Architectural insights are not tested beyond translation tasks.\"\n    },\n    {\n      \"point\": \"Unclear whether tokenization and vocabulary are consistent across architectures\",\n      \"evidence\": \"Potential bias due to differing vocabularies is not discussed.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How do the proposed LM architectures compare to existing pretrained LM-based translation models like GPT or mT5?\",\n      \"motivation\": \"Understanding relative novelty and practical impact requires positioning against current state-of-the-art pretrained models.\"\n    },\n    {\n      \"question\": \"Would intermediate or hybrid masking strategies yield better trade-offs between translation quality and computational efficiency?\",\n      \"motivation\": \"Exploring masking beyond the two extremes could uncover more effective architectural designs.\"\n    },\n    {\n      \"question\": \"How robust are the zero-shot translation advantages of PrefixLM across different multilingual datasets and domains?\",\n      \"motivation\": \"Generalizability of findings is critical for broader applicability.\"\n    },\n    {\n      \"question\": \"Can the architectural insights from translation tasks transfer to monolingual language understanding or generation tasks?\",\n      \"motivation\": \"Extending benefits beyond translation would increase the significance of the study.\"\n    },\n    {\n      \"question\": \"What are the practical deployment implications of the computational efficiency differences observed between EncDec and LM models?\",\n      \"motivation\": \"Real-world constraints like latency and memory are key for production use.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper presents a comprehensive empirical study comparing language model (LM) architectures and encoder-decoder (EncDec) architectures for machine translation across bilingual, multilingual, and zero-shot tasks. It analyzes the impact of architectural choices and scaling on translation quality, cross-lingual transfer, and computational efficiency, providing practical recommendations for model selection in different scenarios.",
+    "strengths": [
+      {
+        "point": "Comprehensive empirical comparison of LM and EncDec architectures for translation",
+        "evidence": "Systematic experiments across multiple datasets (WMT14 En-Fr, En-De, WMT19 En-Zh, OPUS-100) and tasks (bilingual, multilingual, zero-shot) with varying model sizes."
+      },
+      {
+        "point": "Insightful scaling analysis revealing how architectural differences diminish at large scale",
+        "evidence": "Results show that while EncDec outperforms LMs at small scales, LMs close the performance gap as model size increases, with PrefixLM consistently outperforming CausalLM."
+      },
+      {
+        "point": "Identification of PrefixLM as a superior masking strategy for zero-shot translation",
+        "evidence": "PrefixLM models achieve better zero-shot BLEU scores and reduce off-target translations compared to CausalLM and EncDec."
+      },
+      {
+        "point": "Practical recommendations based on empirical findings",
+        "evidence": "Suggests EncDec for major language pairs and small on-device models, and PrefixLM for large multilingual zero-shot models."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison to prior LM-based translation work",
+        "evidence": "The paper does not sufficiently position its contributions relative to existing LM translation approaches such as GPT-based or mT5 models."
+      },
+      {
+        "point": "Lack of ablation on masking strategies beyond PrefixLM and CausalLM",
+        "evidence": "No exploration of intermediate or hybrid masking schemes to isolate the effect of masking from other architectural factors."
+      },
+      {
+        "point": "Insufficient justification for TopOnly and TgtOnly LM variants",
+        "evidence": "The rationale and practical relevance of these variants are not clearly explained."
+      },
+      {
+        "point": "Missing baselines with pretrained models",
+        "evidence": "All models are trained from scratch without comparison to pretrained LMs or EncDec models, limiting practical relevance."
+      },
+      {
+        "point": "Limited evaluation metrics for translation quality",
+        "evidence": "Relies mainly on SacreBLEU and perplexity without including metrics like chrF, COMET, or human evaluation."
+      },
+      {
+        "point": "Sparse details on off-target translation metric",
+        "evidence": "Methodology and validation of translation language accuracy metric are not sufficiently described."
+      },
+      {
+        "point": "Reproducibility concerns due to missing hyperparameter and training details",
+        "evidence": "No comprehensive information on learning rates, batch sizes, optimizer settings, or training duration."
+      },
+      {
+        "point": "No release of code or model checkpoints",
+        "evidence": "Absence of code or trained model availability hinders verification and further research."
+      },
+      {
+        "point": "Ambiguous description of scaling laws analysis",
+        "evidence": "Lacks clear explanation of fitting procedures and statistical significance."
+      },
+      {
+        "point": "Insufficient explanation of computational efficiency measurements",
+        "evidence": "Details on FLOPs computation (training vs inference, batch size, sequence length) are missing."
+      },
+      {
+        "point": "No discussion on real-world deployment constraints",
+        "evidence": "Practical issues like memory footprint, latency, and hardware constraints are not addressed."
+      },
+      {
+        "point": "Zero-shot translation experiments limited to OPUS-100",
+        "evidence": "No evaluation on other multilingual datasets or domains to test generalizability."
+      },
+      {
+        "point": "Lack of analysis on language families or typological diversity",
+        "evidence": "No breakdown of performance variations by linguistic characteristics."
+      },
+      {
+        "point": "No evaluation on downstream or monolingual tasks",
+        "evidence": "Architectural insights are not tested beyond translation tasks."
+      },
+      {
+        "point": "Unclear whether tokenization and vocabulary are consistent across architectures",
+        "evidence": "Potential bias due to differing vocabularies is not discussed."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How do the proposed LM architectures compare to existing pretrained LM-based translation models like GPT or mT5?",
+        "motivation": "Understanding relative novelty and practical impact requires positioning against current state-of-the-art pretrained models."
+      },
+      {
+        "question": "Would intermediate or hybrid masking strategies yield better trade-offs between translation quality and computational efficiency?",
+        "motivation": "Exploring masking beyond the two extremes could uncover more effective architectural designs."
+      },
+      {
+        "question": "How robust are the zero-shot translation advantages of PrefixLM across different multilingual datasets and domains?",
+        "motivation": "Generalizability of findings is critical for broader applicability."
+      },
+      {
+        "question": "Can the architectural insights from translation tasks transfer to monolingual language understanding or generation tasks?",
+        "motivation": "Extending benefits beyond translation would increase the significance of the study."
+      },
+      {
+        "question": "What are the practical deployment implications of the computational efficiency differences observed between EncDec and LM models?",
+        "motivation": "Real-world constraints like latency and memory are key for production use."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Limited comparison to prior LM-based translation work. The paper does not sufficiently position its contributions relative to existing LM translation approaches such as GPT-based or mT5 models",
+    "point_002": "Lack of ablation on masking strategies beyond PrefixLM and CausalLM. No exploration of intermediate or hybrid masking schemes to isolate the effect of masking from other architectural factors",
+    "point_003": "Insufficient justification for TopOnly and TgtOnly LM variants. The rationale and practical relevance of these variants are not clearly explained",
+    "point_004": "Missing baselines with pretrained models. All models are trained from scratch without comparison to pretrained LMs or EncDec models, limiting practical relevance",
+    "point_005": "Limited evaluation metrics for translation quality. Relies mainly on SacreBLEU and perplexity without including metrics like chrF, COMET, or human evaluation",
+    "point_006": "Sparse details on off-target translation metric. Methodology and validation of translation language accuracy metric are not sufficiently described",
+    "point_007": "Reproducibility concerns due to missing hyperparameter and training details. No comprehensive information on learning rates, batch sizes, optimizer settings, or training duration",
+    "point_008": "No release of code or model checkpoints. Absence of code or trained model availability hinders verification and further research",
+    "point_009": "Ambiguous description of scaling laws analysis. Lacks clear explanation of fitting procedures and statistical significance",
+    "point_010": "Insufficient explanation of computational efficiency measurements. Details on FLOPs computation (training vs inference, batch size, sequence length) are missing",
+    "point_011": "No discussion on real-world deployment constraints. Practical issues like memory footprint, latency, and hardware constraints are not addressed",
+    "point_012": "Zero-shot translation experiments limited to OPUS-100. No evaluation on other multilingual datasets or domains to test generalizability",
+    "point_013": "Lack of analysis on language families or typological diversity. No breakdown of performance variations by linguistic characteristics",
+    "point_014": "No evaluation on downstream or monolingual tasks. Architectural insights are not tested beyond translation tasks",
+    "point_015": "Unclear whether tokenization and vocabulary are consistent across architectures. Potential bias due to differing vocabularies is not discussed"
+  }
+}

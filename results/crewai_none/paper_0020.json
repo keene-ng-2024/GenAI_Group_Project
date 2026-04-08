@@ -1,0 +1,142 @@
+{
+  "paper_id": "paper_0020",
+  "title": "Identifying the Limits of Cross-Domain Knowledge Transfer for Pretrained Models",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 60.35,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nPretrained language models (PLMs) like BERT have demonstrated remarkable effectiveness in fine-tuning for diverse NLP tasks, often outperforming baselines even when the fine-tuning data is very different from the pretraining data. Recent studies have shown surprising cross-domain transfer capabilities, including transfer across languages and even from non-linguistic data (e.g., music, code) to natural language tasks. However, the nature and limits of such cross-domain transfer remain poorly understood.\n\nThis paper investigates the extent and nature of cross-domain knowledge transfer in pretrained models by systematically removing word identity information from fine-tuning and evaluation data via scrambling. The motivation is to understand how much transfer occurs when models cannot rely on lexical identity and to identify the factors enabling or limiting such transfer. Understanding these mechanisms can guide future model design and fine-tuning strategies.\n\n---\n\n### Proposed Method\n\nThe authors propose an evaluation paradigm where pretrained models are fine-tuned and evaluated on datasets with scrambled word identities, effectively removing lexical cues. The scrambling replaces each word with another word from the vocabulary, under two main scrambling schemes:\n\n1. **Scrambling with Similar Frequency (SSF):** Each word is replaced by another word with similar frequency and the same sub-token length (according to BERT\u2019s tokenizer). This aims to preserve some distributional properties like word frequency.\n\n2. **Random Scrambling (RS):** Words are replaced randomly without frequency matching, to test the role of frequency preservation.\n\nThe study evaluates three model types:\n\n- **BERT (pretrained):** Using the pretrained BERT-base model fine-tuned on scrambled and original datasets.\n- **LSTM with GloVe embeddings:** A strong baseline with pretrained word embeddings but no contextual pretraining.\n- **Bag-of-Words (BoW) models:** Simple baselines that rely only on word co-occurrence.\n\nSix NLP tasks are considered, covering:\n\n- **Sequence classification:** SST-3 (sentiment), QNLI, SNLI (natural language inference), MRPC (paraphrase detection).\n- **Sequence labeling:** POS tagging (Universal Dependencies English Web Treebank) and NER (CoNLL-2003).\n\nThe evaluation compares model performance when fine-tuned and tested on original vs. scrambled data, analyzing the degree of transfer without word identity.\n\nAdditional analyses include:\n\n- Comparing performance with SSF vs. RS scrambling to assess the role of frequency.\n- Zero-shot evaluation with BoW models to check if scrambling preserves semantic consistency.\n- Fine-tuning randomly initialized BERT models of varying sizes to isolate pretraining effects.\n- Freezing BERT parameters during fine-tuning to assess the role of fine-tuning.\n- Probing whether fine-tuning learns to reassociate scrambled tokens with original word identities.\n\n---\n\n### Results\n\n**Main Findings:**\n\n- **BERT shows robust cross-domain transfer for sequence classification tasks even without word identity information.** When fine-tuned and tested on scrambled data, BERT maintains strong performance, often outperforming LSTM models trained and tested on original data. For example, on MRPC, BERT\u2019s performance drops less than 5% with scrambling and still beats the best LSTM by ~14%.\n\n- **For sequence labeling tasks, BERT\u2019s performance drops significantly with scrambling.** This suggests that token-level labeling tasks rely more heavily on word identity, limiting transfer without lexical cues.\n\n- **LSTM models show little difference between scrambled and original data, but their overall performance is much lower than BERT\u2019s.** This likely reflects retraining from scratch rather than transfer.\n\n- **Frequency matching in scrambling (SSF) slightly improves performance compared to random scrambling (RS), but the difference is small.** This indicates word frequency contributes to transfer but is not the main factor.\n\n- **BoW models suffer large performance drops under scrambling, confirming that scrambling destroys word identity and semantic consistency.** Thus, BERT\u2019s transfer is not due to preserved semantic substitution.\n\n- **Randomly initialized BERT models fine-tuned on scrambled data perform worse than pretrained BERT, indicating pretraining is important for transfer.** The performance gap increases with model depth.\n\n- **Freezing BERT parameters during fine-tuning drastically reduces transfer performance, showing that fine-tuning is also critical.** Lower layers provide more predictive embeddings for classification.\n\n- **Probing analyses find no evidence that fine-tuning learns to reassociate scrambled tokens with their original word identities.** Cosine similarities and word identity prediction probes remain unchanged after fine-tuning.\n\n---\n\n### Claimed Contributions\n\n1. **A novel evaluation paradigm for testing cross-domain transfer in pretrained models by removing word identity information via scrambling.**\n\n2. **Empirical demonstration that BERT exhibits strong cross-domain transfer for sequence classification tasks even without lexical identity, outperforming strong baselines.**\n\n3. **Identification of task-dependent limits of transfer: sequence labeling tasks show much less transfer without word identities.**\n\n4. **Systematic analyses isolating the roles of word frequency, pretraining, and fine-tuning in enabling transfer, showing that both pretraining and fine-tuning are essential.**\n\n5. **Evidence that fine-tuning does not simply learn to unscramble inputs or reassociate scrambled tokens with original words, suggesting transfer relies on deeper distributional or structural knowledge.**\n\n6. **Provision of insights and experimental results that help explain where and why cross-domain transfer occurs, guiding future research and practical fine-tuning strategies.**\n\n---\n\n**Overall, the paper advances understanding of the mechanisms and limits of cross-domain knowledge transfer in pretrained language models, highlighting BERT\u2019s unique ability to transfer beyond lexical identity for classification tasks, and providing a foundation for further exploration of transfer phenomena.**"
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty - Missing Comparison to Related Transfer Studies:**  \nWhile the paper claims novelty in evaluating cross-domain transfer by scrambling word identities, it insufficiently situates itself relative to prior work on domain adaptation and robustness in pretrained models. For example, recent studies on adversarial perturbations or lexical substitution effects on BERT\u2019s transfer (not cited here) could provide important context. The paper would benefit from a more thorough literature review and explicit comparison to these related approaches to clarify its unique contribution (Problem & Motivation section).\n\n2. **Methodology - Justification for Scrambling Schemes:**  \nThe choice of scrambling schemes (SSF and RS) is central but not fully justified. The paper states SSF preserves frequency and sub-token length but does not explain why sub-token length matching is necessary or how it affects model behavior. Moreover, no ablation explores the impact of sub-token length preservation independently from frequency matching. This leaves unclear which scrambling factors most influence transfer (Proposed Method section).\n\n3. **Methodology - Lack of Scrambling Impact on Syntax or Sentence Structure:**  \nThe scrambling replaces words but does not address whether sentence-level syntactic structure is preserved or disrupted. Since BERT is sensitive to syntax, it is unclear if scrambling affects syntactic cues differently across tasks. The paper does not analyze or control for syntactic degradation caused by scrambling, which could confound interpretations of transfer limits, especially for sequence labeling tasks (Results section).\n\n4. **Evaluation - Baselines Not Fully Matched for Pretraining:**  \nThe LSTM with GloVe embeddings and BoW models serve as baselines but differ fundamentally from BERT in pretraining and architecture. The LSTM is trained from scratch on fine-tuning data, while BERT benefits from massive pretraining. This makes direct performance comparisons somewhat unfair. Including a pretrained LSTM or transformer baseline without contextual pretraining would better isolate the effect of pretraining (Results section).\n\n5. **Evaluation - Metrics and Statistical Significance Missing:**  \nThe paper reports performance drops and relative differences but does not provide confidence intervals or statistical significance tests. Given the relatively small performance gaps (e.g., <5% drop on MRPC), it is unclear whether these differences are robust or due to random variation. This weakens claims about the robustness of cross-domain transfer (Results section).\n\n6. **Evaluation - Limited Task Diversity and Domain Coverage:**  \nThe six tasks cover classification and labeling but are all English-centric and mostly from standard NLP benchmarks. The paper does not test cross-lingual transfer, non-English datasets, or truly out-of-domain corpora beyond scrambling. This limits generalizability claims about cross-domain transfer, especially given the motivation referencing cross-lingual and non-linguistic transfer (Problem & Motivation, Results).\n\n7. **Reproducibility - Missing Details on Scrambling Implementation:**  \nThe paper does not specify how the scrambling vocabulary is constructed or how replacement words are sampled exactly (e.g., uniform sampling within frequency bins?). It also omits whether scrambling is deterministic or stochastic across runs, which affects reproducibility and variance in results (Proposed Method).\n\n8. **Reproducibility - Fine-tuning Hyperparameters and Protocols Under-specified:**  \nDetails such as learning rates, number of epochs, batch sizes, and early stopping criteria for fine-tuning on scrambled vs. original data are not clearly reported. These can significantly affect performance and transfer outcomes, especially when fine-tuning on scrambled inputs (Proposed Method, Results).\n\n9. **Clarity - Ambiguous Terminology Around \u201cCross-Domain Transfer\u201d:**  \nThe paper uses \u201ccross-domain transfer\u201d to describe transfer without lexical identity, but this deviates from common usage where domain refers to topical or distributional shifts. This could confuse readers, as scrambling is an artificial manipulation rather than a natural domain shift. Clarifying or redefining this term would improve clarity (Problem & Motivation).\n\n10. **Clarity - Insufficient Explanation of Probing Analyses:**  \nThe probing experiments aiming to detect reassociation of scrambled tokens with original identities are briefly described but lack detail on probe architecture, training data, and evaluation metrics. This makes it difficult to assess the validity of the negative findings reported (Results).\n\n11. **Limitations - No Discussion of Potential Overfitting to Scrambled Data:**  \nFine-tuning on scrambled data might lead models to exploit artifacts or overfit to unnatural token distributions. The paper does not discuss this possibility or analyze whether performance gains reflect genuine transfer or memorization of scrambling patterns (Results).\n\n12. **Limitations - Sequence Labeling Tasks Underexplored:**  \nThe paper notes that sequence labeling tasks suffer large performance drops but does not investigate why or propose methods to mitigate this. Given the importance of token-level tasks, more analysis or alternative scrambling strategies could provide insights into transfer limitations (Results).\n\n13. **Generalisability - No Experiments on Larger or More Recent Models:**  \nAll experiments use BERT-base; the paper does not test whether findings hold for larger models like BERT-large, RoBERTa, or newer architectures. This limits confidence that conclusions about transfer without lexical identity generalize across model scales and families (Results).\n\n14. **Generalisability - No Exploration of Transfer to Non-NLP Modalities:**  \nThe motivation references transfer from non-linguistic data (music, code), but experiments focus solely on NLP tasks. Testing scrambling or analogous perturbations in multimodal or code domains would strengthen claims about the nature of cross-domain transfer (Problem & Motivation).\n\n15. **Methodology - Freezing Lower Layers Analysis Lacks Granularity:**  \nThe freezing experiments show lower layers provide more predictive embeddings, but the paper does not analyze which specific layers contribute most or how intermediate layers behave. A more granular layer-wise analysis could yield deeper insights into where transfer knowledge resides (Results)."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper investigates the extent of cross-domain transfer in pretrained language models by removing lexical identity information through word scrambling during fine-tuning and evaluation. It demonstrates that BERT maintains strong transfer performance on sequence classification tasks without word identity, while sequence labeling tasks suffer significant drops, highlighting task-dependent transfer limits and the critical roles of pretraining and fine-tuning.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel evaluation paradigm removing lexical identity via scrambling\",\n      \"evidence\": \"The paper proposes scrambling schemes (SSF and RS) to systematically remove word identity, enabling a novel test of cross-domain transfer.\"\n    },\n    {\n      \"point\": \"Empirical demonstration of BERT's robust transfer on classification tasks without lexical cues\",\n      \"evidence\": \"BERT maintains strong performance on scrambled data, outperforming LSTM baselines and showing less than 5% drop on MRPC.\"\n    },\n    {\n      \"point\": \"Comprehensive analyses isolating effects of frequency, pretraining, and fine-tuning\",\n      \"evidence\": \"Comparisons between SSF and RS scrambling, pretrained vs. randomly initialized BERT, and freezing experiments clarify factors enabling transfer.\"\n    },\n    {\n      \"point\": \"Insightful finding that fine-tuning does not learn to unscramble tokens\",\n      \"evidence\": \"Probing analyses show no evidence of reassociation between scrambled tokens and original identities after fine-tuning.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Insufficient comparison to related transfer and robustness studies\",\n      \"evidence\": \"The paper lacks discussion of prior work on adversarial perturbations or lexical substitution effects on BERT\u2019s transfer.\"\n    },\n    {\n      \"point\": \"Scrambling schemes lack full justification and ablation\",\n      \"evidence\": \"No analysis isolates the impact of sub-token length preservation separate from frequency matching.\"\n    },\n    {\n      \"point\": \"No analysis of scrambling's impact on syntax or sentence structure\",\n      \"evidence\": \"The paper does not assess whether scrambling disrupts syntactic cues, which may confound transfer interpretations.\"\n    },\n    {\n      \"point\": \"Baselines not fully matched for pretraining and architecture\",\n      \"evidence\": \"LSTM and BoW baselines differ fundamentally from BERT, limiting fairness of performance comparisons.\"\n    },\n    {\n      \"point\": \"Missing statistical significance and confidence intervals\",\n      \"evidence\": \"Reported performance drops lack tests for robustness, weakening claims about transfer reliability.\"\n    },\n    {\n      \"point\": \"Limited task diversity and domain coverage\",\n      \"evidence\": \"Experiments focus on English NLP benchmarks without cross-lingual or non-linguistic domain evaluations.\"\n    },\n    {\n      \"point\": \"Reproducibility details under-specified\",\n      \"evidence\": \"Scrambling implementation and fine-tuning hyperparameters are not fully described.\"\n    },\n    {\n      \"point\": \"Ambiguous use of 'cross-domain transfer' terminology\",\n      \"evidence\": \"Scrambling is an artificial manipulation rather than a natural domain shift, potentially confusing readers.\"\n    },\n    {\n      \"point\": \"Probing analyses lack sufficient methodological detail\",\n      \"evidence\": \"Probe architectures, training data, and evaluation metrics are not clearly explained.\"\n    },\n    {\n      \"point\": \"No discussion of potential overfitting to scrambled data\",\n      \"evidence\": \"The possibility that models memorize scrambling artifacts is not addressed.\"\n    },\n    {\n      \"point\": \"Sequence labeling tasks underexplored\",\n      \"evidence\": \"Large performance drops are noted but not analyzed or mitigated.\"\n    },\n    {\n      \"point\": \"No experiments on larger or more recent models\",\n      \"evidence\": \"Only BERT-base is tested, limiting generalizability across model scales.\"\n    },\n    {\n      \"point\": \"No exploration of transfer to non-NLP modalities\",\n      \"evidence\": \"Despite motivation referencing music and code, experiments remain NLP-only.\"\n    },\n    {\n      \"point\": \"Layer freezing analysis lacks granularity\",\n      \"evidence\": \"No detailed layer-wise breakdown of which layers contribute most to transfer.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How would the findings extend to larger or more recent pretrained models like RoBERTa or BERT-large?\",\n      \"motivation\": \"Understanding if transfer without lexical identity generalizes across model architectures and sizes is critical for broader applicability.\"\n    },\n    {\n      \"question\": \"To what extent does scrambling disrupt syntactic and structural cues, and how does this impact transfer performance, especially for sequence labeling?\",\n      \"motivation\": \"Clarifying the role of syntax preservation could explain why labeling tasks suffer more and guide improved scrambling methods.\"\n    },\n    {\n      \"question\": \"Could models be overfitting to scrambling artifacts rather than demonstrating genuine transfer?\",\n      \"motivation\": \"Addressing this would strengthen claims about the nature of transfer and avoid confounding memorization effects.\"\n    },\n    {\n      \"question\": \"How might the evaluation paradigm be adapted to test cross-lingual or multimodal transfer beyond artificial scrambling?\",\n      \"motivation\": \"Extending experiments to natural domain shifts would enhance the relevance and impact of the findings.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper investigates the extent of cross-domain transfer in pretrained language models by removing lexical identity information through word scrambling during fine-tuning and evaluation. It demonstrates that BERT maintains strong transfer performance on sequence classification tasks without word identity, while sequence labeling tasks suffer significant drops, highlighting task-dependent transfer limits and the critical roles of pretraining and fine-tuning.",
+    "strengths": [
+      {
+        "point": "Novel evaluation paradigm removing lexical identity via scrambling",
+        "evidence": "The paper proposes scrambling schemes (SSF and RS) to systematically remove word identity, enabling a novel test of cross-domain transfer."
+      },
+      {
+        "point": "Empirical demonstration of BERT's robust transfer on classification tasks without lexical cues",
+        "evidence": "BERT maintains strong performance on scrambled data, outperforming LSTM baselines and showing less than 5% drop on MRPC."
+      },
+      {
+        "point": "Comprehensive analyses isolating effects of frequency, pretraining, and fine-tuning",
+        "evidence": "Comparisons between SSF and RS scrambling, pretrained vs. randomly initialized BERT, and freezing experiments clarify factors enabling transfer."
+      },
+      {
+        "point": "Insightful finding that fine-tuning does not learn to unscramble tokens",
+        "evidence": "Probing analyses show no evidence of reassociation between scrambled tokens and original identities after fine-tuning."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to related transfer and robustness studies",
+        "evidence": "The paper lacks discussion of prior work on adversarial perturbations or lexical substitution effects on BERT\u2019s transfer."
+      },
+      {
+        "point": "Scrambling schemes lack full justification and ablation",
+        "evidence": "No analysis isolates the impact of sub-token length preservation separate from frequency matching."
+      },
+      {
+        "point": "No analysis of scrambling's impact on syntax or sentence structure",
+        "evidence": "The paper does not assess whether scrambling disrupts syntactic cues, which may confound transfer interpretations."
+      },
+      {
+        "point": "Baselines not fully matched for pretraining and architecture",
+        "evidence": "LSTM and BoW baselines differ fundamentally from BERT, limiting fairness of performance comparisons."
+      },
+      {
+        "point": "Missing statistical significance and confidence intervals",
+        "evidence": "Reported performance drops lack tests for robustness, weakening claims about transfer reliability."
+      },
+      {
+        "point": "Limited task diversity and domain coverage",
+        "evidence": "Experiments focus on English NLP benchmarks without cross-lingual or non-linguistic domain evaluations."
+      },
+      {
+        "point": "Reproducibility details under-specified",
+        "evidence": "Scrambling implementation and fine-tuning hyperparameters are not fully described."
+      },
+      {
+        "point": "Ambiguous use of 'cross-domain transfer' terminology",
+        "evidence": "Scrambling is an artificial manipulation rather than a natural domain shift, potentially confusing readers."
+      },
+      {
+        "point": "Probing analyses lack sufficient methodological detail",
+        "evidence": "Probe architectures, training data, and evaluation metrics are not clearly explained."
+      },
+      {
+        "point": "No discussion of potential overfitting to scrambled data",
+        "evidence": "The possibility that models memorize scrambling artifacts is not addressed."
+      },
+      {
+        "point": "Sequence labeling tasks underexplored",
+        "evidence": "Large performance drops are noted but not analyzed or mitigated."
+      },
+      {
+        "point": "No experiments on larger or more recent models",
+        "evidence": "Only BERT-base is tested, limiting generalizability across model scales."
+      },
+      {
+        "point": "No exploration of transfer to non-NLP modalities",
+        "evidence": "Despite motivation referencing music and code, experiments remain NLP-only."
+      },
+      {
+        "point": "Layer freezing analysis lacks granularity",
+        "evidence": "No detailed layer-wise breakdown of which layers contribute most to transfer."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How would the findings extend to larger or more recent pretrained models like RoBERTa or BERT-large?",
+        "motivation": "Understanding if transfer without lexical identity generalizes across model architectures and sizes is critical for broader applicability."
+      },
+      {
+        "question": "To what extent does scrambling disrupt syntactic and structural cues, and how does this impact transfer performance, especially for sequence labeling?",
+        "motivation": "Clarifying the role of syntax preservation could explain why labeling tasks suffer more and guide improved scrambling methods."
+      },
+      {
+        "question": "Could models be overfitting to scrambling artifacts rather than demonstrating genuine transfer?",
+        "motivation": "Addressing this would strengthen claims about the nature of transfer and avoid confounding memorization effects."
+      },
+      {
+        "question": "How might the evaluation paradigm be adapted to test cross-lingual or multimodal transfer beyond artificial scrambling?",
+        "motivation": "Extending experiments to natural domain shifts would enhance the relevance and impact of the findings."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to related transfer and robustness studies. The paper lacks discussion of prior work on adversarial perturbations or lexical substitution effects on BERT\u2019s transfer",
+    "point_002": "Scrambling schemes lack full justification and ablation. No analysis isolates the impact of sub-token length preservation separate from frequency matching",
+    "point_003": "No analysis of scrambling's impact on syntax or sentence structure. The paper does not assess whether scrambling disrupts syntactic cues, which may confound transfer interpretations",
+    "point_004": "Baselines not fully matched for pretraining and architecture. LSTM and BoW baselines differ fundamentally from BERT, limiting fairness of performance comparisons",
+    "point_005": "Missing statistical significance and confidence intervals. Reported performance drops lack tests for robustness, weakening claims about transfer reliability",
+    "point_006": "Limited task diversity and domain coverage. Experiments focus on English NLP benchmarks without cross-lingual or non-linguistic domain evaluations",
+    "point_007": "Reproducibility details under-specified. Scrambling implementation and fine-tuning hyperparameters are not fully described",
+    "point_008": "Ambiguous use of 'cross-domain transfer' terminology. Scrambling is an artificial manipulation rather than a natural domain shift, potentially confusing readers",
+    "point_009": "Probing analyses lack sufficient methodological detail. Probe architectures, training data, and evaluation metrics are not clearly explained",
+    "point_010": "No discussion of potential overfitting to scrambled data. The possibility that models memorize scrambling artifacts is not addressed",
+    "point_011": "Sequence labeling tasks underexplored. Large performance drops are noted but not analyzed or mitigated",
+    "point_012": "No experiments on larger or more recent models. Only BERT-base is tested, limiting generalizability across model scales",
+    "point_013": "No exploration of transfer to non-NLP modalities. Despite motivation referencing music and code, experiments remain NLP-only",
+    "point_014": "Layer freezing analysis lacks granularity. No detailed layer-wise breakdown of which layers contribute most to transfer"
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "paper_id": "paper_0036",
+  "title": "LFPT5: A Unified Framework for Lifelong Few-shot Language Learning Based on Prompt Tuning of T5",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 61.75,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Existing lifelong language learning (LLL) methods require large amounts of labeled data for learning new tasks, which is often impractical in real-world scenarios due to the scarcity and cost of obtaining such data. Moreover, these methods typically focus on a single type of NLP task and fine-tune entire models, which can lead to catastrophic forgetting and negative transfer between tasks.\n\n- **Motivation:** Humans can learn new tasks quickly from only a few examples by leveraging prior knowledge without forgetting previously learned tasks. Inspired by this, the authors define a more challenging and practical problem called **Lifelong Few-shot Language Learning (LFLL)**, where a model must continually learn new few-shot tasks (with limited labeled data) across different domains and task types without forgetting previous knowledge.\n\n- **Challenges:** \n  - Avoiding catastrophic forgetting when learning new tasks with few examples.\n  - Handling multiple task types (sequence labeling, classification, generation) rather than just one.\n  - Preventing negative transfer between different task types.\n  - Learning effectively from few-shot data without overfitting.\n\n---\n\n### Proposed Method\n\n- **Framework:** The authors propose **LFPT5**, a unified framework for LFLL based on **prompt tuning** of the pre-trained T5 model.\n\n- **Key Ideas:**\n  - **Prompt Tuning:** Instead of fine-tuning the entire T5 model, LFPT5 freezes T5\u2019s parameters and learns small sets of tunable prompt embeddings for each task or domain. This reduces overfitting and allows efficient adaptation.\n  - **Text-to-Text Reformulation:** All tasks (sequence labeling, classification, generation) are reformulated into a text-to-text format compatible with T5.\n  - **Dual Role of Prompt Embeddings:** The prompt embeddings serve both as a **task solver** (decoding outputs given inputs) and a **data generator** (generating pseudo-labeled samples of previously learned domains).\n  - **Pseudo Sample Generation:** Before learning a new domain of the same task type, LFPT5 generates pseudo samples from previously learned domains using the data generator prompt. These pseudo samples are replayed during training to mitigate catastrophic forgetting.\n  - **KL Divergence Loss:** To maintain label consistency between the previous and current models on generated pseudo samples, LFPT5 minimizes a KL divergence loss between their output distributions.\n  - **Adapting to New Task Types:** When learning a new task type, LFPT5 adds and tunes a new set of prompt embeddings for that task, while keeping previous prompts frozen, thus avoiding negative transfer.\n  - **Overall Training Objective:** Combines task-solving loss, language modeling loss (for generation), and KL divergence loss.\n\n- **Problem Formulation:**\n  - Two adaptation dimensions:\n    - **STDD (Same Task Different Domains):** Learning new domains of the same task type sequentially.\n    - **DT (Different Task Types):** Learning new task types sequentially.\n  - Few-shot setting: training and validation sets have limited examples (e.g., 16-shot for NER and classification, 64-shot for summarization).\n\n---\n\n### Results\n\n- **Datasets & Tasks:**\n  - Sequence labeling: NER on CoNLL03 and OntoNotes.\n  - Text classification: AGNews, Amazon Review, DBPedia, Yahoo.\n  - Text generation: Summarization on CNNDM, WikiHow, Xsum.\n  - Few-shot setting: 16 examples per class for NER and classification; 64 examples for summarization.\n\n- **Baselines Compared:**\n  - Fine-tuning entire T5 (FT).\n  - Prompt tuning without pseudo samples (PT).\n  - Regularization-based lifelong learning methods (EWC, MAS) applied to FT and PT.\n  - Prompt tuning with replay of real samples (PT-R).\n  - Multitask prompt tuning (MT-PT) and multitask fine-tuning (MT-FT).\n\n- **Single Task Few-shot Learning:**\n  - Prompt tuning (T5-PT) performs comparably or better than fine-tuned T5 and BERT-Large on NER, classification, and summarization, showing strong few-shot learning ability.\n\n- **Learning New Domains (STDD):**\n  - LFPT5 significantly outperforms regularization-based lifelong learning methods (EWC, MAS) and prompt tuning without pseudo samples.\n  - For NER, PT-based methods outperform FT-based methods due to better knowledge transfer and fewer tunable parameters.\n  - For classification, FT-based methods perform better than PT-based due to diverse label spaces; however, LFPT5 still improves over PT by using generated pseudo samples.\n  - For summarization, LFPT5 outperforms baselines, though pseudo sample quality is more challenging due to task complexity.\n\n- **Learning New Task Types (DT):**\n  - LFPT5 variants outperform multitask learning baselines (MT-FT, MT-PT).\n  - Including forward knowledge transfer (initializing new task prompts from previous ones) can have positive or negative effects depending on task pairs.\n\n- **Analysis:**\n  - Domain order affects performance, but LFPT5 consistently outperforms baselines across different orders.\n  - KL divergence loss improves label consistency and overall performance.\n  - Generated pseudo samples are generally high-quality but sometimes contain errors (e.g., incorrect labels, missing tokens).\n  - Abbreviation variations in generated outputs indicate the model\u2019s reasoning beyond simple copying.\n\n---\n\n### Claimed Contributions\n\n1. **Problem Definition:** First to formally define and address **Lifelong Few-shot Language Learning (LFLL)**, a practical and challenging problem requiring models to continually learn new few-shot tasks without forgetting.\n\n2. **Unified Framework:** Propose **LFPT5**, a novel unified framework leveraging prompt tuning of T5 that can handle multiple NLP task types (sequence labeling, classification, generation) in a lifelong few-shot learning setting.\n\n3. **Methodological Innovations:**\n   - Combining prompt tuning with pseudo sample generation to replay previous knowledge and mitigate catastrophic forgetting.\n   - Using KL divergence loss for label consistency between models.\n   - Adding new prompt embeddings for new task types to avoid negative transfer.\n\n4. **Empirical Validation:** Extensive experiments demonstrate that LFPT5 significantly outperforms previous lifelong learning methods and multitask baselines across diverse tasks and datasets.\n\n5. **Open Source:** The authors have open-sourced their codebase to facilitate further research.\n\n6. **Towards General Language Intelligence:** LFPT5 represents a vital step towards building models capable of general language intelligence by continually learning from few-shot tasks without forgetting.\n\n---\n\n**In summary,** this paper introduces LFPT5, a prompt tuning based lifelong few-shot learning framework that effectively learns new tasks and domains with limited data while mitigating forgetting, outperforming existing lifelong learning approaches and advancing the field towards more generalizable language models."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty - Missing Comparison to Recent Parameter-Efficient Methods:**  \nWhile the paper proposes prompt tuning of T5 as the core adaptation mechanism, it does not compare against other recent parameter-efficient fine-tuning methods such as adapters, LoRA, or prefix tuning. These methods have shown strong performance in few-shot and continual learning settings. Without such comparisons, it is unclear whether prompt tuning is the best choice for LFLL, limiting the novelty claim of the method (see Methodology and Results sections).\n\n2. **Methodology - Lack of Ablation on Pseudo Sample Generation Quality and Quantity:**  \nThe paper emphasizes pseudo sample generation as a key component to mitigate forgetting, but does not provide ablations varying the number or quality of generated samples. It is unclear how sensitive LFPT5\u2019s performance is to the amount or fidelity of pseudo samples, or whether poor-quality samples might hurt learning (see Proposed Method and Analysis sections).\n\n3. **Methodology - Unclear Justification for KL Divergence Loss Weighting:**  \nThe KL divergence loss is introduced to maintain label consistency between previous and current models on generated samples, but the paper does not specify how the weighting of this loss relative to other losses was chosen or tuned. This hyperparameter could significantly affect performance, yet no sensitivity analysis or justification is provided (see Proposed Method).\n\n4. **Evaluation - Baselines Not Fully Matched in Parameter Budget or Training Protocol:**  \nThe fine-tuning baselines (FT) tune all model parameters, while LFPT5 tunes only prompt embeddings. However, it is unclear if the baselines were given comparable training budgets, early stopping criteria, or hyperparameter tuning. This raises concerns about the fairness of comparisons, especially since prompt tuning methods typically require fewer parameters and may converge differently (see Results and Baselines Compared).\n\n5. **Evaluation - Limited Metrics for Generation Tasks:**  \nFor summarization tasks, the evaluation relies on standard metrics (presumably ROUGE), but the paper does not report metrics that capture factual consistency or fluency, which are critical in generation. Given the challenges in pseudo sample quality for generation noted in the Analysis, more comprehensive evaluation metrics would strengthen claims (see Results and Analysis).\n\n6. **Evaluation - No Evaluation on Truly Zero-Shot or Ultra-Low-Shot Settings:**  \nThe few-shot experiments use 16 or 64 examples per task/domain, but the paper does not explore more extreme low-data regimes (e.g., 1-5 examples) or zero-shot transfer. Since LFLL aims to mimic human-like fast learning, testing on ultra-low-shot settings would better demonstrate the method\u2019s robustness (see Problem & Motivation and Results).\n\n7. **Methodology - Assumption That Task Types Are Known and Discrete:**  \nLFPT5 adds new prompt embeddings when a new task type is encountered, assuming task boundaries and types are known a priori. This is a strong assumption that may not hold in real-world continual learning where task boundaries are unknown or tasks are mixed. The paper does not discuss this limitation or potential extensions (see Proposed Method).\n\n8. **Reproducibility - Missing Details on Prompt Embedding Initialization and Size:**  \nThe paper does not specify how prompt embeddings are initialized (randomly or from pretrained vectors), nor their dimensionality or length. These design choices can impact learning and reproducibility but are not detailed in the Methodology or Experimental Setup sections.\n\n9. **Reproducibility - Lack of Hyperparameter Settings and Training Details:**  \nCritical training details such as learning rates, batch sizes, number of training steps per task/domain, and optimizer settings are not reported. Without these, reproducing the results or fairly comparing to baselines is difficult (see Empirical Validation).\n\n10. **Clarity - Insufficient Explanation of Dual Role of Prompt Embeddings:**  \nThe concept that prompt embeddings serve both as task solvers and data generators is central but somewhat confusingly explained. It is unclear whether separate prompt embeddings are learned for these roles or if the same embeddings are used interchangeably. More explicit diagrams or examples would improve clarity (see Proposed Method).\n\n11. **Limitations - No Discussion of Computational Overhead of Pseudo Sample Generation:**  \nGenerating pseudo samples before learning new domains adds computational cost, but the paper does not quantify or discuss this overhead. In practical lifelong learning scenarios, efficiency is critical, so this omission limits understanding of method scalability (see Proposed Method and Analysis).\n\n12. **Limitations - Potential Accumulation of Errors in Pseudo Samples Over Time:**  \nThe paper notes that generated pseudo samples sometimes contain errors (incorrect labels, missing tokens), but does not analyze how these errors accumulate over many sequential tasks or affect long-term forgetting. This is a significant limitation for lifelong learning that is not addressed (see Analysis).\n\n13. **Generalisability - Experiments Limited to English and Specific NLP Tasks:**  \nAll experiments are conducted on English datasets and three task types (NER, classification, summarization). The paper does not explore other languages, modalities, or more diverse NLP tasks (e.g., question answering, dialogue), limiting claims about general language intelligence (see Datasets & Tasks).\n\n14. **Generalisability - Fixed Pretrained Model Backbone Limits Adaptation to Novel Domains:**  \nLFPT5 freezes the entire T5 backbone and only tunes prompts. While this reduces overfitting, it may limit adaptation capacity to domains or tasks that require deeper model changes. The paper does not discuss this trade-off or potential extensions to partially fine-tune the backbone (see Proposed Method).\n\n15. **Clarity - Ambiguity in Terminology Around \u201cTask Solver\u201d and \u201cData Generator\u201d Prompts:**  \nThe paper uses terms like \u201ctask solver prompt\u201d and \u201cdata generator prompt\u201d but does not clearly define whether these are distinct prompt sets or conceptual roles played by the same prompt embeddings. This ambiguity makes it difficult to understand the training and inference procedures fully (see Proposed Method and Analysis)."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes LFPT5, a prompt tuning based framework for lifelong few-shot language learning that adapts a frozen T5 model to sequentially learn multiple NLP tasks and domains with limited labeled data. By leveraging pseudo sample generation and KL divergence loss to mitigate forgetting, LFPT5 achieves strong performance across sequence labeling, classification, and summarization tasks, outperforming existing lifelong learning and multitask baselines.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel unified framework for lifelong few-shot learning across multiple NLP task types\",\n      \"evidence\": \"LFPT5 handles sequence labeling, classification, and generation tasks in a single framework using prompt tuning and text-to-text reformulation.\"\n    },\n    {\n      \"point\": \"Effective mitigation of catastrophic forgetting via pseudo sample generation and KL divergence loss\",\n      \"evidence\": \"Experiments show LFPT5 outperforms regularization-based lifelong learning methods and prompt tuning without replay by generating and replaying pseudo samples.\"\n    },\n    {\n      \"point\": \"Strong empirical validation on diverse datasets and tasks\",\n      \"evidence\": \"Extensive experiments on NER, classification, and summarization datasets demonstrate consistent improvements over fine-tuning, prompt tuning, and multitask baselines.\"\n    },\n    {\n      \"point\": \"Efficient adaptation by tuning only prompt embeddings while freezing large pretrained model\",\n      \"evidence\": \"LFPT5 tunes small prompt embeddings per task/domain, reducing overfitting and parameter overhead compared to full fine-tuning.\"\n    },\n    {\n      \"point\": \"Clear problem motivation and formalization of Lifelong Few-shot Language Learning (LFLL)\",\n      \"evidence\": \"The paper defines LFLL as continual learning of few-shot tasks across domains and task types without forgetting, addressing practical challenges.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Lack of comparison to other recent parameter-efficient fine-tuning methods\",\n      \"evidence\": \"No experiments comparing prompt tuning to adapters, LoRA, or prefix tuning, limiting claims about prompt tuning's superiority.\"\n    },\n    {\n      \"point\": \"Insufficient ablation on pseudo sample generation quality and quantity\",\n      \"evidence\": \"No analysis on sensitivity to number or fidelity of generated pseudo samples and their impact on performance.\"\n    },\n    {\n      \"point\": \"Unclear justification and tuning of KL divergence loss weighting\",\n      \"evidence\": \"The paper does not specify how the KL loss weight was chosen or analyze its effect on results.\"\n    },\n    {\n      \"point\": \"Baselines may not be fairly matched in parameter budget or training protocols\",\n      \"evidence\": \"Fine-tuning baselines tune all parameters while LFPT5 tunes only prompts; unclear if training budgets and early stopping were comparable.\"\n    },\n    {\n      \"point\": \"Evaluation metrics for generation tasks are limited\",\n      \"evidence\": \"Only standard metrics (e.g., ROUGE) reported without factual consistency or fluency measures, which are important for summarization.\"\n    },\n    {\n      \"point\": \"No evaluation on truly zero-shot or ultra-low-shot settings\",\n      \"evidence\": \"Experiments use 16 or 64 examples per task; no tests on 1-5 examples or zero-shot transfer to assess robustness.\"\n    },\n    {\n      \"point\": \"Strong assumption that task types and boundaries are known and discrete\",\n      \"evidence\": \"LFPT5 adds new prompt embeddings per task type assuming known task boundaries, which may not hold in real-world continual learning.\"\n    },\n    {\n      \"point\": \"Missing details on prompt embedding initialization and size\",\n      \"evidence\": \"No specification of prompt embedding dimensionality, length, or initialization method, hindering reproducibility.\"\n    },\n    {\n      \"point\": \"Lack of critical hyperparameter and training details\",\n      \"evidence\": \"Learning rates, batch sizes, number of training steps, and optimizer settings are not reported.\"\n    },\n    {\n      \"point\": \"Ambiguity in explanation of dual role of prompt embeddings\",\n      \"evidence\": \"Unclear whether separate prompt embeddings are learned for task solving and data generation or if the same embeddings serve both roles.\"\n    },\n    {\n      \"point\": \"No discussion of computational overhead of pseudo sample generation\",\n      \"evidence\": \"The cost of generating pseudo samples before learning new domains is not quantified or analyzed.\"\n    },\n    {\n      \"point\": \"No analysis of error accumulation in pseudo samples over many tasks\",\n      \"evidence\": \"Potential degradation from incorrect or incomplete pseudo samples over sequential tasks is not addressed.\"\n    },\n    {\n      \"point\": \"Limited generalizability experiments\",\n      \"evidence\": \"All experiments are on English datasets and three NLP tasks; no exploration of other languages, modalities, or task types.\"\n    },\n    {\n      \"point\": \"Freezing entire pretrained backbone may limit adaptation to novel domains\",\n      \"evidence\": \"No discussion on trade-offs or potential benefits of partially fine-tuning the backbone for better domain adaptation.\"\n    },\n    {\n      \"point\": \"Ambiguity in terminology around 'task solver' and 'data generator' prompts\",\n      \"evidence\": \"Terms are used without clear definitions, causing confusion about training and inference procedures.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does LFPT5 compare to other parameter-efficient fine-tuning methods like adapters or LoRA in lifelong few-shot learning?\",\n      \"motivation\": \"Understanding relative performance would clarify whether prompt tuning is the best adaptation mechanism.\"\n    },\n    {\n      \"question\": \"How sensitive is LFPT5 to the quality and quantity of generated pseudo samples, and what happens if pseudo samples contain errors?\",\n      \"motivation\": \"This affects robustness and long-term forgetting mitigation in continual learning.\"\n    },\n    {\n      \"question\": \"How was the KL divergence loss weighting chosen, and how does varying it impact performance?\",\n      \"motivation\": \"Proper tuning of this hyperparameter is critical for maintaining label consistency.\"\n    },\n    {\n      \"question\": \"Can LFPT5 handle scenarios where task boundaries or types are unknown or mixed?\",\n      \"motivation\": \"Real-world continual learning often lacks clear task delineations, so this affects practical applicability.\"\n    },\n    {\n      \"question\": \"What is the computational cost of pseudo sample generation, and how does it scale with the number of tasks?\",\n      \"motivation\": \"Efficiency is important for deploying lifelong learning systems in practice.\"\n    },\n    {\n      \"question\": \"Would partial fine-tuning of the pretrained backbone improve adaptation to novel domains without sacrificing forgetting mitigation?\",\n      \"motivation\": \"Exploring this trade-off could enhance model flexibility and performance.\"\n    },\n    {\n      \"question\": \"How does LFPT5 perform in truly zero-shot or ultra-low-shot settings (e.g., 1-5 examples)?\",\n      \"motivation\": \"Demonstrating robustness in extreme low-data regimes would strengthen claims about few-shot learning.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes LFPT5, a prompt tuning based framework for lifelong few-shot language learning that adapts a frozen T5 model to sequentially learn multiple NLP tasks and domains with limited labeled data. By leveraging pseudo sample generation and KL divergence loss to mitigate forgetting, LFPT5 achieves strong performance across sequence labeling, classification, and summarization tasks, outperforming existing lifelong learning and multitask baselines.",
+    "strengths": [
+      {
+        "point": "Novel unified framework for lifelong few-shot learning across multiple NLP task types",
+        "evidence": "LFPT5 handles sequence labeling, classification, and generation tasks in a single framework using prompt tuning and text-to-text reformulation."
+      },
+      {
+        "point": "Effective mitigation of catastrophic forgetting via pseudo sample generation and KL divergence loss",
+        "evidence": "Experiments show LFPT5 outperforms regularization-based lifelong learning methods and prompt tuning without replay by generating and replaying pseudo samples."
+      },
+      {
+        "point": "Strong empirical validation on diverse datasets and tasks",
+        "evidence": "Extensive experiments on NER, classification, and summarization datasets demonstrate consistent improvements over fine-tuning, prompt tuning, and multitask baselines."
+      },
+      {
+        "point": "Efficient adaptation by tuning only prompt embeddings while freezing large pretrained model",
+        "evidence": "LFPT5 tunes small prompt embeddings per task/domain, reducing overfitting and parameter overhead compared to full fine-tuning."
+      },
+      {
+        "point": "Clear problem motivation and formalization of Lifelong Few-shot Language Learning (LFLL)",
+        "evidence": "The paper defines LFLL as continual learning of few-shot tasks across domains and task types without forgetting, addressing practical challenges."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to other recent parameter-efficient fine-tuning methods",
+        "evidence": "No experiments comparing prompt tuning to adapters, LoRA, or prefix tuning, limiting claims about prompt tuning's superiority."
+      },
+      {
+        "point": "Insufficient ablation on pseudo sample generation quality and quantity",
+        "evidence": "No analysis on sensitivity to number or fidelity of generated pseudo samples and their impact on performance."
+      },
+      {
+        "point": "Unclear justification and tuning of KL divergence loss weighting",
+        "evidence": "The paper does not specify how the KL loss weight was chosen or analyze its effect on results."
+      },
+      {
+        "point": "Baselines may not be fairly matched in parameter budget or training protocols",
+        "evidence": "Fine-tuning baselines tune all parameters while LFPT5 tunes only prompts; unclear if training budgets and early stopping were comparable."
+      },
+      {
+        "point": "Evaluation metrics for generation tasks are limited",
+        "evidence": "Only standard metrics (e.g., ROUGE) reported without factual consistency or fluency measures, which are important for summarization."
+      },
+      {
+        "point": "No evaluation on truly zero-shot or ultra-low-shot settings",
+        "evidence": "Experiments use 16 or 64 examples per task; no tests on 1-5 examples or zero-shot transfer to assess robustness."
+      },
+      {
+        "point": "Strong assumption that task types and boundaries are known and discrete",
+        "evidence": "LFPT5 adds new prompt embeddings per task type assuming known task boundaries, which may not hold in real-world continual learning."
+      },
+      {
+        "point": "Missing details on prompt embedding initialization and size",
+        "evidence": "No specification of prompt embedding dimensionality, length, or initialization method, hindering reproducibility."
+      },
+      {
+        "point": "Lack of critical hyperparameter and training details",
+        "evidence": "Learning rates, batch sizes, number of training steps, and optimizer settings are not reported."
+      },
+      {
+        "point": "Ambiguity in explanation of dual role of prompt embeddings",
+        "evidence": "Unclear whether separate prompt embeddings are learned for task solving and data generation or if the same embeddings serve both roles."
+      },
+      {
+        "point": "No discussion of computational overhead of pseudo sample generation",
+        "evidence": "The cost of generating pseudo samples before learning new domains is not quantified or analyzed."
+      },
+      {
+        "point": "No analysis of error accumulation in pseudo samples over many tasks",
+        "evidence": "Potential degradation from incorrect or incomplete pseudo samples over sequential tasks is not addressed."
+      },
+      {
+        "point": "Limited generalizability experiments",
+        "evidence": "All experiments are on English datasets and three NLP tasks; no exploration of other languages, modalities, or task types."
+      },
+      {
+        "point": "Freezing entire pretrained backbone may limit adaptation to novel domains",
+        "evidence": "No discussion on trade-offs or potential benefits of partially fine-tuning the backbone for better domain adaptation."
+      },
+      {
+        "point": "Ambiguity in terminology around 'task solver' and 'data generator' prompts",
+        "evidence": "Terms are used without clear definitions, causing confusion about training and inference procedures."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does LFPT5 compare to other parameter-efficient fine-tuning methods like adapters or LoRA in lifelong few-shot learning?",
+        "motivation": "Understanding relative performance would clarify whether prompt tuning is the best adaptation mechanism."
+      },
+      {
+        "question": "How sensitive is LFPT5 to the quality and quantity of generated pseudo samples, and what happens if pseudo samples contain errors?",
+        "motivation": "This affects robustness and long-term forgetting mitigation in continual learning."
+      },
+      {
+        "question": "How was the KL divergence loss weighting chosen, and how does varying it impact performance?",
+        "motivation": "Proper tuning of this hyperparameter is critical for maintaining label consistency."
+      },
+      {
+        "question": "Can LFPT5 handle scenarios where task boundaries or types are unknown or mixed?",
+        "motivation": "Real-world continual learning often lacks clear task delineations, so this affects practical applicability."
+      },
+      {
+        "question": "What is the computational cost of pseudo sample generation, and how does it scale with the number of tasks?",
+        "motivation": "Efficiency is important for deploying lifelong learning systems in practice."
+      },
+      {
+        "question": "Would partial fine-tuning of the pretrained backbone improve adaptation to novel domains without sacrificing forgetting mitigation?",
+        "motivation": "Exploring this trade-off could enhance model flexibility and performance."
+      },
+      {
+        "question": "How does LFPT5 perform in truly zero-shot or ultra-low-shot settings (e.g., 1-5 examples)?",
+        "motivation": "Demonstrating robustness in extreme low-data regimes would strengthen claims about few-shot learning."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to other recent parameter-efficient fine-tuning methods. No experiments comparing prompt tuning to adapters, LoRA, or prefix tuning, limiting claims about prompt tuning's superiority",
+    "point_002": "Insufficient ablation on pseudo sample generation quality and quantity. No analysis on sensitivity to number or fidelity of generated pseudo samples and their impact on performance",
+    "point_003": "Unclear justification and tuning of KL divergence loss weighting. The paper does not specify how the KL loss weight was chosen or analyze its effect on results",
+    "point_004": "Baselines may not be fairly matched in parameter budget or training protocols. Fine-tuning baselines tune all parameters while LFPT5 tunes only prompts; unclear if training budgets and early stopping were comparable",
+    "point_005": "Evaluation metrics for generation tasks are limited. Only standard metrics (e.g., ROUGE) reported without factual consistency or fluency measures, which are important for summarization",
+    "point_006": "No evaluation on truly zero-shot or ultra-low-shot settings. Experiments use 16 or 64 examples per task; no tests on 1-5 examples or zero-shot transfer to assess robustness",
+    "point_007": "Strong assumption that task types and boundaries are known and discrete. LFPT5 adds new prompt embeddings per task type assuming known task boundaries, which may not hold in real-world continual learning",
+    "point_008": "Missing details on prompt embedding initialization and size. No specification of prompt embedding dimensionality, length, or initialization method, hindering reproducibility",
+    "point_009": "Lack of critical hyperparameter and training details. Learning rates, batch sizes, number of training steps, and optimizer settings are not reported",
+    "point_010": "Ambiguity in explanation of dual role of prompt embeddings. Unclear whether separate prompt embeddings are learned for task solving and data generation or if the same embeddings serve both roles",
+    "point_011": "No discussion of computational overhead of pseudo sample generation. The cost of generating pseudo samples before learning new domains is not quantified or analyzed",
+    "point_012": "No analysis of error accumulation in pseudo samples over many tasks. Potential degradation from incorrect or incomplete pseudo samples over sequential tasks is not addressed",
+    "point_013": "Limited generalizability experiments. All experiments are on English datasets and three NLP tasks; no exploration of other languages, modalities, or task types",
+    "point_014": "Freezing entire pretrained backbone may limit adaptation to novel domains. No discussion on trade-offs or potential benefits of partially fine-tuning the backbone for better domain adaptation",
+    "point_015": "Ambiguity in terminology around 'task solver' and 'data generator' prompts. Terms are used without clear definitions, causing confusion about training and inference procedures"
+  }
+}

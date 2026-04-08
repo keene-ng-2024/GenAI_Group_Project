@@ -1,0 +1,154 @@
+{
+  "paper_id": "paper_0078",
+  "title": "Autoregressive Entity Retrieval ",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 57.34,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nEntity retrieval\u2014the task of retrieving relevant entities from large Knowledge Bases (KBs) such as Wikipedia given a textual query\u2014is fundamental for many knowledge-intensive NLP applications, including entity linking, open-domain question answering, and chatbots. Current state-of-the-art approaches typically treat entity retrieval as a multi-class classification problem over atomic entity labels. These methods encode entities into dense vector representations (using entity meta-information like descriptions) and compute relevance via dot products with query embeddings.\n\nHowever, this classification-based approach suffers from several key limitations:\n\n1. **Limited Interaction Modeling:** The dot product between dense vectors may miss fine-grained interactions between the query context and entity meta-information, unless costly cross-encoders are used for re-ranking.\n\n2. **Large Memory Footprint:** Storing dense embeddings for millions of entities requires substantial memory (e.g., ~24GB for 6M Wikipedia pages with 1024-dimensional vectors), and this grows linearly with the number of entities.\n\n3. **Training Complexity:** Computing exact softmax over all entities is expensive, so negative sampling or subsampling is used, which requires careful tuning of hard negatives.\n\n4. **Cold-Start Problem:** Existing systems struggle to represent new entities lacking sufficient meta-information.\n\nAdditionally, treating entity identifiers as atomic labels ignores the compositional and structured nature of entity names (e.g., Wikipedia article titles), which often have predictable interactions with mention contexts.\n\n---\n\n### Proposed Method\n\nThe paper introduces **GENRE (Generative ENtity REtrieval)**, a novel paradigm that formulates entity retrieval as a sequence-to-sequence generation problem. Instead of classifying among atomic entity labels, GENRE autoregressively generates entity names token-by-token conditioned on the input context.\n\nKey aspects of GENRE include:\n\n- **Autoregressive Generation:** Using a transformer-based encoder-decoder architecture (fine-tuned from BART), GENRE models the probability of an entity name as a sequence, allowing direct cross-encoding of context and entity name tokens to capture fine-grained interactions.\n\n- **Constrained Beam Search Decoding:** To ensure generated outputs correspond to valid entity names, GENRE employs constrained beam search guided by a prefix tree (trie) of all valid entity names. This restricts generation to valid entity identifiers and enables efficient approximate search.\n\n- **Memory Efficiency:** The model parameters scale with vocabulary size rather than entity count, resulting in a significantly smaller memory footprint (orders of magnitude smaller than dense vector-based methods).\n\n- **Exact Softmax Computation:** The autoregressive factorization allows exact computation of the softmax loss over the vocabulary at each token generation step, eliminating the need for negative sampling.\n\n- **Extensibility to New Entities:** Since only entity names are used (no additional meta-information), new entities can be added by simply appending their names to the candidate set without retraining.\n\n- **Extension to End-to-End Entity Linking:** GENRE is extended to jointly detect mentions and link them to entities by generating annotated spans with special tokens, using a dynamically computed trie for constrained decoding.\n\n---\n\n### Results\n\nGENRE was extensively evaluated on over 20 datasets spanning three main tasks:\n\n1. **Entity Disambiguation (ED):** Using standard datasets and candidate sets, GENRE achieved state-of-the-art or highly competitive results, with a small improvement (+0.8 F1) over previous best systems.\n\n2. **End-to-End Entity Linking (EL):** GENRE outperformed existing methods significantly, especially on out-of-domain datasets (e.g., +13 F1 on Derczynski, +4.7 on KORE50). It was the best in-domain model on AIDA-CoNLL. Some limitations were noted on datasets with coreference annotations, which were not explicitly modeled.\n\n3. **Page-Level Document Retrieval (DR):** On the KILT benchmark (five diverse tasks using Wikipedia as the KB), GENRE achieved remarkable improvements, outperforming all baselines by +13.7 R-precision points on average. Notably, GENRE used a single model trained jointly on all tasks, whereas baselines often trained separate models per task.\n\nAdditional analyses demonstrated:\n\n- **Memory Footprint:** GENRE requires approximately 12 times less memory than BLINK and nearly 30 times less than DPR, due to storing only a prefix tree of entity names rather than dense embeddings.\n\n- **Exploitation of Structured Name Space:** Experiments showed that generating meaningful entity names (versus numeric IDs) is crucial for performance, highlighting the benefit of modeling compositional and structured entity names.\n\n- **Cold-Start Capability:** GENRE successfully retrieved newly added Wikipedia entities unseen during training by relying solely on their names, correctly classifying 45.2% of mentions without entity descriptions, a scenario where existing systems fail.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Paradigm for Entity Retrieval:** Casting entity retrieval as an autoregressive sequence generation problem that generates entity names token-by-token conditioned on context.\n\n2. **Efficient and Effective Model Architecture:** Leveraging a pre-trained sequence-to-sequence transformer (BART) fine-tuned for entity name generation, enabling direct cross-encoding of context and entity names.\n\n3. **Constrained Decoding Mechanism:** Introducing constrained beam search with a prefix tree to ensure valid entity name generation and efficient approximate search over millions of entities.\n\n4. **Reduced Memory Footprint:** Achieving orders of magnitude reduction in memory requirements compared to dense vector-based retrieval systems.\n\n5. **Exact Softmax Training Without Negative Sampling:** Utilizing the autoregressive formulation to compute exact softmax loss efficiently, avoiding the complexity of negative sampling.\n\n6. **Extensibility to New Entities:** Demonstrating the ability to incorporate new entities by simply adding their names to the candidate set, addressing cold-start problems.\n\n7. **Strong Empirical Performance:** Establishing new state-of-the-art or highly competitive results across a wide range of entity retrieval tasks, including entity disambiguation, end-to-end entity linking, and document retrieval.\n\n8. **Open-Source Release:** Committing to release code and pre-processed data to facilitate reproducibility and further research.\n\n---\n\n**In summary,** GENRE presents a fundamentally different approach to entity retrieval by generating entity names autoregressively, overcoming key limitations of classification-based methods, and achieving superior performance with significantly reduced memory usage and enhanced flexibility."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty - Missing Comparison to Recent Generative Retrieval Models:**  \nWhile the paper positions GENRE as a novel autoregressive approach for entity retrieval, it does not sufficiently discuss or compare to recent contemporaneous works that also explore generative retrieval or sequence-to-sequence models for retrieval tasks (e.g., models generating document identifiers or entity mentions). This omission weakens the claim of novelty and leaves unclear how GENRE advances beyond or differs from these related approaches.\n\n2. **Methodology - Lack of Ablation on Constrained Beam Search Parameters:**  \nThe constrained beam search decoding guided by a prefix tree is a core novelty (Section: Proposed Method). However, the paper does not provide ablations or sensitivity analyses on beam size, trie construction details, or how pruning affects recall and efficiency. Without this, it is unclear how robust or sensitive GENRE is to these decoding hyperparameters.\n\n3. **Methodology - No Analysis of Error Modes in Entity Name Generation:**  \nThe paper claims that generating entity names token-by-token allows fine-grained interaction modeling, but it does not analyze common failure cases such as partial or incorrect name generation, or how often the model generates valid but incorrect entities. Such analysis would clarify the practical reliability of the autoregressive approach.\n\n4. **Evaluation - Baselines May Not Be Fully Comparable in Memory Footprint:**  \nThe memory footprint comparison (Results: Memory Footprint) shows GENRE requires 12x to 30x less memory than BLINK and DPR. However, the paper does not clarify whether baseline models use similar hardware optimizations or compression techniques, nor does it account for the memory used by the prefix tree in GENRE. This raises questions about the fairness and completeness of the memory comparison.\n\n5. **Evaluation - Limited Discussion on Coreference and Contextual Challenges:**  \nGENRE underperforms on datasets with coreference annotations (Results: End-to-End EL). The paper acknowledges this but does not explore or propose extensions to handle coreference or multi-mention contexts. This is a significant limitation for real-world entity linking scenarios where coreference is common.\n\n6. **Evaluation - Metrics Focused Mainly on F1 and R-Precision:**  \nThe evaluation primarily reports F1 and R-precision scores. There is no discussion of other relevant metrics such as latency, throughput, or decoding speed, which are critical for practical deployment of autoregressive models, especially given the constrained beam search over millions of entities.\n\n7. **Evaluation - Joint Training on KILT Tasks May Confound Results:**  \nGENRE is trained jointly on all KILT tasks, while baselines are trained separately per task. This difference in training regime could contribute to performance gains, but the paper does not ablate or discuss this factor, making it difficult to isolate the impact of the model architecture itself.\n\n8. **Reproducibility - Missing Details on Prefix Tree Construction and Storage:**  \nThe paper states that a prefix tree of all entity names is used for constrained decoding but does not provide implementation details such as trie construction algorithms, memory requirements, or how updates (e.g., adding new entities) are handled efficiently. This omission hinders reproducibility and practical adoption.\n\n9. **Reproducibility - Insufficient Hyperparameter and Training Details:**  \nKey training details such as learning rates, batch sizes, number of training steps, and hardware used are not explicitly stated. Also, it is unclear how the exact softmax over large vocabularies is implemented efficiently. These details are essential for replicating the reported results.\n\n10. **Clarity - Ambiguous Description of Entity Name Tokenization:**  \nThe paper does not clearly specify how entity names are tokenized for generation (e.g., word-level, subword-level, or character-level tokens). Since tokenization affects model vocabulary size and generation quality, this lack of clarity impedes understanding and reproduction.\n\n11. **Clarity - Insufficient Explanation of End-to-End Entity Linking Extension:**  \nThe extension to jointly detect mentions and link entities by generating annotated spans with special tokens is briefly described but lacks detailed explanation or examples. This makes it difficult to grasp how mention boundaries are predicted and how the trie is dynamically computed during decoding.\n\n12. **Limitations - No Discussion of Scalability to Larger or More Diverse KBs:**  \nWhile GENRE is evaluated on Wikipedia-based datasets, the paper does not discuss how the approach would scale to larger or more heterogeneous KBs with more complex entity naming conventions, multilingual entities, or noisy entity names.\n\n13. **Limitations - Potential Bias Toward Entities with Distinctive Names:**  \nSince GENRE relies solely on entity names without meta-information, it may struggle with entities that have ambiguous or very common names. The paper does not analyze or acknowledge this potential bias or provide mitigation strategies.\n\n14. **Generalisability - Unclear Performance on Non-Wikipedia KBs or Domains:**  \nAll experiments focus on Wikipedia as the KB. It remains unclear whether GENRE\u2019s approach generalizes to other KBs with different naming conventions, entity distributions, or domain-specific vocabularies, limiting the claimed broad applicability.\n\n15. **Generalisability - Cold-Start Evaluation Limited to Newly Added Wikipedia Entities:**  \nThe cold-start capability is demonstrated only on newly added Wikipedia entities. The paper does not test or discuss performance on entirely new domains or languages, which would better demonstrate the model\u2019s extensibility and robustness in practical scenarios."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"The paper introduces GENRE, a novel autoregressive sequence-to-sequence model for entity retrieval that generates entity names token-by-token conditioned on input context. By leveraging constrained beam search with a prefix tree, GENRE achieves strong empirical performance across entity disambiguation, end-to-end entity linking, and document retrieval tasks, while significantly reducing memory footprint compared to dense vector-based methods.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel formulation of entity retrieval as autoregressive entity name generation\",\n      \"evidence\": \"GENRE models entity retrieval by generating entity names token-by-token, enabling fine-grained interaction between context and entity names.\"\n    },\n    {\n      \"point\": \"Efficient constrained decoding using prefix tree guided beam search\",\n      \"evidence\": \"The use of a prefix tree to constrain beam search ensures generated outputs correspond to valid entity names and enables efficient approximate search over millions of entities.\"\n    },\n    {\n      \"point\": \"Significant memory savings compared to dense embedding retrieval methods\",\n      \"evidence\": \"GENRE requires 12x to 30x less memory than BLINK and DPR by storing only a prefix tree of entity names rather than large dense embeddings.\"\n    },\n    {\n      \"point\": \"Strong empirical results across diverse datasets and tasks\",\n      \"evidence\": \"GENRE achieves state-of-the-art or highly competitive results on over 20 datasets spanning entity disambiguation, end-to-end entity linking, and document retrieval, including large improvements on out-of-domain and cold-start scenarios.\"\n    },\n    {\n      \"point\": \"Demonstrated cold-start capability for newly added entities\",\n      \"evidence\": \"GENRE correctly retrieves 45.2% of mentions for new Wikipedia entities unseen during training by relying solely on entity names.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Insufficient comparison to recent generative retrieval models\",\n      \"evidence\": \"The paper does not discuss or compare GENRE to contemporaneous generative retrieval or sequence-to-sequence retrieval approaches, weakening the novelty claim.\"\n    },\n    {\n      \"point\": \"Lack of ablation studies on constrained beam search parameters\",\n      \"evidence\": \"No sensitivity analysis is provided on beam size, trie construction, or pruning effects on recall and efficiency.\"\n    },\n    {\n      \"point\": \"No analysis of error modes in entity name generation\",\n      \"evidence\": \"The paper does not analyze failure cases such as partial or incorrect entity name generation or generation of valid but incorrect entities.\"\n    },\n    {\n      \"point\": \"Memory footprint comparison may be unfair or incomplete\",\n      \"evidence\": \"Baseline models' hardware optimizations or compression techniques are not clarified, nor is the memory cost of the prefix tree in GENRE accounted for.\"\n    },\n    {\n      \"point\": \"Limited discussion on handling coreference and multi-mention contexts\",\n      \"evidence\": \"GENRE underperforms on datasets with coreference annotations but the paper does not explore extensions to address this limitation.\"\n    },\n    {\n      \"point\": \"Evaluation metrics omit latency, throughput, and decoding speed\",\n      \"evidence\": \"Given the autoregressive nature and constrained beam search, practical deployment metrics are critical but not reported.\"\n    },\n    {\n      \"point\": \"Joint training on all KILT tasks may confound performance gains\",\n      \"evidence\": \"Baselines are trained separately per task, but no ablation isolates the effect of joint training versus model architecture.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing implementation details\",\n      \"evidence\": \"Details on prefix tree construction, storage, updates, hyperparameters, training steps, and efficient exact softmax computation are lacking.\"\n    },\n    {\n      \"point\": \"Ambiguous description of entity name tokenization\",\n      \"evidence\": \"The paper does not specify whether tokenization is word-, subword-, or character-level, which affects vocabulary size and generation quality.\"\n    },\n    {\n      \"point\": \"Insufficient explanation of end-to-end entity linking extension\",\n      \"evidence\": \"The method for generating annotated spans with special tokens and dynamic trie computation during decoding is briefly described without examples.\"\n    },\n    {\n      \"point\": \"No discussion of scalability to larger or more diverse knowledge bases\",\n      \"evidence\": \"The approach is only evaluated on Wikipedia-based datasets, with no analysis on multilingual, noisy, or heterogeneous KBs.\"\n    },\n    {\n      \"point\": \"Potential bias toward entities with distinctive names not addressed\",\n      \"evidence\": \"GENRE relies solely on entity names and may struggle with ambiguous or common names, but this limitation is not analyzed.\"\n    },\n    {\n      \"point\": \"Generalisability to non-Wikipedia domains remains unclear\",\n      \"evidence\": \"All experiments focus on Wikipedia; performance on other KBs or domain-specific vocabularies is not evaluated.\"\n    },\n    {\n      \"point\": \"Cold-start evaluation limited to new Wikipedia entities only\",\n      \"evidence\": \"No experiments test cold-start on new domains or languages, limiting claims of extensibility.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does GENRE compare to other recent generative retrieval or sequence-to-sequence retrieval models?\",\n      \"motivation\": \"Understanding relative novelty and advantages requires direct comparison to contemporaneous approaches.\"\n    },\n    {\n      \"question\": \"What is the impact of constrained beam search hyperparameters on recall, efficiency, and robustness?\",\n      \"motivation\": \"Ablations would clarify sensitivity and guide practical deployment.\"\n    },\n    {\n      \"question\": \"How does GENRE handle ambiguous entity names or entities with common names?\",\n      \"motivation\": \"Addressing potential biases is important for real-world applicability.\"\n    },\n    {\n      \"question\": \"Can the approach scale to larger, multilingual, or noisier knowledge bases beyond Wikipedia?\",\n      \"motivation\": \"Demonstrating scalability and generalisability is critical for broader adoption.\"\n    },\n    {\n      \"question\": \"What are the latency and throughput characteristics of GENRE during inference?\",\n      \"motivation\": \"Practical deployment requires understanding computational efficiency of autoregressive constrained decoding.\"\n    },\n    {\n      \"question\": \"How does joint training on multiple KILT tasks affect performance compared to separate training?\",\n      \"motivation\": \"Isolating the effect of training regime is necessary to attribute gains to model architecture.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "The paper introduces GENRE, a novel autoregressive sequence-to-sequence model for entity retrieval that generates entity names token-by-token conditioned on input context. By leveraging constrained beam search with a prefix tree, GENRE achieves strong empirical performance across entity disambiguation, end-to-end entity linking, and document retrieval tasks, while significantly reducing memory footprint compared to dense vector-based methods.",
+    "strengths": [
+      {
+        "point": "Novel formulation of entity retrieval as autoregressive entity name generation",
+        "evidence": "GENRE models entity retrieval by generating entity names token-by-token, enabling fine-grained interaction between context and entity names."
+      },
+      {
+        "point": "Efficient constrained decoding using prefix tree guided beam search",
+        "evidence": "The use of a prefix tree to constrain beam search ensures generated outputs correspond to valid entity names and enables efficient approximate search over millions of entities."
+      },
+      {
+        "point": "Significant memory savings compared to dense embedding retrieval methods",
+        "evidence": "GENRE requires 12x to 30x less memory than BLINK and DPR by storing only a prefix tree of entity names rather than large dense embeddings."
+      },
+      {
+        "point": "Strong empirical results across diverse datasets and tasks",
+        "evidence": "GENRE achieves state-of-the-art or highly competitive results on over 20 datasets spanning entity disambiguation, end-to-end entity linking, and document retrieval, including large improvements on out-of-domain and cold-start scenarios."
+      },
+      {
+        "point": "Demonstrated cold-start capability for newly added entities",
+        "evidence": "GENRE correctly retrieves 45.2% of mentions for new Wikipedia entities unseen during training by relying solely on entity names."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to recent generative retrieval models",
+        "evidence": "The paper does not discuss or compare GENRE to contemporaneous generative retrieval or sequence-to-sequence retrieval approaches, weakening the novelty claim."
+      },
+      {
+        "point": "Lack of ablation studies on constrained beam search parameters",
+        "evidence": "No sensitivity analysis is provided on beam size, trie construction, or pruning effects on recall and efficiency."
+      },
+      {
+        "point": "No analysis of error modes in entity name generation",
+        "evidence": "The paper does not analyze failure cases such as partial or incorrect entity name generation or generation of valid but incorrect entities."
+      },
+      {
+        "point": "Memory footprint comparison may be unfair or incomplete",
+        "evidence": "Baseline models' hardware optimizations or compression techniques are not clarified, nor is the memory cost of the prefix tree in GENRE accounted for."
+      },
+      {
+        "point": "Limited discussion on handling coreference and multi-mention contexts",
+        "evidence": "GENRE underperforms on datasets with coreference annotations but the paper does not explore extensions to address this limitation."
+      },
+      {
+        "point": "Evaluation metrics omit latency, throughput, and decoding speed",
+        "evidence": "Given the autoregressive nature and constrained beam search, practical deployment metrics are critical but not reported."
+      },
+      {
+        "point": "Joint training on all KILT tasks may confound performance gains",
+        "evidence": "Baselines are trained separately per task, but no ablation isolates the effect of joint training versus model architecture."
+      },
+      {
+        "point": "Reproducibility hindered by missing implementation details",
+        "evidence": "Details on prefix tree construction, storage, updates, hyperparameters, training steps, and efficient exact softmax computation are lacking."
+      },
+      {
+        "point": "Ambiguous description of entity name tokenization",
+        "evidence": "The paper does not specify whether tokenization is word-, subword-, or character-level, which affects vocabulary size and generation quality."
+      },
+      {
+        "point": "Insufficient explanation of end-to-end entity linking extension",
+        "evidence": "The method for generating annotated spans with special tokens and dynamic trie computation during decoding is briefly described without examples."
+      },
+      {
+        "point": "No discussion of scalability to larger or more diverse knowledge bases",
+        "evidence": "The approach is only evaluated on Wikipedia-based datasets, with no analysis on multilingual, noisy, or heterogeneous KBs."
+      },
+      {
+        "point": "Potential bias toward entities with distinctive names not addressed",
+        "evidence": "GENRE relies solely on entity names and may struggle with ambiguous or common names, but this limitation is not analyzed."
+      },
+      {
+        "point": "Generalisability to non-Wikipedia domains remains unclear",
+        "evidence": "All experiments focus on Wikipedia; performance on other KBs or domain-specific vocabularies is not evaluated."
+      },
+      {
+        "point": "Cold-start evaluation limited to new Wikipedia entities only",
+        "evidence": "No experiments test cold-start on new domains or languages, limiting claims of extensibility."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does GENRE compare to other recent generative retrieval or sequence-to-sequence retrieval models?",
+        "motivation": "Understanding relative novelty and advantages requires direct comparison to contemporaneous approaches."
+      },
+      {
+        "question": "What is the impact of constrained beam search hyperparameters on recall, efficiency, and robustness?",
+        "motivation": "Ablations would clarify sensitivity and guide practical deployment."
+      },
+      {
+        "question": "How does GENRE handle ambiguous entity names or entities with common names?",
+        "motivation": "Addressing potential biases is important for real-world applicability."
+      },
+      {
+        "question": "Can the approach scale to larger, multilingual, or noisier knowledge bases beyond Wikipedia?",
+        "motivation": "Demonstrating scalability and generalisability is critical for broader adoption."
+      },
+      {
+        "question": "What are the latency and throughput characteristics of GENRE during inference?",
+        "motivation": "Practical deployment requires understanding computational efficiency of autoregressive constrained decoding."
+      },
+      {
+        "question": "How does joint training on multiple KILT tasks affect performance compared to separate training?",
+        "motivation": "Isolating the effect of training regime is necessary to attribute gains to model architecture."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to recent generative retrieval models. The paper does not discuss or compare GENRE to contemporaneous generative retrieval or sequence-to-sequence retrieval approaches, weakening the novelty claim",
+    "point_002": "Lack of ablation studies on constrained beam search parameters. No sensitivity analysis is provided on beam size, trie construction, or pruning effects on recall and efficiency",
+    "point_003": "No analysis of error modes in entity name generation. The paper does not analyze failure cases such as partial or incorrect entity name generation or generation of valid but incorrect entities",
+    "point_004": "Memory footprint comparison may be unfair or incomplete. Baseline models' hardware optimizations or compression techniques are not clarified, nor is the memory cost of the prefix tree in GENRE accounted for",
+    "point_005": "Limited discussion on handling coreference and multi-mention contexts. GENRE underperforms on datasets with coreference annotations but the paper does not explore extensions to address this limitation",
+    "point_006": "Evaluation metrics omit latency, throughput, and decoding speed. Given the autoregressive nature and constrained beam search, practical deployment metrics are critical but not reported",
+    "point_007": "Joint training on all KILT tasks may confound performance gains. Baselines are trained separately per task, but no ablation isolates the effect of joint training versus model architecture",
+    "point_008": "Reproducibility hindered by missing implementation details. Details on prefix tree construction, storage, updates, hyperparameters, training steps, and efficient exact softmax computation are lacking",
+    "point_009": "Ambiguous description of entity name tokenization. The paper does not specify whether tokenization is word-, subword-, or character-level, which affects vocabulary size and generation quality",
+    "point_010": "Insufficient explanation of end-to-end entity linking extension. The method for generating annotated spans with special tokens and dynamic trie computation during decoding is briefly described without examples",
+    "point_011": "No discussion of scalability to larger or more diverse knowledge bases. The approach is only evaluated on Wikipedia-based datasets, with no analysis on multilingual, noisy, or heterogeneous KBs",
+    "point_012": "Potential bias toward entities with distinctive names not addressed. GENRE relies solely on entity names and may struggle with ambiguous or common names, but this limitation is not analyzed",
+    "point_013": "Generalisability to non-Wikipedia domains remains unclear. All experiments focus on Wikipedia; performance on other KBs or domain-specific vocabularies is not evaluated",
+    "point_014": "Cold-start evaluation limited to new Wikipedia entities only. No experiments test cold-start on new domains or languages, limiting claims of extensibility"
+  }
+}
