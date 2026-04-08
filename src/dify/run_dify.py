@@ -32,9 +32,12 @@ load_dotenv()
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 
-DIFY_API_KEY = os.environ["DIFY_API_KEY"]
+DIFY_API_KEYS = {
+    "single_critic": os.environ["DIFY_API_KEY_SINGLE"],
+    "dual_critic": os.environ["DIFY_API_KEY_DUAL"],
+}
+
 DIFY_BASE_URL = "https://api.dify.ai/v1"
-HEADERS = {"Authorization": f"Bearer {DIFY_API_KEY}"}
 
 CHECKPOINT_FILE = Path("data/checkpoint.json")
 PAPERS_DIR = Path("data/papers")
@@ -70,14 +73,14 @@ def find_pdf(title: str, pdf_files: list[Path]) -> Path | None:
 
 # ── Dify API calls ──────────────────────────────────────────────────────────────
 
-def upload_file(pdf_path: Path) -> str | None:
+def upload_file(pdf_path: Path, headers: dict) -> str | None:
     """Upload a PDF to Dify and return the upload_file_id."""
     url = f"{DIFY_BASE_URL}/files/upload"
     try:
         with open(pdf_path, "rb") as f:
             response = requests.post(
                 url,
-                headers=HEADERS,
+                headers=headers,
                 files={"file": (pdf_path.name, f, "application/pdf")},
                 data={"user": "automation"},
             )
@@ -88,7 +91,7 @@ def upload_file(pdf_path: Path) -> str | None:
         return None
 
 
-def run_workflow(upload_file_id: str) -> dict | None:
+def run_workflow(upload_file_id: str, headers: dict) -> dict | None:
     """Run the Dify workflow using streaming mode to avoid gateway timeouts."""
     url = f"{DIFY_BASE_URL}/workflows/run"
     payload = {
@@ -105,7 +108,7 @@ def run_workflow(upload_file_id: str) -> dict | None:
     try:
         response = requests.post(
             url,
-            headers={**HEADERS, "Content-Type": "application/json"},
+            headers={**headers, "Content-Type": "application/json"},
             json=payload,
             stream=True,
             timeout=600,  # 10 minutes total
@@ -186,6 +189,12 @@ def main(mode: str) -> None:
         print(f"Unknown mode '{mode}'. Use 'single_critic' or 'dual_critic'.")
         sys.exit(1)
 
+    api_key = DIFY_API_KEYS[mode]
+    if not api_key:
+        print(f"[ERROR] DIFY_API_KEY_{'SINGLE' if mode == 'single_critic' else 'DUAL'} is not set in .env")
+        sys.exit(1)
+    headers = {"Authorization": f"Bearer {api_key}"}
+
     output_dir = Path(f"results/dify/{mode}")
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -224,13 +233,13 @@ def main(mode: str) -> None:
         print(f"    PDF: {pdf_path.name}")
 
         # Upload PDF
-        upload_id = upload_file(pdf_path)
+        upload_id = upload_file(pdf_path, headers)
         if upload_id is None:
             failed += 1
             continue
 
         # Run workflow
-        result = run_workflow(upload_id)
+        result = run_workflow(upload_id, headers)
         if result is None:
             failed += 1
             time.sleep(SLEEP_BETWEEN_PAPERS)
