@@ -60,65 +60,48 @@ class CritiqueState(TypedDict):
 # ── System prompts (same as agents.py for fair comparison) ─────────────────────
 
 READER_SYSTEM = (
-    "You are a careful academic reader. "
-    "When given a paper (or section of a paper), produce a structured "
-    "summary with the following clearly labelled sections:\n\n"
-    "## Problem & Motivation\n"
-    "## Proposed Method\n"
-    "## Methods\n"
-    "## Results\n"
-    "## Claimed Contributions\n\n"
-    "Be factual and concise. Include specific numbers from experiments."
+    "You are a Reader agent. Read the following paper and produce a structured summary. Cover:\n"
+    "Problem & Motivation, Proposed Method, Results, Claimed Contributions."
 )
 
 CRITIC_SYSTEM = (
-    "You are a rigorous peer reviewer for a top-tier ML/AI venue. "
-    "Given a paper summary, identify substantive weaknesses in: "
-    "novelty, methodology, evaluation, clarity, and reproducibility. "
-    "For each point give: (a) the issue, (b) why it matters, "
-    "(c) what evidence from the paper supports your concern. "
-    "Be specific and actionable."
+    "You are a Critic agent reviewing an AI/ML research paper."
+)
+
+CRITIC_REVISION_SYSTEM = (
+    "You are the Critic agent revising your review based on Auditor feedback."
 )
 
 AUDITOR_SYSTEM = (
-    "You are a senior programme committee member auditing a peer review. "
-    "Your job is to challenge poorly-supported critique points: "
-    "ask for concrete evidence, flag over-interpretations, and identify "
-    "any points that are actually addressed in the paper. "
-    "Also highlight genuine issues the Critic may have missed. "
-    "Be constructive but demanding."
+    "You are an Auditor agent. Your job is to make the Critic's review stronger."
 )
 
 STRUCTURED_OUTPUT_SCHEMA = """\
 {
-  "summary": "<2-3 sentence paper summary>",
+  "summary": "2-3 sentence paper summary",
   "strengths": [
-    {"point": "<strength>", "evidence": "<supporting evidence from paper>"}
+    {"point": "strength point", "evidence": "evidence from paper"},
+    {"point": "strength point", "evidence": "evidence from paper"}
   ],
   "weaknesses": [
-    {"point": "<weakness>", "evidence": "<supporting evidence from paper>"}
+    {"point": "weakness point", "evidence": "evidence from paper"},
+    {"point": "weakness point", "evidence": "evidence from paper"}
   ],
   "questions": [
-    {"question": "<question for authors>", "motivation": "<why this matters>"}
+    {"question": "open question", "motivation": "why this matters"},
+    {"question": "open question", "motivation": "why this matters"}
   ],
   "scores": {
-    "correctness": <int 1-5>,
-    "novelty": <int 1-5>,
-    "recommendation": "<accept|borderline|reject>",
-    "confidence": <int 1-5>
+    "correctness": 3,
+    "novelty": 3,
+    "recommendation": "borderline",
+    "confidence": 3
   }
 }"""
 
 SUMMARISER_SYSTEM = (
-    "You are a senior editor. Given a debate between a Critic and Auditor "
-    "about a paper, synthesise their discussion into a final structured review.\n\n"
-    "Output ONLY valid JSON matching this exact schema:\n"
-    f"{STRUCTURED_OUTPUT_SCHEMA}\n\n"
-    "Rules:\n"
-    "- Include 3-8 strengths and 3-8 weaknesses (deduplicated).\n"
-    "- Include 2-5 questions for the authors.\n"
-    "- Base scores on the debate content.\n"
-    "- Output nothing except the JSON object. No markdown fences, no commentary."
+    "You are a Summariser agent. Consolidate the critique into a final structured review.\n"
+    "Output ONLY valid JSON, no other text, no markdown code fences."
 )
 
 
@@ -179,7 +162,7 @@ def make_reader_node(model: str):
     def reader_node(state: CritiqueState) -> dict:
         text, in_t, out_t = _call_llm(
             system_prompt=READER_SYSTEM,
-            user_message=f"Please summarise the following paper:\n\nTitle: {state['title']}\n\n{state['paper_text']}",
+            user_message=f"Paper:\n{state['paper_text']}",
             model=model,
         )
         print(f"    [Reader] {text[:200]}{'…' if len(text) > 200 else ''}")
@@ -195,19 +178,53 @@ def make_critic_node(model: str):
     def critic_node(state: CritiqueState) -> dict:
         if state["round_num"] == 0:
             user_msg = (
-                f"Here is the paper summary:\n\n{state['summary']}\n\n"
-                "Now list your critique points."
+                f"Paper summary:\n{state['summary']}\n\n"
+                "Generate 12-15 specific critique points.\n\n"
+                "For each point you MUST:\n"
+                "- Be concrete and specific, not generic\n"
+                "- Reference specific sections, tables, or claims from the paper\n"
+                "- Focus on ONE issue per point\n\n"
+                "Cover ALL of these dimensions:\n"
+                "- Novelty: what prior work is missing or inadequately compared?\n"
+                "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
+                "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
+                "- Reproducibility: what implementation details are missing?\n"
+                "- Clarity: what is confusing or poorly explained in the paper?\n"
+                "- Limitations: what does the method fail to address or acknowledge?\n"
+                "- Generalisability: does it work beyond the tested settings?\n\n"
+                "IMPORTANT: Only critique what is actually in the paper.\n"
+                "Do NOT invent references, section numbers, or claims not explicitly stated."
             )
+            system = CRITIC_SYSTEM
             role_label = "Critic (initial)"
         else:
             user_msg = (
-                f"The Auditor has challenged some of your points:\n\n{state['audit_feedback']}\n\n"
-                "Revise or defend your critique points accordingly."
+                f"Original paper summary:\n{state['summary']}\n\n"
+                f"Your original critique:\n{state['critique']}\n\n"
+                f"Auditor feedback:\n{state['audit_feedback']}\n\n"
+                "Now produce an improved critique that:\n"
+                "- Fixes all weak or vague points the Auditor flagged\n"
+                "- Adds the missing issues the Auditor identified\n"
+                "- Keeps all strong original points\n"
+                "- Generates 12-15 total points\n\n"
+                "For each point you MUST:\n"
+                "- Be concrete and specific, not generic\n"
+                "- Reference specific sections, tables, or claims from the paper\n"
+                "- Focus on ONE issue per point\n\n"
+                "Cover ALL of these dimensions:\n"
+                "- Novelty: what prior work is missing or inadequately compared?\n"
+                "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
+                "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
+                "- Reproducibility: what implementation details are missing?\n"
+                "- Clarity: what is confusing or poorly explained in the paper?\n"
+                "- Limitations: what does the method fail to address or acknowledge?\n"
+                "- Generalisability: does it work beyond the tested settings?"
             )
+            system = CRITIC_REVISION_SYSTEM
             role_label = f"Critic (round {state['round_num']})"
 
         text, in_t, out_t = _call_llm(
-            system_prompt=CRITIC_SYSTEM,
+            system_prompt=system,
             user_message=user_msg,
             model=model,
         )
@@ -225,8 +242,15 @@ def make_auditor_node(model: str):
         round_num = state["round_num"] + 1
         user_msg = (
             f"Paper summary:\n{state['summary']}\n\n"
-            f"Critic's points:\n{state['critique']}\n\n"
-            "Challenge weak points and identify anything important that was missed."
+            f"Critic response:\n{state['critique']}\n\n"
+            "For each critique point:\n"
+            "1. Is it specific enough or too generic? Push for concrete details.\n"
+            "2. Is it supported by evidence from the paper?\n"
+            "3. What important issues did the Critic completely miss?\n\n"
+            "Be aggressive — a weak vague point is worse than no point.\n"
+            "Explicitly list 3-5 issues the Critic missed.\n\n"
+            "Do NOT suggest ethical implications or bias points unless\n"
+            "the paper explicitly makes claims in these areas."
         )
         text, in_t, out_t = _call_llm(
             system_prompt=AUDITOR_SYSTEM,
@@ -245,16 +269,16 @@ def make_auditor_node(model: str):
     return auditor_node
 
 
-def make_summariser_node(model: str):
+def make_summariser_node(model: str, loop_mode: str):
     def summariser_node(state: CritiqueState) -> dict:
-        full_debate = "\n\n".join(
-            f"=== {entry['role']} ===\n{entry['content']}" for entry in state["transcript"]
-        )
+        critic_label = "Critic output" if loop_mode == "none" else "Critic2 output"
         text, in_t, out_t = _call_llm(
             system_prompt=SUMMARISER_SYSTEM,
             user_message=(
-                f"Here is the full debate transcript:\n\n{full_debate}\n\n"
-                "Produce the final structured review JSON."
+                f"{critic_label}:\n{state['critique']}\n\n"
+                f"Reader summary:\n{state['summary']}\n\n"
+                "Output in this exact JSON format:\n"
+                f"{STRUCTURED_OUTPUT_SCHEMA}"
             ),
             model=model,
         )
@@ -331,7 +355,7 @@ def build_graph(
 
     graph.add_node("reader", make_reader_node(models["reader"]))
     graph.add_node("critic", make_critic_node(models["critic"]))
-    graph.add_node("summariser", make_summariser_node(models["summariser"]))
+    graph.add_node("summariser", make_summariser_node(models["summariser"], loop_mode))
 
     graph.add_edge(START, "reader")
     graph.add_edge("reader", "critic")
@@ -423,7 +447,7 @@ def critique_paper(
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
     title = paper.get("title", paper_id)
     full_text = paper.get("full_text", "")
-    paper_text = full_text[:truncate_chars] if full_text else paper.get("abstract", title)
+    paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", title)
 
     lg_cfg = cfg.get("langgraph", {})
 
@@ -453,7 +477,7 @@ def critique_paper(
         "title": title,
         "platform": "langgraph",
         "loop_mode": loop_mode,
-        "model": lg_cfg.get("critic_model", "gpt-4o"),
+        "model": lg_cfg.get("critic_model", "gpt-4.1-mini"),
         "rounds": result["round_num"],
         "latency_seconds": latency_seconds,
         "token_usage": result["token_usage"],
@@ -476,10 +500,10 @@ def run_all_papers(
 
     lg_cfg = cfg.get("langgraph", {})
     models = {
-        "reader": lg_cfg.get("reader_model", "gpt-4o-mini"),
-        "critic": lg_cfg.get("critic_model", "gpt-4o"),
-        "auditor": lg_cfg.get("auditor_model", "gpt-4o-mini"),
-        "summariser": lg_cfg.get("summariser_model", "gpt-4o"),
+        "reader": lg_cfg.get("reader_model", "gpt-4.1-mini"),
+        "critic": lg_cfg.get("critic_model", "gpt-4.1-mini"),
+        "auditor": lg_cfg.get("auditor_model", "gpt-4.1-mini"),
+        "summariser": lg_cfg.get("summariser_model", "gpt-4.1-mini"),
     }
 
     # Compile graph ONCE and reuse for all papers

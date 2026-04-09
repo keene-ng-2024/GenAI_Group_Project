@@ -1,0 +1,116 @@
+{
+  "paper_id": "paper_0030",
+  "title": "Pretrained Language Model in Continual Learning: A Comparative Study",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 39.41,
+  "token_usage": {
+    "input": 9950,
+    "output": 2822
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nContinual Learning (CL) aims to enable models to learn from a stream of data without forgetting previously acquired knowledge, a challenge known as catastrophic forgetting (CF). While Pre-trained Language Models (PLMs) like BERT have been widely used in NLP tasks, their behavior and robustness in continual learning settings remain underexplored. Existing CL studies often focus on specific PLMs or trivial task settings, neglecting the diversity of PLMs and the impact of model architecture on forgetting. This paper addresses the need for a comprehensive understanding of how different PLMs interact with various CL methods across realistic incremental learning scenarios, aiming to guide the design of more effective continual learning techniques for NLP.\n\n---\n\n### Proposed Method\n\nThe authors conduct a large-scale empirical comparative study involving:\n\n- **PLMs Evaluated:** Five representative models \u2014 BERT, ALBERT, RoBERTa, GPT2, and XLNET.\n- **CL Methods Compared:** Six schemes including Vanilla (naive fine-tuning), Joint training (upper bound), Elastic Weight Consolidation (EWC, regularization-based), Hard Attention to the Task (HAT, dynamic architecture), Experience Replay (ER, rehearsal-based), and Dark Experience Replay Plus Plus (DERPP, hybrid).\n- **Settings:** Two typical continual learning settings \u2014 task-incremental learning (Task-IL) and class-incremental learning (Class-IL).\n- **Datasets:** Three benchmarks with varying data distributions and task definitions \u2014 CLINC150 (intent classification), Maven (event detection), and WebRED (relation classification).\n- **Evaluation Metrics:** Average accuracy, forward transfer (FWT), backward transfer (BWT), and computational cost.\n- **Layer-wise Probing:** A prototype-based method to analyze representational capacity and forgetting at each PLM layer and task stage.\n\n---\n\n### Results\n\n- **Catastrophic Forgetting Exists in PLMs:** All PLMs suffer significant forgetting in continual learning, especially in Class-IL settings, as shown by the performance gap between Vanilla and Joint training.\n- **Experience Replay is Most Robust:** Rehearsal-based methods (ER and DERPP) outperform regularization (EWC) and dynamic architecture (HAT) methods in accuracy and backward transfer. DERPP performs best on balanced datasets but not on imbalanced ones, where ER excels.\n- **BERT is the Most Robust PLM:** Among PLMs, BERT achieves the highest average accuracy and competitive forward/backward transfer, making it a strong choice for CL.\n- **Layer-wise Analysis of BERT:**\n  - Forgetting occurs not only in the final classifier but also in middle layers (notably layer 6).\n  - Experience replay better preserves representational ability across layers compared to regularization.\n  - The classifier layer is the most fragile component.\n- **Cross-PLM Layer-wise Differences:**\n  - Inner layer robustness varies significantly across PLMs.\n  - ALBERT\u2019s parameter-sharing makes its layers more fragile.\n  - Different PLMs benefit from replay in different layers; e.g., XLNET benefits more in layer 12 and classifier, RoBERTa and GPT2 mainly in classifier.\n- **Computational Cost:** XLNET has the lowest per-instance computation but longest training time; ALBERT has the fewest parameters and competitive training time.\n\n---\n\n### Claimed Contributions\n\n1. **Comprehensive Benchmark:** Rigorous evaluation framework combining multiple PLMs, CL methods, datasets, and incremental learning settings for NLP continual learning.\n2. **Comparative Study:** Detailed performance comparison revealing that experience replay methods are most effective and BERT is the most robust PLM for CL.\n3. **Layer-wise Probing Analysis:** Novel insights into how forgetting manifests across layers within PLMs, highlighting the fragility of the classifier and certain middle layers.\n4. **New Research Questions:** Identification of open problems such as improving regularization in middle layers, understanding replay\u2019s layer-wise effects, and dynamically detecting robust layers.\n5. **Resource Release:** Commitment to open-source code and datasets to foster further research in NLP continual learning.\n\n---\n\n### Summary\n\nThis paper presents the first extensive comparative study of continual learning performance across multiple pre-trained language models and continual learning methods in NLP. It demonstrates that catastrophic forgetting is a serious issue for PLMs, with rehearsal-based methods like experience replay providing the most robust mitigation. BERT emerges as the most reliable PLM in continual learning scenarios. Layer-wise probing reveals that forgetting affects both classifier and inner layers, suggesting new directions for method development. The study\u2019s insights and resources aim to guide future research on PLM-oriented continual learning techniques and pretraining strategies."
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty \u2013 Missing Comparison with Recent CL Methods:**  \nWhile the paper compares six CL methods including EWC, HAT, ER, and DERPP, it omits more recent or advanced continual learning approaches such as parameter-efficient fine-tuning (e.g., adapters or LoRA) or prompt-based continual learning methods that have shown promise in NLP. This limits the novelty and comprehensiveness of the comparative study, especially given the rapid evolution of CL techniques in NLP.\n\n2. **Methodology \u2013 Lack of Justification for Selected PLMs:**  \nThe choice of five PLMs (BERT, ALBERT, RoBERTa, GPT2, XLNET) is reasonable, but the paper does not justify why these particular models were selected over others like T5 or ELECTRA, which have different architectures and pretraining objectives. This omission weakens the claim of a \u201ccomprehensive\u201d benchmark.\n\n3. **Methodology \u2013 No Ablation on Replay Buffer Size or Sampling Strategy:**  \nExperience replay methods (ER and DERPP) are shown to be most effective, but the paper does not provide ablation studies on the size of the replay buffer or the sampling strategy used. These factors critically affect replay performance and should be analyzed to understand robustness and scalability.\n\n4. **Evaluation \u2013 Joint Training as an Upper Bound May Be Unfair:**  \nThe paper uses joint training as an upper bound baseline, but joint training has access to all data simultaneously, which is unrealistic in continual learning. This makes the performance gap potentially misleading. A more realistic upper bound or oracle method would strengthen the evaluation.\n\n5. **Evaluation \u2013 Metrics Lack Task-Specific or Real-World Utility Measures:**  \nThe evaluation focuses on average accuracy, forward and backward transfer, and computational cost, but does not include metrics such as memory overhead, latency during inference, or robustness to domain shifts, which are important for practical continual learning deployment.\n\n6. **Reproducibility \u2013 Missing Details on Hyperparameter Tuning:**  \nThe paper does not provide detailed information on hyperparameter tuning for each CL method and PLM combination, such as learning rates, regularization coefficients, or replay buffer sizes. This omission hinders reproducibility and fair comparison.\n\n7. **Reproducibility \u2013 Unclear Implementation of Layer-wise Probing:**  \nThe prototype-based layer-wise probing method is a key contribution, but the paper lacks sufficient detail on how prototypes are constructed, how similarity is measured, and how forgetting is quantified at each layer, making it difficult to replicate this analysis.\n\n8. **Clarity \u2013 Ambiguous Description of Class-IL vs. Task-IL Settings:**  \nThe paper mentions two continual learning settings (Task-IL and Class-IL) but does not clearly define how tasks and classes are split or how task identities are provided or withheld during evaluation, which is critical for interpreting results.\n\n9. **Clarity \u2013 Insufficient Explanation of DERPP Method:**  \nDERPP is reported as the best-performing method on balanced datasets, yet the paper provides only a brief description of DERPP without explaining its key mechanisms or differences from ER, leaving readers unclear about why it excels.\n\n10. **Limitations \u2013 No Discussion on Scalability to Larger PLMs or Longer Task Sequences:**  \nThe study uses relatively moderate-sized PLMs and a limited number of tasks per dataset. There is no discussion on how the findings would scale to larger models (e.g., GPT-3 scale) or longer continual learning streams, which is important for real-world applicability.\n\n11. **Limitations \u2013 Ignoring Multi-Task or Multi-Domain Continual Learning:**  \nThe experiments focus on single-task incremental learning scenarios (intent classification, event detection, relation classification) but do not explore multi-task or multi-domain continual learning, where task interference and forgetting might behave differently.\n\n12. **Generalisability \u2013 Limited Dataset Diversity:**  \nAlthough three datasets are used, all are classification tasks with relatively small label sets. The paper does not test on generation tasks or more complex NLP problems, limiting the generalizability of conclusions to broader NLP continual learning challenges.\n\n13. **Generalisability \u2013 No Cross-Lingual or Multilingual Evaluation:**  \nAll datasets and PLMs are English-only. The paper does not address whether the observed forgetting patterns and method effectiveness hold in multilingual or cross-lingual continual learning scenarios, which are increasingly important.\n\n14. **Evaluation \u2013 Computational Cost Metrics Are Incomplete:**  \nThe paper reports per-instance computation and training time but does not provide memory usage or energy consumption metrics, which are critical for assessing the practicality of CL methods on resource-constrained devices.\n\n15. **Clarity \u2013 Presentation of Layer-wise Results Could Be Improved:**  \nThe layer-wise forgetting analysis is insightful but presented in a way that is difficult to interpret without extensive background. More intuitive visualizations or summaries would help readers grasp the key findings more easily."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper presents a comprehensive empirical study comparing multiple continual learning methods across five pre-trained language models (PLMs) on three NLP classification benchmarks under task- and class-incremental settings. It finds that rehearsal-based methods, particularly experience replay variants, are most effective at mitigating catastrophic forgetting, with BERT being the most robust PLM. A novel layer-wise probing analysis reveals that forgetting occurs not only in the classifier but also in middle layers, providing new insights for future continual learning research.\",\n  \"strengths\": [\n    {\n      \"point\": \"Comprehensive benchmark combining multiple PLMs, CL methods, datasets, and settings\",\n      \"evidence\": \"Evaluation of six CL methods on five PLMs across three datasets and two continual learning settings (Task-IL and Class-IL).\"\n    },\n    {\n      \"point\": \"Insightful layer-wise probing analysis\",\n      \"evidence\": \"Prototype-based layer-wise analysis reveals forgetting patterns across PLM layers, highlighting fragility in classifier and middle layers.\"\n    },\n    {\n      \"point\": \"Clear identification of experience replay methods as most effective\",\n      \"evidence\": \"ER and DERPP outperform regularization and dynamic architecture methods in accuracy and backward transfer.\"\n    },\n    {\n      \"point\": \"Open sourcing code and datasets\",\n      \"evidence\": \"Commitment to releasing resources to facilitate further research in NLP continual learning.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited novelty due to missing comparison with recent CL methods\",\n      \"evidence\": \"No evaluation of newer parameter-efficient fine-tuning or prompt-based continual learning methods.\"\n    },\n    {\n      \"point\": \"Lack of justification for selected PLMs\",\n      \"evidence\": \"No explanation for choosing BERT, ALBERT, RoBERTa, GPT2, XLNET over other influential models like T5 or ELECTRA.\"\n    },\n    {\n      \"point\": \"Insufficient ablation studies on replay buffer size and sampling\",\n      \"evidence\": \"No analysis on how buffer size or sampling strategies affect experience replay performance.\"\n    },\n    {\n      \"point\": \"Evaluation metrics incomplete and upper bound baseline potentially unfair\",\n      \"evidence\": \"Joint training used as upper bound is unrealistic; metrics omit memory overhead, latency, and robustness to domain shifts.\"\n    },\n    {\n      \"point\": \"Reproducibility concerns due to missing hyperparameter and implementation details\",\n      \"evidence\": \"No detailed hyperparameter tuning info or clear description of prototype-based layer-wise probing and DERPP method.\"\n    },\n    {\n      \"point\": \"Clarity issues in defining continual learning settings and method descriptions\",\n      \"evidence\": \"Ambiguous explanation of Task-IL vs Class-IL splits and insufficient DERPP method details.\"\n    },\n    {\n      \"point\": \"Limited generalizability and scalability discussion\",\n      \"evidence\": \"No experiments on larger PLMs, longer task sequences, multi-task or multi-domain learning, or multilingual datasets.\"\n    },\n    {\n      \"point\": \"Presentation of layer-wise results could be more accessible\",\n      \"evidence\": \"Layer-wise forgetting analysis is difficult to interpret without extensive background or intuitive visualization.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How would recent parameter-efficient or prompt-based continual learning methods compare?\",\n      \"motivation\": \"Including these could provide a more comprehensive and up-to-date benchmark reflecting current advances.\"\n    },\n    {\n      \"question\": \"How sensitive are experience replay methods to buffer size and sampling strategies?\",\n      \"motivation\": \"Understanding this is critical for assessing robustness and scalability in practical continual learning deployments.\"\n    },\n    {\n      \"question\": \"Can the findings generalize to larger PLMs, longer task sequences, and multilingual settings?\",\n      \"motivation\": \"Real-world applications often involve larger models and diverse languages, so scalability and generalizability are important.\"\n    },\n    {\n      \"question\": \"What are the detailed mechanisms behind DERPP\u2019s superior performance?\",\n      \"motivation\": \"Clarifying this would help researchers understand and build upon the method.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper presents a comprehensive empirical study comparing multiple continual learning methods across five pre-trained language models (PLMs) on three NLP classification benchmarks under task- and class-incremental settings. It finds that rehearsal-based methods, particularly experience replay variants, are most effective at mitigating catastrophic forgetting, with BERT being the most robust PLM. A novel layer-wise probing analysis reveals that forgetting occurs not only in the classifier but also in middle layers, providing new insights for future continual learning research.",
+    "strengths": [
+      {
+        "point": "Comprehensive benchmark combining multiple PLMs, CL methods, datasets, and settings",
+        "evidence": "Evaluation of six CL methods on five PLMs across three datasets and two continual learning settings (Task-IL and Class-IL)."
+      },
+      {
+        "point": "Insightful layer-wise probing analysis",
+        "evidence": "Prototype-based layer-wise analysis reveals forgetting patterns across PLM layers, highlighting fragility in classifier and middle layers."
+      },
+      {
+        "point": "Clear identification of experience replay methods as most effective",
+        "evidence": "ER and DERPP outperform regularization and dynamic architecture methods in accuracy and backward transfer."
+      },
+      {
+        "point": "Open sourcing code and datasets",
+        "evidence": "Commitment to releasing resources to facilitate further research in NLP continual learning."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited novelty due to missing comparison with recent CL methods",
+        "evidence": "No evaluation of newer parameter-efficient fine-tuning or prompt-based continual learning methods."
+      },
+      {
+        "point": "Lack of justification for selected PLMs",
+        "evidence": "No explanation for choosing BERT, ALBERT, RoBERTa, GPT2, XLNET over other influential models like T5 or ELECTRA."
+      },
+      {
+        "point": "Insufficient ablation studies on replay buffer size and sampling",
+        "evidence": "No analysis on how buffer size or sampling strategies affect experience replay performance."
+      },
+      {
+        "point": "Evaluation metrics incomplete and upper bound baseline potentially unfair",
+        "evidence": "Joint training used as upper bound is unrealistic; metrics omit memory overhead, latency, and robustness to domain shifts."
+      },
+      {
+        "point": "Reproducibility concerns due to missing hyperparameter and implementation details",
+        "evidence": "No detailed hyperparameter tuning info or clear description of prototype-based layer-wise probing and DERPP method."
+      },
+      {
+        "point": "Clarity issues in defining continual learning settings and method descriptions",
+        "evidence": "Ambiguous explanation of Task-IL vs Class-IL splits and insufficient DERPP method details."
+      },
+      {
+        "point": "Limited generalizability and scalability discussion",
+        "evidence": "No experiments on larger PLMs, longer task sequences, multi-task or multi-domain learning, or multilingual datasets."
+      },
+      {
+        "point": "Presentation of layer-wise results could be more accessible",
+        "evidence": "Layer-wise forgetting analysis is difficult to interpret without extensive background or intuitive visualization."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How would recent parameter-efficient or prompt-based continual learning methods compare?",
+        "motivation": "Including these could provide a more comprehensive and up-to-date benchmark reflecting current advances."
+      },
+      {
+        "question": "How sensitive are experience replay methods to buffer size and sampling strategies?",
+        "motivation": "Understanding this is critical for assessing robustness and scalability in practical continual learning deployments."
+      },
+      {
+        "question": "Can the findings generalize to larger PLMs, longer task sequences, and multilingual settings?",
+        "motivation": "Real-world applications often involve larger models and diverse languages, so scalability and generalizability are important."
+      },
+      {
+        "question": "What are the detailed mechanisms behind DERPP\u2019s superior performance?",
+        "motivation": "Clarifying this would help researchers understand and build upon the method."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Limited novelty due to missing comparison with recent CL methods. No evaluation of newer parameter-efficient fine-tuning or prompt-based continual learning methods",
+    "point_002": "Lack of justification for selected PLMs. No explanation for choosing BERT, ALBERT, RoBERTa, GPT2, XLNET over other influential models like T5 or ELECTRA",
+    "point_003": "Insufficient ablation studies on replay buffer size and sampling. No analysis on how buffer size or sampling strategies affect experience replay performance",
+    "point_004": "Evaluation metrics incomplete and upper bound baseline potentially unfair. Joint training used as upper bound is unrealistic; metrics omit memory overhead, latency, and robustness to domain shifts",
+    "point_005": "Reproducibility concerns due to missing hyperparameter and implementation details. No detailed hyperparameter tuning info or clear description of prototype-based layer-wise probing and DERPP method",
+    "point_006": "Clarity issues in defining continual learning settings and method descriptions. Ambiguous explanation of Task-IL vs Class-IL splits and insufficient DERPP method details",
+    "point_007": "Limited generalizability and scalability discussion. No experiments on larger PLMs, longer task sequences, multi-task or multi-domain learning, or multilingual datasets",
+    "point_008": "Presentation of layer-wise results could be more accessible. Layer-wise forgetting analysis is difficult to interpret without extensive background or intuitive visualization"
+  }
+}
