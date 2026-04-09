@@ -208,7 +208,7 @@ Output in this exact JSON format:
   "questions": [
     {"question": "open question", "motivation": "why this matters"},
     {"question": "open question", "motivation": "why this matters"}
-  ],
+  ]
 }
 ```
 
@@ -298,7 +298,7 @@ pip install -r requirements.txt
 
 ```bash
 cp .env.example .env
-# Edit .env and add OPENAI_API_KEY, DIFY_API_KEY, and any other required keys
+# Edit .env and add OPENAI_API_KEY, DIFY_API_KEY_SINGLE, DIFY_API_KEY_DUAL, and any other required keys
 ```
 
 ### 3. Add data
@@ -396,7 +396,8 @@ python -m src.evaluation.scorer baseline
 python -m src.evaluation.scorer agents
 python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
-python -m src.evaluation.scorer dify
+python -m src.evaluation.scorer dify_single_critic
+python -m src.evaluation.scorer dify_dual_critic
 
 # Print comparison table + plots
 python -m src.evaluation.metrics
