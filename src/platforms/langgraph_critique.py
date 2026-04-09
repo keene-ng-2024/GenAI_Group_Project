@@ -380,6 +380,20 @@ def build_graph(
 
 # ── Output parsing (shared with other platforms) ───────────────────────────────
 
+def _sanitize_json(text: str) -> str:
+    """Fix invalid backslash escapes (e.g. LaTeX \\(x\\)) that break json.loads.
+
+    Strips backslashes not part of valid JSON escapes (\\", \\\\, \\/, \\b, \\f,
+    \\n, \\r, \\t, \\uXXXX). Applied twice to handle cases where \\\\\\ followed
+    by a letter (e.g. \\\\hat) becomes an invalid escape after the first pass.
+    """
+    pattern = re.compile(r'\\(?!["\\/bfnrtu])')
+    result = pattern.sub('', text)
+    result = pattern.sub('', result)
+    return result
+
+
+
 def _parse_structured_output(raw: str) -> dict:
     """Parse the Summariser's structured JSON output with fallbacks."""
     text = raw.strip()
@@ -389,17 +403,20 @@ def _parse_structured_output(raw: str) -> dict:
         if text.startswith("json"):
             text = text[4:]
 
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        pass
+    # Try raw first, then sanitized
+    for candidate in [text, _sanitize_json(text)]:
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            pass
 
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if match:
-        try:
-            return json.loads(match.group())
-        except json.JSONDecodeError:
-            pass
+        for candidate in [match.group(), _sanitize_json(match.group())]:
+            try:
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                pass
 
     print("    [WARN] Failed to parse structured output, returning empty structure")
     return {
@@ -442,6 +459,7 @@ def critique_paper(
     cfg: dict,
     app,
     loop_mode: str,
+    max_rounds_override: int | None = None,
 ) -> dict:
     """Run the LangGraph critique workflow for one paper using a pre-compiled graph."""
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
@@ -450,6 +468,13 @@ def critique_paper(
     paper_text = (full_text[:truncate_chars] if truncate_chars else full_text) if full_text else paper.get("abstract", title)
 
     lg_cfg = cfg.get("langgraph", {})
+
+    if loop_mode == "none":
+        max_rounds = 0
+    elif max_rounds_override is not None:
+        max_rounds = max_rounds_override
+    else:
+        max_rounds = cfg["agent"]["max_rounds"]
 
     start_time = time.perf_counter()
 
@@ -462,7 +487,7 @@ def critique_paper(
         "audit_feedback": "",
         "transcript": [],
         "round_num": 0,
-        "max_rounds": cfg["agent"]["max_rounds"] if loop_mode != "none" else 0,
+        "max_rounds": max_rounds,
         "early_stop_phrases": lg_cfg.get("early_stop_phrases",
                                           cfg["agent"].get("early_stop_phrases", [])),
         "structured": {},
@@ -494,6 +519,7 @@ def run_all_papers(
     output_dir: str,
     cfg: dict,
     loop_mode: str,
+    max_rounds_override: int | None = None,
 ) -> None:
     with open(reviews_path) as f:
         all_papers: dict = json.load(f)
@@ -527,6 +553,7 @@ def run_all_papers(
                 cfg=cfg,
                 app=app,
                 loop_mode=loop_mode,
+                max_rounds_override=max_rounds_override,
             )
         except Exception as exc:
             print(f"\n  [ERROR] {paper_id} failed: {exc}")
@@ -554,6 +581,18 @@ if __name__ == "__main__":
         default=None,
         help="Loop mode to run. 'all' runs all three. Defaults to config.yaml langgraph.loop_mode.",
     )
+    parser.add_argument(
+        "--max-rounds",
+        type=int,
+        default=None,
+        help="Override max debate rounds (e.g. --max-rounds 1 for fair comparison with n8n/Dify).",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=str,
+        default=None,
+        help="Override output directory (e.g. results/langgraph_fixed_1round).",
+    )
     args = parser.parse_args()
 
     cfg = load_config()
@@ -567,10 +606,11 @@ if __name__ == "__main__":
         modes = [lg_cfg.get("loop_mode", "dynamic")]
 
     for mode in modes:
-        out_dir = cfg["results"].get(f"langgraph_{mode}_dir",
-                                     f"results/langgraph_{mode}")
+        out_dir = args.output_dir or cfg["results"].get(
+            f"langgraph_{mode}_dir", f"results/langgraph_{mode}")
+        rounds_label = f", max_rounds={args.max_rounds}" if args.max_rounds is not None else ""
         print(f"\n{'#'*60}")
-        print(f"  Running LangGraph ablation: loop_mode={mode}")
+        print(f"  Running LangGraph ablation: loop_mode={mode}{rounds_label}")
         print(f"  Output → {out_dir}")
         print(f"{'#'*60}")
 
@@ -579,4 +619,5 @@ if __name__ == "__main__":
             output_dir=out_dir,
             cfg=cfg,
             loop_mode=mode,
+            max_rounds_override=args.max_rounds,
         )
