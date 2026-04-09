@@ -3,83 +3,106 @@
   "title": "Ask Me Anything: A simple strategy for prompting language models",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 70.56,
+  "latency_seconds": 56.56,
   "structured": {
-    "summary": "The paper proposes AMA, a prompting approach that generates multiple open-ended question-answer style prompts via LLM prompt-chains and aggregates their noisy outputs using weak supervision to improve zero- and few-shot task performance. AMA substantially improves robustness and accuracy across diverse NLP benchmarks and models, enabling smaller open-source LLMs to match or surpass few-shot GPT-3 175B without additional training.",
+    "summary": "The paper proposes ASK ME ANYTHING (AMA), a novel prompting strategy that converts tasks into open-ended QA prompts generated recursively by the LLM itself and aggregates multiple noisy prompt outputs using weak supervision without labeled data. AMA demonstrates significant performance improvements across 20 benchmarks and 14 models, enabling smaller open-source LLMs to rival much larger few-shot GPT-3 baselines.",
     "strengths": [
       {
-        "point": "Effective use of open-ended QA prompt format",
-        "evidence": "Empirically shown that open-ended QA prompts outperform restrictive prompt styles by up to +72% on some tasks, aligning better with LLM pretraining data."
+        "point": "Effective prompt format identification",
+        "evidence": "The paper empirically shows open-ended QA prompts outperform restrictive prompts across tasks and models, aligning better with LLM pretraining distributions (Section 4.1)."
       },
       {
-        "point": "Scalable generation of diverse prompts via prompt-chains",
-        "evidence": "Recursive application of LLM functional prompts creates multiple diverse prompt variations automatically, avoiding manual design."
+        "point": "Scalable recursive prompt generation",
+        "evidence": "Introduces functional prompt-chains (question() and answer()) to generate diverse QA prompts from inputs without manual engineering (Section 4.2)."
       },
       {
-        "point": "Principled aggregation of noisy prompt outputs using weak supervision",
-        "evidence": "Weak supervision models prompt accuracies and dependencies without labeled data, outperforming majority voting by up to 8.7 points."
+        "point": "Weak supervision aggregation without labeled data",
+        "evidence": "Applies weak supervision to model prompt accuracies and dependencies, outperforming majority vote by up to 8.7 accuracy points and enabling reliable aggregation (Section 4.3, Section 5.2)."
       },
       {
-        "point": "Strong empirical performance across 20 benchmarks and 14 models",
-        "evidence": "AMA yields an average absolute improvement of 10.2% over standard few-shot prompting and enables GPT-J-6B to match/exceed GPT-3 175B on 15/20 tasks."
+        "point": "Extensive empirical validation",
+        "evidence": "Evaluated on 20 benchmarks and 14 LLMs (125M-175B parameters), showing AMA enables GPT-J-6B to match or exceed GPT3-175B few-shot performance on most tasks (Section 5)."
+      },
+      {
+        "point": "Open-source release and diagnostics",
+        "evidence": "Code, prompts, and detailed diagnostics are released to facilitate reproducibility and analysis (Section 5.4)."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to chain-of-thought prompting methods",
-        "evidence": "No extensive experiments or citations contrasting AMA with CoT prompting, which also promote free-form generation and reasoning."
+        "point": "Limited comparison to related ensemble prompting methods",
+        "evidence": "Only brief comparison to Self-Consistency prompting; lacks benchmarking against other prompt ensembling or voting-based aggregation approaches (Section 5.3)."
       },
       {
-        "point": "Limited ablations on prompt-chain quantity and impact of prompt format vs. aggregation",
-        "evidence": "No justification or analysis on why 3-6 prompt-chains are used or the separate contributions of prompt format and WS aggregation."
+        "point": "Insufficient methodological details on weak supervision model",
+        "evidence": "Omission of WS model architecture, training procedure, hyperparameters, and convergence criteria hinders reproducibility (Section 4.3)."
       },
       {
-        "point": "Potential unfairness in baselines due to differing computational budgets",
-        "evidence": "AMA aggregates multiple prompt-chains per input while GPT-3 baselines mostly use single prompts, possibly biasing comparisons."
+        "point": "Evaluation baselines use different shot counts",
+        "evidence": "Few-shot GPT3 baselines use 32-70 examples, while AMA uses zero-shot recursive prompts, making comparisons not strictly apples-to-apples (Section 5.1)."
       },
       {
-        "point": "Insufficient methodological details and clarity",
-        "evidence": "Ambiguous descriptions of answer-to-label mapping step, prompt-chain generation parameters, terminology inconsistencies, and missing WS failure mode discussion."
+        "point": "Lack of analysis on prompt diversity impact",
+        "evidence": "No ablation quantifies whether prompt diversity or quantity drives performance gains (Section 4.2)."
       },
       {
-        "point": "Limited evaluation metrics and generalizability assessment",
-        "evidence": "Focuses mainly on accuracy; lacks robustness, calibration analyses, or multilingual/multimodal task evaluations."
+        "point": "Limited evaluation on knowledge-intensive and multilingual tasks",
+        "evidence": "AMA shows smaller gains on closed-book factual tasks and no experiments on multilingual or cross-lingual settings (Section 5.2)."
       },
       {
-        "point": "No discussion of computational cost and latency implications",
-        "evidence": "Running multiple prompt-chains and WS aggregation likely increases inference overhead, which is not analyzed."
+        "point": "Missing statistical significance and variance reporting",
+        "evidence": "Results report average accuracy improvements without confidence intervals or significance tests (Section 5)."
       },
       {
-        "point": "Incomplete related work positioning",
-        "evidence": "Prior work on prompt ensembles and automatic prompt tuning not sufficiently cited or contrasted."
+        "point": "Reproducibility hindered by missing prompt generation details",
+        "evidence": "Lack of pseudocode or detailed prompt templates for recursive question() and answer() functions (Section 4.2)."
+      },
+      {
+        "point": "Unclear availability of weak supervision code and data",
+        "evidence": "Uncertainty whether WS aggregation code, model checkpoints, and unlabeled data are publicly released (Section 4.3)."
+      },
+      {
+        "point": "Terminology ambiguity",
+        "evidence": "The term 'prompt-chains' is not clearly defined or distinguished from standard prompt ensembles or chain-of-thought prompting (Section 4.2)."
+      },
+      {
+        "point": "Limited discussion on handling long contexts and instruction errors",
+        "evidence": "Acknowledges challenges but lacks quantitative analysis or mitigation strategies (Section 6)."
       }
     ],
     "questions": [
       {
-        "question": "How does AMA compare to chain-of-thought prompting in terms of performance and prompt diversity?",
-        "motivation": "CoT is a prominent recent prompting strategy that promotes free-form reasoning, so understanding AMA's relative benefits is important."
+        "question": "How does AMA compare to other ensemble or voting-based prompt aggregation methods beyond Self-Consistency prompting?",
+        "motivation": "Understanding relative advantages and novelty requires benchmarking against a broader set of related methods."
       },
       {
-        "question": "What are the computational trade-offs and latency costs of running multiple prompt-chains with WS aggregation?",
-        "motivation": "For practical deployment, inference speed and resource consumption are critical factors."
+        "question": "To what extent does prompt diversity versus sheer number of prompts contribute to AMA\u2019s performance gains?",
+        "motivation": "Clarifying this can guide efficient prompt generation strategies and reduce computational overhead."
       },
       {
-        "question": "How robust is AMA to tasks requiring closed-book knowledge or commonsense reasoning?",
-        "motivation": "Smaller gains on such tasks were noted but not explored in depth, limiting understanding of generality."
+        "question": "Can AMA\u2019s recursive prompt generation and weak supervision aggregation generalize effectively to multilingual or non-English tasks?",
+        "motivation": "Extending AMA beyond English is critical for broader applicability in diverse real-world settings."
       },
       {
-        "question": "Can AMA generalize beyond English NLP tasks to multilingual or multimodal domains?",
-        "motivation": "Broader applicability would increase the method's impact."
+        "question": "What are the detailed architectures, training procedures, and hyperparameters of the weak supervision model used for aggregation?",
+        "motivation": "Providing these details is essential for reproducibility and adoption by the research community."
+      },
+      {
+        "question": "How does AMA perform when applied to generation tasks such as summarization or dialogue, which may require different prompt formats?",
+        "motivation": "Evaluating generalizability beyond classification and QA tasks would demonstrate broader utility."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison to chain-of-thought prompting methods. No extensive experiments or citations contrasting AMA with CoT prompting, which also promote free-form generation and reasoning",
-    "point_002": "Limited ablations on prompt-chain quantity and impact of prompt format vs. aggregation. No justification or analysis on why 3-6 prompt-chains are used or the separate contributions of prompt format and WS aggregation",
-    "point_003": "Potential unfairness in baselines due to differing computational budgets. AMA aggregates multiple prompt-chains per input while GPT-3 baselines mostly use single prompts, possibly biasing comparisons",
-    "point_004": "Insufficient methodological details and clarity. Ambiguous descriptions of answer-to-label mapping step, prompt-chain generation parameters, terminology inconsistencies, and missing WS failure mode discussion",
-    "point_005": "Limited evaluation metrics and generalizability assessment. Focuses mainly on accuracy; lacks robustness, calibration analyses, or multilingual/multimodal task evaluations",
-    "point_006": "No discussion of computational cost and latency implications. Running multiple prompt-chains and WS aggregation likely increases inference overhead, which is not analyzed",
-    "point_007": "Incomplete related work positioning. Prior work on prompt ensembles and automatic prompt tuning not sufficiently cited or contrasted"
+    "point_001": "Limited comparison to related ensemble prompting methods. Only brief comparison to Self-Consistency prompting; lacks benchmarking against other prompt ensembling or voting-based aggregation approaches (Section 5.3)",
+    "point_002": "Insufficient methodological details on weak supervision model. Omission of WS model architecture, training procedure, hyperparameters, and convergence criteria hinders reproducibility (Section 4.3)",
+    "point_003": "Evaluation baselines use different shot counts. Few-shot GPT3 baselines use 32-70 examples, while AMA uses zero-shot recursive prompts, making comparisons not strictly apples-to-apples (Section 5.1)",
+    "point_004": "Lack of analysis on prompt diversity impact. No ablation quantifies whether prompt diversity or quantity drives performance gains (Section 4.2)",
+    "point_005": "Limited evaluation on knowledge-intensive and multilingual tasks. AMA shows smaller gains on closed-book factual tasks and no experiments on multilingual or cross-lingual settings (Section 5.2)",
+    "point_006": "Missing statistical significance and variance reporting. Results report average accuracy improvements without confidence intervals or significance tests (Section 5)",
+    "point_007": "Reproducibility hindered by missing prompt generation details. Lack of pseudocode or detailed prompt templates for recursive question() and answer() functions (Section 4.2)",
+    "point_008": "Unclear availability of weak supervision code and data. Uncertainty whether WS aggregation code, model checkpoints, and unlabeled data are publicly released (Section 4.3)",
+    "point_009": "Terminology ambiguity. The term 'prompt-chains' is not clearly defined or distinguished from standard prompt ensembles or chain-of-thought prompting (Section 4.2)",
+    "point_010": "Limited discussion on handling long contexts and instruction errors. Acknowledges challenges but lacks quantitative analysis or mitigation strategies (Section 6)"
   }
 }

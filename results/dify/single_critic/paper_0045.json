@@ -3,102 +3,120 @@
   "title": "Large Language Models Can Self-improve",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 57.2,
+  "latency_seconds": 37.57,
   "structured": {
-    "summary": "The paper proposes a self-training framework (LMSI) enabling large language models to improve their reasoning abilities using only unlabeled questions by generating and fine-tuning on their own high-confidence chain-of-thought pseudo-labels. Experiments demonstrate notable performance gains across multiple reasoning benchmarks and some out-of-domain tasks, alongside knowledge distillation to smaller models.",
+    "summary": "This paper proposes a self-training framework for large language models that leverages Chain-of-Thought prompting and majority voting to generate high-confidence pseudo-labels from unlabeled questions. Fine-tuning on these self-generated rationale-augmented answers enables significant improvements in reasoning tasks without any ground truth supervision, demonstrating strong empirical gains and promising directions for reducing reliance on labeled data.",
     "strengths": [
       {
-        "point": "Innovative use of self-generated Chain-of-Thought pseudo-labels for self-training",
-        "evidence": "The method leverages multiple sampled reasoning paths with majority voting to create high-confidence pseudo-labels without requiring ground truth supervision."
+        "point": "Novel self-training approach enabling LLMs to improve reasoning without labeled data",
+        "evidence": "The method uses multiple sampled CoT reasoning paths and majority voting to generate high-confidence pseudo-labels for fine-tuning, resulting in substantial accuracy improvements across arithmetic, commonsense, and NLI benchmarks."
       },
       {
-        "point": "Strong empirical gains on diverse reasoning benchmarks",
-        "evidence": "Notable improvements in accuracy across arithmetic, commonsense QA, and NLI datasets (e.g., GSM8K from 74.4% to 82.1%, OpenBookQA from 90.0% to 94.4%)."
+        "point": "Strong empirical results with state-of-the-art or competitive performance",
+        "evidence": "Significant gains on GSM8K (74.4% to 82.1%), DROP, OpenBookQA, and ANLI datasets without any ground truth labels, as well as improved out-of-domain generalization."
       },
       {
-        "point": "Demonstrated knowledge distillation benefits to smaller models",
-        "evidence": "Distillation experiments show smaller PaLM and UL2 models improve beyond their baselines after learning from LMSI fine-tuned large models."
+        "point": "Comprehensive ablation studies and analysis",
+        "evidence": "Ablations demonstrate the importance of CoT training formats, sampling temperature, number of reasoning paths, and the benefit of self-generated questions and few-shot prompts."
       },
       {
-        "point": "Comprehensive ablations and analyses on hyperparameters and training formats",
-        "evidence": "Ablations highlight importance of mixed-format fine-tuning and increased optimal sampling temperature post-LMSI."
+        "point": "Extension to self-generate training questions and few-shot prompts",
+        "evidence": "The LLM autonomously creates additional training questions and few-shot CoT examples, reducing dependence on human annotation."
+      },
+      {
+        "point": "Knowledge distillation to smaller models",
+        "evidence": "Improvements from the large 540B LMSI model are successfully distilled to smaller 62B and 8B models, enhancing their reasoning capabilities."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to prior self-training and pseudo-labeling methods",
-        "evidence": "The paper lacks discussion or empirical baselines involving existing self-training, confidence filtering, or bootstrapping approaches in language model reasoning."
+        "point": "Lack of thorough comparison to prior self-training and self-distillation methods",
+        "evidence": "Related work section briefly mentions prior approaches but does not explicitly position LMSI relative to existing self-training or semi-supervised learning paradigms."
       },
       {
-        "point": "Lack of ablations on filtering thresholds and robustness to noisy pseudo-labels",
-        "evidence": "No analyses on how majority voting threshold impacts pseudo-label quality or fine-tuning robustness."
+        "point": "No justification or exploration of majority voting threshold and aggregation method",
+        "evidence": "The paper uses majority voting to select high-confidence answers but does not analyze alternative aggregation strategies or justify this choice."
       },
       {
-        "point": "Missing experiments on iterative or multi-step self-training and exposure bias",
-        "evidence": "Only single-step LMSI results are shown without investigating potential overfitting or degeneration from repeated self-generated data."
+        "point": "No analysis of error propagation from incorrect pseudo-labels",
+        "evidence": "The impact of noisy or incorrect majority answers on fine-tuning stability and model degradation is not studied or quantified."
       },
       {
-        "point": "Limited evaluation diversity and baselines with human-generated reasoning data",
-        "evidence": "Comparisons do not include fine-tuning on labeled CoT datasets or human rationales to contextualize the contribution of self-generated data."
+        "point": "Missing strong supervised fine-tuning baselines for fair comparison",
+        "evidence": "Comparisons are mainly to zero-shot, few-shot, or prior SOTA models; no direct supervised fine-tuning results on the same datasets are provided."
       },
       {
-        "point": "Omission of reasoning quality and calibration metrics",
-        "evidence": "The evaluation focuses solely on answer accuracy without assessing intermediate chain correctness or confidence calibration."
+        "point": "Limited evaluation metrics focusing only on accuracy",
+        "evidence": "No assessment of confidence calibration, robustness to adversarial or out-of-distribution inputs, or human evaluation of generated rationales."
       },
       {
-        "point": "Reproducibility hindered by missing fine-tuning details",
-        "evidence": "Key hyperparameters such as batch size, learning rate schedules, epochs, and hardware are not specified."
+        "point": "Insufficient details on fine-tuning hyperparameters and training procedure",
+        "evidence": "Key hyperparameters such as learning rate, batch size, number of epochs, and optimizer are omitted, hindering reproducibility."
       },
       {
-        "point": "Unclear quality control for self-generated questions and prompts",
-        "evidence": "The process for filtering or validating generated questions for augmentation is not described, risking low-quality data inclusion."
+        "point": "No code or model checkpoint release",
+        "evidence": "The paper does not mention releasing code or checkpoints, limiting reproducibility given the method's complexity."
       },
       {
-        "point": "Opaque explanations of design choices like mixed-format fine-tuning and prompt engineering",
-        "evidence": "Rationale for mixing four training formats and temperature selection lacks intuitive or empirical justification."
+        "point": "Ambiguity in mixed-format fine-tuning training details",
+        "evidence": "It is unclear how the four prompt-output formats are mixed or weighted during training."
       },
       {
-        "point": "No discussion of potential failure cases or computational costs",
-        "evidence": "The method\u2019s limitations in tasks where LMSI underperforms and the inference cost of sampling many reasoning paths are not addressed."
+        "point": "Limited discussion on computational cost and scalability",
+        "evidence": "Sampling multiple reasoning paths with a 540B model and fine-tuning it is computationally expensive, but cost implications are not addressed."
       },
       {
-        "point": "Limited assessment of generalizability beyond tested models and domains",
-        "evidence": "Experiments focus mainly on PaLM-540B and similar models with no exploration of multimodal tasks or cross-architecture distillation."
+        "point": "No exploration of iterative self-improvement beyond one round",
+        "evidence": "The paper only presents a single self-training iteration without studying potential gains or degradation from multiple rounds."
+      },
+      {
+        "point": "Limited generalizability beyond reasoning tasks",
+        "evidence": "Experiments focus solely on reasoning benchmarks; applicability to other NLP tasks like summarization or translation is untested."
+      },
+      {
+        "point": "Modest gains on smaller models suggest limited applicability",
+        "evidence": "UL2 experiments show only small improvements, indicating LMSI may require extremely large models to be effective."
       }
     ],
     "questions": [
       {
-        "question": "How does LMSI perform relative to supervised fine-tuning on labeled CoT datasets or human-annotated rationales?",
-        "motivation": "Understanding this would clarify whether LMSI truly substitutes for or complements supervised reasoning data."
+        "question": "How does LMSI compare quantitatively and qualitatively to existing self-training or self-distillation methods in NLP?",
+        "motivation": "Understanding relative novelty and effectiveness requires positioning LMSI within the broader literature on pseudo-labeling and semi-supervised learning."
       },
       {
-        "question": "What is the effect of varying the majority vote threshold and filtering criteria on pseudo-label noise and downstream performance?",
-        "motivation": "This impacts robustness and reliability of self-training, crucial for practical adoption."
+        "question": "What is the impact of incorrect majority-voted pseudo-labels on model performance and stability during fine-tuning?",
+        "motivation": "Quantifying error propagation is critical to ensure that self-training does not degrade the model or lead to confirmation bias."
       },
       {
-        "question": "Can LMSI be effectively iterated multiple times without suffering from exposure bias or degenerative loops?",
-        "motivation": "This would indicate the method\u2019s scalability and long-term self-improvement potential."
+        "question": "Can multiple iterations of LMSI self-improvement lead to further gains or does performance plateau or degrade?",
+        "motivation": "Studying iterative self-training dynamics would inform practical deployment and potential for continual self-improvement."
       },
       {
-        "question": "How does the quality of intermediate reasoning chains change after LMSI, and are models better calibrated?",
-        "motivation": "Evaluating reasoning quality and confidence calibration is key to assessing genuine reasoning improvement."
+        "question": "How does LMSI perform on non-reasoning NLP tasks such as summarization, translation, or open-domain QA?",
+        "motivation": "Demonstrating generalizability beyond reasoning benchmarks would broaden the method's applicability."
       },
       {
-        "question": "What are the computational and inference costs of generating multiple CoT paths, and can these be reduced without sacrificing gains?",
-        "motivation": "Practical deployment requires balancing performance improvements with resource constraints."
+        "question": "What are the computational costs and resource requirements for LMSI, and how feasible is it to deploy at scale?",
+        "motivation": "Understanding cost and scalability is essential for practical adoption in research and industry."
+      },
+      {
+        "question": "How does the choice of aggregation method (majority voting vs alternatives) affect the quality of pseudo-labels and final model performance?",
+        "motivation": "Exploring aggregation strategies could improve pseudo-label quality and self-training effectiveness."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to prior self-training and pseudo-labeling methods. The paper lacks discussion or empirical baselines involving existing self-training, confidence filtering, or bootstrapping approaches in language model reasoning",
-    "point_002": "Lack of ablations on filtering thresholds and robustness to noisy pseudo-labels. No analyses on how majority voting threshold impacts pseudo-label quality or fine-tuning robustness",
-    "point_003": "Missing experiments on iterative or multi-step self-training and exposure bias. Only single-step LMSI results are shown without investigating potential overfitting or degeneration from repeated self-generated data",
-    "point_004": "Limited evaluation diversity and baselines with human-generated reasoning data. Comparisons do not include fine-tuning on labeled CoT datasets or human rationales to contextualize the contribution of self-generated data",
-    "point_005": "Omission of reasoning quality and calibration metrics. The evaluation focuses solely on answer accuracy without assessing intermediate chain correctness or confidence calibration",
-    "point_006": "Reproducibility hindered by missing fine-tuning details. Key hyperparameters such as batch size, learning rate schedules, epochs, and hardware are not specified",
-    "point_007": "Unclear quality control for self-generated questions and prompts. The process for filtering or validating generated questions for augmentation is not described, risking low-quality data inclusion",
-    "point_008": "Opaque explanations of design choices like mixed-format fine-tuning and prompt engineering. Rationale for mixing four training formats and temperature selection lacks intuitive or empirical justification",
-    "point_009": "No discussion of potential failure cases or computational costs. The method\u2019s limitations in tasks where LMSI underperforms and the inference cost of sampling many reasoning paths are not addressed",
-    "point_010": "Limited assessment of generalizability beyond tested models and domains. Experiments focus mainly on PaLM-540B and similar models with no exploration of multimodal tasks or cross-architecture distillation"
+    "point_001": "Lack of thorough comparison to prior self-training and self-distillation methods. Related work section briefly mentions prior approaches but does not explicitly position LMSI relative to existing self-training or semi-supervised learning paradigms",
+    "point_002": "No justification or exploration of majority voting threshold and aggregation method. The paper uses majority voting to select high-confidence answers but does not analyze alternative aggregation strategies or justify this choice",
+    "point_003": "No analysis of error propagation from incorrect pseudo-labels. The impact of noisy or incorrect majority answers on fine-tuning stability and model degradation is not studied or quantified",
+    "point_004": "Missing strong supervised fine-tuning baselines for fair comparison. Comparisons are mainly to zero-shot, few-shot, or prior SOTA models; no direct supervised fine-tuning results on the same datasets are provided",
+    "point_005": "Limited evaluation metrics focusing only on accuracy. No assessment of confidence calibration, robustness to adversarial or out-of-distribution inputs, or human evaluation of generated rationales",
+    "point_006": "Insufficient details on fine-tuning hyperparameters and training procedure. Key hyperparameters such as learning rate, batch size, number of epochs, and optimizer are omitted, hindering reproducibility",
+    "point_007": "No code or model checkpoint release. The paper does not mention releasing code or checkpoints, limiting reproducibility given the method's complexity",
+    "point_008": "Ambiguity in mixed-format fine-tuning training details. It is unclear how the four prompt-output formats are mixed or weighted during training",
+    "point_009": "Limited discussion on computational cost and scalability. Sampling multiple reasoning paths with a 540B model and fine-tuning it is computationally expensive, but cost implications are not addressed",
+    "point_010": "No exploration of iterative self-improvement beyond one round. The paper only presents a single self-training iteration without studying potential gains or degradation from multiple rounds",
+    "point_011": "Limited generalizability beyond reasoning tasks. Experiments focus solely on reasoning benchmarks; applicability to other NLP tasks like summarization or translation is untested",
+    "point_012": "Modest gains on smaller models suggest limited applicability. UL2 experiments show only small improvements, indicating LMSI may require extremely large models to be effective"
   }
 }

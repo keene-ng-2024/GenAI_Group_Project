@@ -3,74 +3,82 @@
   "title": "One Question Answering Model for Many Languages with Cross-lingual Dense Passage Retrieval",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 48.63,
+  "latency_seconds": 40.75,
   "structured": {
-    "summary": "This paper presents CORA, a unified many-to-many multilingual open-domain QA model that jointly retrieves passages across multiple languages and generates answers in the target language without relying on translation or language-specific modules. Using iterative training with automatic cross-lingual data mining from Wikipedia language links, CORA achieves substantial improvements over prior state-of-the-art on two large multilingual QA benchmarks covering over 25 languages, including low-resource and unseen languages.",
+    "summary": "This paper presents CORA, a unified many-to-many multilingual open question answering system that jointly trains a cross-lingual dense passage retriever and a multilingual answer generator. By leveraging iterative cross-lingual data mining using Wikipedia language links, CORA effectively scales to 26 languages, including low-resource and unseen languages, outperforming prior state-of-the-art methods without relying on translation pipelines.",
     "strengths": [
       {
-        "point": "Unified many-to-many retrieval and generation framework",
-        "evidence": "CORA jointly performs multilingual dense passage retrieval and generative answer modeling without explicit translation or language-specific pipelines."
+        "point": "Unified many-to-many multilingual QA framework without reliance on translation pipelines",
+        "evidence": "CORA jointly trains a multilingual dense retriever (mDPR) and a multilingual generator (mGEN) that directly generate answers in the target language, eliminating the need for language-specific translation or retrieval modules."
       },
       {
-        "point": "Strong empirical improvements on multilingual QA benchmarks",
-        "evidence": "CORA achieves +23.4 F1 on XOR-TYDI and +4.7 F1 on MKQA compared to prior state-of-the-art, including on low-resource and unseen languages."
+        "point": "Iterative cross-lingual data mining method that scales QA training data to low-resource and unseen languages without additional human annotation",
+        "evidence": "The approach uses Wikipedia language links and model predictions to automatically mine positive and negative training examples across languages, enabling improved performance on 26 languages including 9 unseen during training."
       },
       {
-        "point": "Novel iterative training with automatic cross-lingual data mining",
-        "evidence": "The method mines cross-lingual positive passages using Wikipedia language links and filters them through answer generation correctness to augment training data."
+        "point": "Strong empirical results demonstrating substantial improvements over prior state-of-the-art on multilingual QA benchmarks",
+        "evidence": "CORA achieves +23.4 F1 on XOR-TYDI QA and +4.7 F1 on MKQA, with notable gains on unseen languages and languages with limited Wikipedia coverage."
       },
       {
-        "point": "Comprehensive analysis and human evaluation",
-        "evidence": "The paper provides detailed error analysis, retrieval language distribution studies, and human judgments confirming high relevance of retrieved passages."
+        "point": "Comprehensive analyses including human evaluation and error analysis",
+        "evidence": "Human evaluation shows 96% relevance of retrieved passages; analysis highlights the importance of cross-lingual retrieval and identifies main error sources such as retrieval failures and generation language mismatches."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited comparison to recent multilingual cross-lingual retrieval methods",
-        "evidence": "The paper mainly compares to DPR variants but does not empirically evaluate or discuss contemporaneous methods like LaBSE or mColBERT."
+        "point": "Insufficient comparison and discussion of prior multilingual dense retrieval methods",
+        "evidence": "The paper does not compare mDPR to existing multilingual retrievers like LaBSE or mContriever, nor include them as baselines in retrieval experiments."
       },
       {
-        "point": "Evaluation relies on gold question translations, potentially inflating results",
-        "evidence": "Benchmarks use manually translated questions, and no experiments with noisy or automatic translation inputs are reported, limiting real-world robustness assessment."
+        "point": "Lack of ablation studies on key methodological components",
+        "evidence": "No ablation on the impact of language tags in mGEN for controlling answer language, nor on retrieval hyperparameters such as the number of retrieved passages (k)."
       },
       {
-        "point": "Insufficient methodological details and ablations",
-        "evidence": "The paper lacks ablations on dependence on Wikipedia language link mining, the benefit of retrieval vs. generation-only, and does not specify key training hyperparameters."
+        "point": "Limited clarity and reproducibility details",
+        "evidence": "Details on mDPR training hyperparameters, passage indexing and retrieval infrastructure, and the iterative data mining algorithm are insufficiently described, hindering replication."
       },
       {
-        "point": "No code or data release plans discussed, hindering reproducibility",
-        "evidence": "The paper does not mention releasing code, pretrained models, or mined training data."
+        "point": "Evaluation limitations including unclear baseline comparability and lack of statistical significance testing",
+        "evidence": "Baselines on MKQA may not use the same retrieval corpus or multilingual generation setup; no confidence intervals or significance tests are reported for reported improvements."
       },
       {
-        "point": "Limited discussion of multilingual retrieval challenges and practical deployment",
-        "evidence": "Issues such as script mismatches, tokenization, latency, and efficiency are not addressed; evaluation metrics do not assess semantic correctness or fluency in non-English languages."
+        "point": "Limited discussion of domain generalizability and potential biases",
+        "evidence": "The approach relies heavily on Wikipedia and does not evaluate on other domains or tasks; retrieval errors increase for languages with limited Wikipedia presence without mitigation strategies."
       },
       {
-        "point": "Experiments restricted to Wikipedia corpora",
-        "evidence": "The retrieval corpus is only Wikipedia passages, limiting claims about generalizability to other domains or informal text."
+        "point": "Ambiguities in experimental definitions and human evaluation setup",
+        "evidence": "The definition of 'unseen languages' is unclear; human evaluation lacks details on annotator instructions, number of annotators, and inter-annotator agreement."
       }
     ],
     "questions": [
       {
-        "question": "How does CORA perform with noisy or user-generated queries without gold translations?",
-        "motivation": "Real-world applications involve imperfect input; understanding robustness to noise or automatic translations is crucial for deployment."
+        "question": "How does CORA's mDPR compare quantitatively and qualitatively to other multilingual dense retrievers like LaBSE or mContriever?",
+        "motivation": "Understanding relative performance and design differences would clarify the novelty and effectiveness of the proposed retrieval component."
       },
       {
-        "question": "To what extent does the reliance on Wikipedia language links limit applicability to other domains or languages without such alignment?",
-        "motivation": "Generalization beyond Wikipedia is essential to validate the approach's broader utility."
+        "question": "What is the impact of language tags appended to questions on mGEN's ability to generate answers in the correct target language?",
+        "motivation": "Ablation would reveal whether explicit language control is necessary or if the model can infer target language implicitly, informing future multilingual generation designs."
       },
       {
-        "question": "What are the computational efficiency and latency characteristics of CORA in large-scale multilingual retrieval and generation?",
-        "motivation": "Practical deployment requires understanding resource and speed trade-offs."
+        "question": "How sensitive is CORA's performance to the number of retrieved passages (k) and retrieval passage length?",
+        "motivation": "This affects computational efficiency and answer quality, important for practical deployment and understanding retrieval-generation trade-offs."
+      },
+      {
+        "question": "Can CORA generalize to non-Wikipedia corpora or other multilingual tasks such as fact verification or summarization?",
+        "motivation": "Evaluating generalizability would demonstrate broader applicability beyond Wikipedia-based open QA."
+      },
+      {
+        "question": "What strategies could mitigate retrieval bias toward languages with rich Wikipedia coverage and improve performance on low-resource languages?",
+        "motivation": "Addressing this limitation is crucial for equitable multilingual QA performance and real-world usability."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited comparison to recent multilingual cross-lingual retrieval methods. The paper mainly compares to DPR variants but does not empirically evaluate or discuss contemporaneous methods like LaBSE or mColBERT",
-    "point_002": "Evaluation relies on gold question translations, potentially inflating results. Benchmarks use manually translated questions, and no experiments with noisy or automatic translation inputs are reported, limiting real-world robustness assessment",
-    "point_003": "Insufficient methodological details and ablations. The paper lacks ablations on dependence on Wikipedia language link mining, the benefit of retrieval vs. generation-only, and does not specify key training hyperparameters",
-    "point_004": "No code or data release plans discussed, hindering reproducibility. The paper does not mention releasing code, pretrained models, or mined training data",
-    "point_005": "Limited discussion of multilingual retrieval challenges and practical deployment. Issues such as script mismatches, tokenization, latency, and efficiency are not addressed; evaluation metrics do not assess semantic correctness or fluency in non-English languages",
-    "point_006": "Experiments restricted to Wikipedia corpora. The retrieval corpus is only Wikipedia passages, limiting claims about generalizability to other domains or informal text"
+    "point_001": "Insufficient comparison and discussion of prior multilingual dense retrieval methods. The paper does not compare mDPR to existing multilingual retrievers like LaBSE or mContriever, nor include them as baselines in retrieval experiments",
+    "point_002": "Lack of ablation studies on key methodological components. No ablation on the impact of language tags in mGEN for controlling answer language, nor on retrieval hyperparameters such as the number of retrieved passages (k)",
+    "point_003": "Limited clarity and reproducibility details. Details on mDPR training hyperparameters, passage indexing and retrieval infrastructure, and the iterative data mining algorithm are insufficiently described, hindering replication",
+    "point_004": "Evaluation limitations including unclear baseline comparability and lack of statistical significance testing. Baselines on MKQA may not use the same retrieval corpus or multilingual generation setup; no confidence intervals or significance tests are reported for reported improvements",
+    "point_005": "Limited discussion of domain generalizability and potential biases. The approach relies heavily on Wikipedia and does not evaluate on other domains or tasks; retrieval errors increase for languages with limited Wikipedia presence without mitigation strategies",
+    "point_006": "Ambiguities in experimental definitions and human evaluation setup. The definition of 'unseen languages' is unclear; human evaluation lacks details on annotator instructions, number of annotators, and inter-annotator agreement"
   }
 }

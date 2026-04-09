@@ -3,42 +3,83 @@
   "title": "Deepening Hidden Representations from Pre-trained Language Models",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 85.94,
+  "latency_seconds": 117.3,
   "structured": {
-    "summary": "This paper proposes HIRE, a novel module that adaptively extracts and fuses complementary representations from all hidden layers of Transformer-based models to enhance downstream task performance. Applied to RoBERTa-large, HIRE dynamically weights each layer\u2019s output via Bi-GRU summarization and fusion, achieving consistent improvements on GLUE benchmark tasks and state-of-the-art results on SST-2 without modifying the backbone architecture.",
+    "summary": "The paper proposes HIRE, a lightweight module that dynamically extracts and fuses complementary representations from all hidden layers of a Transformer encoder to enhance downstream task performance without modifying the pre-trained model. Evaluated on GLUE benchmarks with RoBERTa-large, HIRE achieves consistent improvements and state-of-the-art results on SST-2 by adaptively weighting layer contributions per example and task.",
     "strengths": [
       {
-        "point": "Adaptive multi-layer representation extraction",
-        "evidence": "HIRE dynamically weights all hidden layers\u2019 outputs to produce richer contextualized embeddings, outperforming baselines relying solely on the final layer."
+        "point": "Novel approach to leverage all Transformer hidden layers dynamically",
+        "evidence": "HIRE uses a shared Bi-GRU to summarize each layer and learns dynamic importance weights to adaptively combine layer representations."
       },
       {
-        "point": "Consistent empirical gains on diverse NLU tasks",
-        "evidence": "Experiments on GLUE show significant improvements over RoBERTa-large baseline, including +1.7 points on CoLA and state-of-the-art accuracy on SST-2."
+        "point": "Consistent empirical improvements on multiple GLUE tasks",
+        "evidence": "RoBERTa+HIRE outperforms baseline RoBERTa-large on 5 out of 9 GLUE tasks, including +1.7 MCC on CoLA and state-of-the-art 97.1 accuracy on SST-2."
+      },
+      {
+        "point": "Maintains original encoder architecture and pre-training intact",
+        "evidence": "HIRE is an add-on module applied during fine-tuning, requiring no changes to the Transformer encoder or pre-training procedure."
+      },
+      {
+        "point": "Analysis shows adaptive layer weighting varies by task and example",
+        "evidence": "Importance scores differ across tasks and inputs, indicating HIRE\u2019s ability to capture complementary information dynamically."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to prior multi-layer fusion methods",
-        "evidence": "The paper omits explicit comparisons to ELMo scalar mixing, learned scalar weighting in BERT, or recent dynamic layer selection approaches, leaving novelty unclear."
+        "point": "Insufficient comparison to prior layer aggregation methods and simple baselines",
+        "evidence": "No empirical baselines using scalar mixing, averaging, or concatenation of layers are provided to contextualize HIRE\u2019s gains."
       },
       {
-        "point": "Lack of ablations justifying Bi-GRU design choices and fusion operations",
-        "evidence": "No experiments compare Bi-GRU summarization and fusion to simpler methods (e.g., pooling, feed-forward, self-attention), nor isolate contributions of concatenation/addition/multiplication."
+        "point": "Lack of ablation studies justifying architectural choices",
+        "evidence": "No comparisons between Bi-GRU summarization and simpler alternatives, or between fusion network designs (e.g., MLP vs. Bi-GRU)."
+      },
+      {
+        "point": "Unclear and ambiguous description of dynamic importance weighting mechanism",
+        "evidence": "The paper does not specify whether weights are computed per token or per example, nor provides formal definitions or pseudocode."
+      },
+      {
+        "point": "Limited evaluation scope and missing statistical rigor",
+        "evidence": "Experiments are restricted to GLUE with RoBERTa-large; no statistical significance tests or multiple run variances are reported."
+      },
+      {
+        "point": "Reproducibility hindered by missing hyperparameter details and code release",
+        "evidence": "Critical training details, hyperparameters for HIRE modules, and code or pre-trained models are not provided."
+      },
+      {
+        "point": "No quantification of computational overhead or parameter increase",
+        "evidence": "Claims of lightweight design are unsubstantiated by runtime, memory, or parameter count analyses."
+      },
+      {
+        "point": "Lack of theoretical motivation and qualitative error analysis",
+        "evidence": "No explanation for why Bi-GRU summarization and fusion improve representations; no analysis of failure cases or training stability."
       }
     ],
     "questions": [
       {
-        "question": "How does HIRE compare to learned static scalar layer weighting baselines?",
-        "motivation": "Such baselines are standard and critical to isolate the benefit of example-adaptive weighting."
+        "question": "How does HIRE compare empirically to simpler layer aggregation methods like scalar mixing or averaging?",
+        "motivation": "Establishing whether the added complexity of Bi-GRU summarization and fusion is justified by significant gains."
       },
       {
-        "question": "What is the computational and inference overhead introduced by HIRE?",
-        "motivation": "Understanding efficiency trade-offs is important for practical deployment given the ~80M parameter increase."
+        "question": "What is the exact formulation and granularity of the dynamic importance weights?",
+        "motivation": "Clarifying this is crucial for reproducibility and understanding how HIRE adapts layer contributions per example or token."
+      },
+      {
+        "question": "What is the computational cost and parameter overhead introduced by HIRE during training and inference?",
+        "motivation": "Quantifying efficiency is important for practical adoption, especially in resource-constrained settings."
+      },
+      {
+        "question": "Does HIRE generalize to other Transformer architectures, languages, or low-resource scenarios?",
+        "motivation": "Demonstrating broad applicability would strengthen claims of general utility beyond RoBERTa and GLUE."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to prior multi-layer fusion methods. The paper omits explicit comparisons to ELMo scalar mixing, learned scalar weighting in BERT, or recent dynamic layer selection approaches, leaving novelty unclear",
-    "point_002": "Lack of ablations justifying Bi-GRU design choices and fusion operations. No experiments compare Bi-GRU summarization and fusion to simpler methods (e.g., pooling, feed-forward, self-attention), nor isolate contributions of concatenation/addition/multiplication"
+    "point_001": "Insufficient comparison to prior layer aggregation methods and simple baselines. No empirical baselines using scalar mixing, averaging, or concatenation of layers are provided to contextualize HIRE\u2019s gains",
+    "point_002": "Lack of ablation studies justifying architectural choices. No comparisons between Bi-GRU summarization and simpler alternatives, or between fusion network designs (e.g., MLP vs. Bi-GRU)",
+    "point_003": "Unclear and ambiguous description of dynamic importance weighting mechanism. The paper does not specify whether weights are computed per token or per example, nor provides formal definitions or pseudocode",
+    "point_004": "Limited evaluation scope and missing statistical rigor. Experiments are restricted to GLUE with RoBERTa-large; no statistical significance tests or multiple run variances are reported",
+    "point_005": "Reproducibility hindered by missing hyperparameter details and code release. Critical training details, hyperparameters for HIRE modules, and code or pre-trained models are not provided",
+    "point_006": "No quantification of computational overhead or parameter increase. Claims of lightweight design are unsubstantiated by runtime, memory, or parameter count analyses",
+    "point_007": "Lack of theoretical motivation and qualitative error analysis. No explanation for why Bi-GRU summarization and fusion improve representations; no analysis of failure cases or training stability"
   }
 }

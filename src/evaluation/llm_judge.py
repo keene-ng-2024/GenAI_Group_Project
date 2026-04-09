@@ -209,10 +209,12 @@ if __name__ == "__main__":
     cfg = load_config()
     mode = sys.argv[1] if len(sys.argv) > 1 else "baseline"
 
-    results_dir = (
-        cfg["results"]["baseline_dir"] if mode == "baseline"
-        else cfg["results"]["agents_dir"]
-    )
+    results_dir = {
+        "baseline": cfg["results"]["baseline_dir"],
+        "agents": cfg["results"]["agents_dir"],
+        "n8n": cfg["results"]["n8n_dir"],
+        "langgraph": cfg["results"]["langgraph_dir"],
+    }.get(mode, cfg["results"]["agents_dir"])
 
     result = judge_all(
         results_dir=results_dir,

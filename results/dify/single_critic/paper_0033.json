@@ -3,42 +3,102 @@
   "title": "How Should Pre-Trained Language Models Be Fine-Tuned Towards Adversarial Robustness?",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 50.3,
+  "latency_seconds": 60.31,
   "structured": {
-    "summary": "This paper proposes Robust Informative Fine-Tuning (RIFT), an adversarial fine-tuning method for pre-trained language models that leverages conditional mutual information maximization to preserve robust and generic features learned during pre-training, mitigating catastrophic forgetting. Experiments on IMDB and SNLI tasks demonstrate improved adversarial robustness and clean accuracy compared to several adversarial fine-tuning baselines.",
+    "summary": "This paper proposes Robust Informative Fine-Tuning (RIFT), an information-theoretic adversarial fine-tuning method that mitigates catastrophic forgetting in pre-trained language models by maximizing conditional mutual information between fine-tuned and pre-trained features given labels. Evaluated on sentiment analysis and natural language inference tasks under word substitution attacks, RIFT improves robustness without sacrificing clean accuracy compared to strong baselines.",
     "strengths": [
       {
-        "point": "Novel information-theoretic framework to mitigate catastrophic forgetting during adversarial fine-tuning",
-        "evidence": "RIFT explicitly maximizes conditional mutual information I(S; T|Y) to retain robust pre-trained features, a novel approach supported by theoretical motivation and contrastive learning techniques (Section 3.2, Algorithm 1)."
+        "point": "Novel information-theoretic formulation to retain pre-trained features during adversarial fine-tuning",
+        "evidence": "The method maximizes conditional mutual information I(S; T | Y) to encourage retention of robust, generic linguistic features from the fixed pre-trained model."
       },
       {
-        "point": "Consistent empirical improvements on adversarial robustness across tasks and models",
-        "evidence": "RIFT outperforms multiple adversarial fine-tuning baselines (Adv-Base, Adv-PTWD, Adv-Mixout) on two NLP tasks (IMDB sentiment analysis, SNLI natural language inference) and two pre-trained models (BERT-base, RoBERTa-base) under strong word substitution attacks (Tables 1 and 2)."
+        "point": "Consistent empirical improvements in robustness and clean accuracy across datasets and models",
+        "evidence": "RIFT outperforms baselines including ASCC-Defense, pre-trained weight decay, and Mixout on IMDB and SNLI under Genetic and PWWS attacks, e.g., 2.9% robust accuracy gain on IMDB with RoBERTa."
+      },
+      {
+        "point": "Insightful analysis of catastrophic forgetting intensified by adversarial fine-tuning",
+        "evidence": "The paper shows adversarial fine-tuning increases parameter distance from the pre-trained model, motivating the need for information retention."
+      },
+      {
+        "point": "Ablation studies demonstrating the advantage of conditional MI over unconditional MI",
+        "evidence": "Maximizing I(S; T | Y) yields better robustness than maximizing I(S; T), aligning better with downstream task objectives."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited evaluation scope and comparison to other robustness methods",
-        "evidence": "Experiments focus only on two NLP tasks with word substitution attacks and compare mainly to adversarial fine-tuning baselines, omitting other state-of-the-art robustness techniques such as randomized smoothing or certified defenses (Results section)."
+        "point": "Lack of comparison to representation-level regularization or feature distillation baselines",
+        "evidence": "The paper does not compare RIFT against simpler or established methods like L2 feature matching or knowledge distillation from pre-trained to fine-tuned models."
       },
       {
-        "point": "Insufficient theoretical justification and methodological clarity",
-        "evidence": "The core claim about conditional mutual information balancing feature retention and separation lacks formal proof; notation and optimization steps (Equations 8-11) are dense and may confuse readers unfamiliar with mutual information estimation (Section 3.2, 3.3)."
+        "point": "Insufficient justification for fixing the pre-trained model during fine-tuning",
+        "evidence": "No discussion on whether jointly fine-tuning or partially updating the pre-trained model could improve adaptability or robustness."
+      },
+      {
+        "point": "Limited evaluation scope with only two sentence-level classification tasks",
+        "evidence": "No experiments on other NLP tasks such as question answering, sequence labeling, or generation to demonstrate generalizability."
+      },
+      {
+        "point": "Baselines do not include recent strong adversarial training methods for PLMs",
+        "evidence": "Methods like FreeLB, SMART, or adversarial data augmentation are not considered, weakening claims of state-of-the-art robustness."
+      },
+      {
+        "point": "Missing details on adversarial example generation and training hyperparameters",
+        "evidence": "Number of attack iterations, perturbation budgets, synonym candidate selection, learning rates, batch sizes, and optimizer settings are not specified."
+      },
+      {
+        "point": "No statistical significance testing or confidence intervals reported",
+        "evidence": "Reported gains such as 2.9% robust accuracy improvement lack measures of variance or significance."
+      },
+      {
+        "point": "No discussion or measurement of computational overhead",
+        "evidence": "Training time, memory consumption, and inference latency compared to baselines are not reported."
+      },
+      {
+        "point": "Potential overfitting to word substitution attacks without evaluation on other perturbation types",
+        "evidence": "Only Genetic and PWWS word substitution attacks are considered; robustness to character-level, paraphrasing, or syntactic attacks is unknown."
+      },
+      {
+        "point": "Clarity issues due to notation overload and brief theoretical explanations",
+        "evidence": "Multiple variables introduced rapidly without summary tables or diagrams; conditional MI justification is only briefly discussed."
+      },
+      {
+        "point": "No code or pre-trained model release mentioned",
+        "evidence": "Lack of released resources hinders reproducibility and further research."
       }
     ],
     "questions": [
       {
-        "question": "How does RIFT perform on a broader range of NLP tasks and different pre-training objectives?",
-        "motivation": "Evaluating generalizability to tasks like question answering or summarization and models pre-trained with objectives other than masked language modeling would clarify the method's applicability."
+        "question": "Would jointly fine-tuning or partially updating the pre-trained model improve robustness or adaptability?",
+        "motivation": "Fixing the pre-trained model may limit adaptation to domain-specific nuances or new vocabulary, affecting performance and generalization."
       },
       {
-        "question": "What is the computational overhead and training stability impact of RIFT compared to standard adversarial fine-tuning?",
-        "motivation": "Understanding runtime costs and convergence behavior is critical for practical adoption in resource-constrained settings."
+        "question": "How does RIFT perform on other NLP tasks beyond sentence classification, such as question answering or sequence labeling?",
+        "motivation": "Demonstrating generalizability across diverse tasks is important for broader applicability of the method."
+      },
+      {
+        "question": "Can RIFT improve robustness against other adversarial perturbations beyond word substitutions?",
+        "motivation": "Robustness to a wider range of attacks (e.g., character-level, paraphrasing) is critical for practical deployment."
+      },
+      {
+        "question": "How sensitive is RIFT to the choice of hyperparameter \u03b1, and can automated tuning strategies be developed?",
+        "motivation": "Proper balancing of task fitting and information retention is crucial; lack of principled selection may hinder usability."
+      },
+      {
+        "question": "What is the computational cost of RIFT compared to standard adversarial fine-tuning methods?",
+        "motivation": "Understanding overhead is necessary for assessing feasibility in real-world applications."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited evaluation scope and comparison to other robustness methods. Experiments focus only on two NLP tasks with word substitution attacks and compare mainly to adversarial fine-tuning baselines, omitting other state-of-the-art robustness techniques such as randomized smoothing or certified defenses (Results section)",
-    "point_002": "Insufficient theoretical justification and methodological clarity. The core claim about conditional mutual information balancing feature retention and separation lacks formal proof; notation and optimization steps (Equations 8-11) are dense and may confuse readers unfamiliar with mutual information estimation (Section 3.2, 3.3)"
+    "point_001": "Lack of comparison to representation-level regularization or feature distillation baselines. The paper does not compare RIFT against simpler or established methods like L2 feature matching or knowledge distillation from pre-trained to fine-tuned models",
+    "point_002": "Insufficient justification for fixing the pre-trained model during fine-tuning. No discussion on whether jointly fine-tuning or partially updating the pre-trained model could improve adaptability or robustness",
+    "point_003": "Limited evaluation scope with only two sentence-level classification tasks. No experiments on other NLP tasks such as question answering, sequence labeling, or generation to demonstrate generalizability",
+    "point_004": "Baselines do not include recent strong adversarial training methods for PLMs. Methods like FreeLB, SMART, or adversarial data augmentation are not considered, weakening claims of state-of-the-art robustness",
+    "point_005": "Missing details on adversarial example generation and training hyperparameters. Number of attack iterations, perturbation budgets, synonym candidate selection, learning rates, batch sizes, and optimizer settings are not specified",
+    "point_006": "No statistical significance testing or confidence intervals reported. Reported gains such as 2.9% robust accuracy improvement lack measures of variance or significance",
+    "point_007": "No discussion or measurement of computational overhead. Training time, memory consumption, and inference latency compared to baselines are not reported",
+    "point_008": "Potential overfitting to word substitution attacks without evaluation on other perturbation types. Only Genetic and PWWS word substitution attacks are considered; robustness to character-level, paraphrasing, or syntactic attacks is unknown",
+    "point_009": "Clarity issues due to notation overload and brief theoretical explanations. Multiple variables introduced rapidly without summary tables or diagrams; conditional MI justification is only briefly discussed",
+    "point_010": "No code or pre-trained model release mentioned. Lack of released resources hinders reproducibility and further research"
   }
 }

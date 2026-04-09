@@ -3,83 +3,102 @@
   "title": "Using Document Similarity Methods to create Parallel Datasets for Code Translation",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 183.07,
+  "latency_seconds": 89.01,
   "structured": {
-    "summary": "The paper proposes generating noisy parallel code translation datasets by leveraging document similarity metrics, particularly Word Mover\u2019s Distance, to automatically match code solving the same problems across languages. It demonstrates that pretrained code models fine-tuned on these noisy datasets maintain robust translation performance and expands supervised code translation to 10 programming languages beyond commonly studied pairs.",
+    "summary": "This paper proposes using document similarity mining, particularly Word Movers Distance, to automatically create noisy parallel datasets for code translation across multiple programming languages. The approach enables supervised training of code translation models on languages lacking parallel corpora, demonstrating robustness to noise and improved performance over random baselines on the CodeNet dataset.",
     "strengths": [
       {
-        "point": "Addresses scarcity of parallel code datasets by automatic, unsupervised matching",
-        "evidence": "The method generates noisy parallel corpora from monolingual corpora using document similarity without manual curation."
+        "point": "Novel application of document similarity mining to create noisy parallel code datasets",
+        "evidence": "The paper introduces and empirically validates multiple similarity metrics, with WMD achieving up to ~95% match accuracy in identifying parallel or near-parallel code pairs."
       },
       {
-        "point": "Empirical evaluation shows Word Mover\u2019s Distance effectively identifies semantically similar code samples",
-        "evidence": "WMD achieves higher match accuracy than TF-IDF, BM25, LDA, and LSI on both ground-truth and large-scale CodeNet datasets."
+        "point": "Demonstrated robustness of code translation models to noise in training data",
+        "evidence": "Experiments show that models trained on noisy datasets with up to ~30% noise degrade performance slowly and remain competitive with models trained on ground-truth parallel data."
       },
       {
-        "point": "Demonstrates pretrained code models' robustness to noise in training data",
-        "evidence": "Models fine-tuned with noisy parallel pairs show only mild performance degradation compared to ground-truth data, tolerating up to ~30% noise."
+        "point": "Expanded code translation to 10 language pairs beyond commonly studied ones",
+        "evidence": "Created noisy parallel datasets and fine-tuned PLBART models on pairs including PHP\u2192Ruby and JavaScript\u2192C++, achieving significantly better computational accuracy than random baselines."
       },
       {
-        "point": "Practical contribution by creating and evaluating noisy parallel datasets across 10 diverse programming languages",
-        "evidence": "Fine-tuned PLBART models trained on WMD-generated pairs outperform random baselines, including on less studied language pairs."
+        "point": "Comprehensive evaluation across multiple similarity metrics, datasets, and models",
+        "evidence": "Evaluated TF-IDF, BM25, LDA, LSI, and WMD on both synthetic and real-world datasets; tested CodeBERT, GraphCodeBERT, and PLBART models; analyzed noise tolerance and translation accuracy."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks comparison to existing unsupervised or weakly supervised code translation methods",
-        "evidence": "Related work and experimental baselines omit recent state-of-the-art approaches leveraging AST alignments, back-translation, or self-supervision."
+        "point": "Insufficient comparison to recent unsupervised or semi-supervised code translation methods",
+        "evidence": "Related work lacks discussion or empirical comparison to methods like TransCoder, back-translation, or dual learning that also address parallel data scarcity."
       },
       {
-        "point": "Insufficient methodological details and analysis on key components",
-        "evidence": "No rationale or ablation study for similarity threshold choice, embedding source and quality for WMD, or tokenization and preprocessing schemes."
+        "point": "Lack of principled selection or sensitivity analysis of similarity threshold in mining algorithm",
+        "evidence": "Algorithm 1 uses a fixed threshold without ablation or analysis of its impact on dataset noise and model performance."
       },
       {
-        "point": "Evaluation metrics do not fully guarantee semantic or functional equivalence",
-        "evidence": "Reliance on BLEU, CodeBLEU, Exact Match, and unit tests lacks human or formal semantic validation; unit test coverage adequacy is unaddressed."
+        "point": "No exploration of alternative pairing strategies beyond one-to-one matching",
+        "evidence": "The paper enforces one-to-one document pairing but does not investigate one-to-many or many-to-many approaches that might increase dataset size and diversity."
       },
       {
-        "point": "One-to-one matching assumption without coverage analysis may limit dataset diversity",
-        "evidence": "No analysis on unmatched documents or potential benefits of many-to-many pairings."
+        "point": "Limited evaluation baselines, missing state-of-the-art models like TransCoder or CodeT5",
+        "evidence": "Experiments only compare CodeBERT, GraphCodeBERT, and PLBART without including recent leading code translation models."
       },
       {
-        "point": "No discussion of scalability, computational efficiency, or practical deployment considerations",
-        "evidence": "Pairwise similarity computations over large corpora may be costly; no mention of indexing or approximate methods."
+        "point": "Overreliance on computational accuracy @5 metric without complementary syntactic or semantic metrics",
+        "evidence": "No use of BLEU, CodeBLEU, or human evaluation to assess code quality beyond functional correctness."
       },
       {
-        "point": "No qualitative analysis of failure cases or error modes",
-        "evidence": "The paper lacks examples or categorization of mismatches or poor translations."
+        "point": "No qualitative error analysis or examples illustrating mined pairs and noise characteristics",
+        "evidence": "The paper lacks concrete examples of correct or incorrect mined pairs to understand noise nature."
       },
       {
-        "point": "Limited generalizability given exclusive use of CodeNet and educational problem datasets",
-        "evidence": "No evaluation on industrial or more heterogeneous codebases."
+        "point": "Missing critical details on code preprocessing and tokenization for similarity computation",
+        "evidence": "No description of comment removal, normalization, or tokenization schemes, which affect similarity scores and reproducibility."
+      },
+      {
+        "point": "No public release of mining code or noisy parallel datasets",
+        "evidence": "Despite claiming dataset contributions, the paper does not mention releasing code or data for replication."
+      },
+      {
+        "point": "No analysis of computational efficiency or scalability of mining algorithm, especially for WMD",
+        "evidence": "WMD is computationally intensive, but runtime or scalability considerations are not discussed."
+      },
+      {
+        "point": "Limited generalizability evaluation restricted to CodeNet and popular languages",
+        "evidence": "No experiments on cross-project, cross-domain, or less common languages; no discussion of language-specific challenges."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed noisy parallel data approach compare quantitatively and qualitatively to recent unsupervised/self-supervised code translation methods?",
-        "motivation": "Understanding relative gains over existing approaches is critical for assessing novelty and practical impact."
+        "question": "How does the proposed document similarity mining approach compare empirically to recent unsupervised or semi-supervised code translation methods like TransCoder?",
+        "motivation": "Understanding relative advantages or limitations is crucial for positioning this method within the state-of-the-art and guiding future research."
       },
       {
-        "question": "What is the sensitivity of translation performance to the similarity threshold and embedding choices in the WMD metric?",
-        "motivation": "These parameters directly affect dataset quality and reproducibility; clarifying their impact aids method robustness."
+        "question": "What is the impact of varying the similarity threshold and allowing alternative pairing strategies (e.g., one-to-many) on dataset quality and translation performance?",
+        "motivation": "This would inform best practices for mining noisy parallel datasets and potentially improve dataset size and model accuracy."
       },
       {
-        "question": "Can the method be extended to leverage structural code features (e.g., ASTs) in similarity for improved matching precision?",
-        "motivation": "Incorporating code semantics may reduce noise and improve translation quality."
+        "question": "Can similarity scores be integrated as sample weights during model training to mitigate noise effects and improve robustness?",
+        "motivation": "Incorporating confidence measures could enhance model performance on noisy data, a promising direction mentioned but unexplored."
       },
       {
-        "question": "How well does the approach scale computationally to very large codebases, and are approximate matching methods feasible?",
-        "motivation": "Scalability is key for real-world adoption in industry-scale repositories."
+        "question": "What preprocessing and tokenization steps are necessary to adapt WMD and other similarity metrics effectively to source code?",
+        "motivation": "Clarifying this is essential for reproducibility and for others to apply or improve the mining approach."
+      },
+      {
+        "question": "Are there plans to release the mined noisy parallel datasets and mining code to facilitate replication and further research?",
+        "motivation": "Public resources would significantly increase the impact and adoption of the proposed method."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lacks comparison to existing unsupervised or weakly supervised code translation methods. Related work and experimental baselines omit recent state-of-the-art approaches leveraging AST alignments, back-translation, or self-supervision",
-    "point_002": "Insufficient methodological details and analysis on key components. No rationale or ablation study for similarity threshold choice, embedding source and quality for WMD, or tokenization and preprocessing schemes",
-    "point_003": "Evaluation metrics do not fully guarantee semantic or functional equivalence. Reliance on BLEU, CodeBLEU, Exact Match, and unit tests lacks human or formal semantic validation; unit test coverage adequacy is unaddressed",
-    "point_004": "One-to-one matching assumption without coverage analysis may limit dataset diversity. No analysis on unmatched documents or potential benefits of many-to-many pairings",
-    "point_005": "No discussion of scalability, computational efficiency, or practical deployment considerations. Pairwise similarity computations over large corpora may be costly; no mention of indexing or approximate methods",
-    "point_006": "No qualitative analysis of failure cases or error modes. The paper lacks examples or categorization of mismatches or poor translations",
-    "point_007": "Limited generalizability given exclusive use of CodeNet and educational problem datasets. No evaluation on industrial or more heterogeneous codebases"
+    "point_001": "Insufficient comparison to recent unsupervised or semi-supervised code translation methods. Related work lacks discussion or empirical comparison to methods like TransCoder, back-translation, or dual learning that also address parallel data scarcity",
+    "point_002": "Lack of principled selection or sensitivity analysis of similarity threshold in mining algorithm. Algorithm 1 uses a fixed threshold without ablation or analysis of its impact on dataset noise and model performance",
+    "point_003": "No exploration of alternative pairing strategies beyond one-to-one matching. The paper enforces one-to-one document pairing but does not investigate one-to-many or many-to-many approaches that might increase dataset size and diversity",
+    "point_004": "Limited evaluation baselines, missing state-of-the-art models like TransCoder or CodeT5. Experiments only compare CodeBERT, GraphCodeBERT, and PLBART without including recent leading code translation models",
+    "point_005": "Overreliance on computational accuracy @5 metric without complementary syntactic or semantic metrics. No use of BLEU, CodeBLEU, or human evaluation to assess code quality beyond functional correctness",
+    "point_006": "No qualitative error analysis or examples illustrating mined pairs and noise characteristics. The paper lacks concrete examples of correct or incorrect mined pairs to understand noise nature",
+    "point_007": "Missing critical details on code preprocessing and tokenization for similarity computation. No description of comment removal, normalization, or tokenization schemes, which affect similarity scores and reproducibility",
+    "point_008": "No public release of mining code or noisy parallel datasets. Despite claiming dataset contributions, the paper does not mention releasing code or data for replication",
+    "point_009": "No analysis of computational efficiency or scalability of mining algorithm, especially for WMD. WMD is computationally intensive, but runtime or scalability considerations are not discussed",
+    "point_010": "Limited generalizability evaluation restricted to CodeNet and popular languages. No experiments on cross-project, cross-domain, or less common languages; no discussion of language-specific challenges"
   }
 }

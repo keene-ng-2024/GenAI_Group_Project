@@ -216,6 +216,7 @@ Output in this exact JSON format:
     "recommendation": "borderline",
     "confidence": 3
   }
+>>>>>>> origin/main
 }
 ```
 
@@ -365,8 +366,7 @@ python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
 python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 
 # Run Dify workflows (requires DIFY_API_KEY in .env)
-python -m src.dify.run_dify single_critic     # Reader → Critic → Summariser
-python -m src.dify.run_dify dual_critic       # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+python -m src.dify.run_dify                   # runs single_critic workflow by default
 
 # Run CrewAI workflows
 python -m src.platforms.crewai_critique none     # Reader → Critic → Summariser
