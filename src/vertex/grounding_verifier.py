@@ -15,7 +15,7 @@ import re
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
-from src.agents.vertex_client import get_vertex_ai_client, generate_content, load_config
+from src.vertex.vertex_client import get_vertex_ai_client, generate_content, load_config
 
 
 # ── Data structures ────────────────────────────────────────────────────────────

@@ -16,7 +16,7 @@ from typing import Dict, Any, List, Optional
 
 import yaml
 
-from src.agents.state import (
+from src.vertex.state import (
     create_initial_state,
     update_transcript,
     update_token_usage,
@@ -24,13 +24,13 @@ from src.agents.state import (
     should_early_stop,
     get_latency_seconds,
 )
-from src.agents.vertex_client import (
+from src.vertex.vertex_client import (
     get_vertex_ai_client,
     generate_content,
     load_config,
 )
-from src.agents.personas import AgentRole, BaseAgent, build_agents
-from src.agents.grounding_verifier import verify_all_grounding
+from src.vertex.personas import AgentRole, BaseAgent, build_agents
+from src.vertex.grounding_verifier import verify_all_grounding
 
 
 # ── Config ─────────────────────────────────────────────────────────────────────
