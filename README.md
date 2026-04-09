@@ -208,7 +208,7 @@ Output in this exact JSON format:
   "questions": [
     {"question": "open question", "motivation": "why this matters"},
     {"question": "open question", "motivation": "why this matters"}
-  ]
+  ],
 }
 ```
 
