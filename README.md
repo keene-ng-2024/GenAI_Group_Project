@@ -396,6 +396,12 @@ python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
 python -m src.evaluation.scorer dify_single_critic
 python -m src.evaluation.scorer dify_dual_critic
+python -m src.evaluation.scorer langgraph_none
+python -m src.evaluation.scorer langgraph_fixed
+python -m src.evaluation.scorer langgraph_dynamic
+python -m src.evaluation.scorer crewai_none
+python -m src.evaluation.scorer crewai_fixed
+python -m src.evaluation.scorer crewai_dynamic
 
 # Print comparison table + plots
 python -m src.evaluation.metrics
