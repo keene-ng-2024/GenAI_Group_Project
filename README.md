@@ -23,7 +23,7 @@ are workflow structure, input format, and model (Vertex AI only).
 | n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
 | Dify (no loop) | Dify workflow (`single_critic`) | None | GPT-4.1-mini | Raw PDF |
 | Dify (1 round) | Dify workflow (`dual_critic`) | Fixed 1 round | GPT-4.1-mini | Raw PDF |
-| Vertex AI | `src/agents/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | JSONL body_text |
+| Vertex AI | `src/vertex/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | JSONL body_text |
 | LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | JSONL body_text |
 | LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
 | LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
@@ -261,9 +261,11 @@ paper-critique-agent-study/
 │   ├── baseline/
 │   │   └── baseline_critique.py    # single LLM call to critique a paper
 │   ├── agents/
-│   │   ├── orchestrator.py         # main agentic loop / workflow
-│   │   ├── agents.py               # role definitions (Reader, Critic, Auditor, …)
-│   │   └── tools.py                # tools agents can invoke
+│   │   ├── vertex_orchestrator.py  # Vertex AI pipeline (Gemini 2.5 Flash)
+│   │   ├── vertex_client.py        # Google GenAI SDK wrapper
+│   │   ├── personas.py             # agent role definitions for Vertex AI
+│   │   ├── state.py                # state management for Vertex AI pipeline
+│   │   └── grounding_verifier.py   # verifies critique points against paper text
 │   └── evaluation/
 │       ├── scorer.py               # compare output vs ground truth → scores
 │       └── metrics.py              # precision/recall, plots, summary tables
@@ -380,9 +382,6 @@ python -m src.data_processing.build_critique_dict
 # Run baseline (single LLM call per paper)
 python -m src.baseline.baseline_critique
 
-# Run agentic system (multi-agent loop)
-python -m src.agents.orchestrator
-
 # Run n8n workflows (requires n8n running — see step 4)
 python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
 python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
@@ -393,7 +392,6 @@ python -m src.dify.run_dify dual_critic       # Reader → Critic 1 → Auditor 
 
 # Score all systems
 python -m src.evaluation.scorer baseline
-python -m src.evaluation.scorer agents
 python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
 python -m src.evaluation.scorer dify_single_critic
