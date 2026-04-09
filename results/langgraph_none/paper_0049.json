@@ -1,0 +1,141 @@
+{
+  "paper_id": "paper_0049",
+  "title": "P-Adapters: Robustly Extracting Factual Information from Language Models with Diverse Prompts",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 41.04,
+  "token_usage": {
+    "input": 11323,
+    "output": 2947
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "Structured Summary:\n\n**Problem & Motivation:**\n- Large Language Models (LLMs) contain factual knowledge but extracting this information accurately and consistently is challenging.\n- The quality of factual information extracted from LLMs heavily depends on the natural language prompts used.\n- Different users may phrase queries differently but expect consistent and accurate answers.\n- Prior work shows LLMs are sensitive to prompt wording, leading to inconsistent predictions for semantically equivalent prompts.\n- Existing methods to improve factual extraction often require additional annotations or focus on finding optimal discrete or continuous prompts per relation.\n- The motivation is to develop a user-friendly, annotation-light method that adapts arbitrary natural language prompts into continuous representations to improve factual extraction robustness and consistency.\n\n**Proposed Method:**\n- Introduce **P-Adapters**, lightweight models inserted between the embedding layer and the first attention layer of frozen LLMs (BERT Base, BERT Large, RoBERTa Large).\n- P-Adapters take embeddings of natural language prompts as input and output continuous prompts optimized to improve factual prediction.\n- Three variants of P-Adapters:\n  - **Rewrite P-Adapter:** Uses a BiLSTM + MLP to rewrite the entire prompt embedding sequence.\n  - **Prefix P-Adapter:** Prepends a learned prefix to the original embeddings, preserving the original prompt embeddings.\n  - **P-Tuning P-Adapter:** Learns continuous prompts conditioned on the relation and subject embeddings; requires additional annotations (subject identity).\n- Also investigate **Mixture of Experts (MoE)** models that classify the relation of the prompt and select a canonical continuous prompt expert accordingly; requires relation annotations and subject identity.\n- An **Oracle** model uses gold relation labels to select canonical prompts, serving as an upper bound.\n- Training uses only (prompt, object) pairs without requiring relation or subject annotations for P-Adapters (except P-Tuning).\n- Evaluate models on in-domain (ID) and three out-of-distribution (OOD) settings:\n  - OOD Prompts: unseen templates\n  - OOD Objects: uniform distribution of objects differing from training\n  - OOD Keyboard Errors: prompts with typographical errors\n\n**Results:**\n- P-Adapters significantly improve precision and consistency over baseline natural language prompts:\n  - Precision improvement: 12-26% absolute\n  - Consistency improvement: 36-50% absolute\n- MoE models generally perform better than P-Adapters but require additional annotations.\n- Oracle achieves perfect consistency but limited precision (~50% on ID, ~25% on OOD objects), indicating inherent difficulty.\n- OOD Objects setting is the most challenging, with ~20% lower precision than ID.\n- Typographical errors reduce performance but less severely than expected.\n- Prefix and P-Tuning P-Adapters outperform Rewrite P-Adapter, attributed to preserving original prompt embeddings.\n- Ablations show that preserving the embedding of the **subject token** in the prompt is critical for performance.\n- Interpolating between P-Adapter output and original embeddings (\u03b1=0.5) improves Rewrite P-Adapter performance close to P-Tuning.\n- Overall, P-Adapters reduce sensitivity to prompt variability without requiring extra annotations.\n\n**Claimed Contributions:**\n- Propose P-Adapters, a novel, lightweight method to adapt natural language prompts into continuous prompts for frozen LLMs, improving factual extraction robustness and consistency.\n- Demonstrate that P-Adapters perform comparably to more complex MoE models without needing relation or subject annotations at inference.\n- Provide extensive evaluation on in-domain and multiple OOD settings, showing improved precision and consistency.\n- Identify the importance of preserving subject token embeddings in prompt adaptation for successful factual extraction.\n- Offer a user-centric approach that aligns with real-world querying scenarios, requiring only natural language prompts at inference.\n- Suggest P-Adapters as a general framework for adapting variable inputs beyond factual extraction, e.g., reading comprehension or dialogue.\n- Release code and data for reproducibility (upon acceptance)."
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty - Comparison to Prior Prompt Tuning Methods:**  \nWhile the paper proposes P-Adapters as a lightweight alternative to discrete or continuous prompt tuning, it lacks a detailed comparison to recent continuous prompt tuning methods such as prefix-tuning or prompt tuning on frozen LLMs beyond the P-Tuning variant. For example, it is unclear how P-Adapters differ in parameter efficiency or adaptation speed compared to these established methods, which limits the novelty claim (see Section \"Proposed Method\").\n\n2. **Methodology - Justification for P-Adapter Architectures:**  \nThe choice of BiLSTM + MLP for the Rewrite P-Adapter is not sufficiently motivated. The paper does not explain why a sequential model is preferred over simpler feed-forward or transformer-based architectures for rewriting prompt embeddings. This design choice could impact performance and efficiency but is not justified (Section \"Proposed Method\").\n\n3. **Methodology - Lack of Ablation on P-Adapter Size and Complexity:**  \nThere is no ablation study on the size or depth of the P-Adapters (e.g., number of BiLSTM layers, hidden units). It is unclear whether larger or smaller adapters would improve or degrade performance, which is important for understanding the trade-off between model complexity and gains (Section \"Results\").\n\n4. **Evaluation - Baselines Limited to Frozen LLMs:**  \nAll experiments use frozen LLMs (BERT Base, BERT Large, RoBERTa Large), but the paper does not compare against fine-tuning or adapter-based tuning baselines that might also improve factual extraction. This leaves open whether P-Adapters outperform or complement these stronger baselines (Section \"Results\").\n\n5. **Evaluation - Metrics Focus on Precision and Consistency Only:**  \nThe evaluation primarily reports precision and consistency improvements but does not include recall or F1 scores. Since factual extraction involves retrieving correct objects, recall is important to assess whether P-Adapters trade off recall for precision (Section \"Results\").\n\n6. **Evaluation - Oracle Model Interpretation:**  \nThe Oracle model achieves perfect consistency but limited precision (~50% ID, ~25% OOD objects). The paper does not analyze why precision is capped at these levels despite perfect relation selection, which could reveal fundamental limitations of the factual extraction task or model capacity (Section \"Results\").\n\n7. **Evaluation - OOD Keyboard Errors Setting Details:**  \nThe paper states that typographical errors reduce performance less severely than expected but does not provide detailed error analysis or examples of the types and frequencies of keyboard errors introduced. This limits understanding of robustness claims (Section \"Results\").\n\n8. **Reproducibility - Missing Hyperparameter Details:**  \nKey training hyperparameters for P-Adapters, such as learning rates, batch sizes, number of epochs, and optimizer settings, are not reported. Without these, reproducing the training procedure and results is difficult (Section \"Proposed Method\" and \"Results\").\n\n9. **Reproducibility - Dataset and Prompt Template Details:**  \nThe paper mentions evaluation on in-domain and three OOD settings but does not provide detailed statistics or examples of the prompt templates used, nor the distribution of relations and objects. This hinders reproducibility and understanding of dataset difficulty (Section \"Evaluation\").\n\n10. **Clarity - Ambiguity in Subject Token Preservation:**  \nThe paper emphasizes the importance of preserving the subject token embedding but does not clearly define how the subject token is identified in arbitrary natural language prompts, especially when prompts vary widely. This ambiguity affects the applicability of the method (Section \"Results\" and \"Method\").\n\n11. **Limitations - Dependency on Subject Token Identification:**  \nAlthough P-Adapters do not require relation or subject annotations at inference, the ablation shows subject token embedding preservation is critical. The paper does not discuss how subject tokens are reliably identified without annotations, which may limit real-world usability (Section \"Results\").\n\n12. **Limitations - Handling of Ambiguous or Complex Prompts:**  \nThe method is evaluated on factual extraction prompts but does not address how P-Adapters handle ambiguous, multi-hop, or complex prompts that require reasoning beyond single relation extraction. This limits generalizability claims (Section \"Evaluation\").\n\n13. **Generalisability - Applicability Beyond Factual Extraction:**  \nThe paper suggests P-Adapters could be applied to reading comprehension or dialogue but provides no experiments or preliminary results in these domains. This claim remains speculative without empirical support (Section \"Claimed Contributions\").\n\n14. **Evaluation - MoE Models Require Additional Annotations:**  \nWhile MoE models outperform P-Adapters, the paper does not quantify the annotation cost or practical feasibility of obtaining relation and subject annotations in real-world scenarios, which is necessary to fairly weigh the trade-offs (Section \"Results\").\n\n15. **Clarity - Presentation of Results and Tables:**  \nThe paper reports large absolute improvements (e.g., 12-26% precision) but does not provide confidence intervals or statistical significance testing, making it difficult to assess the robustness of the reported gains (Section \"Results\")."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"The paper proposes P-Adapters, lightweight modules that adapt arbitrary natural language prompts into continuous prompt embeddings to improve factual extraction from frozen large language models. Evaluated on in-domain and multiple out-of-distribution settings, P-Adapters enhance precision and consistency without requiring relation or subject annotations at inference, offering a user-friendly approach to robust prompt tuning.\",\n  \"strengths\": [\n    {\n      \"point\": \"P-Adapters improve factual extraction precision and consistency significantly over baseline natural language prompts.\",\n      \"evidence\": \"Reported absolute precision improvements of 12-26% and consistency gains of 36-50% across in-domain and OOD settings.\"\n    },\n    {\n      \"point\": \"The method requires minimal annotation, operating without relation or subject labels at inference for most variants.\",\n      \"evidence\": \"P-Adapters trained only with (prompt, object) pairs and do not rely on relation or subject annotations, unlike MoE or P-Tuning variants.\"\n    },\n    {\n      \"point\": \"Comprehensive evaluation on multiple OOD scenarios demonstrates robustness to prompt variability and typographical errors.\",\n      \"evidence\": \"Experiments include OOD prompts, OOD objects, and OOD keyboard error settings, showing P-Adapters reduce sensitivity to prompt changes.\"\n    },\n    {\n      \"point\": \"Identification of subject token embedding preservation as critical for performance provides useful insight.\",\n      \"evidence\": \"Ablation studies show that preserving the subject token embedding in prompt adaptation substantially improves results.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Insufficient comparison to recent continuous prompt tuning methods limits novelty claims.\",\n      \"evidence\": \"Lack of detailed comparison to prefix-tuning or other continuous prompt tuning approaches beyond P-Tuning.\"\n    },\n    {\n      \"point\": \"Architectural choices, such as using BiLSTM + MLP for Rewrite P-Adapter, are not well justified.\",\n      \"evidence\": \"No explanation why sequential models are preferred over simpler or transformer-based architectures.\"\n    },\n    {\n      \"point\": \"No ablation on P-Adapter size or complexity to understand trade-offs between model capacity and performance.\",\n      \"evidence\": \"Missing studies on number of BiLSTM layers or hidden units.\"\n    },\n    {\n      \"point\": \"Evaluation baselines exclude fine-tuning or adapter-based tuning methods, limiting assessment of relative gains.\",\n      \"evidence\": \"Experiments only compare to frozen LLM baselines and MoE models, not to stronger fine-tuning baselines.\"\n    },\n    {\n      \"point\": \"Evaluation metrics omit recall and F1 scores, focusing mainly on precision and consistency.\",\n      \"evidence\": \"Recall is important to assess trade-offs but is not reported.\"\n    },\n    {\n      \"point\": \"Oracle model's limited precision despite perfect consistency is not analyzed.\",\n      \"evidence\": \"No discussion on why precision caps at ~50% ID and ~25% OOD objects.\"\n    },\n    {\n      \"point\": \"Details on OOD keyboard error types and frequencies are lacking, limiting robustness claims.\",\n      \"evidence\": \"No error analysis or examples provided.\"\n    },\n    {\n      \"point\": \"Key hyperparameters and dataset statistics are missing, hindering reproducibility.\",\n      \"evidence\": \"Learning rates, batch sizes, epochs, optimizer settings, and prompt template distributions are not reported.\"\n    },\n    {\n      \"point\": \"Ambiguity in how subject tokens are identified in arbitrary prompts affects applicability.\",\n      \"evidence\": \"No clear method for subject token identification in varied natural language prompts.\"\n    },\n    {\n      \"point\": \"No discussion on handling ambiguous, multi-hop, or complex prompts limits generalizability.\",\n      \"evidence\": \"Evaluation restricted to single relation factual extraction.\"\n    },\n    {\n      \"point\": \"Claims of applicability beyond factual extraction are speculative without empirical support.\",\n      \"evidence\": \"No experiments on reading comprehension or dialogue tasks.\"\n    },\n    {\n      \"point\": \"MoE annotation costs and practical feasibility are not quantified, limiting fair comparison.\",\n      \"evidence\": \"No analysis of annotation burden for relation and subject labels.\"\n    },\n    {\n      \"point\": \"Reported improvements lack confidence intervals or statistical significance testing.\",\n      \"evidence\": \"No uncertainty measures provided for precision or consistency gains.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How do P-Adapters compare in parameter efficiency and adaptation speed to recent continuous prompt tuning methods like prefix-tuning?\",\n      \"motivation\": \"Understanding relative advantages is critical to assess novelty and practical utility.\"\n    },\n    {\n      \"question\": \"How is the subject token reliably identified in arbitrary natural language prompts without annotations?\",\n      \"motivation\": \"Subject token preservation is key to performance, so practical identification methods affect real-world applicability.\"\n    },\n    {\n      \"question\": \"Would incorporating recall and F1 metrics change the interpretation of P-Adapters' effectiveness?\",\n      \"motivation\": \"Precision improvements might come at recall cost; full metric evaluation is needed for balanced assessment.\"\n    },\n    {\n      \"question\": \"Can P-Adapters generalize to more complex prompt types requiring multi-hop reasoning or beyond factual extraction?\",\n      \"motivation\": \"Extending applicability would increase impact and relevance.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "The paper proposes P-Adapters, lightweight modules that adapt arbitrary natural language prompts into continuous prompt embeddings to improve factual extraction from frozen large language models. Evaluated on in-domain and multiple out-of-distribution settings, P-Adapters enhance precision and consistency without requiring relation or subject annotations at inference, offering a user-friendly approach to robust prompt tuning.",
+    "strengths": [
+      {
+        "point": "P-Adapters improve factual extraction precision and consistency significantly over baseline natural language prompts.",
+        "evidence": "Reported absolute precision improvements of 12-26% and consistency gains of 36-50% across in-domain and OOD settings."
+      },
+      {
+        "point": "The method requires minimal annotation, operating without relation or subject labels at inference for most variants.",
+        "evidence": "P-Adapters trained only with (prompt, object) pairs and do not rely on relation or subject annotations, unlike MoE or P-Tuning variants."
+      },
+      {
+        "point": "Comprehensive evaluation on multiple OOD scenarios demonstrates robustness to prompt variability and typographical errors.",
+        "evidence": "Experiments include OOD prompts, OOD objects, and OOD keyboard error settings, showing P-Adapters reduce sensitivity to prompt changes."
+      },
+      {
+        "point": "Identification of subject token embedding preservation as critical for performance provides useful insight.",
+        "evidence": "Ablation studies show that preserving the subject token embedding in prompt adaptation substantially improves results."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to recent continuous prompt tuning methods limits novelty claims.",
+        "evidence": "Lack of detailed comparison to prefix-tuning or other continuous prompt tuning approaches beyond P-Tuning."
+      },
+      {
+        "point": "Architectural choices, such as using BiLSTM + MLP for Rewrite P-Adapter, are not well justified.",
+        "evidence": "No explanation why sequential models are preferred over simpler or transformer-based architectures."
+      },
+      {
+        "point": "No ablation on P-Adapter size or complexity to understand trade-offs between model capacity and performance.",
+        "evidence": "Missing studies on number of BiLSTM layers or hidden units."
+      },
+      {
+        "point": "Evaluation baselines exclude fine-tuning or adapter-based tuning methods, limiting assessment of relative gains.",
+        "evidence": "Experiments only compare to frozen LLM baselines and MoE models, not to stronger fine-tuning baselines."
+      },
+      {
+        "point": "Evaluation metrics omit recall and F1 scores, focusing mainly on precision and consistency.",
+        "evidence": "Recall is important to assess trade-offs but is not reported."
+      },
+      {
+        "point": "Oracle model's limited precision despite perfect consistency is not analyzed.",
+        "evidence": "No discussion on why precision caps at ~50% ID and ~25% OOD objects."
+      },
+      {
+        "point": "Details on OOD keyboard error types and frequencies are lacking, limiting robustness claims.",
+        "evidence": "No error analysis or examples provided."
+      },
+      {
+        "point": "Key hyperparameters and dataset statistics are missing, hindering reproducibility.",
+        "evidence": "Learning rates, batch sizes, epochs, optimizer settings, and prompt template distributions are not reported."
+      },
+      {
+        "point": "Ambiguity in how subject tokens are identified in arbitrary prompts affects applicability.",
+        "evidence": "No clear method for subject token identification in varied natural language prompts."
+      },
+      {
+        "point": "No discussion on handling ambiguous, multi-hop, or complex prompts limits generalizability.",
+        "evidence": "Evaluation restricted to single relation factual extraction."
+      },
+      {
+        "point": "Claims of applicability beyond factual extraction are speculative without empirical support.",
+        "evidence": "No experiments on reading comprehension or dialogue tasks."
+      },
+      {
+        "point": "MoE annotation costs and practical feasibility are not quantified, limiting fair comparison.",
+        "evidence": "No analysis of annotation burden for relation and subject labels."
+      },
+      {
+        "point": "Reported improvements lack confidence intervals or statistical significance testing.",
+        "evidence": "No uncertainty measures provided for precision or consistency gains."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How do P-Adapters compare in parameter efficiency and adaptation speed to recent continuous prompt tuning methods like prefix-tuning?",
+        "motivation": "Understanding relative advantages is critical to assess novelty and practical utility."
+      },
+      {
+        "question": "How is the subject token reliably identified in arbitrary natural language prompts without annotations?",
+        "motivation": "Subject token preservation is key to performance, so practical identification methods affect real-world applicability."
+      },
+      {
+        "question": "Would incorporating recall and F1 metrics change the interpretation of P-Adapters' effectiveness?",
+        "motivation": "Precision improvements might come at recall cost; full metric evaluation is needed for balanced assessment."
+      },
+      {
+        "question": "Can P-Adapters generalize to more complex prompt types requiring multi-hop reasoning or beyond factual extraction?",
+        "motivation": "Extending applicability would increase impact and relevance."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to recent continuous prompt tuning methods limits novelty claims.. Lack of detailed comparison to prefix-tuning or other continuous prompt tuning approaches beyond P-Tuning",
+    "point_002": "Architectural choices, such as using BiLSTM + MLP for Rewrite P-Adapter, are not well justified.. No explanation why sequential models are preferred over simpler or transformer-based architectures",
+    "point_003": "No ablation on P-Adapter size or complexity to understand trade-offs between model capacity and performance.. Missing studies on number of BiLSTM layers or hidden units",
+    "point_004": "Evaluation baselines exclude fine-tuning or adapter-based tuning methods, limiting assessment of relative gains.. Experiments only compare to frozen LLM baselines and MoE models, not to stronger fine-tuning baselines",
+    "point_005": "Evaluation metrics omit recall and F1 scores, focusing mainly on precision and consistency.. Recall is important to assess trade-offs but is not reported",
+    "point_006": "Oracle model's limited precision despite perfect consistency is not analyzed.. No discussion on why precision caps at ~50% ID and ~25% OOD objects",
+    "point_007": "Details on OOD keyboard error types and frequencies are lacking, limiting robustness claims.. No error analysis or examples provided",
+    "point_008": "Key hyperparameters and dataset statistics are missing, hindering reproducibility.. Learning rates, batch sizes, epochs, optimizer settings, and prompt template distributions are not reported",
+    "point_009": "Ambiguity in how subject tokens are identified in arbitrary prompts affects applicability.. No clear method for subject token identification in varied natural language prompts",
+    "point_010": "No discussion on handling ambiguous, multi-hop, or complex prompts limits generalizability.. Evaluation restricted to single relation factual extraction",
+    "point_011": "Claims of applicability beyond factual extraction are speculative without empirical support.. No experiments on reading comprehension or dialogue tasks",
+    "point_012": "MoE annotation costs and practical feasibility are not quantified, limiting fair comparison.. No analysis of annotation burden for relation and subject labels",
+    "point_013": "Reported improvements lack confidence intervals or statistical significance testing.. No uncertainty measures provided for precision or consistency gains"
+  }
+}

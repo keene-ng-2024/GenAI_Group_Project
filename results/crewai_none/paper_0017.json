@@ -1,0 +1,149 @@
+{
+  "paper_id": "paper_0017",
+  "title": "Evaluating Gender Bias in Natural Language Inference",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 56.73,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nNatural Language Processing (NLP) models, especially those trained on large-scale datasets, have been shown to exhibit systemic gender biases, which raise significant ethical concerns. These biases manifest in various NLP tasks such as word embeddings, hate speech detection, dialog systems, and coreference resolution. However, there is limited progress in detecting and evaluating gender bias specifically in Natural Language Inference (NLI) systems, which require understanding inferential relations between sentence pairs (premise and hypothesis). Since NLI models are often fine-tuned from large pre-trained language models (e.g., BERT, RoBERTa, BART) on datasets collected via crowdsourcing, they may inherit or amplify gender stereotypes, particularly associating certain occupations with specific genders. This motivates the need for a systematic evaluation methodology to detect gender bias in NLI models and to explore mitigation strategies without compromising model performance.\n\n---\n\n### Proposed Method\n\nThe authors propose a challenge task methodology to evaluate gender bias in NLI models by constructing paired sentence inputs where the premise is gender-neutral, and the hypotheses differ only by gender-specific terms. The key idea is to test whether the model\u2019s predictions change solely due to the gender indicated in the hypothesis, which would indicate bias.\n\n- **Dataset Construction:**\n  - Premises are drawn from publicly available NLI datasets (MNLI, SNLI for in-distribution; ANLI, QNLI for out-of-distribution).\n  - Premises are filtered to include 38 occupations with varying gender distributions based on U.S. labor statistics.\n  - Premises containing gender-specific words or named entities are removed to isolate occupation-based bias.\n  - Hypotheses are generated using templates that differ only by gendered terms (e.g., \u201cThis text talks about a female occupation\u201d vs. \u201cThis text talks about a male occupation\u201d).\n  - Hypotheses are labeled as pro-stereotypical or anti-stereotypical based on societal gender norms for occupations.\n\n- **Models Evaluated:**\n  - Three Transformer-based pre-trained language models fine-tuned on MNLI and SNLI datasets: BERT, RoBERTa, and BART.\n\n- **Evaluation Metrics:**\n  - **S:** Percentage of instances where the model predicts the same label for both female and male hypotheses (higher is better, indicating less bias).\n  - **\u0394P:** Mean absolute difference in entailment probabilities between female and male hypotheses (lower is better, indicating less bias).\n  - **B:** Percentage of instances where the model favors the pro-stereotypical gender hypothesis (lower is better).\n\n- **Debiasing Technique:**\n  - A simple data augmentation method involving gender swapping in the training data.\n  - Gendered terms are swapped using a dictionary (e.g., \u201che\u201d \u2194 \u201cshe\u201d, \u201chis\u201d \u2194 \u201cher\u201d) to create a gender-balanced training set.\n  - Models are retrained on the augmented dataset to assess bias reduction.\n\n---\n\n### Results\n\n- All tested models (BERT, RoBERTa, BART) exhibit significant gender bias, as evidenced by differing predictions when the only change is the gender in the hypothesis.\n- BERT shows the highest bias, with the lowest S scores (most label shifts) and highest \u0394P values (largest prediction differences).\n- Bias is more pronounced in male-dominated occupations, with models favoring pro-stereotypical gender hypotheses.\n- Models fine-tuned on SNLI exhibit relatively higher bias than those trained on MNLI.\n- The distribution of bias across occupations aligns with real-world gender distributions in jobs, confirming that models reflect societal stereotypes.\n- The gender-swapping data augmentation technique effectively reduces bias, especially for BERT, without degrading accuracy on original datasets.\n- RoBERTa and BART show slight improvements after debiasing, but residual bias likely stems from the pre-training corpora rather than the NLI datasets.\n- The results highlight the importance of balanced datasets and careful curation of pre-training data to mitigate gender bias.\n\n---\n\n### Claimed Contributions\n\n1. **Evaluation Methodology:**  \n   The paper introduces a novel challenge task to detect gender bias in state-of-the-art Transformer-based NLI models by pairing gender-neutral premises with gender-specific hypotheses and measuring prediction differences.\n\n2. **Empirical Analysis:**  \n   It provides a comprehensive evaluation of three widely-used pre-trained models (BERT, RoBERTa, BART) fine-tuned on MNLI and SNLI, demonstrating significant gender bias in their predictions related to occupational stereotypes.\n\n3. **Debiasing via Data Augmentation:**  \n   The study explores a simple yet effective debiasing technique based on gender swapping and data augmentation, showing that it reduces gender bias in NLI models, particularly for BERT, while maintaining model accuracy.\n\n4. **Insight on Bias Sources:**  \n   The findings suggest that bias arises not only from downstream NLI datasets but also from the large-scale corpora used for pre-training, emphasizing the need for attention to data curation at all stages.\n\n5. **Baseline for Future Research:**  \n   The work establishes a baseline approach for evaluating and mitigating gender bias in NLI systems and encourages further research into advanced debiasing methods and exploration of biases beyond gender.\n\n---\n\n**References:**  \nThe paper cites foundational and recent works on gender bias in NLP, data augmentation techniques, and pre-trained language models, situating its contributions within ongoing efforts to understand and mitigate bias in AI systems."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty - Limited Comparison to Prior Bias Evaluation in NLI:**  \n   While the paper claims novelty in proposing a challenge task for gender bias detection in NLI models, it does not sufficiently compare its methodology to prior work that investigates bias in NLI or related sentence-pair tasks. For example, recent studies on bias in entailment or semantic similarity tasks are not discussed or contrasted, which weakens the claim of novelty (see Problem & Motivation). A more thorough literature review and explicit positioning against existing NLI bias benchmarks would strengthen the contribution.\n\n2. **Methodology - Justification for Occupation Selection and Gender Norms:**  \n   The choice of 38 occupations and their gender distributions is based on U.S. labor statistics, but the paper does not justify why these particular occupations were selected or how representative they are globally or culturally. Moreover, the labeling of hypotheses as pro- or anti-stereotypical relies on societal gender norms that may vary or evolve, but this is not discussed or validated. This raises concerns about the robustness and fairness of the bias evaluation (see Dataset Construction).\n\n3. **Methodology - Potential Confounding from Hypothesis Template Construction:**  \n   The hypotheses are generated using fixed templates differing only by gendered terms, but the paper does not analyze whether the templates themselves introduce linguistic artifacts or unnatural phrasing that could affect model predictions independently of gender bias. An ablation or human evaluation of hypothesis naturalness would clarify if the observed bias is truly due to gender or confounded by template design (see Proposed Method).\n\n4. **Evaluation - Metrics Do Not Capture All Bias Dimensions:**  \n   The three metrics (S, \u0394P, B) focus on label consistency and preference for pro-stereotypical hypotheses, but do not measure other important aspects such as false positive/negative rates per gender or intersectional biases. The paper does not justify why these metrics suffice or discuss their limitations, potentially overlooking subtler forms of bias (see Evaluation Metrics).\n\n5. **Evaluation - Lack of Statistical Significance Testing:**  \n   The reported differences in bias metrics across models and datasets are presented without any statistical significance tests or confidence intervals. This omission makes it difficult to assess whether observed improvements after debiasing or differences between models are meaningful or due to chance (see Results).\n\n6. **Evaluation - No Comparison to Other Debiasing Methods:**  \n   The paper evaluates only a simple gender-swapping data augmentation technique for debiasing, without comparing it to other existing methods such as adversarial training, embedding projection, or counterfactual data augmentation. This limits understanding of how effective or novel the proposed debiasing approach is relative to prior work (see Debiasing Technique).\n\n7. **Evaluation - Potential Overfitting to MNLI and SNLI:**  \n   The models are fine-tuned on MNLI and SNLI, and bias is evaluated on these plus out-of-distribution datasets (ANLI, QNLI). However, the paper does not analyze whether the debiasing method generalizes well to truly unseen or more diverse NLI datasets beyond those tested, raising questions about generalizability (see Results).\n\n8. **Reproducibility - Missing Details on Data Filtering and Template Generation:**  \n   The paper states that premises containing gender-specific words or named entities are removed, but does not specify the exact filtering criteria, tools, or scripts used. Similarly, the process for generating hypotheses from templates is not detailed enough to allow replication, such as the exact templates, gender term dictionary, or handling of ambiguous cases (see Dataset Construction).\n\n9. **Reproducibility - Lack of Hyperparameter and Training Details:**  \n   There is no mention of hyperparameters used during fine-tuning or retraining after data augmentation (e.g., learning rate, batch size, number of epochs), nor details on computational resources or random seeds. These omissions hinder reproducibility and fair comparison (see Models Evaluated and Debiasing Technique).\n\n10. **Clarity - Ambiguity in Definition of Pro- and Anti-Stereotypical Labels:**  \n    The paper does not clearly define how pro- and anti-stereotypical labels are assigned to hypotheses beyond referencing societal gender norms. It is unclear whether this assignment is binary, continuous, or based on external data, which may confuse readers and affect interpretation of metric B (see Dataset Construction and Evaluation Metrics).\n\n11. **Clarity - Insufficient Explanation of Metric S:**  \n    The metric S is described as the percentage of instances where the model predicts the same label for both female and male hypotheses, but it is not explicitly stated whether this is computed per occupation, per dataset, or overall. Also, the implications of different S values on practical bias are not elaborated, reducing interpretability (see Evaluation Metrics).\n\n12. **Limitations - Focus Solely on Binary Gender Terms:**  \n    The study only considers binary gender swapping (male/female) and does not address non-binary or gender-neutral identities, which limits the scope and inclusivity of the bias evaluation. This limitation is not acknowledged or discussed in the paper (see Proposed Method and Limitations).\n\n13. **Limitations - Does Not Address Intersectional Biases:**  \n    The evaluation focuses exclusively on gender bias related to occupations but does not consider intersectional biases involving race, ethnicity, or other demographic factors that may interact with gender. This narrow focus restricts the applicability of findings to broader fairness concerns (see Problem & Motivation).\n\n14. **Generalisability - Limited to English and U.S. Labor Statistics:**  \n    The dataset construction and bias evaluation rely on English-language NLI datasets and U.S.-centric occupation gender distributions, which may not generalize to other languages or cultural contexts. The paper does not discuss this limitation or potential adaptations needed for other settings (see Dataset Construction and Results).\n\n15. **Generalisability - Unclear Impact on Downstream Applications:**  \n    While the paper demonstrates bias in NLI models, it does not explore or discuss how this bias might affect downstream NLP applications that rely on NLI, such as question answering or summarization. Without this connection, the practical significance of the findings remains somewhat abstract (see Problem & Motivation and Claimed Contributions)."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"The paper proposes a challenge task to evaluate gender bias in Transformer-based NLI models by constructing paired hypotheses differing only in gendered terms related to occupations. It empirically analyzes bias in BERT, RoBERTa, and BART fine-tuned on MNLI and SNLI, and explores a simple gender-swapping data augmentation technique to mitigate bias while maintaining accuracy.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel evaluation methodology for gender bias in NLI\",\n      \"evidence\": \"The paper introduces a challenge task using gender-neutral premises paired with gender-specific hypotheses to detect bias in model predictions.\"\n    },\n    {\n      \"point\": \"Comprehensive empirical analysis across multiple models and datasets\",\n      \"evidence\": \"Evaluation of BERT, RoBERTa, and BART fine-tuned on MNLI and SNLI reveals consistent gender bias aligned with occupational stereotypes.\"\n    },\n    {\n      \"point\": \"Effective and simple debiasing technique\",\n      \"evidence\": \"Gender-swapping data augmentation reduces bias notably in BERT without degrading original task accuracy.\"\n    },\n    {\n      \"point\": \"Insight into bias sources beyond downstream datasets\",\n      \"evidence\": \"Findings suggest residual bias in RoBERTa and BART stems from pre-training corpora, highlighting the need for data curation at all stages.\"\n    },\n    {\n      \"point\": \"Establishes a baseline for future bias evaluation and mitigation research\",\n      \"evidence\": \"The work provides a foundation for further exploration of bias in NLI and encourages development of advanced debiasing methods.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited comparison to prior bias evaluation work in NLI\",\n      \"evidence\": \"The paper lacks discussion or contrast with recent studies on bias in entailment or semantic similarity tasks, weakening the novelty claim.\"\n    },\n    {\n      \"point\": \"Insufficient justification for occupation selection and gender norm assumptions\",\n      \"evidence\": \"No rationale for choosing the 38 occupations or validation of societal gender norms used to label hypotheses as pro- or anti-stereotypical.\"\n    },\n    {\n      \"point\": \"Potential confounding effects from fixed hypothesis templates\",\n      \"evidence\": \"No analysis or human evaluation to rule out linguistic artifacts introduced by template design affecting model predictions.\"\n    },\n    {\n      \"point\": \"Evaluation metrics do not capture all bias dimensions\",\n      \"evidence\": \"Metrics focus on label consistency and pro-stereotypical preference but omit false positive/negative rates or intersectional biases.\"\n    },\n    {\n      \"point\": \"Lack of statistical significance testing\",\n      \"evidence\": \"Reported metric differences across models and debiasing lack confidence intervals or significance tests.\"\n    },\n    {\n      \"point\": \"No comparison to other debiasing methods\",\n      \"evidence\": \"Only a simple gender-swapping augmentation is evaluated without benchmarking against adversarial training or counterfactual augmentation.\"\n    },\n    {\n      \"point\": \"Limited analysis of generalizability beyond tested datasets\",\n      \"evidence\": \"No assessment of debiasing effectiveness on truly unseen or more diverse NLI datasets beyond MNLI, SNLI, ANLI, and QNLI.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing data filtering and template details\",\n      \"evidence\": \"Exact filtering criteria, template sets, gender term dictionaries, and handling of ambiguous cases are not fully described.\"\n    },\n    {\n      \"point\": \"Omission of hyperparameter, training, and computational details\",\n      \"evidence\": \"No information on learning rates, batch sizes, epochs, random seeds, or hardware used for fine-tuning and retraining.\"\n    },\n    {\n      \"point\": \"Ambiguity in defining pro- and anti-stereotypical labels\",\n      \"evidence\": \"The labeling process is not clearly defined beyond referencing societal norms, causing potential confusion in interpreting metric B.\"\n    },\n    {\n      \"point\": \"Insufficient explanation of metric S and its practical implications\",\n      \"evidence\": \"Unclear whether S is computed per occupation or overall, and the impact of different S values on bias is not elaborated.\"\n    },\n    {\n      \"point\": \"Focus solely on binary gender terms limits inclusivity\",\n      \"evidence\": \"Non-binary or gender-neutral identities are not considered or discussed, restricting the scope of bias evaluation.\"\n    },\n    {\n      \"point\": \"Does not address intersectional biases involving race or ethnicity\",\n      \"evidence\": \"Evaluation is limited to gender bias related to occupations, ignoring other demographic factors.\"\n    },\n    {\n      \"point\": \"Limited generalizability due to reliance on English and U.S. labor statistics\",\n      \"evidence\": \"No discussion on adapting the methodology or dataset to other languages or cultural contexts.\"\n    },\n    {\n      \"point\": \"Unclear impact on downstream NLP applications\",\n      \"evidence\": \"The paper does not explore how detected biases affect tasks like question answering or summarization that use NLI models.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does the proposed evaluation methodology compare quantitatively and qualitatively to existing NLI bias benchmarks?\",\n      \"motivation\": \"Understanding relative novelty and effectiveness requires positioning against prior work.\"\n    },\n    {\n      \"question\": \"Can the debiasing approach generalize to non-binary gender identities and intersectional biases?\",\n      \"motivation\": \"Extending inclusivity and fairness beyond binary gender is critical for comprehensive bias mitigation.\"\n    },\n    {\n      \"question\": \"What is the impact of linguistic artifacts introduced by hypothesis templates on model bias measurements?\",\n      \"motivation\": \"Disentangling true gender bias from template-induced effects is necessary for valid evaluation.\"\n    },\n    {\n      \"question\": \"How do the bias metrics correlate with downstream application performance and fairness?\",\n      \"motivation\": \"Establishing practical significance of bias measurements informs real-world relevance.\"\n    },\n    {\n      \"question\": \"Would more sophisticated debiasing methods outperform simple gender-swapping augmentation?\",\n      \"motivation\": \"Benchmarking against advanced techniques can guide future mitigation strategies.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "The paper proposes a challenge task to evaluate gender bias in Transformer-based NLI models by constructing paired hypotheses differing only in gendered terms related to occupations. It empirically analyzes bias in BERT, RoBERTa, and BART fine-tuned on MNLI and SNLI, and explores a simple gender-swapping data augmentation technique to mitigate bias while maintaining accuracy.",
+    "strengths": [
+      {
+        "point": "Novel evaluation methodology for gender bias in NLI",
+        "evidence": "The paper introduces a challenge task using gender-neutral premises paired with gender-specific hypotheses to detect bias in model predictions."
+      },
+      {
+        "point": "Comprehensive empirical analysis across multiple models and datasets",
+        "evidence": "Evaluation of BERT, RoBERTa, and BART fine-tuned on MNLI and SNLI reveals consistent gender bias aligned with occupational stereotypes."
+      },
+      {
+        "point": "Effective and simple debiasing technique",
+        "evidence": "Gender-swapping data augmentation reduces bias notably in BERT without degrading original task accuracy."
+      },
+      {
+        "point": "Insight into bias sources beyond downstream datasets",
+        "evidence": "Findings suggest residual bias in RoBERTa and BART stems from pre-training corpora, highlighting the need for data curation at all stages."
+      },
+      {
+        "point": "Establishes a baseline for future bias evaluation and mitigation research",
+        "evidence": "The work provides a foundation for further exploration of bias in NLI and encourages development of advanced debiasing methods."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison to prior bias evaluation work in NLI",
+        "evidence": "The paper lacks discussion or contrast with recent studies on bias in entailment or semantic similarity tasks, weakening the novelty claim."
+      },
+      {
+        "point": "Insufficient justification for occupation selection and gender norm assumptions",
+        "evidence": "No rationale for choosing the 38 occupations or validation of societal gender norms used to label hypotheses as pro- or anti-stereotypical."
+      },
+      {
+        "point": "Potential confounding effects from fixed hypothesis templates",
+        "evidence": "No analysis or human evaluation to rule out linguistic artifacts introduced by template design affecting model predictions."
+      },
+      {
+        "point": "Evaluation metrics do not capture all bias dimensions",
+        "evidence": "Metrics focus on label consistency and pro-stereotypical preference but omit false positive/negative rates or intersectional biases."
+      },
+      {
+        "point": "Lack of statistical significance testing",
+        "evidence": "Reported metric differences across models and debiasing lack confidence intervals or significance tests."
+      },
+      {
+        "point": "No comparison to other debiasing methods",
+        "evidence": "Only a simple gender-swapping augmentation is evaluated without benchmarking against adversarial training or counterfactual augmentation."
+      },
+      {
+        "point": "Limited analysis of generalizability beyond tested datasets",
+        "evidence": "No assessment of debiasing effectiveness on truly unseen or more diverse NLI datasets beyond MNLI, SNLI, ANLI, and QNLI."
+      },
+      {
+        "point": "Reproducibility hindered by missing data filtering and template details",
+        "evidence": "Exact filtering criteria, template sets, gender term dictionaries, and handling of ambiguous cases are not fully described."
+      },
+      {
+        "point": "Omission of hyperparameter, training, and computational details",
+        "evidence": "No information on learning rates, batch sizes, epochs, random seeds, or hardware used for fine-tuning and retraining."
+      },
+      {
+        "point": "Ambiguity in defining pro- and anti-stereotypical labels",
+        "evidence": "The labeling process is not clearly defined beyond referencing societal norms, causing potential confusion in interpreting metric B."
+      },
+      {
+        "point": "Insufficient explanation of metric S and its practical implications",
+        "evidence": "Unclear whether S is computed per occupation or overall, and the impact of different S values on bias is not elaborated."
+      },
+      {
+        "point": "Focus solely on binary gender terms limits inclusivity",
+        "evidence": "Non-binary or gender-neutral identities are not considered or discussed, restricting the scope of bias evaluation."
+      },
+      {
+        "point": "Does not address intersectional biases involving race or ethnicity",
+        "evidence": "Evaluation is limited to gender bias related to occupations, ignoring other demographic factors."
+      },
+      {
+        "point": "Limited generalizability due to reliance on English and U.S. labor statistics",
+        "evidence": "No discussion on adapting the methodology or dataset to other languages or cultural contexts."
+      },
+      {
+        "point": "Unclear impact on downstream NLP applications",
+        "evidence": "The paper does not explore how detected biases affect tasks like question answering or summarization that use NLI models."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does the proposed evaluation methodology compare quantitatively and qualitatively to existing NLI bias benchmarks?",
+        "motivation": "Understanding relative novelty and effectiveness requires positioning against prior work."
+      },
+      {
+        "question": "Can the debiasing approach generalize to non-binary gender identities and intersectional biases?",
+        "motivation": "Extending inclusivity and fairness beyond binary gender is critical for comprehensive bias mitigation."
+      },
+      {
+        "question": "What is the impact of linguistic artifacts introduced by hypothesis templates on model bias measurements?",
+        "motivation": "Disentangling true gender bias from template-induced effects is necessary for valid evaluation."
+      },
+      {
+        "question": "How do the bias metrics correlate with downstream application performance and fairness?",
+        "motivation": "Establishing practical significance of bias measurements informs real-world relevance."
+      },
+      {
+        "question": "Would more sophisticated debiasing methods outperform simple gender-swapping augmentation?",
+        "motivation": "Benchmarking against advanced techniques can guide future mitigation strategies."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Limited comparison to prior bias evaluation work in NLI. The paper lacks discussion or contrast with recent studies on bias in entailment or semantic similarity tasks, weakening the novelty claim",
+    "point_002": "Insufficient justification for occupation selection and gender norm assumptions. No rationale for choosing the 38 occupations or validation of societal gender norms used to label hypotheses as pro- or anti-stereotypical",
+    "point_003": "Potential confounding effects from fixed hypothesis templates. No analysis or human evaluation to rule out linguistic artifacts introduced by template design affecting model predictions",
+    "point_004": "Evaluation metrics do not capture all bias dimensions. Metrics focus on label consistency and pro-stereotypical preference but omit false positive/negative rates or intersectional biases",
+    "point_005": "Lack of statistical significance testing. Reported metric differences across models and debiasing lack confidence intervals or significance tests",
+    "point_006": "No comparison to other debiasing methods. Only a simple gender-swapping augmentation is evaluated without benchmarking against adversarial training or counterfactual augmentation",
+    "point_007": "Limited analysis of generalizability beyond tested datasets. No assessment of debiasing effectiveness on truly unseen or more diverse NLI datasets beyond MNLI, SNLI, ANLI, and QNLI",
+    "point_008": "Reproducibility hindered by missing data filtering and template details. Exact filtering criteria, template sets, gender term dictionaries, and handling of ambiguous cases are not fully described",
+    "point_009": "Omission of hyperparameter, training, and computational details. No information on learning rates, batch sizes, epochs, random seeds, or hardware used for fine-tuning and retraining",
+    "point_010": "Ambiguity in defining pro- and anti-stereotypical labels. The labeling process is not clearly defined beyond referencing societal norms, causing potential confusion in interpreting metric B",
+    "point_011": "Insufficient explanation of metric S and its practical implications. Unclear whether S is computed per occupation or overall, and the impact of different S values on bias is not elaborated",
+    "point_012": "Focus solely on binary gender terms limits inclusivity. Non-binary or gender-neutral identities are not considered or discussed, restricting the scope of bias evaluation",
+    "point_013": "Does not address intersectional biases involving race or ethnicity. Evaluation is limited to gender bias related to occupations, ignoring other demographic factors",
+    "point_014": "Limited generalizability due to reliance on English and U.S. labor statistics. No discussion on adapting the methodology or dataset to other languages or cultural contexts",
+    "point_015": "Unclear impact on downstream NLP applications. The paper does not explore how detected biases affect tasks like question answering or summarization that use NLI models"
+  }
+}

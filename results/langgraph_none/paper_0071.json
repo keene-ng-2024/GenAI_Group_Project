@@ -1,0 +1,130 @@
+{
+  "paper_id": "paper_0071",
+  "title": "Bidirectional Language Models Are Also Few-shot Learners",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 45.73,
+  "token_usage": {
+    "input": 14194,
+    "output": 3162
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- Large language models (LLMs) like GPT-3 demonstrate strong few-shot and zero-shot learning capabilities via prompt-based learning, primarily using unidirectional (causal) language models.\n- Bidirectional language models (e.g., T5, mT5), pre-trained with denoising objectives such as masked language modeling, yield stronger learned representations beneficial for transfer learning.\n- However, bidirectional models have been largely incompatible with prompt-based learning paradigms due to their pre-training objectives, limiting their ability to generate long, fluent outputs and perform few-shot or zero-shot learning without fine-tuning.\n- This creates a design dilemma: unidirectional models excel at prompt-based learning but may underperform on tasks benefiting from bidirectionality, while bidirectional models have stronger representations but lack prompt-based learning capabilities.\n- The motivation is to enable bidirectional models to perform prompt-based few-shot and zero-shot learning effectively, potentially combining the benefits of both approaches.\n\n---\n\n### Proposed Method\n\n- **Sequential Autoregressive Prompting (SAP):** A novel prompting technique designed to enable bidirectional language models to perform few-shot and zero-shot learning without fine-tuning.\n- SAP works by iteratively prompting the bidirectional model multiple times, each time concatenating the first word of the previous generation back into the prompt. This process continues until a stop token is generated.\n- This iterative approach overcomes the limitation of bidirectional models that are trained to fill short masked spans rather than generate long sequences.\n- SAP effectively makes the bidirectional model autoregressive at the encoder-decoder level, allowing it to generate longer, coherent outputs.\n- The method was primarily demonstrated using the multilingual bidirectional mT5 model (3.7B parameters).\n- Additional techniques introduced for unsupervised zero-shot machine translation include:\n  - Filtering synthetic parallel examples using an unsupervised scoring metric (mT5Score based on BERTScore).\n  - Prompt ensembling to reduce variance and improve translation quality.\n  - English-centric bootstrapping to leverage English as a pivot language in multilingual translation.\n  \n---\n\n### Results\n\n- **Machine Translation:**\n  - SAP with mT5 outperforms unidirectional models GPT-3 and XGLM on few-shot and zero-shot machine translation across 14 languages and 182 language pairs, despite using ~50% fewer parameters.\n  - Particularly strong improvements on low-resource language pairs.\n  - Zero-shot unsupervised translation with SAP and mT5 surpasses few-shot performance, aided by prompt ensembling and bootstrapping.\n  \n- **Other Tasks:**\n  - SAP enables bidirectional mT5 to perform zero-shot and few-shot question answering on XQuAD and SQuAD datasets, outperforming unidirectional XGLM and T5+LM baselines.\n  - SAP improves summarization performance on CNN/Daily Mail dataset, showing significant gains over T5+LM.\n  \n- **Efficiency:**\n  - SAP requires multiple sequential forward passes proportional to output length, making it less efficient than single-pass unidirectional generation.\n  - Despite efficiency concerns, SAP demonstrates that prompt-based learning is an emergent property of bidirectional models.\n\n---\n\n### Claimed Contributions\n\n1. **Introduction of SAP:** A novel prompting technique enabling bidirectional language models to perform few-shot and zero-shot prompt-based learning at levels exceeding unidirectional models, without fine-tuning or instruction tuning.\n\n2. **Empirical Demonstration:** Extensive evaluation on machine translation (14 languages, 182 pairs) showing SAP with mT5 outperforms GPT-3 and XGLM with fewer parameters and examples, especially on low-resource languages.\n\n3. **Improvements to Unsupervised MT Bootstrapping:** Proposals of filtering, prompt ensembling, and English-centric bootstrapping techniques to enhance unsupervised zero-shot machine translation.\n\n4. **Generalization Beyond MT:** Demonstration that SAP enables bidirectional models to perform well on other language generation tasks such as question answering and summarization.\n\n5. **Broader Impact:** Evidence that prompt-based learning capabilities are not exclusive to unidirectional models, motivating further research into bidirectional architectures and pre-training objectives optimized for prompting and few-shot learning.\n\n---\n\n**Additional Notes:**\n\n- The paper discusses limitations of SAP related to computational efficiency due to multiple sequential forward passes.\n- The authors hypothesize that future bidirectional pre-training objectives could overcome these efficiency issues while retaining performance benefits.\n- The work addresses a long-standing challenge in language model design by bridging the gap between bidirectional model strengths and prompt-based learning capabilities."
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty - Missing Comparison to Related Prompting Techniques for Bidirectional Models:**  \nThe paper introduces SAP as a novel method enabling bidirectional models to perform autoregressive generation via iterative prompting. However, it does not sufficiently compare or discuss prior work on adapting masked language models (e.g., T5) for generation tasks, such as prefix-tuning or span-based generation methods. Including such comparisons would clarify the novelty and advantages of SAP over existing approaches that also aim to enable generation from bidirectional models.\n\n2. **Methodology - Lack of Ablation on Iterative Prompting Design Choices:**  \nWhile SAP iteratively concatenates the first word of the previous generation back into the prompt, the paper does not ablate alternative strategies (e.g., concatenating longer spans, last word instead of first, or different stopping criteria). This leaves unclear whether the chosen design is optimal or if simpler or more efficient variants could achieve similar performance.\n\n3. **Methodology - Hidden Assumption of Prompt Length Growth and Its Impact:**  \nThe iterative concatenation in SAP causes the prompt length to grow with each generation step, potentially impacting model input size and computational cost. The paper does not analyze how prompt length growth affects performance or efficiency, nor does it discuss any truncation or memory management strategies to handle long prompts.\n\n4. **Evaluation - Baseline Models and Parameter Count Discrepancy:**  \nThe paper claims SAP with mT5 (3.7B parameters) outperforms GPT-3 and XGLM despite using ~50% fewer parameters. However, it is unclear if the compared GPT-3 and XGLM models are of comparable sizes or if the parameter counts include only the model or also prompt/context tokens. This raises concerns about fairness and apples-to-apples comparison in the evaluation.\n\n5. **Evaluation - Limited Metrics for Generation Quality Beyond BLEU and BERTScore:**  \nThe evaluation primarily uses BLEU and BERTScore for machine translation and standard QA/summarization datasets. The paper does not report human evaluation or other metrics capturing fluency, coherence, or factual correctness, which are critical for assessing the quality of generated outputs, especially given SAP\u2019s iterative generation approach.\n\n6. **Evaluation - Efficiency Trade-offs Not Quantified in Detail:**  \nAlthough the paper acknowledges SAP requires multiple sequential forward passes proportional to output length, it does not provide quantitative runtime or computational cost comparisons against unidirectional models. Without such data, it is difficult to assess the practical trade-offs between improved performance and efficiency.\n\n7. **Reproducibility - Missing Details on Prompt Construction and Tokenization:**  \nThe paper lacks detailed descriptions of how prompts are constructed at each iteration, including tokenization schemes, handling of special tokens, and whether prompts are truncated or padded. These details are crucial for reproducing the iterative prompting process accurately.\n\n8. **Reproducibility - Unclear Hyperparameter Settings for SAP Iterations:**  \nThere is no explicit mention of hyperparameters controlling SAP\u2019s iterative generation, such as maximum number of iterations, stop token definitions, or beam search parameters. Without this information, reproducing the generation process and results is challenging.\n\n9. **Clarity - Insufficient Explanation of mT5Score Metric:**  \nThe paper introduces mT5Score, an unsupervised scoring metric based on BERTScore, for filtering synthetic parallel examples but does not provide a clear definition, formula, or rationale for its design. This makes it difficult to understand or reproduce this component of the unsupervised MT pipeline.\n\n10. **Clarity - Ambiguous Description of English-Centric Bootstrapping:**  \nThe English-centric bootstrapping technique is mentioned as leveraging English as a pivot language but lacks detailed explanation of the procedure, its integration with SAP, or its impact on results. More clarity is needed to understand how this bootstrapping works and why it improves zero-shot translation.\n\n11. **Limitations - No Discussion on SAP\u2019s Applicability to Larger or Different Bidirectional Models:**  \nThe experiments focus on mT5 (3.7B parameters), but the paper does not discuss whether SAP scales to larger bidirectional models or other architectures (e.g., encoder-only models). This limits understanding of the method\u2019s generalizability across model sizes and types.\n\n12. **Limitations - Efficiency Bottleneck Limits Real-World Deployment Feasibility:**  \nWhile SAP demonstrates improved performance, the multiple sequential forward passes per token generation may severely limit throughput in real-world applications. The paper acknowledges this but does not explore potential mitigations or quantify the severity of this limitation.\n\n13. **Generalisability - Limited Task Diversity Beyond MT, QA, and Summarization:**  \nThe paper evaluates SAP on machine translation, question answering, and summarization but does not test on other generation tasks such as dialogue, code generation, or commonsense reasoning. This leaves open questions about SAP\u2019s broader applicability.\n\n14. **Generalisability - Unclear Performance on High-Resource Languages:**  \nThe results highlight strong improvements on low-resource language pairs, but it is less clear how SAP performs relative to baselines on high-resource languages. More detailed breakdowns would help assess whether SAP\u2019s benefits generalize across resource levels.\n\n15. **Methodology - No Analysis of Error Types or Failure Modes:**  \nThe paper does not analyze qualitative error types or failure cases of SAP-generated outputs, which would provide insights into limitations or areas for improvement in the iterative prompting approach."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes Sequential Autoregressive Prompting (SAP), a novel method enabling bidirectional language models like mT5 to perform few-shot and zero-shot prompt-based generation by iteratively concatenating generated tokens back into the prompt. SAP demonstrates strong performance improvements over unidirectional models such as GPT-3 and XGLM on machine translation, question answering, and summarization tasks, particularly benefiting low-resource languages, though at the cost of increased computational overhead due to multiple sequential forward passes.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel prompting technique enabling bidirectional models to perform autoregressive generation\",\n      \"evidence\": \"SAP iteratively concatenates generated tokens to the prompt, allowing bidirectional models like mT5 to generate long sequences without fine-tuning.\"\n    },\n    {\n      \"point\": \"Strong empirical results on multilingual machine translation and other generation tasks\",\n      \"evidence\": \"SAP with mT5 outperforms GPT-3 and XGLM on 14 languages and 182 language pairs, especially on low-resource languages, and improves zero-shot QA and summarization.\"\n    },\n    {\n      \"point\": \"Innovative unsupervised MT improvements\",\n      \"evidence\": \"The paper introduces mT5Score filtering, prompt ensembling, and English-centric bootstrapping to enhance zero-shot unsupervised machine translation.\"\n    },\n    {\n      \"point\": \"Addresses a key limitation in enabling prompt-based learning for bidirectional models\",\n      \"evidence\": \"SAP bridges the gap between bidirectional model strengths and prompt-based generation capabilities without requiring fine-tuning or instruction tuning.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Insufficient comparison to related prompting techniques for bidirectional models\",\n      \"evidence\": \"The paper lacks discussion or empirical comparison with prior methods like prefix-tuning or span-based generation for masked language models.\"\n    },\n    {\n      \"point\": \"Lack of ablation studies on iterative prompting design choices\",\n      \"evidence\": \"No experiments explore alternatives to concatenating only the first word or different stopping criteria, leaving design optimality unclear.\"\n    },\n    {\n      \"point\": \"No analysis of prompt length growth impact on efficiency and performance\",\n      \"evidence\": \"The iterative concatenation causes prompt length to grow, but the paper does not quantify computational costs or propose truncation strategies.\"\n    },\n    {\n      \"point\": \"Evaluation fairness concerns due to unclear baseline model sizes and parameter counts\",\n      \"evidence\": \"Comparisons to GPT-3 and XGLM do not clarify model sizes or whether prompt/context tokens are included, raising questions about apples-to-apples comparisons.\"\n    },\n    {\n      \"point\": \"Limited evaluation metrics and missing human evaluation\",\n      \"evidence\": \"Only BLEU and BERTScore are reported; no human assessments or metrics for fluency, coherence, or factual correctness are provided.\"\n    },\n    {\n      \"point\": \"Reproducibility hampered by missing details on prompt construction and hyperparameters\",\n      \"evidence\": \"The paper omits specifics on tokenization, special tokens, iteration limits, stop tokens, and beam search parameters.\"\n    },\n    {\n      \"point\": \"Limited discussion on SAP\u2019s scalability and generalizability\",\n      \"evidence\": \"No experiments or analysis on larger bidirectional models or other architectures; task diversity beyond MT, QA, and summarization is limited.\"\n    },\n    {\n      \"point\": \"Efficiency bottleneck limits practical deployment\",\n      \"evidence\": \"SAP requires multiple sequential forward passes per token, but runtime or computational cost comparisons are not quantified.\"\n    },\n    {\n      \"point\": \"Clarity issues regarding novel components like mT5Score and English-centric bootstrapping\",\n      \"evidence\": \"Definitions, formulas, and procedural details for these components are insufficiently explained.\"\n    },\n    {\n      \"point\": \"No qualitative error analysis or failure mode discussion\",\n      \"evidence\": \"The paper does not analyze types of errors or limitations in SAP-generated outputs.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does SAP compare empirically to other prompting or generation methods designed for bidirectional models?\",\n      \"motivation\": \"Understanding relative advantages and limitations is critical to assess SAP\u2019s novelty and practical value.\"\n    },\n    {\n      \"question\": \"What are the practical efficiency trade-offs of SAP in real-world deployment scenarios?\",\n      \"motivation\": \"Quantifying runtime and computational costs is necessary to evaluate SAP\u2019s feasibility beyond research settings.\"\n    },\n    {\n      \"question\": \"Can SAP scale effectively to larger bidirectional models or other architectures beyond mT5?\",\n      \"motivation\": \"Assessing generalizability is important for broader adoption and future research directions.\"\n    },\n    {\n      \"question\": \"How sensitive is SAP\u2019s performance to design choices in iterative prompting and hyperparameters?\",\n      \"motivation\": \"Ablation studies would clarify robustness and guide practitioners in applying SAP.\"\n    },\n    {\n      \"question\": \"What is the impact of SAP on generation quality aspects beyond BLEU and BERTScore, such as fluency and factual correctness?\",\n      \"motivation\": \"Comprehensive evaluation including human judgments is essential to validate output quality.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes Sequential Autoregressive Prompting (SAP), a novel method enabling bidirectional language models like mT5 to perform few-shot and zero-shot prompt-based generation by iteratively concatenating generated tokens back into the prompt. SAP demonstrates strong performance improvements over unidirectional models such as GPT-3 and XGLM on machine translation, question answering, and summarization tasks, particularly benefiting low-resource languages, though at the cost of increased computational overhead due to multiple sequential forward passes.",
+    "strengths": [
+      {
+        "point": "Novel prompting technique enabling bidirectional models to perform autoregressive generation",
+        "evidence": "SAP iteratively concatenates generated tokens to the prompt, allowing bidirectional models like mT5 to generate long sequences without fine-tuning."
+      },
+      {
+        "point": "Strong empirical results on multilingual machine translation and other generation tasks",
+        "evidence": "SAP with mT5 outperforms GPT-3 and XGLM on 14 languages and 182 language pairs, especially on low-resource languages, and improves zero-shot QA and summarization."
+      },
+      {
+        "point": "Innovative unsupervised MT improvements",
+        "evidence": "The paper introduces mT5Score filtering, prompt ensembling, and English-centric bootstrapping to enhance zero-shot unsupervised machine translation."
+      },
+      {
+        "point": "Addresses a key limitation in enabling prompt-based learning for bidirectional models",
+        "evidence": "SAP bridges the gap between bidirectional model strengths and prompt-based generation capabilities without requiring fine-tuning or instruction tuning."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to related prompting techniques for bidirectional models",
+        "evidence": "The paper lacks discussion or empirical comparison with prior methods like prefix-tuning or span-based generation for masked language models."
+      },
+      {
+        "point": "Lack of ablation studies on iterative prompting design choices",
+        "evidence": "No experiments explore alternatives to concatenating only the first word or different stopping criteria, leaving design optimality unclear."
+      },
+      {
+        "point": "No analysis of prompt length growth impact on efficiency and performance",
+        "evidence": "The iterative concatenation causes prompt length to grow, but the paper does not quantify computational costs or propose truncation strategies."
+      },
+      {
+        "point": "Evaluation fairness concerns due to unclear baseline model sizes and parameter counts",
+        "evidence": "Comparisons to GPT-3 and XGLM do not clarify model sizes or whether prompt/context tokens are included, raising questions about apples-to-apples comparisons."
+      },
+      {
+        "point": "Limited evaluation metrics and missing human evaluation",
+        "evidence": "Only BLEU and BERTScore are reported; no human assessments or metrics for fluency, coherence, or factual correctness are provided."
+      },
+      {
+        "point": "Reproducibility hampered by missing details on prompt construction and hyperparameters",
+        "evidence": "The paper omits specifics on tokenization, special tokens, iteration limits, stop tokens, and beam search parameters."
+      },
+      {
+        "point": "Limited discussion on SAP\u2019s scalability and generalizability",
+        "evidence": "No experiments or analysis on larger bidirectional models or other architectures; task diversity beyond MT, QA, and summarization is limited."
+      },
+      {
+        "point": "Efficiency bottleneck limits practical deployment",
+        "evidence": "SAP requires multiple sequential forward passes per token, but runtime or computational cost comparisons are not quantified."
+      },
+      {
+        "point": "Clarity issues regarding novel components like mT5Score and English-centric bootstrapping",
+        "evidence": "Definitions, formulas, and procedural details for these components are insufficiently explained."
+      },
+      {
+        "point": "No qualitative error analysis or failure mode discussion",
+        "evidence": "The paper does not analyze types of errors or limitations in SAP-generated outputs."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does SAP compare empirically to other prompting or generation methods designed for bidirectional models?",
+        "motivation": "Understanding relative advantages and limitations is critical to assess SAP\u2019s novelty and practical value."
+      },
+      {
+        "question": "What are the practical efficiency trade-offs of SAP in real-world deployment scenarios?",
+        "motivation": "Quantifying runtime and computational costs is necessary to evaluate SAP\u2019s feasibility beyond research settings."
+      },
+      {
+        "question": "Can SAP scale effectively to larger bidirectional models or other architectures beyond mT5?",
+        "motivation": "Assessing generalizability is important for broader adoption and future research directions."
+      },
+      {
+        "question": "How sensitive is SAP\u2019s performance to design choices in iterative prompting and hyperparameters?",
+        "motivation": "Ablation studies would clarify robustness and guide practitioners in applying SAP."
+      },
+      {
+        "question": "What is the impact of SAP on generation quality aspects beyond BLEU and BERTScore, such as fluency and factual correctness?",
+        "motivation": "Comprehensive evaluation including human judgments is essential to validate output quality."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to related prompting techniques for bidirectional models. The paper lacks discussion or empirical comparison with prior methods like prefix-tuning or span-based generation for masked language models",
+    "point_002": "Lack of ablation studies on iterative prompting design choices. No experiments explore alternatives to concatenating only the first word or different stopping criteria, leaving design optimality unclear",
+    "point_003": "No analysis of prompt length growth impact on efficiency and performance. The iterative concatenation causes prompt length to grow, but the paper does not quantify computational costs or propose truncation strategies",
+    "point_004": "Evaluation fairness concerns due to unclear baseline model sizes and parameter counts. Comparisons to GPT-3 and XGLM do not clarify model sizes or whether prompt/context tokens are included, raising questions about apples-to-apples comparisons",
+    "point_005": "Limited evaluation metrics and missing human evaluation. Only BLEU and BERTScore are reported; no human assessments or metrics for fluency, coherence, or factual correctness are provided",
+    "point_006": "Reproducibility hampered by missing details on prompt construction and hyperparameters. The paper omits specifics on tokenization, special tokens, iteration limits, stop tokens, and beam search parameters",
+    "point_007": "Limited discussion on SAP\u2019s scalability and generalizability. No experiments or analysis on larger bidirectional models or other architectures; task diversity beyond MT, QA, and summarization is limited",
+    "point_008": "Efficiency bottleneck limits practical deployment. SAP requires multiple sequential forward passes per token, but runtime or computational cost comparisons are not quantified",
+    "point_009": "Clarity issues regarding novel components like mT5Score and English-centric bootstrapping. Definitions, formulas, and procedural details for these components are insufficiently explained",
+    "point_010": "No qualitative error analysis or failure mode discussion. The paper does not analyze types of errors or limitations in SAP-generated outputs"
+  }
+}

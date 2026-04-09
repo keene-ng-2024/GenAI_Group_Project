@@ -393,6 +393,7 @@ def _sanitize_json(text: str) -> str:
     return result
 
 
+
 def _parse_structured_output(raw: str) -> dict:
     """Parse the Summariser's structured JSON output with fallbacks."""
     text = raw.strip()

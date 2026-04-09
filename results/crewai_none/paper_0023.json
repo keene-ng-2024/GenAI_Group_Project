@@ -1,0 +1,143 @@
+{
+  "paper_id": "paper_0023",
+  "title": "Later Span Adaptation for Language Understanding",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 67.79,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nPre-trained contextualized language models (PrLMs) such as BERT, XLNet, and ELECTRA typically use fine-grained tokens (words or sub-words) as the minimal linguistic units during pre-training. While these fine-grained representations are versatile and effective across many downstream natural language understanding (NLU) tasks, some tasks benefit from coarser-grained, span-level information (e.g., phrases, named entities). Prior work has incorporated span-level information by modifying pre-training objectives (e.g., SpanBERT, ERNIE, StructBERT), which improves performance but requires enormous computational resources and lacks flexibility. Moreover, the fixed incorporation of span-level information during pre-training may not suit all downstream tasks, as different tasks require different granularities of information. For example, entity-level masking benefits entity typing but may hurt performance on language inference tasks.\n\nThus, there is a need for a method that can flexibly and adaptively incorporate span-level information during fine-tuning rather than pre-training, enabling better adaptation to diverse downstream tasks without the heavy cost of re-pretraining.\n\n---\n\n### Proposed Method\n\nThe paper proposes **LaSA (Later Span Adaptation)**, a novel approach that integrates span-level information into PrLM representations during the fine-tuning phase, enhancing flexibility and efficiency.\n\nKey components of LaSA:\n\n- **Sentence Segmentation via Pre-sampled n-gram Dictionary:**  \n  Instead of relying on complex parsing tools (e.g., semantic role labeling or dependency parsing), LaSA segments input sentences into spans using a pre-sampled dictionary of frequent n-grams (n \u2264 5) extracted from the WikiText-103 corpus. Longer n-grams are prioritized during segmentation, and unmatched tokens remain as single-token spans.\n\n- **Span-level Representation Aggregation:**  \n  Given the fine-grained subword-level contextual embeddings from BERT, LaSA groups tokens according to the segmentation spans. Each span\u2019s token embeddings are passed through a hierarchical CNN-Maxpooling module to produce span-level representations.\n\n- **Hierarchical CNN for Sentence-level Representation:**  \n  The span-level representations are further processed by another CNN-Maxpooling layer to generate a coarse-grained sentence-level representation enriched with span-level information.\n\n- **Concatenation with Fine-grained [CLS] Token Representation:**  \n  The final sentence representation for downstream tasks is formed by concatenating the span-enhanced sentence representation with the original fine-grained [CLS] token embedding from BERT, thus leveraging multi-granularity information.\n\n- **Training and Fine-tuning:**  \n  LaSA is applied during fine-tuning on downstream tasks without altering the original pre-training of BERT, making it computationally efficient and adaptable.\n\n---\n\n### Results\n\n- **Datasets:**  \n  Evaluations were conducted on nine NLU benchmark datasets, including eight from the GLUE benchmark (covering text classification, natural language inference, and semantic similarity) and the SNLI dataset.\n\n- **Baselines:**  \n  Experiments used BERT Base and BERT Large Whole Word Masking (wwm) as baselines.\n\n- **Performance Gains:**  \n  LaSA consistently improved performance across all downstream tasks compared to the baseline BERT models. The average improvement was about 1.1% over the baseline, comparable or better than SpanBERT, which requires costly pre-training modifications.\n\n- **Comparison with SpanBERT:**  \n  LaSA outperformed SpanBERT on average and showed more consistent improvements across tasks. SpanBERT sometimes underperformed on datasets like MRPC and QQP, whereas LaSA improved all tasks, demonstrating better adaptability.\n\n- **Comparison with SemBERT on SNLI:**  \n  LaSA achieved comparable state-of-the-art results on SNLI without requiring external semantic role labelers, highlighting its simplicity and flexibility.\n\n- **Ablation Studies:**  \n  - Using hierarchical CNN without segmentation or with random segmentation improved performance slightly, but LaSA\u2019s specific segmentation method yielded significantly better results.  \n  - Different encoder architectures were tested; hierarchical CNN layers (CNN-CNN) were found most effective for span-level encoding.\n\n- **Effect of Dictionary Size:**  \n  Medium-sized n-gram dictionaries (20k to 500k entries) provided the best balance, improving segmentation quality and downstream task performance. Too small dictionaries miss meaningful spans; too large ones group meaningless n-grams.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Fine-tuning Span Adaptation Method (LaSA):**  \n   Introduces a lightweight, flexible approach to incorporate span-level information during fine-tuning rather than pre-training, enabling better adaptation to diverse downstream NLU tasks.\n\n2. **Simple and Effective Sentence Segmentation:**  \n   Uses a pre-sampled n-gram dictionary for segmentation, avoiding complex parsing tools and extra computational overhead.\n\n3. **Hierarchical CNN Architecture for Multi-granularity Representation:**  \n   Combines fine-grained token-level embeddings with span-level and sentence-level representations to leverage multi-granular linguistic information effectively.\n\n4. **Empirical Validation:**  \n   Demonstrates that LaSA achieves comparable or better improvements than costly pre-training methods like SpanBERT, with consistent gains across multiple NLU benchmarks.\n\n5. **Analysis and Ablation:**  \n   Provides thorough ablation studies confirming the importance of segmentation and hierarchical CNN architecture, and analyzes the impact of dictionary size on performance.\n\n6. **Practical Implications:**  \n   Offers a resource-efficient alternative to span-level pre-training modifications, potentially guiding future research on adaptive fine-tuning strategies in NLP.\n\n---\n\n**In summary,** this paper presents LaSA, a novel method that flexibly integrates span-level information into pre-trained language models during fine-tuning via dictionary-based segmentation and hierarchical CNN encoding, achieving strong performance gains on multiple NLU tasks with less computational cost and greater adaptability than prior span-level pre-training approaches."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty \u2013 Missing Comparison with More Recent Span-level Fine-tuning Methods:**  \n   While the paper compares LaSA primarily against SpanBERT and SemBERT, it does not discuss or compare with other recent span-level fine-tuning approaches that also aim to incorporate span information without costly pre-training (e.g., methods using span pooling or attention-based span representations during fine-tuning). This omission weakens the novelty claim since the landscape of span-level adaptation is broader than just SpanBERT and SemBERT.\n\n2. **Methodology \u2013 Justification for Using CNNs over Transformer Layers for Span Encoding:**  \n   The paper employs hierarchical CNN-Maxpooling modules for span and sentence-level encoding but does not sufficiently justify why CNNs were chosen over other architectures such as transformers or recurrent networks, which might better capture long-range dependencies within spans. The ablation study only compares CNN-CNN with other CNN variants but omits comparisons with non-CNN encoders.\n\n3. **Methodology \u2013 Lack of Analysis on the Impact of Span Length Distribution:**  \n   The segmentation relies on a pre-sampled n-gram dictionary with n \u2264 5, but the paper does not analyze how the distribution of span lengths affects performance or whether certain span lengths contribute more to gains. This is important because longer spans might dilute fine-grained information, while very short spans might not add meaningful context.\n\n4. **Methodology \u2013 No Discussion on Handling Overlapping or Nested Spans:**  \n   The segmentation method prioritizes longer n-grams but does not clarify how overlapping or nested spans are handled, which is common in natural language (e.g., nested named entities). The absence of this detail raises questions about the robustness of the segmentation approach.\n\n5. **Evaluation \u2013 Limited Baseline Diversity and Potentially Unfair Comparisons:**  \n   The baselines are limited to BERT Base and BERT Large wwm, SpanBERT, and SemBERT. The paper does not compare with other strong baselines such as RoBERTa, ALBERT, or ELECTRA with span-level adaptations, which could provide a more comprehensive evaluation. Also, it is unclear if all models were fine-tuned under identical conditions (e.g., same hyperparameters, training epochs), which affects fairness.\n\n6. **Evaluation \u2013 Metrics Focus Solely on Accuracy and F1 Without Error Analysis:**  \n   The results focus on aggregate metrics like accuracy and F1 scores but lack qualitative or error analysis to understand what types of errors LaSA reduces or fails to address. This limits insight into the practical benefits and failure modes of the method.\n\n7. **Evaluation \u2013 No Evaluation on Span-sensitive Tasks Beyond SNLI:**  \n   Although the motivation emphasizes span-level information\u2019s importance for tasks like entity typing, the evaluation datasets are mostly general NLU benchmarks. The paper does not test LaSA on explicitly span-sensitive tasks such as named entity recognition, coreference resolution, or semantic role labeling, which would better validate the method\u2019s claimed advantages.\n\n8. **Reproducibility \u2013 Missing Details on Dictionary Construction and Pre-sampling Procedure:**  \n   The paper states that the n-gram dictionary is pre-sampled from WikiText-103 but does not provide details on the frequency thresholds, sampling criteria, or how the dictionary size was controlled. This omission hinders reproducibility and understanding of how dictionary quality affects segmentation.\n\n9. **Reproducibility \u2013 Lack of Hyperparameter Settings for CNN Modules:**  \n   The hierarchical CNN architecture is central to LaSA, yet the paper does not specify key hyperparameters such as kernel sizes, number of filters, stride, padding, or activation functions. Without these details, replicating the exact model is difficult.\n\n10. **Clarity \u2013 Ambiguity in the Description of Span-level Representation Aggregation:**  \n    The explanation of how token embeddings within spans are aggregated via CNN-Maxpooling is somewhat vague. It is unclear whether the CNN operates on the sequence of token embeddings directly or on some transformed features, and how variable-length spans are handled in the CNN input.\n\n11. **Clarity \u2013 Insufficient Explanation of the Hierarchical CNN for Sentence-level Representation:**  \n    The paper briefly mentions a second CNN-Maxpooling layer for sentence-level encoding but does not clarify how span-level representations are arranged as input (e.g., sequence order, padding) or how this layer differs from the first CNN. This reduces clarity on the hierarchical encoding process.\n\n12. **Limitations \u2013 No Discussion on Potential Overfitting Due to Additional Parameters:**  \n    LaSA adds hierarchical CNN layers and concatenates span-level representations with the [CLS] token embedding, increasing model complexity. The paper does not discuss whether this leads to overfitting risks, especially on smaller datasets, or how it affects training stability.\n\n13. **Limitations \u2013 Fixed Dictionary May Limit Adaptability to Domain-specific Texts:**  \n    The n-gram dictionary is constructed from WikiText-103, a general-domain corpus. The paper does not address how well LaSA would perform on domain-specific datasets (e.g., biomedical, legal) where frequent n-grams differ, nor does it explore dynamic or adaptive dictionary construction.\n\n14. **Generalisability \u2013 No Experiments Beyond English or GLUE-like Tasks:**  \n    All experiments are conducted on English NLU benchmarks. The paper does not investigate whether LaSA\u2019s segmentation and hierarchical encoding generalize to other languages, especially morphologically rich or low-resource languages, limiting claims about broad applicability.\n\n15. **Generalisability \u2013 No Analysis of Computational Overhead During Fine-tuning:**  \n    While the paper claims LaSA is computationally efficient compared to span-level pre-training, it does not provide quantitative analysis of the additional computational cost or inference latency introduced by the hierarchical CNN modules during fine-tuning and evaluation. This information is crucial for practical deployment considerations."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes LaSA, a novel method to incorporate span-level information into pre-trained language models during fine-tuning via a pre-sampled n-gram dictionary segmentation and hierarchical CNN encoding. LaSA achieves consistent improvements across multiple NLU benchmarks, offering a flexible and computationally efficient alternative to costly span-level pre-training approaches like SpanBERT.\",\n  \"strengths\": [\n    {\n      \"point\": \"Flexible span-level adaptation during fine-tuning\",\n      \"evidence\": \"LaSA integrates span-level information without modifying pre-training, enabling adaptability to diverse downstream tasks.\"\n    },\n    {\n      \"point\": \"Simple and effective segmentation method\",\n      \"evidence\": \"Uses a pre-sampled n-gram dictionary from WikiText-103 for sentence segmentation, avoiding complex parsing tools.\"\n    },\n    {\n      \"point\": \"Hierarchical CNN architecture for multi-granularity representation\",\n      \"evidence\": \"Combines token-level embeddings with span-level and sentence-level representations via hierarchical CNN-Maxpooling modules.\"\n    },\n    {\n      \"point\": \"Consistent empirical improvements\",\n      \"evidence\": \"LaSA outperforms or matches SpanBERT and SemBERT across nine NLU datasets, with average gains of about 1.1% over BERT baselines.\"\n    },\n    {\n      \"point\": \"Thorough ablation and analysis\",\n      \"evidence\": \"Ablation studies confirm the importance of segmentation and hierarchical CNNs; analysis of dictionary size effects is provided.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited comparison with recent span-level fine-tuning methods\",\n      \"evidence\": \"The paper compares mainly with SpanBERT and SemBERT but omits other recent span-level fine-tuning approaches using span pooling or attention.\"\n    },\n    {\n      \"point\": \"Insufficient justification for CNN-based span encoding\",\n      \"evidence\": \"No comparison with transformer or recurrent encoders; ablation only contrasts CNN variants.\"\n    },\n    {\n      \"point\": \"Lack of analysis on span length distribution impact\",\n      \"evidence\": \"No study on how different span lengths affect performance or contribute to gains.\"\n    },\n    {\n      \"point\": \"No discussion on handling overlapping or nested spans\",\n      \"evidence\": \"Segmentation prioritizes longer n-grams but does not clarify treatment of overlapping/nested spans common in language.\"\n    },\n    {\n      \"point\": \"Limited baseline diversity and unclear training fairness\",\n      \"evidence\": \"Baselines exclude strong models like RoBERTa or ELECTRA with span adaptations; training conditions across models are not fully detailed.\"\n    },\n    {\n      \"point\": \"Evaluation lacks qualitative error analysis\",\n      \"evidence\": \"Results focus on accuracy and F1 without insight into error types or failure modes.\"\n    },\n    {\n      \"point\": \"No evaluation on explicitly span-sensitive tasks\",\n      \"evidence\": \"Experiments are limited to GLUE-like benchmarks and SNLI; no tests on tasks like NER or coreference.\"\n    },\n    {\n      \"point\": \"Reproducibility concerns due to missing dictionary and CNN hyperparameter details\",\n      \"evidence\": \"No information on dictionary construction thresholds or CNN kernel sizes, filters, and activations.\"\n    },\n    {\n      \"point\": \"Clarity issues in span representation aggregation and hierarchical CNN description\",\n      \"evidence\": \"Unclear how CNN operates on token embeddings and how span-level representations are arranged for sentence-level CNN.\"\n    },\n    {\n      \"point\": \"No discussion on overfitting risks from added parameters\",\n      \"evidence\": \"Additional CNN layers increase model complexity but overfitting or training stability is not addressed.\"\n    },\n    {\n      \"point\": \"Fixed dictionary may limit domain adaptability\",\n      \"evidence\": \"Dictionary built from general-domain WikiText-103; no exploration of domain-specific or adaptive dictionaries.\"\n    },\n    {\n      \"point\": \"No experiments beyond English or GLUE-like tasks\",\n      \"evidence\": \"No evaluation on other languages or morphologically rich/low-resource languages.\"\n    },\n    {\n      \"point\": \"No quantitative analysis of computational overhead\",\n      \"evidence\": \"Claims of efficiency lack measurements of fine-tuning or inference latency impact.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does LaSA compare with other recent span-level fine-tuning methods beyond SpanBERT and SemBERT?\",\n      \"motivation\": \"Understanding relative novelty and effectiveness requires broader baseline comparisons.\"\n    },\n    {\n      \"question\": \"Why were CNNs chosen for span encoding over transformers or recurrent networks, and how would these alternatives perform?\",\n      \"motivation\": \"Justification of architecture choice is critical for assessing method design and potential improvements.\"\n    },\n    {\n      \"question\": \"How does the method handle overlapping or nested spans during segmentation?\",\n      \"motivation\": \"Robustness to common linguistic phenomena affects practical applicability.\"\n    },\n    {\n      \"question\": \"What is the impact of span length distribution on performance, and are certain span lengths more beneficial?\",\n      \"motivation\": \"Optimizing segmentation granularity could improve effectiveness.\"\n    },\n    {\n      \"question\": \"Can LaSA generalize to span-sensitive tasks like named entity recognition or coreference resolution?\",\n      \"motivation\": \"Validating claimed advantages requires testing on explicitly span-focused tasks.\"\n    },\n    {\n      \"question\": \"What are the computational costs and latency implications of adding hierarchical CNN modules during fine-tuning and inference?\",\n      \"motivation\": \"Efficiency claims need quantitative support for practical deployment.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes LaSA, a novel method to incorporate span-level information into pre-trained language models during fine-tuning via a pre-sampled n-gram dictionary segmentation and hierarchical CNN encoding. LaSA achieves consistent improvements across multiple NLU benchmarks, offering a flexible and computationally efficient alternative to costly span-level pre-training approaches like SpanBERT.",
+    "strengths": [
+      {
+        "point": "Flexible span-level adaptation during fine-tuning",
+        "evidence": "LaSA integrates span-level information without modifying pre-training, enabling adaptability to diverse downstream tasks."
+      },
+      {
+        "point": "Simple and effective segmentation method",
+        "evidence": "Uses a pre-sampled n-gram dictionary from WikiText-103 for sentence segmentation, avoiding complex parsing tools."
+      },
+      {
+        "point": "Hierarchical CNN architecture for multi-granularity representation",
+        "evidence": "Combines token-level embeddings with span-level and sentence-level representations via hierarchical CNN-Maxpooling modules."
+      },
+      {
+        "point": "Consistent empirical improvements",
+        "evidence": "LaSA outperforms or matches SpanBERT and SemBERT across nine NLU datasets, with average gains of about 1.1% over BERT baselines."
+      },
+      {
+        "point": "Thorough ablation and analysis",
+        "evidence": "Ablation studies confirm the importance of segmentation and hierarchical CNNs; analysis of dictionary size effects is provided."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison with recent span-level fine-tuning methods",
+        "evidence": "The paper compares mainly with SpanBERT and SemBERT but omits other recent span-level fine-tuning approaches using span pooling or attention."
+      },
+      {
+        "point": "Insufficient justification for CNN-based span encoding",
+        "evidence": "No comparison with transformer or recurrent encoders; ablation only contrasts CNN variants."
+      },
+      {
+        "point": "Lack of analysis on span length distribution impact",
+        "evidence": "No study on how different span lengths affect performance or contribute to gains."
+      },
+      {
+        "point": "No discussion on handling overlapping or nested spans",
+        "evidence": "Segmentation prioritizes longer n-grams but does not clarify treatment of overlapping/nested spans common in language."
+      },
+      {
+        "point": "Limited baseline diversity and unclear training fairness",
+        "evidence": "Baselines exclude strong models like RoBERTa or ELECTRA with span adaptations; training conditions across models are not fully detailed."
+      },
+      {
+        "point": "Evaluation lacks qualitative error analysis",
+        "evidence": "Results focus on accuracy and F1 without insight into error types or failure modes."
+      },
+      {
+        "point": "No evaluation on explicitly span-sensitive tasks",
+        "evidence": "Experiments are limited to GLUE-like benchmarks and SNLI; no tests on tasks like NER or coreference."
+      },
+      {
+        "point": "Reproducibility concerns due to missing dictionary and CNN hyperparameter details",
+        "evidence": "No information on dictionary construction thresholds or CNN kernel sizes, filters, and activations."
+      },
+      {
+        "point": "Clarity issues in span representation aggregation and hierarchical CNN description",
+        "evidence": "Unclear how CNN operates on token embeddings and how span-level representations are arranged for sentence-level CNN."
+      },
+      {
+        "point": "No discussion on overfitting risks from added parameters",
+        "evidence": "Additional CNN layers increase model complexity but overfitting or training stability is not addressed."
+      },
+      {
+        "point": "Fixed dictionary may limit domain adaptability",
+        "evidence": "Dictionary built from general-domain WikiText-103; no exploration of domain-specific or adaptive dictionaries."
+      },
+      {
+        "point": "No experiments beyond English or GLUE-like tasks",
+        "evidence": "No evaluation on other languages or morphologically rich/low-resource languages."
+      },
+      {
+        "point": "No quantitative analysis of computational overhead",
+        "evidence": "Claims of efficiency lack measurements of fine-tuning or inference latency impact."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does LaSA compare with other recent span-level fine-tuning methods beyond SpanBERT and SemBERT?",
+        "motivation": "Understanding relative novelty and effectiveness requires broader baseline comparisons."
+      },
+      {
+        "question": "Why were CNNs chosen for span encoding over transformers or recurrent networks, and how would these alternatives perform?",
+        "motivation": "Justification of architecture choice is critical for assessing method design and potential improvements."
+      },
+      {
+        "question": "How does the method handle overlapping or nested spans during segmentation?",
+        "motivation": "Robustness to common linguistic phenomena affects practical applicability."
+      },
+      {
+        "question": "What is the impact of span length distribution on performance, and are certain span lengths more beneficial?",
+        "motivation": "Optimizing segmentation granularity could improve effectiveness."
+      },
+      {
+        "question": "Can LaSA generalize to span-sensitive tasks like named entity recognition or coreference resolution?",
+        "motivation": "Validating claimed advantages requires testing on explicitly span-focused tasks."
+      },
+      {
+        "question": "What are the computational costs and latency implications of adding hierarchical CNN modules during fine-tuning and inference?",
+        "motivation": "Efficiency claims need quantitative support for practical deployment."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Limited comparison with recent span-level fine-tuning methods. The paper compares mainly with SpanBERT and SemBERT but omits other recent span-level fine-tuning approaches using span pooling or attention",
+    "point_002": "Insufficient justification for CNN-based span encoding. No comparison with transformer or recurrent encoders; ablation only contrasts CNN variants",
+    "point_003": "Lack of analysis on span length distribution impact. No study on how different span lengths affect performance or contribute to gains",
+    "point_004": "No discussion on handling overlapping or nested spans. Segmentation prioritizes longer n-grams but does not clarify treatment of overlapping/nested spans common in language",
+    "point_005": "Limited baseline diversity and unclear training fairness. Baselines exclude strong models like RoBERTa or ELECTRA with span adaptations; training conditions across models are not fully detailed",
+    "point_006": "Evaluation lacks qualitative error analysis. Results focus on accuracy and F1 without insight into error types or failure modes",
+    "point_007": "No evaluation on explicitly span-sensitive tasks. Experiments are limited to GLUE-like benchmarks and SNLI; no tests on tasks like NER or coreference",
+    "point_008": "Reproducibility concerns due to missing dictionary and CNN hyperparameter details. No information on dictionary construction thresholds or CNN kernel sizes, filters, and activations",
+    "point_009": "Clarity issues in span representation aggregation and hierarchical CNN description. Unclear how CNN operates on token embeddings and how span-level representations are arranged for sentence-level CNN",
+    "point_010": "No discussion on overfitting risks from added parameters. Additional CNN layers increase model complexity but overfitting or training stability is not addressed",
+    "point_011": "Fixed dictionary may limit domain adaptability. Dictionary built from general-domain WikiText-103; no exploration of domain-specific or adaptive dictionaries",
+    "point_012": "No experiments beyond English or GLUE-like tasks. No evaluation on other languages or morphologically rich/low-resource languages",
+    "point_013": "No quantitative analysis of computational overhead. Claims of efficiency lack measurements of fine-tuning or inference latency impact"
+  }
+}

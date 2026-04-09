@@ -3,103 +3,84 @@
   "title": "Contextual Temperature for Language Modeling",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 143.42,
+  "latency_seconds": 84.95,
   "structured": {
-    "summary": "This paper proposes a novel contextual temperature scaling method that dynamically adjusts the softmax temperature on a per-token and per-context basis within neural language models. Integrated with Mixture of Softmaxes (MoS), the approach improves perplexity on standard benchmarks like PTB and WikiText-2 by better controlling output uncertainty and adapting smoothing dynamically during sequence generation.",
+    "summary": "This paper proposes Contextual Temperature (CT), a novel method that learns token- and context-dependent temperature scaling for the Softmax layer in language models, integrated with Mixture of Softmaxes (MoS) to form CT-MoS. Experiments on PTB and WikiText-2 demonstrate improved perplexity over strong baselines, with analyses showing dynamic temperature schedules varying by token frequency, position, and context.",
     "strengths": [
       {
-        "point": "Novel contextual temperature scaling",
-        "evidence": "Introduces a learnable temperature vector \u03c4 \u2208 \u211d^|V| conditioned on context, extending fixed or global temperature approaches."
+        "point": "Introduces a novel, fine-grained temperature scaling method that adapts per token and context",
+        "evidence": "The method learns a temperature vector \u03c4 conditioned on contextual history using AWD-LSTM, enabling dynamic temperature variation across tokens and contexts."
       },
       {
-        "point": "Empirical improvements on language modeling benchmarks",
-        "evidence": "CT-MoS outperforms AWD-LSTM, MoS, and parameter-matched MoS+ baselines on PTB and WikiText-2 with notable perplexity reductions."
+        "point": "Demonstrates consistent perplexity improvements over strong baselines on standard datasets",
+        "evidence": "CT-MoS achieves test perplexities of 47.42 on PTB and 60.13 on WikiText-2, outperforming AWD-LSTM and MoS baselines."
       },
       {
-        "point": "Insightful qualitative analyses",
-        "evidence": "Visualizations show temperature values correlate with token frequency and positional context, and case studies demonstrate improved semantic consistency in next-token predictions."
-      },
-      {
-        "point": "Integration with existing architectures",
-        "evidence": "Successfully integrates contextual temperature with Mixture of Softmaxes and provides gradient analyses illustrating training dynamics."
+        "point": "Provides insightful analyses of learned temperature dynamics and their relation to token frequency and sentence position",
+        "evidence": "Temperature tends to be higher at sentence starts and varies with token frequency; case studies show CT-MoS predicts semantically closer tokens."
       }
     ],
     "weaknesses": [
       {
-        "point": "Incomplete literature review on adaptive temperature methods",
-        "evidence": "Prior adaptive temperature scaling approaches in calibration and uncertainty estimation are not discussed or compared."
+        "point": "Insufficient comparison and discussion of prior work on temperature scaling and token-level smoothing",
+        "evidence": "The paper lacks explicit positioning relative to key works like Guo et al. (2017) and adaptive smoothing methods, and does not include empirical baselines for standard temperature scaling techniques."
       },
       {
-        "point": "Lack of theoretical or empirical justification for temperature normalization range",
-        "evidence": "No ablation or analysis justifies the choice of bounding temperature via scaled Softmax normalization."
+        "point": "Lack of ablation studies justifying the choice of AWD-LSTM for temperature prediction",
+        "evidence": "No experiments compare AWD-LSTM with other architectures such as Transformers or feed-forward networks for parameterizing the temperature vector."
       },
       {
-        "point": "Scalability concerns due to per-token temperature vector",
-        "evidence": "Computing a temperature vector of size |V| per context is memory- and computation-intensive; no runtime or memory overhead analysis is provided."
+        "point": "Limited dataset diversity and absence of downstream task evaluations restrict generalizability claims",
+        "evidence": "Experiments are only on PTB and WikiText-2; no evaluation on larger corpora or NLP tasks like summarization or translation."
       },
       {
-        "point": "Limited evaluation with only AWD-LSTM-based architectures",
-        "evidence": "No experiments on transformer-based models, limiting claims of general applicability."
+        "point": "Missing detailed hyperparameter, training, and implementation details hinder reproducibility",
+        "evidence": "Critical settings such as AWD-LSTM hidden size, optimizer parameters, and initialization of \u03b1 and \u03b2 are not reported."
       },
       {
-        "point": "Evaluation restricted to perplexity on small datasets",
-        "evidence": "No calibration metrics, downstream task evaluations, or human assessments to validate improved uncertainty control."
+        "point": "No analysis of computational overhead or inference efficiency introduced by dynamic temperature scaling",
+        "evidence": "The paper does not report latency, memory usage, or throughput impacts of computing temperature vectors at inference."
       },
       {
-        "point": "Insufficient details on temperature network architecture and training",
-        "evidence": "Missing specification of network layers, hyperparameters, and training procedures hinders reproducibility."
+        "point": "Unclear fairness of baselines due to missing parameter counts and training budget comparisons",
+        "evidence": "No detailed table comparing model sizes or compute resources for CT-MoS and baselines is provided."
       },
       {
-        "point": "No analysis of training stability or convergence behavior",
-        "evidence": "Claims about loss scaling improving gradient balance lack empirical support such as training curves or gradient norms."
+        "point": "Absence of statistical significance testing and variance reporting across multiple runs",
+        "evidence": "Reported perplexity improvements are small but no standard deviations or significance tests are included."
       },
       {
-        "point": "Missing critical baselines and ablations",
-        "evidence": "No baseline with fixed per-token temperatures independent of context to isolate contextual benefit."
-      },
-      {
-        "point": "Lack of quantitative characterization and interpretability of learned temperatures",
-        "evidence": "No statistical analysis of temperature distributions or correlations beyond qualitative observations."
-      },
-      {
-        "point": "Absent discussion on inference efficiency and practical deployment",
-        "evidence": "No reported latency, throughput, or memory usage comparisons between CT-MoS and baselines."
-      },
-      {
-        "point": "No statistical significance or variance reporting",
-        "evidence": "Results presented as single perplexity values without error bars or multiple-run averages."
+        "point": "No ablation isolating the contributions of contextual temperature scaling versus MoS components",
+        "evidence": "The paper does not evaluate CT alone or MoS with fixed temperature to disentangle effects."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed contextual temperature scaling compare to existing adaptive temperature or calibration methods?",
-        "motivation": "Positioning relative to prior work is critical to assess novelty and practical advantages."
+        "question": "How sensitive is the method to the choice of architecture for temperature prediction, and would simpler or more modern architectures perform comparably?",
+        "motivation": "Understanding this would clarify whether AWD-LSTM is necessary or if the approach generalizes across architectures."
       },
       {
-        "question": "Can the approach scale efficiently to large vocabularies and transformer architectures used in modern NLP?",
-        "motivation": "Ensuring applicability to state-of-the-art models and real-world scenarios is necessary for impact."
+        "question": "What is the computational cost and inference latency overhead introduced by dynamic temperature scaling, and how does it affect practical deployment?",
+        "motivation": "Assessing efficiency trade-offs is critical for real-world applications where latency and resource constraints matter."
       },
       {
-        "question": "Does the learned temperature adaptation meaningfully improve uncertainty estimation and downstream task performance beyond perplexity?",
-        "motivation": "Demonstrating benefits beyond standard perplexity would validate the broader utility of contextual temperature."
+        "question": "Can the contextual temperature scaling method improve calibration or uncertainty estimation beyond perplexity, and how does it compare to other calibration techniques?",
+        "motivation": "Since temperature scaling is often used for calibration, evaluating calibration metrics would demonstrate broader utility."
       },
       {
-        "question": "What are the training stability characteristics and computational overheads introduced by contextual temperature scaling?",
-        "motivation": "Understanding optimization behavior and resource costs is essential for practical adoption."
+        "question": "How does the method perform on larger-scale datasets and downstream NLP tasks such as machine translation or summarization?",
+        "motivation": "Validating generalizability and practical impact requires testing beyond small language modeling benchmarks."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Incomplete literature review on adaptive temperature methods. Prior adaptive temperature scaling approaches in calibration and uncertainty estimation are not discussed or compared",
-    "point_002": "Lack of theoretical or empirical justification for temperature normalization range. No ablation or analysis justifies the choice of bounding temperature via scaled Softmax normalization",
-    "point_003": "Scalability concerns due to per-token temperature vector. Computing a temperature vector of size |V| per context is memory- and computation-intensive; no runtime or memory overhead analysis is provided",
-    "point_004": "Limited evaluation with only AWD-LSTM-based architectures. No experiments on transformer-based models, limiting claims of general applicability",
-    "point_005": "Evaluation restricted to perplexity on small datasets. No calibration metrics, downstream task evaluations, or human assessments to validate improved uncertainty control",
-    "point_006": "Insufficient details on temperature network architecture and training. Missing specification of network layers, hyperparameters, and training procedures hinders reproducibility",
-    "point_007": "No analysis of training stability or convergence behavior. Claims about loss scaling improving gradient balance lack empirical support such as training curves or gradient norms",
-    "point_008": "Missing critical baselines and ablations. No baseline with fixed per-token temperatures independent of context to isolate contextual benefit",
-    "point_009": "Lack of quantitative characterization and interpretability of learned temperatures. No statistical analysis of temperature distributions or correlations beyond qualitative observations",
-    "point_010": "Absent discussion on inference efficiency and practical deployment. No reported latency, throughput, or memory usage comparisons between CT-MoS and baselines",
-    "point_011": "No statistical significance or variance reporting. Results presented as single perplexity values without error bars or multiple-run averages"
+    "point_001": "Insufficient comparison and discussion of prior work on temperature scaling and token-level smoothing. The paper lacks explicit positioning relative to key works like Guo et al. (2017) and adaptive smoothing methods, and does not include empirical baselines for standard temperature scaling techniques",
+    "point_002": "Lack of ablation studies justifying the choice of AWD-LSTM for temperature prediction. No experiments compare AWD-LSTM with other architectures such as Transformers or feed-forward networks for parameterizing the temperature vector",
+    "point_003": "Limited dataset diversity and absence of downstream task evaluations restrict generalizability claims. Experiments are only on PTB and WikiText-2; no evaluation on larger corpora or NLP tasks like summarization or translation",
+    "point_004": "Missing detailed hyperparameter, training, and implementation details hinder reproducibility. Critical settings such as AWD-LSTM hidden size, optimizer parameters, and initialization of \u03b1 and \u03b2 are not reported",
+    "point_005": "No analysis of computational overhead or inference efficiency introduced by dynamic temperature scaling. The paper does not report latency, memory usage, or throughput impacts of computing temperature vectors at inference",
+    "point_006": "Unclear fairness of baselines due to missing parameter counts and training budget comparisons. No detailed table comparing model sizes or compute resources for CT-MoS and baselines is provided",
+    "point_007": "Absence of statistical significance testing and variance reporting across multiple runs. Reported perplexity improvements are small but no standard deviations or significance tests are included",
+    "point_008": "No ablation isolating the contributions of contextual temperature scaling versus MoS components. The paper does not evaluate CT alone or MoS with fixed temperature to disentangle effects"
   }
 }

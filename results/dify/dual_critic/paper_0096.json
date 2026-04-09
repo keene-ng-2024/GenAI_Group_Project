@@ -3,79 +3,121 @@
   "title": "Selective Annotation Makes Language Models Better Few-Shot Learners",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 162.93,
+  "latency_seconds": 98.5,
   "structured": {
-    "summary": "The paper proposes a two-step framework for efficient few-shot in-context learning, focusing on selective annotation of unlabeled data to minimize annotation costs while maximizing downstream performance. The key contribution is vote-k, an unsupervised graph-based method that balances diversity and representativeness to select examples for annotation, yielding substantial gains across diverse NLP tasks and large language models compared to random or other baseline selections.",
+    "summary": "The paper proposes vote-k, a novel graph-based selective annotation method within a two-step framework (selective annotation followed by prompt retrieval) to improve annotation efficiency for in-context learning with large language models. Evaluated on 10 diverse NLP tasks, vote-k significantly outperforms random and classical baselines, enabling strong few-shot performance with substantially fewer annotations than finetuning. The work offers practical insights into dataset creation for LLMs, demonstrating gains in stability, domain robustness, and annotation cost reduction.",
     "strengths": [
       {
-        "point": "Clear framing of selective annotation as a distinct step for in-context learning efficiency",
-        "evidence": "The paper formalizes the problem of selective annotation preceding prompt retrieval, highlighting annotation cost explicitly, which is often overlooked in few-shot learning."
+        "point": "Novel unsupervised graph-based selective annotation method balancing diversity and representativeness",
+        "evidence": "Vote-k constructs a k-NN graph over Sentence-BERT embeddings and scores nodes with a modified degree that discounts neighbors near already selected samples, encouraging diverse and representative selection (Section 3.2)."
       },
       {
-        "point": "Effective unsupervised graph-based method balancing diversity and representativeness",
-        "evidence": "vote-k constructs a k-NN graph and uses a modified degree scoring to iteratively select samples, outperforming baselines like random sampling, facility location, and uncertainty sampling on 10 diverse datasets."
+        "point": "Comprehensive empirical evaluation across 10 diverse NLP tasks and multiple large language models",
+        "evidence": "Experiments include classification, commonsense reasoning, dialogue state tracking, semantic parsing, QA, and summarization with models like GPT-J, Codex, GPT-3, and OPT-175B, demonstrating consistent gains over random and classical baselines (Section 4)."
       },
       {
-        "point": "Extensive empirical evaluation across varied datasets, model sizes, and domain shifts",
-        "evidence": "Demonstrates consistent gains with annotation budgets as low as 18 examples, robustness to domain shifts, and competitive performance compared to finetuning with much less annotation cost."
+        "point": "Demonstrated annotation efficiency with vote-k enabling strong in-context learning using 10-100\u00d7 fewer annotations than finetuning",
+        "evidence": "On three representative tasks, in-context learning with vote-k outperforms finetuning baselines requiring significantly more labeled data, highlighting practical annotation cost savings (Section 4.4)."
+      },
+      {
+        "point": "Analysis of stability, domain shift robustness, and prompt retrieval impact",
+        "evidence": "Vote-k reduces variance in performance, improves results under domain shifts (CivilComments, Amazon), and shows that selective annotation benefits depend on similarity-based prompt retrieval (Sections 4.3, 4.5)."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient positioning against classical and recent active learning methods",
-        "evidence": "Related work lacks direct comparison or discussion of methods like Core-set or BADGE, which also optimize diversity and uncertainty jointly."
+        "point": "Lack of comparison to recent state-of-the-art selective annotation and active learning methods",
+        "evidence": "The paper compares vote-k only to classical baselines like facility location and least-confidence sampling, omitting comparisons to methods such as BADGE, GLISTER, or CoreSet that have shown strong performance in selective annotation (Critique point 1)."
       },
       {
-        "point": "Lack of ablation studies for key design choices in vote-k",
-        "evidence": "No justification or sensitivity analysis for fixed k=150 in k-NN graph construction or for the two-stage confidence-based bucketing selection."
+        "point": "Insufficient ablation studies and justification for key hyperparameters and methodological choices",
+        "evidence": "No sensitivity analysis or ablation on hyperparameters k=150 and \u03c1=10, no ablation isolating the confidence-based bucket sampling step, and no exploration of alternative embeddings or fine-tuning Sentence-BERT (Critique points 2, 3, 4)."
       },
       {
-        "point": "Sparse reproducibility details and missing implementation specifics",
-        "evidence": "Critical parameters for embedding extraction, graph construction, and bucket sizing are omitted, hindering exact replication."
+        "point": "Limited evaluation and description of prompt retrieval strategies",
+        "evidence": "Prompt retrieval relies solely on cosine similarity over Sentence-BERT embeddings without comparison to advanced retrieval methods like DPR or learned retrievers, which may affect in-context learning performance (Critique point 5)."
       },
       {
-        "point": "Limited consideration of annotation noise, label quality, and human-in-the-loop aspects",
-        "evidence": "The impact of annotating low-confidence (hard) examples on label noise and downstream robustness is not analyzed or experimentally evaluated."
+        "point": "Finetuning baselines lack detailed hyperparameter settings and optimization details",
+        "evidence": "The paper does not provide finetuning hyperparameters or evidence of hyperparameter tuning, raising concerns about fairness of comparisons between in-context learning and finetuning (Critique point 6)."
       },
       {
-        "point": "Evaluation focuses mainly on accuracy without exploring calibration, robustness, or error types",
-        "evidence": "No analysis of how selective annotation affects model confidence calibration or uncertainty estimation."
+        "point": "No statistical significance testing reported for performance improvements",
+        "evidence": "Although average gains and variance reductions are reported, no paired tests or confidence intervals are provided to confirm robustness of improvements (Critique point 7)."
       },
       {
-        "point": "Baseline comparisons omit stronger active learning and semi-supervised methods",
-        "evidence": "Fails to benchmark against methods like BADGE or Core-set, limiting claims of superiority."
+        "point": "Reproducibility hindered by missing details on annotation budget allocation and baseline implementations",
+        "evidence": "Exact proportions of annotation budget split between vote-k and confidence sampling are unspecified, and it is unclear if baseline code and hyperparameters are fully released (Critique points 8, 9)."
       },
       {
-        "point": "No exploration of scalability, computational overhead, or practical annotation cost measurements",
-        "evidence": "Although a faster variant is introduced, detailed runtime and memory analyses or annotation time studies are missing."
+        "point": "Ambiguous description and lack of formal definition for the modified degree scoring function",
+        "evidence": "No formal mathematical definition or pseudocode is provided for the key scoring mechanism that discounts neighbors near selected samples, limiting clarity and reproducibility (Critique point 10)."
+      },
+      {
+        "point": "No discussion of computational scalability and annotation cost trade-offs",
+        "evidence": "Constructing large k-NN graphs with k=150 over large unlabeled pools may be expensive, but the paper does not analyze runtime complexity, memory requirements, or annotation overhead beyond number of examples (Critique points 11, 12)."
+      },
+      {
+        "point": "Generalisability limited to NLP tasks and Sentence-BERT embeddings",
+        "evidence": "Experiments are restricted to NLP datasets and embeddings; no exploration of other modalities or embedding methods is presented (Critique points 13, 18)."
+      },
+      {
+        "point": "Domain shift evaluation limited to only two datasets",
+        "evidence": "Robustness claims under domain shift are based on CivilComments and Amazon datasets only, which may not generalize broadly (Critique point 14)."
+      },
+      {
+        "point": "Insufficient empirical analysis explaining why selective annotation benefits in-context learning but not finetuning",
+        "evidence": "The paper speculates prompt retrieval robustness to outliers as a reason but lacks experiments isolating this effect or deeper analysis (Critique point 15)."
+      },
+      {
+        "point": "No consideration of label noise, annotation quality, prompt length constraints, or selection biases",
+        "evidence": "Potential impacts of noisy annotations, token budget limits for prompts, and embedding-induced selection biases are not discussed or analyzed (Critique points 16, 17, 18)."
+      },
+      {
+        "point": "No analysis of how task difficulty or dataset size affects vote-k\u2019s effectiveness",
+        "evidence": "Understanding when selective annotation is most beneficial requires such analysis, which is absent (Critique point 19)."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is vote-k\u2019s performance to the choice of k in the k-NN graph?",
-        "motivation": "Understanding this helps assess robustness and guides adaptation to different datasets or domains."
+        "question": "How does vote-k compare to recent state-of-the-art selective annotation or active learning methods like BADGE or GLISTER?",
+        "motivation": "Comparisons to strong baselines are essential to validate the novelty and practical superiority of vote-k."
       },
       {
-        "question": "What is the impact of annotation noise, especially from low-confidence examples selected in the second stage?",
-        "motivation": "Since noisy labels can degrade in-context learning, analyzing this is crucial for practical deployment."
+        "question": "What is the sensitivity of vote-k\u2019s performance to hyperparameters k and \u03c1, and how critical is the confidence-based bucket sampling step?",
+        "motivation": "Understanding robustness and necessity of design choices aids reproducibility and practical tuning."
       },
       {
-        "question": "How does vote-k compare empirically to state-of-the-art active learning methods combining uncertainty and diversity?",
-        "motivation": "Without these comparisons, it is unclear if vote-k offers unique advantages or merely recapitulates known techniques."
+        "question": "Can more advanced or learned prompt retrieval methods improve the gains from selective annotation?",
+        "motivation": "Prompt retrieval quality directly affects in-context learning; exploring alternatives may yield further improvements."
       },
       {
-        "question": "Can the selective annotation framework and vote-k generalize beyond NLP and code to other modalities like vision or speech?",
-        "motivation": "Broader applicability would increase the impact and relevance of the proposed approach."
+        "question": "How do annotation costs including embedding computation and graph construction compare to annotation savings in practice?",
+        "motivation": "Total cost analysis is important for assessing real-world applicability, especially in resource-constrained settings."
+      },
+      {
+        "question": "Why does selective annotation benefit in-context learning but not finetuning, and can this gap be closed with improved finetuning strategies?",
+        "motivation": "Clarifying this difference informs when to prefer in-context learning versus finetuning."
+      },
+      {
+        "question": "How does vote-k perform under label noise or with varying annotation quality?",
+        "motivation": "Robustness to noisy annotations is critical for deployment in real-world annotation scenarios."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Insufficient positioning against classical and recent active learning methods. Related work lacks direct comparison or discussion of methods like Core-set or BADGE, which also optimize diversity and uncertainty jointly",
-    "point_002": "Lack of ablation studies for key design choices in vote-k. No justification or sensitivity analysis for fixed k=150 in k-NN graph construction or for the two-stage confidence-based bucketing selection",
-    "point_003": "Sparse reproducibility details and missing implementation specifics. Critical parameters for embedding extraction, graph construction, and bucket sizing are omitted, hindering exact replication",
-    "point_004": "Limited consideration of annotation noise, label quality, and human-in-the-loop aspects. The impact of annotating low-confidence (hard) examples on label noise and downstream robustness is not analyzed or experimentally evaluated",
-    "point_005": "Evaluation focuses mainly on accuracy without exploring calibration, robustness, or error types. No analysis of how selective annotation affects model confidence calibration or uncertainty estimation",
-    "point_006": "Baseline comparisons omit stronger active learning and semi-supervised methods. Fails to benchmark against methods like BADGE or Core-set, limiting claims of superiority",
-    "point_007": "No exploration of scalability, computational overhead, or practical annotation cost measurements. Although a faster variant is introduced, detailed runtime and memory analyses or annotation time studies are missing"
+    "point_001": "Lack of comparison to recent state-of-the-art selective annotation and active learning methods. The paper compares vote-k only to classical baselines like facility location and least-confidence sampling, omitting comparisons to methods such as BADGE, GLISTER, or CoreSet that have shown strong performance in selective annotation (Critique point 1)",
+    "point_002": "Insufficient ablation studies and justification for key hyperparameters and methodological choices. No sensitivity analysis or ablation on hyperparameters k=150 and \u03c1=10, no ablation isolating the confidence-based bucket sampling step, and no exploration of alternative embeddings or fine-tuning Sentence-BERT (Critique points 2, 3, 4)",
+    "point_003": "Limited evaluation and description of prompt retrieval strategies. Prompt retrieval relies solely on cosine similarity over Sentence-BERT embeddings without comparison to advanced retrieval methods like DPR or learned retrievers, which may affect in-context learning performance (Critique point 5)",
+    "point_004": "Finetuning baselines lack detailed hyperparameter settings and optimization details. The paper does not provide finetuning hyperparameters or evidence of hyperparameter tuning, raising concerns about fairness of comparisons between in-context learning and finetuning (Critique point 6)",
+    "point_005": "No statistical significance testing reported for performance improvements. Although average gains and variance reductions are reported, no paired tests or confidence intervals are provided to confirm robustness of improvements (Critique point 7)",
+    "point_006": "Reproducibility hindered by missing details on annotation budget allocation and baseline implementations. Exact proportions of annotation budget split between vote-k and confidence sampling are unspecified, and it is unclear if baseline code and hyperparameters are fully released (Critique points 8, 9)",
+    "point_007": "Ambiguous description and lack of formal definition for the modified degree scoring function. No formal mathematical definition or pseudocode is provided for the key scoring mechanism that discounts neighbors near selected samples, limiting clarity and reproducibility (Critique point 10)",
+    "point_008": "No discussion of computational scalability and annotation cost trade-offs. Constructing large k-NN graphs with k=150 over large unlabeled pools may be expensive, but the paper does not analyze runtime complexity, memory requirements, or annotation overhead beyond number of examples (Critique points 11, 12)",
+    "point_009": "Generalisability limited to NLP tasks and Sentence-BERT embeddings. Experiments are restricted to NLP datasets and embeddings; no exploration of other modalities or embedding methods is presented (Critique points 13, 18)",
+    "point_010": "Domain shift evaluation limited to only two datasets. Robustness claims under domain shift are based on CivilComments and Amazon datasets only, which may not generalize broadly (Critique point 14)",
+    "point_011": "Insufficient empirical analysis explaining why selective annotation benefits in-context learning but not finetuning. The paper speculates prompt retrieval robustness to outliers as a reason but lacks experiments isolating this effect or deeper analysis (Critique point 15)",
+    "point_012": "No consideration of label noise, annotation quality, prompt length constraints, or selection biases. Potential impacts of noisy annotations, token budget limits for prompts, and embedding-induced selection biases are not discussed or analyzed (Critique points 16, 17, 18)",
+    "point_013": "No analysis of how task difficulty or dataset size affects vote-k\u2019s effectiveness. Understanding when selective annotation is most beneficial requires such analysis, which is absent (Critique point 19)"
   }
 }

@@ -3,69 +3,66 @@
   "title": "Data-Efficient Finetuning Using Cross-Task Nearest Neighbors",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 68.3,
+  "latency_seconds": 49.93,
   "structured": {
-    "summary": "This paper proposes DEFT, a method that leverages a small set of unlabeled target task examples to retrieve a relevant subset of instances from large multitask prompted datasets for fine-tuning. Training on these retrieved nearest neighbors yields improved or comparable performance to training on the full multitask pool with significantly less data and compute, particularly benefiting zero-shot and few-shot transfer scenarios.",
+    "summary": "This paper proposes DEFT, a data-efficient finetuning method that leverages unlabeled target-task examples to retrieve relevant cross-task nearest neighbors from large multitask pools, enabling training of task-specific models on a small fraction of data. DEFT achieves strong zero-shot and few-shot performance improvements over existing multitask pretrained models while mitigating negative interference and reducing training data requirements.",
     "strengths": [
       {
-        "point": "Data-efficient instance-level retrieval improves target-task performance",
-        "evidence": "DEFT models trained on as little as 2-5% of the multitask data outperform baselines trained on the entire dataset on 12 of 14 held-out tasks."
+        "point": "Novel instance-level retrieval approach using unlabeled target-task examples for data selection",
+        "evidence": "DEFT retrieves cross-task nearest neighbors from large multitask pools based on unlabeled target examples, enabling fine-grained data curation and improved data efficiency."
       },
       {
-        "point": "Strong empirical gains in zero-shot and few-shot settings",
-        "evidence": "DEFT combined with parameter-efficient few-shot finetuning (IA3) yields 7% average improvement over T0-3B few-shot baselines across multiple datasets."
+        "point": "Strong empirical results demonstrating improved zero-shot and few-shot performance",
+        "evidence": "DEFT models trained on as little as 2% of P3 data outperform T0-3B trained on ~10% of P3 on 12 out of 14 held-out datasets, and DEFT provides better initialization for few-shot IA3 finetuning with 2\u201323% relative gains."
       },
       {
-        "point": "Detailed analysis confirms negative interference from irrelevant data and the utility of targeted retrieval",
-        "evidence": "Only a small fraction of multitask data is retrieved per target, and random or BM25-retrieved subsets perform worse than DEFT's nearest neighbor selection."
+        "point": "Comprehensive analysis of retrieval behavior and practical benefits",
+        "evidence": "The paper analyzes retrieval index parameters, impact of query size, model size for retrieval, and shows DEFT is especially beneficial under limited labeling budgets and for tasks with expensive annotation."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to prior instance-level retrieval or example selection methods",
-        "evidence": "The paper lacks discussion or empirical baselines involving other retrieval-augmented or example-based finetuning approaches, potentially overstating novelty."
+        "point": "Insufficient comparison to prior retrieval-augmented finetuning methods",
+        "evidence": "The paper lacks detailed empirical or conceptual comparison to retrieval-augmented methods like REALM or RAG that also use unlabeled or few-shot data for retrieval-based data selection."
       },
       {
-        "point": "Limited investigation of retrieval design choices and failure modes",
-        "evidence": "Including prompt tokens during retrieval unexpectedly hurts performance but the paper does not deeply analyze why; also, reasons for performance degradation with large neighbor counts remain unexplored."
+        "point": "Limited evaluation of retrieval quality baselines and hyperparameter sensitivity",
+        "evidence": "Baselines for retrieval quality exclude strong semantic retrievers such as DPR, and there is no ablation on key retrieval index parameters like number of neighbors or PQ code size."
       },
       {
-        "point": "Reproducibility details are incomplete",
-        "evidence": "Key hyperparameters for retriever training, FAISS indexing, and DEFT finetuning (learning rates, epochs) are not fully specified."
+        "point": "Reproducibility concerns due to missing training and retrieval encoder details",
+        "evidence": "The paper does not specify whether the retrieval encoder is fine-tuned or frozen, nor does it provide detailed finetuning hyperparameters such as learning rates, batch sizes, or early stopping criteria."
       },
       {
-        "point": "Evaluation scope and metrics could be broader",
-        "evidence": "Only two multitask pools (P3 and SuperNaturalInstructions) and limited metrics (accuracy, ROUGE-L) are reported; robustness, calibration, or diverse task formats are not evaluated."
+        "point": "Ambiguity in data aggregation and selection process",
+        "evidence": "It is unclear how retrieved neighbors are aggregated, whether duplicates are removed, or if any weighting or filtering is applied when forming the training subset."
       },
       {
-        "point": "Scalability and practical applicability concerns unaddressed",
-        "evidence": "The computational cost and feasibility of building and searching large nearest neighbor indices over very large multitask pools in resource-constrained settings is not discussed."
+        "point": "Limited discussion of scalability and applicability to multilingual or generative tasks",
+        "evidence": "The method is evaluated primarily on English QA and classification tasks, with no exploration of scalability to larger multitask pools or performance on generative or multilingual tasks."
+      },
+      {
+        "point": "No statistical significance testing reported for performance gains",
+        "evidence": "Reported improvements lack confidence intervals or significance tests, making it difficult to assess robustness."
       }
     ],
     "questions": [
       {
-        "question": "How does DEFT compare to other example selection or retrieval-augmented finetuning methods?",
-        "motivation": "Understanding relative gains and complementary benefits requires positioning DEFT against existing retrieval-based approaches."
+        "question": "How would DEFT perform when combined with strong learned semantic retrievers like DPR or retrieval-augmented generation methods?",
+        "motivation": "Understanding this could clarify whether DEFT\u2019s retrieval approach is optimal or can be improved by integrating advances in retrieval models."
       },
       {
-        "question": "Why does including prompt/instruction tokens in retrieval embeddings degrade performance?",
-        "motivation": "Clarifying this counterintuitive behavior could inform better retrieval design and improve DEFT."
-      },
-      {
-        "question": "What are the practical compute costs and latency overheads introduced by retrieval indexing and nearest neighbor search?",
-        "motivation": "Verifying efficiency claims requires concrete measurements beyond data size reduction."
-      },
-      {
-        "question": "Can DEFT generalize to non-prompted multitask datasets, non-English tasks, or domains with very scarce unlabeled data?",
-        "motivation": "Understanding generalizability is crucial for wider applicability."
+        "question": "Can DEFT be adapted or extended to settings without any unlabeled target-task data, or with very limited/noisy unlabeled data?",
+        "motivation": "Since DEFT relies on unlabeled target examples, exploring fallback strategies is important for applicability to truly zero-shot or low-resource tasks."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to prior instance-level retrieval or example selection methods. The paper lacks discussion or empirical baselines involving other retrieval-augmented or example-based finetuning approaches, potentially overstating novelty",
-    "point_002": "Limited investigation of retrieval design choices and failure modes. Including prompt tokens during retrieval unexpectedly hurts performance but the paper does not deeply analyze why; also, reasons for performance degradation with large neighbor counts remain unexplored",
-    "point_003": "Reproducibility details are incomplete. Key hyperparameters for retriever training, FAISS indexing, and DEFT finetuning (learning rates, epochs) are not fully specified",
-    "point_004": "Evaluation scope and metrics could be broader. Only two multitask pools (P3 and SuperNaturalInstructions) and limited metrics (accuracy, ROUGE-L) are reported; robustness, calibration, or diverse task formats are not evaluated",
-    "point_005": "Scalability and practical applicability concerns unaddressed. The computational cost and feasibility of building and searching large nearest neighbor indices over very large multitask pools in resource-constrained settings is not discussed"
+    "point_001": "Insufficient comparison to prior retrieval-augmented finetuning methods. The paper lacks detailed empirical or conceptual comparison to retrieval-augmented methods like REALM or RAG that also use unlabeled or few-shot data for retrieval-based data selection",
+    "point_002": "Limited evaluation of retrieval quality baselines and hyperparameter sensitivity. Baselines for retrieval quality exclude strong semantic retrievers such as DPR, and there is no ablation on key retrieval index parameters like number of neighbors or PQ code size",
+    "point_003": "Reproducibility concerns due to missing training and retrieval encoder details. The paper does not specify whether the retrieval encoder is fine-tuned or frozen, nor does it provide detailed finetuning hyperparameters such as learning rates, batch sizes, or early stopping criteria",
+    "point_004": "Ambiguity in data aggregation and selection process. It is unclear how retrieved neighbors are aggregated, whether duplicates are removed, or if any weighting or filtering is applied when forming the training subset",
+    "point_005": "Limited discussion of scalability and applicability to multilingual or generative tasks. The method is evaluated primarily on English QA and classification tasks, with no exploration of scalability to larger multitask pools or performance on generative or multilingual tasks",
+    "point_006": "No statistical significance testing reported for performance gains. Reported improvements lack confidence intervals or significance tests, making it difficult to assess robustness"
   }
 }
