@@ -341,7 +341,40 @@ docker run -it --rm \
 
 #### Dify
 
-Ensure `DIFY_API_KEY` is set in your `.env` file.
+Dify is a cloud-hosted (or self-hosted) visual workflow builder. The two workflows are exported as DSL YAML files in `src/dify/` and must be imported into your Dify workspace before running.
+
+**Import workflows (do this once):**
+
+1. Log in to your Dify workspace (cloud or self-hosted)
+2. Go to **Studio → Create App → Import DSL file**
+3. Import `src/dify/Paper CritiqueAgent(Single Critic).yml` — this creates the **single-critic** workflow (Reader → Critic → Summariser)
+4. Import `src/dify/Paper CritiqueAgent (Dual Critic).yml` — this creates the **dual-critic** workflow (Reader → Critic 1 → Auditor → Critic 2 → Summariser)
+
+**Retrieve API keys:**
+
+Each imported workflow has its own API key:
+
+1. Open the workflow in Dify
+2. Click **API Access** (or the API icon, top-right of the workflow editor)
+3. Copy the API key shown
+4. Repeat for the other workflow
+
+Set both keys in your `.env`:
+
+```
+DIFY_API_KEY_SINGLE=your_single_critic_api_key_here
+DIFY_API_KEY_DUAL=your_dual_critic_api_key_here
+```
+
+**Verify temperature settings:**
+
+Before running, confirm all LLM nodes in both workflows are set to **temperature = 0.2** (matching the other platforms):
+
+- In the Dify workflow editor, click each LLM node (Reader, Critic1, Auditor, Critic2, Summariser)
+- Open **Model parameters** and confirm `temperature: 0.2`
+- The DSL files in this repo already have these values set correctly
+
+---
 
 ### 5. Run the pipeline
 
@@ -362,15 +395,17 @@ python -m src.agents.orchestrator
 python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
 python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 
-# Run Dify workflows (requires DIFY_API_KEY in .env)
-python -m src.dify.run_dify                   # runs single_critic workflow by default
+# Run Dify workflows (requires DIFY_API_KEY_SINGLE and DIFY_API_KEY_DUAL in .env)
+python -m src.dify.run_dify single_critic     # Reader → Critic → Summariser
+python -m src.dify.run_dify dual_critic       # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 
 # Score all systems
 python -m src.evaluation.scorer baseline
 python -m src.evaluation.scorer agents
 python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
-python -m src.evaluation.scorer dify
+python -m src.evaluation.scorer dify_single_critic
+python -m src.evaluation.scorer dify_dual_critic
 
 # Print comparison table + plots
 python -m src.evaluation.metrics
