@@ -3,91 +3,121 @@
   "title": "BertNet: Harvesting Knowledge Graphs from Pretrained Language Models",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 77.25,
+  "latency_seconds": 52.46,
   "structured": {
-    "summary": "This paper presents BertNet, a framework for extracting explicit symbolic knowledge graphs with arbitrary relations from frozen pretrained language models using minimal input prompts and example entity pairs. It introduces prompt paraphrasing and weighting, a consistency-based scoring function, and efficient entity pair search, demonstrating large-scale KG construction with diverse relations and competitive accuracy validated by human evaluation.",
+    "summary": "This paper introduces BertNet, a novel framework to automatically harvest large-scale, explicit knowledge graphs with arbitrary relations from pretrained language models using minimal input prompts and example entity pairs. It proposes automatic prompt generation and weighting combined with an efficient entity pair search to extract symbolic knowledge, enabling interpretable analysis of LM knowledge without fine-tuning or external training data.",
     "strengths": [
       {
-        "point": "Novel framework enabling explicit symbolic KG extraction for arbitrary new relations from frozen LMs without external training",
-        "evidence": "The method requires only minimal natural language prompts and few example pairs to harvest large-scale KGs covering hundreds of relations not previously covered."
+        "point": "Novel framework enabling extraction of arbitrary new relations from any pretrained LM",
+        "evidence": "The method requires only a minimal relation definition (a prompt and few examples) and works across various LMs (BERT, RoBERTa, DistilBERT, GPT-3) without fine-tuning."
       },
       {
-        "point": "Automatic prompt paraphrasing and weighting improves robustness and accuracy over single prompt approaches",
-        "evidence": "Ablations show that multiple diverse prompts generated and weighted automatically outperform single human-written prompts on relation extraction accuracy."
+        "point": "Effective automatic prompt creation and weighting improves knowledge extraction accuracy",
+        "evidence": "Automatic prompt paraphrasing combined with a scoring function for prompt weighting yields higher accuracy and better precision-recall tradeoffs than human-written or single prompts."
       },
       {
-        "point": "Efficient search and pruning algorithm scales to large entity vocabularies and supports extension to n-ary relations",
-        "evidence": "The pruning and re-ranking strategy allows tractable search in quadratic entity pair space, enabling extraction of large KGs."
+        "point": "Efficient entity pair search algorithm enables scalable harvesting of large KGs",
+        "evidence": "The proposed pruning and re-ranking strategy allows searching large entity sets to extract hundreds of thousands of tuples across hundreds of relations."
       },
       {
-        "point": "Comprehensive evaluation on diverse relation sets including ConceptNet, LAMA, user-defined, and automatically derived relations",
-        "evidence": "Human evaluations indicate accuracy around 65% on hundreds of arbitrary relations, with analyses showing benefits of larger and better pretrained LMs."
+        "point": "Comprehensive empirical validation on diverse relations and LMs",
+        "evidence": "Experiments on ConceptNet, LAMA, human-written, and auto-generated relations show accuracy up to 88%, discovery of novel knowledge beyond existing KGs, and insights into LM knowledge capacity related to model size and pretraining."
       },
       {
-        "point": "Provides interpretable symbolic KG outputs that facilitate understanding LM knowledge capacity and enable new knowledge discovery",
-        "evidence": "The harvested KGs serve as explicit, analyzable representations of implicit LM knowledge, with publicly released code and demo."
+        "point": "Provides interpretable symbolic KG representations of LM knowledge",
+        "evidence": "The extracted tuples serve as explicit, navigable knowledge graphs, facilitating analysis and understanding of black-box pretrained LMs."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of direct comparison to in-context prompting methods on large autoregressive LMs like GPT-3",
-        "evidence": "No experiments compare BertNet\u2019s symbolic extraction versus few-shot prompting on GPT-3 or similar models for the same arbitrary relations."
+        "point": "Limited comparison to recent prompt engineering and tuning methods",
+        "evidence": "The paper compares mainly to AutoPrompt and LPAQA but omits other recent prompt tuning or knowledge probing methods, weakening novelty claims."
       },
       {
-        "point": "Insufficient methodological details and ablations on prompt filtering thresholds, pruning criteria, and sensitivity",
-        "evidence": "The paper omits precise filtering thresholds for semantic similarity and diversity, pruning algorithm specifics, and impact of hyperparameter choices."
+        "point": "Lack of ablation studies isolating prompt filtering and weighting effects",
+        "evidence": "Section 3.1 introduces both filtering and weighting but only combined improvements are reported, leaving unclear the contribution of each component."
       },
       {
-        "point": "Limited evaluation scope with missing recall/coverage analyses and inter-annotator agreement in human evaluation",
-        "evidence": "Human evaluation reports accuracy but not inter-annotator agreement or recall, leaving completeness and annotation reliability unclear."
+        "point": "Insufficient details on paraphrase model and filtering thresholds hinder reproducibility",
+        "evidence": "The paper does not specify which off-the-shelf paraphrase model was used nor the exact criteria or thresholds for prompt filtering."
       },
       {
-        "point": "Reproducibility concerns due to unspecified paraphrasing models, LM API/tokenizer details, and example pair selection strategy",
-        "evidence": "The paper does not disclose which paraphrasing models or LM checkpoints were used, nor tokenizer normalization or example pair sampling methods."
+        "point": "Entity pair search algorithm lacks detailed implementation and scalability analysis",
+        "evidence": "Key parameters such as pruning thresholds, candidate set sizes, and computational complexity are not described, making replication difficult."
       },
       {
-        "point": "Claims of extensibility to n-ary relations are not empirically validated or clearly illustrated",
-        "evidence": "Only binary relation results are presented without concrete examples or experiments on ternary or higher-arity relation extraction."
+        "point": "Human annotation protocol lacks inter-annotator agreement and disagreement resolution details",
+        "evidence": "Without reporting agreement statistics or adjudication methods, the reliability of accuracy metrics is uncertain."
       },
       {
-        "point": "Limited analysis on generalizability regarding example pair quantity/quality and paraphrasing model dependency",
-        "evidence": "No systematic study on how the number or representativeness of example pairs or paraphrasing quality affects KG extraction robustness."
+        "point": "Comparisons to baselines are not fully fair due to differences in training data usage",
+        "evidence": "Baselines like COMET and text mining methods use external corpora or training data, whereas BertNet relies solely on pretrained LMs without fine-tuning."
       },
       {
-        "point": "Presentation could be improved with clearer explanations and concrete examples of prompts, scoring, and terminology",
-        "evidence": "Technical terms are used without intuitive definitions or illustrative examples, reducing accessibility for a broader audience."
+        "point": "Limited evaluation and analysis of n-ary and complex relations",
+        "evidence": "Although the method claims to handle n-ary relations, evaluation is sparse and lacks detailed comparison to baselines."
+      },
+      {
+        "point": "No discussion on handling noisy, contradictory, or biased knowledge extraction",
+        "evidence": "The paper does not address how conflicting tuples are detected or resolved, nor does it propose mitigation strategies for biases inherent in LMs."
+      },
+      {
+        "point": "Ethical considerations are briefly mentioned but lack depth and concrete mitigation",
+        "evidence": "Potential risks of harmful or biased knowledge extraction are acknowledged but not elaborated with safeguards or solutions."
+      },
+      {
+        "point": "Terminology inconsistencies and unclear explanations reduce clarity",
+        "evidence": "Terms like 'consistency score' and 'compatibility score' are used interchangeably without clear definitions; scoring function intuition is not well explained."
+      },
+      {
+        "point": "No analysis of prompt length or complexity impact on extraction quality",
+        "evidence": "The effect of initial prompt linguistic properties on paraphrase generation and final KG quality is not studied."
+      },
+      {
+        "point": "Generalisability limited to English and generic domains",
+        "evidence": "Experiments focus on English LMs and generic knowledge relations without evaluation on other languages or specialized domains."
+      },
+      {
+        "point": "Precision-recall results lack statistical significance testing",
+        "evidence": "No confidence intervals or significance analyses are reported for precision-recall curves, leaving robustness of improvements unclear."
       }
     ],
     "questions": [
       {
-        "question": "How does BertNet\u2019s symbolic KG extraction compare in accuracy and coverage to large autoregressive LMs using in-context prompting on the same relations?",
-        "motivation": "Direct comparison would clarify whether symbolic extraction offers unique advantages or complements existing prompting methods."
+        "question": "How sensitive is the method to the choice and completeness of the entity set used for candidate generation?",
+        "motivation": "Since entity pair search depends on a predefined entity set, missing important entities could limit knowledge extraction coverage."
       },
       {
-        "question": "What is the impact of the number and representativeness of example entity pairs on the quality and coverage of the harvested KG?",
-        "motivation": "Understanding sensitivity to input examples is crucial for practical deployment and user guidance."
+        "question": "Can the framework be extended or adapted to domain-specific LMs and specialized knowledge graphs?",
+        "motivation": "Evaluating applicability beyond generic English LMs is important for practical use in specialized fields like healthcare or scientific domains."
       },
       {
-        "question": "How robust is the method to noise or lower quality in paraphrased prompts, and how do different paraphrasing models affect performance?",
-        "motivation": "Since the method depends heavily on prompt quality, robustness to paraphrasing errors affects generalizability."
+        "question": "What mechanisms can be introduced to detect and resolve contradictory or noisy knowledge tuples extracted from LMs?",
+        "motivation": "Ensuring the quality and consistency of the harvested KG is critical for downstream applications and trustworthiness."
       },
       {
-        "question": "Can the method be effectively applied to domain-specific pretrained LMs and relations requiring complex reasoning beyond co-occurrence?",
-        "motivation": "Extending to specialized domains would broaden applicability and test method limits."
+        "question": "How does the linguistic complexity or length of initial prompts affect the quality and diversity of generated paraphrases and final KG extraction?",
+        "motivation": "Understanding prompt design impact can guide users to provide better inputs and improve extraction performance."
       },
       {
-        "question": "What are the practical runtimes, scalability limits, and resource requirements of the pruning and search algorithm when scaling to very large vocabularies?",
-        "motivation": "Detailed efficiency analysis informs feasibility for real-world large-scale KG extraction."
+        "question": "What are the ethical risks associated with extracting potentially biased or harmful knowledge from LMs, and how can these be mitigated?",
+        "motivation": "Given the societal impact of deploying knowledge graphs, concrete strategies for bias detection and mitigation are necessary."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of direct comparison to in-context prompting methods on large autoregressive LMs like GPT-3. No experiments compare BertNet\u2019s symbolic extraction versus few-shot prompting on GPT-3 or similar models for the same arbitrary relations",
-    "point_002": "Insufficient methodological details and ablations on prompt filtering thresholds, pruning criteria, and sensitivity. The paper omits precise filtering thresholds for semantic similarity and diversity, pruning algorithm specifics, and impact of hyperparameter choices",
-    "point_003": "Limited evaluation scope with missing recall/coverage analyses and inter-annotator agreement in human evaluation. Human evaluation reports accuracy but not inter-annotator agreement or recall, leaving completeness and annotation reliability unclear",
-    "point_004": "Reproducibility concerns due to unspecified paraphrasing models, LM API/tokenizer details, and example pair selection strategy. The paper does not disclose which paraphrasing models or LM checkpoints were used, nor tokenizer normalization or example pair sampling methods",
-    "point_005": "Claims of extensibility to n-ary relations are not empirically validated or clearly illustrated. Only binary relation results are presented without concrete examples or experiments on ternary or higher-arity relation extraction",
-    "point_006": "Limited analysis on generalizability regarding example pair quantity/quality and paraphrasing model dependency. No systematic study on how the number or representativeness of example pairs or paraphrasing quality affects KG extraction robustness",
-    "point_007": "Presentation could be improved with clearer explanations and concrete examples of prompts, scoring, and terminology. Technical terms are used without intuitive definitions or illustrative examples, reducing accessibility for a broader audience"
+    "point_001": "Limited comparison to recent prompt engineering and tuning methods. The paper compares mainly to AutoPrompt and LPAQA but omits other recent prompt tuning or knowledge probing methods, weakening novelty claims",
+    "point_002": "Lack of ablation studies isolating prompt filtering and weighting effects. Section 3.1 introduces both filtering and weighting but only combined improvements are reported, leaving unclear the contribution of each component",
+    "point_003": "Insufficient details on paraphrase model and filtering thresholds hinder reproducibility. The paper does not specify which off-the-shelf paraphrase model was used nor the exact criteria or thresholds for prompt filtering",
+    "point_004": "Entity pair search algorithm lacks detailed implementation and scalability analysis. Key parameters such as pruning thresholds, candidate set sizes, and computational complexity are not described, making replication difficult",
+    "point_005": "Human annotation protocol lacks inter-annotator agreement and disagreement resolution details. Without reporting agreement statistics or adjudication methods, the reliability of accuracy metrics is uncertain",
+    "point_006": "Comparisons to baselines are not fully fair due to differences in training data usage. Baselines like COMET and text mining methods use external corpora or training data, whereas BertNet relies solely on pretrained LMs without fine-tuning",
+    "point_007": "Limited evaluation and analysis of n-ary and complex relations. Although the method claims to handle n-ary relations, evaluation is sparse and lacks detailed comparison to baselines",
+    "point_008": "No discussion on handling noisy, contradictory, or biased knowledge extraction. The paper does not address how conflicting tuples are detected or resolved, nor does it propose mitigation strategies for biases inherent in LMs",
+    "point_009": "Ethical considerations are briefly mentioned but lack depth and concrete mitigation. Potential risks of harmful or biased knowledge extraction are acknowledged but not elaborated with safeguards or solutions",
+    "point_010": "Terminology inconsistencies and unclear explanations reduce clarity. Terms like 'consistency score' and 'compatibility score' are used interchangeably without clear definitions; scoring function intuition is not well explained",
+    "point_011": "No analysis of prompt length or complexity impact on extraction quality. The effect of initial prompt linguistic properties on paraphrase generation and final KG quality is not studied",
+    "point_012": "Generalisability limited to English and generic domains. Experiments focus on English LMs and generic knowledge relations without evaluation on other languages or specialized domains",
+    "point_013": "Precision-recall results lack statistical significance testing. No confidence intervals or significance analyses are reported for precision-recall curves, leaving robustness of improvements unclear"
   }
 }

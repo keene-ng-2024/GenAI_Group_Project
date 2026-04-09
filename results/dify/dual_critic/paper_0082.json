@@ -3,73 +3,111 @@
   "title": "Towards Continual Knowledge Learning of Language Models",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 109.3,
+  "latency_seconds": 120.32,
   "structured": {
-    "summary": "This paper addresses the problem of Continual Knowledge Learning (CKL), focusing on updating language models' internal world knowledge while retaining invariant facts. It introduces new benchmark datasets and a novel FUAR metric to evaluate the trade-off between forgetting and acquiring knowledge, and compares several continual pretraining strategies, finding parameter-expansion methods most effective.",
+    "summary": "This paper formulates Continual Knowledge Learning (CKL) to update language models with new knowledge while retaining time-invariant facts, introducing a novel benchmark and metric (FUAR) to evaluate forgetting and acquisition. Through extensive experiments, it shows parameter-expansion methods outperform regularization and rehearsal baselines but incur memory overhead, highlighting unique challenges in continual pretraining of LMs.",
     "strengths": [
       {
-        "point": "Novel problem formulation and benchmark creation",
-        "evidence": "The paper clearly formulates CKL as continual pretraining to update implicit world knowledge, and constructs four datasets (INVARIANTLAMA, UPDATEDLAMA, NEWLAMA, NEWLAMA-EASY) with crowd annotation and expert validation to evaluate retention, update, and acquisition."
+        "point": "Novel formulation and benchmark for continual knowledge learning in LMs",
+        "evidence": "The paper introduces CKL as a new continual learning problem focused on updating implicit knowledge in LMs and constructs datasets (INVARIANTLAMA, UPDATEDLAMA, NEWLAMA) combining automatic question generation, crowdsourcing, and expert verification."
       },
       {
-        "point": "Introduction of FUAR metric capturing forgetting vs learning trade-off",
-        "evidence": "The FUAR metric is a novel, interpretable measure combining forgetting of invariant knowledge with updated and newly acquired knowledge, designed specifically to evaluate continual knowledge learning quality."
+        "point": "Comprehensive evaluation of multiple baseline methods adapted for CKL",
+        "evidence": "Experiments compare regularization (RecAdam), rehearsal (Mix-Review), and parameter-expansion methods (LoRA, K-Adapter, Modular) on T5 and GPT-2 models, showing parameter-expansion methods achieve the best trade-off measured by FUAR."
       },
       {
-        "point": "Comprehensive empirical evaluation across methods and settings",
-        "evidence": "Experiments systematically compare regularization, rehearsal, and parameter-expansion baselines on multiple datasets, model architectures (T5, GPT-2), and continual update phases, revealing key insights such as parameter-expansion methods' superiority and rehearsal's limited effectiveness."
+        "point": "Insightful analysis of forgetting dynamics and trade-offs in continual pretraining",
+        "evidence": "The study reveals that repeated exposure to data causes forgetting, learning rate influences the forgetting-acquisition balance, and multiple CKL phases exacerbate forgetting despite fixed total training steps."
       },
       {
-        "point": "Public release of datasets and code",
-        "evidence": "The paper commits to releasing benchmark datasets, code, and model checkpoints to facilitate reproducibility and future research."
+        "point": "Evaluation on downstream knowledge-intensive tasks and cross-architecture transfer",
+        "evidence": "Continual pretraining does not harm and sometimes improves KILT benchmark performance, and CKL methods generalize from encoder-decoder (T5) to decoder-only (GPT-2) architectures."
+      },
+      {
+        "point": "Public release of benchmark datasets, code, and model checkpoints",
+        "evidence": "The paper commits to releasing resources to facilitate future research in continual knowledge learning."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to state-of-the-art knowledge editing and retrieval-augmented methods",
-        "evidence": "The related work omits discussion of recent localized knowledge editing methods (e.g., ROME, MEND) and retrieval-augmented approaches, limiting claims of novelty and practical positioning of CKL."
+        "point": "Limited comparison to recent continual learning methods tailored for LMs",
+        "evidence": "The paper omits evaluation of prompt-tuning-based continual learning or dynamic routing adapters, which are relevant alternatives for updating LMs with minimal forgetting."
       },
       {
-        "point": "Evaluation of rehearsal baseline is limited and possibly premature",
-        "evidence": "The Mix-Review rehearsal strategy uses naive uniform sampling without exploring more effective sampling or scheduling methods, weakening conclusions that rehearsal is ineffective."
+        "point": "Insufficient analysis of dataset quality and annotation noise impact",
+        "evidence": "No inter-annotator agreement, error rates, or performance differences between automatically generated and human-verified subsets are reported, leaving benchmark reliability unclear."
       },
       {
-        "point": "Insufficient methodological transparency and analysis",
-        "evidence": "Details on dataset annotation protocols, sensitivity of FUAR metric, continual pretraining hyperparameters, and handling of ambiguous or conflicting knowledge updates are lacking."
+        "point": "Lack of theoretical or empirical justification for the FUAR metric design",
+        "evidence": "The paper does not motivate the choice of FUAR ratio over other metrics nor provide sensitivity analysis or interpretability aids such as examples or visualizations."
       },
       {
-        "point": "Limited scale and diversity in experiments reduce generalizability",
-        "evidence": "Experiments are restricted to T5-base and GPT-2 small models and English news domain data; no evaluation on larger models or other domains/languages is provided."
+        "point": "Potentially unfair rehearsal baseline setup due to corpus size imbalance",
+        "evidence": "Details on sampling strategies, replay buffer size, or weighting to mitigate the large size difference between original and new corpora are missing, possibly disadvantaging Mix-Review."
       },
       {
-        "point": "No exploration of computational cost, model size growth control, or hybrid methods",
-        "evidence": "While parameter-expansion methods are shown to be memory inefficient, no strategies for adapter pruning or consolidation are discussed, nor are hybrid retrieval-augmented or explicit memory approaches considered."
+        "point": "Narrow evaluation scope focusing mainly on zero-shot cloze probing and knowledge-intensive tasks",
+        "evidence": "No assessment on general language understanding benchmarks (e.g., GLUE) or human evaluation of updated knowledge quality is provided."
+      },
+      {
+        "point": "Incomplete reproducibility details for continual pretraining and crowdsourcing protocols",
+        "evidence": "Critical hyperparameters like batch size, optimizer settings, and quality control measures for crowdsourcing are not fully described."
+      },
+      {
+        "point": "Ambiguous definitions and explanations of key concepts and methods",
+        "evidence": "The notion of time-invariant knowledge is underdefined, and parameter-expansion methods lack detailed architectural descriptions and training protocols."
+      },
+      {
+        "point": "Memory inefficiency of parameter-expansion methods not quantified or contextualized",
+        "evidence": "The paper notes parameter growth but does not provide concrete numbers or discuss deployment implications."
+      },
+      {
+        "point": "Limited generalizability due to evaluation on only English language and standard model sizes",
+        "evidence": "Experiments are restricted to English corpora and models like T5 and GPT-2, without multilingual or larger-scale model evaluations."
+      },
+      {
+        "point": "No analysis of domain shift effects or catastrophic forgetting dynamics over training time",
+        "evidence": "The impact of domain mismatch between D0 and D1 and temporal forgetting curves are not explored."
+      },
+      {
+        "point": "Lack of qualitative error analysis and computational cost reporting",
+        "evidence": "No breakdown of failure modes or training time and resource usage is provided."
       }
     ],
     "questions": [
       {
-        "question": "How does the FUAR metric correlate with downstream task performance and real-world knowledge quality?",
-        "motivation": "Validating FUAR against practical tasks would establish its utility and inform model selection."
+        "question": "How would CKL methods perform when incorporating prompt-tuning or adapter-based continual learning approaches?",
+        "motivation": "Including these recent methods could provide stronger baselines and insights into efficient knowledge updating with minimal forgetting."
       },
       {
-        "question": "Can more sophisticated rehearsal or data scheduling methods mitigate forgetting effectively in CKL?",
-        "motivation": "Exploring advanced rehearsal strategies might improve continual learning without costly parameter expansions."
+        "question": "What is the sensitivity of the FUAR metric to different formulations, and how well does it correlate with downstream task performance or human judgments?",
+        "motivation": "Understanding FUAR's robustness and interpretability is crucial for its adoption as a standard evaluation metric."
       },
       {
-        "question": "How do CKL methods handle conflicting or partially updated knowledge instances in practice?",
-        "motivation": "Understanding conflict resolution is crucial for reliable knowledge updating in dynamic environments."
+        "question": "How does domain shift between original and new corpora affect forgetting and acquisition in CKL?",
+        "motivation": "Domain mismatch is common in real-world updates and may exacerbate forgetting or hinder learning, impacting method design."
       },
       {
-        "question": "What are the computational trade-offs (training time, inference latency) associated with parameter-expansion methods versus other baselines?",
-        "motivation": "Efficiency considerations are critical for deploying continually updated language models in production."
+        "question": "Can memory-efficient parameter-expansion methods be developed to mitigate the overhead observed in multi-phase CKL?",
+        "motivation": "Scalability and deployment feasibility depend on controlling parameter growth during continual updates."
+      },
+      {
+        "question": "How do CKL methods impact general language understanding and generation capabilities beyond knowledge-intensive tasks?",
+        "motivation": "Evaluating broader language abilities ensures that continual knowledge updates do not degrade overall model utility."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison to state-of-the-art knowledge editing and retrieval-augmented methods. The related work omits discussion of recent localized knowledge editing methods (e.g., ROME, MEND) and retrieval-augmented approaches, limiting claims of novelty and practical positioning of CKL",
-    "point_002": "Evaluation of rehearsal baseline is limited and possibly premature. The Mix-Review rehearsal strategy uses naive uniform sampling without exploring more effective sampling or scheduling methods, weakening conclusions that rehearsal is ineffective",
-    "point_003": "Insufficient methodological transparency and analysis. Details on dataset annotation protocols, sensitivity of FUAR metric, continual pretraining hyperparameters, and handling of ambiguous or conflicting knowledge updates are lacking",
-    "point_004": "Limited scale and diversity in experiments reduce generalizability. Experiments are restricted to T5-base and GPT-2 small models and English news domain data; no evaluation on larger models or other domains/languages is provided",
-    "point_005": "No exploration of computational cost, model size growth control, or hybrid methods. While parameter-expansion methods are shown to be memory inefficient, no strategies for adapter pruning or consolidation are discussed, nor are hybrid retrieval-augmented or explicit memory approaches considered"
+    "point_001": "Limited comparison to recent continual learning methods tailored for LMs. The paper omits evaluation of prompt-tuning-based continual learning or dynamic routing adapters, which are relevant alternatives for updating LMs with minimal forgetting",
+    "point_002": "Insufficient analysis of dataset quality and annotation noise impact. No inter-annotator agreement, error rates, or performance differences between automatically generated and human-verified subsets are reported, leaving benchmark reliability unclear",
+    "point_003": "Lack of theoretical or empirical justification for the FUAR metric design. The paper does not motivate the choice of FUAR ratio over other metrics nor provide sensitivity analysis or interpretability aids such as examples or visualizations",
+    "point_004": "Potentially unfair rehearsal baseline setup due to corpus size imbalance. Details on sampling strategies, replay buffer size, or weighting to mitigate the large size difference between original and new corpora are missing, possibly disadvantaging Mix-Review",
+    "point_005": "Narrow evaluation scope focusing mainly on zero-shot cloze probing and knowledge-intensive tasks. No assessment on general language understanding benchmarks (e.g., GLUE) or human evaluation of updated knowledge quality is provided",
+    "point_006": "Incomplete reproducibility details for continual pretraining and crowdsourcing protocols. Critical hyperparameters like batch size, optimizer settings, and quality control measures for crowdsourcing are not fully described",
+    "point_007": "Ambiguous definitions and explanations of key concepts and methods. The notion of time-invariant knowledge is underdefined, and parameter-expansion methods lack detailed architectural descriptions and training protocols",
+    "point_008": "Memory inefficiency of parameter-expansion methods not quantified or contextualized. The paper notes parameter growth but does not provide concrete numbers or discuss deployment implications",
+    "point_009": "Limited generalizability due to evaluation on only English language and standard model sizes. Experiments are restricted to English corpora and models like T5 and GPT-2, without multilingual or larger-scale model evaluations",
+    "point_010": "No analysis of domain shift effects or catastrophic forgetting dynamics over training time. The impact of domain mismatch between D0 and D1 and temporal forgetting curves are not explored",
+    "point_011": "Lack of qualitative error analysis and computational cost reporting. No breakdown of failure modes or training time and resource usage is provided"
   }
 }

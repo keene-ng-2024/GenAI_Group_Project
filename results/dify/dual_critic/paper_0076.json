@@ -3,83 +3,88 @@
   "title": "Capturing Structural Locality in Non-parametric Language Models",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 102.13,
+  "latency_seconds": 90.07,
   "structured": {
-    "summary": "This paper proposes incorporating manually defined structural locality features into the retrieval process of non-parametric kNN language models to improve neighbor relevance and language modeling performance. By learning simple linear adjustments to distances based on hierarchical locality categories, the method achieves modest perplexity and accuracy improvements on Wikipedia text and Java source code datasets without retraining the base model.",
+    "summary": "This paper proposes a method to enhance non-parametric language models by incorporating structural locality information through learned, locality-conditioned linear adjustments to retrieval distances. Evaluated on Wikipedia text and Java source code, the approach improves perplexity and token prediction accuracy by leveraging hierarchical locality features without retraining the base language model.",
     "strengths": [
       {
-        "point": "Addresses an important limitation of current non-parametric LMs by explicitly modeling structural locality",
-        "evidence": "The paper identifies that existing distance metrics insufficiently capture hierarchical or topical relationships inherent in datasets like Wikipedia and source code."
+        "point": "Novel incorporation of structural locality into kNN-LMs via learned distance modifications",
+        "evidence": "The paper introduces a learned linear function to adjust retrieval distances based on multiple hierarchical locality levels, improving neighbor relevance."
       },
       {
-        "point": "Simple and parameter-efficient approach to integrate locality with minimal overhead",
-        "evidence": "Only two parameters per locality level are learned via validation set optimization, requiring no retraining of the underlying neural LM."
+        "point": "Demonstrated improvements across two diverse domains with distinct locality structures",
+        "evidence": "Experiments on WikiText-103 and Java GitHub datasets show consistent perplexity and accuracy gains when incorporating locality features."
       },
       {
-        "point": "Demonstrates consistent, though modest, improvements across two diverse, real-world domains",
-        "evidence": "Experiments show relative perplexity reductions of 2-4% and top-k accuracy gains on WIKITEXT-103 and a large Java GitHub corpus."
+        "point": "Lightweight approach requiring no retraining of the base parametric LM",
+        "evidence": "Locality parameters are trained separately on a validation set, adding minimal overhead and preserving the original LM."
       },
       {
-        "point": "Provides insightful analysis on the interaction between neural context distance and structural locality",
-        "evidence": "The paper empirically shows that locality signals are complementary to learned embeddings and improve neighbor ranking."
+        "point": "Interpretability through learned parameters that emphasize more local contexts",
+        "evidence": "Qualitative examples illustrate how locality-aware adjustments boost probabilities of relevant neighbors and suppress less relevant ones."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks comparison to recent neural retrieval augmentation frameworks that learn locality or memory structures end-to-end",
-        "evidence": "No discussion or experiments comparing to methods like REALM or RAG that incorporate structural metadata in retrieval."
+        "point": "Insufficient comparison to prior hierarchical and cluster-aware retrieval methods",
+        "evidence": "The paper lacks thorough literature review and empirical baselines involving hierarchical kNN, cluster-based reranking, or metadata-aware retrieval."
       },
       {
-        "point": "Manual and heuristic design of locality categories without ablation or sensitivity analysis",
-        "evidence": "The paper does not investigate how different granularities or automated locality feature discovery would affect results."
+        "point": "Limited exploration and justification of the linear distance modification function",
+        "evidence": "No ablations or theoretical motivation are provided for choosing a linear form over nonlinear alternatives."
       },
       {
-        "point": "Simplistic linear parameterization of distance adjustment lacks justification or exploration of alternatives",
-        "evidence": "No experiments test nonlinear functions or more expressive models to capture complex locality-distance interactions."
+        "point": "Binary locality indicators restrict expressiveness without exploring graded or hierarchical measures",
+        "evidence": "Locality functions are defined as binary indicators with no experiments on continuous or soft similarity metrics."
       },
       {
-        "point": "Evaluation limited to perplexity and token-level accuracy without downstream task or human evaluation",
-        "evidence": "No assessments on practical applications such as code completion benchmarks or text generation quality."
+        "point": "Training locality parameters solely on validation set raises overfitting and robustness concerns",
+        "evidence": "No details on cross-validation, regularization, or robustness checks are provided."
       },
       {
-        "point": "Insufficient details and analysis on reproducibility and computational overhead",
-        "evidence": "The paper omits datastore construction specifics, retrieval efficiency metrics, and training hyperparameters for learning locality parameters."
+        "point": "Evaluation metrics focus on perplexity and top-1 accuracy, omitting retrieval-specific metrics",
+        "evidence": "Metrics such as recall@k or mean reciprocal rank are not reported, limiting understanding of retrieval quality."
       },
       {
-        "point": "No exploration of scenarios lacking clear structural metadata or cases where locality incorporation fails",
-        "evidence": "The method\u2019s applicability beyond well-structured domains like Wikipedia and source code remains untested."
+        "point": "Lack of analysis on computational overhead, scalability, and datastore construction details",
+        "evidence": "No quantitative measurements of memory, latency, or indexing methods are given, nor discussion on scaling to large or streaming datastores."
       },
       {
-        "point": "No statistical significance testing or error bars reported for observed improvements",
-        "evidence": "Tables report absolute metrics without confidence intervals or variance estimates."
+        "point": "Limited generalizability demonstrated beyond two domains with well-defined locality",
+        "evidence": "No experiments or discussion on applicability to other domains with less structured or noisy locality."
+      },
+      {
+        "point": "No error analysis or study of failure cases where locality adjustments may harm performance",
+        "evidence": "The paper does not analyze instances where locality fails to improve or degrades language modeling."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed locality weighting compare empirically to learned neural retrieval augmentations that model structural or hierarchical metadata?",
-        "motivation": "Understanding comparative benefits is essential to position this method within the broader landscape of retrieval-augmented language modeling."
+        "question": "How does the choice of linear versus nonlinear distance modification functions affect performance?",
+        "motivation": "Understanding this could reveal whether more expressive models capture complex locality effects better."
       },
       {
-        "question": "Can the manual locality categories be replaced or supplemented by automated methods to discover meaningful locality features?",
-        "motivation": "Reducing reliance on domain expertise would enhance generalizability and ease adoption in diverse or less structured datasets."
+        "question": "Can the approach generalize to domains with noisy, missing, or less hierarchical locality information?",
+        "motivation": "Real-world datasets often have imperfect metadata; robustness to such conditions is critical for practical deployment."
       },
       {
-        "question": "How does the locality-based distance adjustment affect retrieval latency and scalability in very large datastores?",
-        "motivation": "Practical deployment requires knowledge of computational trade-offs introduced by the method."
+        "question": "What is the computational cost and scalability of incorporating locality-aware distance adjustments in large or streaming datastores?",
+        "motivation": "Assessing overhead is essential to evaluate feasibility in production systems."
       },
       {
-        "question": "Are there contexts or datasets where incorporating structural locality might degrade performance, and how robust is the method to noisy or ambiguous locality signals?",
-        "motivation": "Understanding failure modes informs safe application and further improvements."
+        "question": "How does the quality or architecture of the base parametric LM influence the gains from locality-aware retrieval?",
+        "motivation": "This could guide when and how to best apply the method depending on existing LM capabilities."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lacks comparison to recent neural retrieval augmentation frameworks that learn locality or memory structures end-to-end. No discussion or experiments comparing to methods like REALM or RAG that incorporate structural metadata in retrieval",
-    "point_002": "Manual and heuristic design of locality categories without ablation or sensitivity analysis. The paper does not investigate how different granularities or automated locality feature discovery would affect results",
-    "point_003": "Simplistic linear parameterization of distance adjustment lacks justification or exploration of alternatives. No experiments test nonlinear functions or more expressive models to capture complex locality-distance interactions",
-    "point_004": "Evaluation limited to perplexity and token-level accuracy without downstream task or human evaluation. No assessments on practical applications such as code completion benchmarks or text generation quality",
-    "point_005": "Insufficient details and analysis on reproducibility and computational overhead. The paper omits datastore construction specifics, retrieval efficiency metrics, and training hyperparameters for learning locality parameters",
-    "point_006": "No exploration of scenarios lacking clear structural metadata or cases where locality incorporation fails. The method\u2019s applicability beyond well-structured domains like Wikipedia and source code remains untested",
-    "point_007": "No statistical significance testing or error bars reported for observed improvements. Tables report absolute metrics without confidence intervals or variance estimates"
+    "point_001": "Insufficient comparison to prior hierarchical and cluster-aware retrieval methods. The paper lacks thorough literature review and empirical baselines involving hierarchical kNN, cluster-based reranking, or metadata-aware retrieval",
+    "point_002": "Limited exploration and justification of the linear distance modification function. No ablations or theoretical motivation are provided for choosing a linear form over nonlinear alternatives",
+    "point_003": "Binary locality indicators restrict expressiveness without exploring graded or hierarchical measures. Locality functions are defined as binary indicators with no experiments on continuous or soft similarity metrics",
+    "point_004": "Training locality parameters solely on validation set raises overfitting and robustness concerns. No details on cross-validation, regularization, or robustness checks are provided",
+    "point_005": "Evaluation metrics focus on perplexity and top-1 accuracy, omitting retrieval-specific metrics. Metrics such as recall@k or mean reciprocal rank are not reported, limiting understanding of retrieval quality",
+    "point_006": "Lack of analysis on computational overhead, scalability, and datastore construction details. No quantitative measurements of memory, latency, or indexing methods are given, nor discussion on scaling to large or streaming datastores",
+    "point_007": "Limited generalizability demonstrated beyond two domains with well-defined locality. No experiments or discussion on applicability to other domains with less structured or noisy locality",
+    "point_008": "No error analysis or study of failure cases where locality adjustments may harm performance. The paper does not analyze instances where locality fails to improve or degrades language modeling"
   }
 }

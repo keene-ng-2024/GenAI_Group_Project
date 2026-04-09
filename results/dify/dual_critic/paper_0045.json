@@ -3,47 +3,80 @@
   "title": "Large Language Models Can Self-improve",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 136.2,
+  "latency_seconds": 98.05,
   "structured": {
-    "summary": "The paper proposes Language Model Self-Improvement (LMSI), a method enabling large language models to autonomously enhance their reasoning abilities using only unlabeled questions by generating multiple reasoning paths, filtering by majority voting, and fine-tuning on self-consistent pseudo-labeled data. Experiments on PaLM-540B demonstrate significant accuracy gains on reasoning benchmarks and out-of-domain tasks without human-labeled supervision, alongside novel techniques for self-generating questions and few-shot prompts.",
+    "summary": "This paper proposes Language Model Self-Improvement (LMSI), a framework where large language models fine-tune themselves on their own high-confidence, self-generated Chain-of-Thought rationales and answers using unlabeled questions. LMSI achieves significant accuracy improvements across multiple reasoning benchmarks without ground truth supervision and demonstrates strong generalization and knowledge distillation to smaller models.",
     "strengths": [
       {
-        "point": "Demonstrates effective self-training of large language models without ground truth labels",
-        "evidence": "LMSI improves GSM8K accuracy from 74.4% to 82.1%, and shows gains on DROP, OpenBookQA, and ANLI-A3 using only unlabeled questions."
+        "point": "Novel self-improvement framework leveraging self-generated rationales without labeled data",
+        "evidence": "LMSI fine-tunes LLMs on their own majority-voted Chain-of-Thought rationales and answers, enabling performance gains without any ground truth supervision."
       },
       {
-        "point": "Comprehensive empirical evaluation including out-of-domain generalization and ablations",
-        "evidence": "The paper evaluates LMSI on six unseen datasets, analyzes the importance of CoT reasoning formats, sampling temperature, and prompt diversity."
+        "point": "Strong empirical performance and generalization across diverse reasoning tasks",
+        "evidence": "LMSI improves PaLM-540B accuracy substantially on GSM8K, DROP, OpenBookQA, and ANLI-A3, achieving state-of-the-art or near state-of-the-art results and better out-of-domain generalization."
+      },
+      {
+        "point": "Comprehensive ablations and analysis of design choices",
+        "evidence": "The paper studies the impact of mixed prompt formats, number of reasoning paths, sampling temperature, self-generated questions, and few-shot prompt generation."
+      },
+      {
+        "point": "Demonstrated knowledge distillation to smaller models",
+        "evidence": "Smaller PaLM models (8B and 62B) distilled from LMSI-trained large models outperform same-sized models without LMSI."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks explicit comparison to prior self-training and instruction tuning baselines",
-        "evidence": "No empirical baselines such as classic pseudo-labeling, noisy student training, or instruction-tuned models (e.g., FLAN, InstructGPT) are included for direct comparison."
+        "point": "Lack of controlled ablations isolating LMSI\u2019s fine-tuning contribution from inference-time self-consistency",
+        "evidence": "No direct comparison between baseline, self-consistency only, fine-tuning without self-consistency, and combined LMSI to clarify unique benefits of LMSI fine-tuning."
       },
       {
-        "point": "Uses hard majority voting filtering without ablation or analysis of its impact on reasoning diversity and bias",
-        "evidence": "The method discards minority reasoning paths without experiments comparing softer filtering strategies or measuring potential bias amplification."
+        "point": "Insufficient analysis of label noise and majority vote reliability",
+        "evidence": "No reported error rates of majority vote answers or experiments varying confidence thresholds to assess impact of noisy self-generated labels on fine-tuning."
       },
       {
-        "point": "Insufficient details for reproducibility and no code/model release commitment",
-        "evidence": "Critical fine-tuning hyperparameters, data splits, augmentation ratios, and hardware details are missing; no public release of code or checkpoints is mentioned."
+        "point": "Missing comparisons to alternative semi-supervised or pseudo-labeling baselines",
+        "evidence": "No experiments comparing LMSI to standard semi-supervised learning methods using the same unlabeled data."
+      },
+      {
+        "point": "Limited evaluation of rationale quality and absence of human assessments",
+        "evidence": "Evaluation focuses on accuracy without human or automatic evaluation of rationale correctness, coherence, or faithfulness."
+      },
+      {
+        "point": "Incomplete reproducibility details and prompt specifications",
+        "evidence": "Fine-tuning hyperparameters, hardware details, exact sampling temperatures, and full prompt templates are not fully reported."
+      },
+      {
+        "point": "Potential confirmation bias by reinforcing model errors through self-labeling",
+        "evidence": "Using majority vote answers from the model itself as pseudo-labels risks amplifying existing biases or mistakes without mitigation strategies."
+      },
+      {
+        "point": "Limited exploration of LMSI beyond PaLM models and tested reasoning domains",
+        "evidence": "No evaluation on other architectures, smaller models beyond distillation, or broader reasoning tasks such as multi-hop QA or code generation."
+      },
+      {
+        "point": "No discussion of computational cost and efficiency considerations",
+        "evidence": "Generating multiple reasoning paths and fine-tuning large models likely incurs high compute costs, which are not reported or analyzed."
       }
     ],
     "questions": [
       {
-        "question": "How does LMSI compare quantitatively and computationally to supervised fine-tuning and instruction tuning methods?",
-        "motivation": "Understanding this is essential to position LMSI's practical advantages and novelty relative to established approaches."
+        "question": "How much of LMSI\u2019s performance gain comes specifically from fine-tuning on self-generated rationales versus inference-time self-consistency?",
+        "motivation": "Isolating this would clarify the unique contribution and novelty of the LMSI fine-tuning step."
       },
       {
-        "question": "What is the effect of majority-voting filtering on reasoning path diversity, model robustness, and potential confirmation bias?",
-        "motivation": "Exploring this would clarify trade-offs between noise reduction and loss of reasoning diversity, impacting generalization and fairness."
+        "question": "How robust is LMSI to noisy or incorrect majority vote labels, and can confidence thresholds or other filtering improve fine-tuning quality?",
+        "motivation": "Understanding and mitigating label noise is critical since LMSI relies solely on self-generated pseudo-labels without external verification."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lacks explicit comparison to prior self-training and instruction tuning baselines. No empirical baselines such as classic pseudo-labeling, noisy student training, or instruction-tuned models (e.g., FLAN, InstructGPT) are included for direct comparison",
-    "point_002": "Uses hard majority voting filtering without ablation or analysis of its impact on reasoning diversity and bias. The method discards minority reasoning paths without experiments comparing softer filtering strategies or measuring potential bias amplification",
-    "point_003": "Insufficient details for reproducibility and no code/model release commitment. Critical fine-tuning hyperparameters, data splits, augmentation ratios, and hardware details are missing; no public release of code or checkpoints is mentioned"
+    "point_001": "Lack of controlled ablations isolating LMSI\u2019s fine-tuning contribution from inference-time self-consistency. No direct comparison between baseline, self-consistency only, fine-tuning without self-consistency, and combined LMSI to clarify unique benefits of LMSI fine-tuning",
+    "point_002": "Insufficient analysis of label noise and majority vote reliability. No reported error rates of majority vote answers or experiments varying confidence thresholds to assess impact of noisy self-generated labels on fine-tuning",
+    "point_003": "Missing comparisons to alternative semi-supervised or pseudo-labeling baselines. No experiments comparing LMSI to standard semi-supervised learning methods using the same unlabeled data",
+    "point_004": "Limited evaluation of rationale quality and absence of human assessments. Evaluation focuses on accuracy without human or automatic evaluation of rationale correctness, coherence, or faithfulness",
+    "point_005": "Incomplete reproducibility details and prompt specifications. Fine-tuning hyperparameters, hardware details, exact sampling temperatures, and full prompt templates are not fully reported",
+    "point_006": "Potential confirmation bias by reinforcing model errors through self-labeling. Using majority vote answers from the model itself as pseudo-labels risks amplifying existing biases or mistakes without mitigation strategies",
+    "point_007": "Limited exploration of LMSI beyond PaLM models and tested reasoning domains. No evaluation on other architectures, smaller models beyond distillation, or broader reasoning tasks such as multi-hop QA or code generation",
+    "point_008": "No discussion of computational cost and efficiency considerations. Generating multiple reasoning paths and fine-tuning large models likely incurs high compute costs, which are not reported or analyzed"
   }
 }

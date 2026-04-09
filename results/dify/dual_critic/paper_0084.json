@@ -3,52 +3,73 @@
   "title": "Out-of-Distribution Detection and Selective Generation for Conditional Language Models",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 129.24,
+  "latency_seconds": 98.49,
   "structured": {
-    "summary": "The paper proposes lightweight Mahalanobis distance-based out-of-distribution (OOD) detection methods leveraging encoder-decoder embeddings for conditional language models, showing improved OOD detection and selective generation performance over perplexity and other baselines on summarization and translation tasks. The approach combines in-domain and background Gaussian fits to derive relative scores that correlate well with quality and enable abstention from low-confidence outputs.",
+    "summary": "This paper proposes a novel and computationally efficient method for out-of-distribution (OOD) detection in conditional language models using relative Mahalanobis distances computed on input and output embeddings. By combining these OOD scores with model perplexity, the approach enables selective generation that improves output quality under distribution shift, demonstrated on summarization and translation tasks with both automatic and human evaluations.",
     "strengths": [
       {
-        "point": "Effective and lightweight embedding-based OOD detection",
-        "evidence": "The method uses simple Gaussian fits to encoder and decoder embeddings with Mahalanobis distances, achieving strong empirical OOD detection performance that surpasses perplexity and other embedding or likelihood baselines on XSUM summarization and WMT15 En-Fr translation."
+        "point": "Novel embedding-based OOD detection tailored for conditional language models",
+        "evidence": "The method adapts Mahalanobis distance to paired input-output embeddings and introduces Relative Mahalanobis Distance (RMD) to distinguish in-domain from OOD inputs efficiently without extra model training."
       },
       {
-        "point": "Improved selective generation via combination with perplexity",
-        "evidence": "Combining the proposed relative Mahalanobis distance scores with perplexity yields better correlation with human and automatic quality metrics across in-domain and OOD data, enabling reliable abstention and improved average generation quality without requiring additional training."
+        "point": "Effective selective generation framework combining OOD scores with perplexity",
+        "evidence": "Combining RMD-based OOD scores with perplexity improves correlation with human quality ratings and BLEURT scores by up to 12%, enabling better abstention decisions and higher output quality under distribution shift."
+      },
+      {
+        "point": "Comprehensive evaluation on multiple OOD datasets and tasks",
+        "evidence": "The paper evaluates on summarization and translation tasks, using several OOD datasets, human quality ratings, and compares against perplexity and baseline metrics, demonstrating robustness and practical utility."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison with recent generative-model-specific OOD detection methods",
-        "evidence": "The paper omits comparison or discussion of recent likelihood-ratio, energy-based, and ensemble uncertainty OOD methods tailored for generative models, limiting understanding of novelty and relative advantage."
+        "point": "Lack of comparison to recent state-of-the-art generative OOD detection methods",
+        "evidence": "The paper only compares against perplexity and a binary logistic regression baseline, omitting energy-based, likelihood ratio, or latent density estimation approaches known in generative OOD detection literature."
       },
       {
-        "point": "Insufficient empirical justification and analysis of key assumptions",
-        "evidence": "No evidence is provided that the high-dimensional embeddings follow Gaussian distributions; no normality tests or alternative density models are explored. Pooling strategy (simple averaging) is neither justified nor ablated."
+        "point": "Insufficient methodological ablations and justification for design choices",
+        "evidence": "No ablation studies on embedding pooling strategies, Gaussian distribution assumptions, or fusion methods for combining OOD scores with perplexity are provided, leaving optimality and robustness unclear."
       },
       {
-        "point": "Reproducibility concerns due to missing experimental and implementation details",
-        "evidence": "Critical details such as training protocols for logistic regression, Gaussian fitting parameters, dataset sampling and preprocessing for background Gaussians, and score combination methods for selective generation are not disclosed."
+        "point": "Limited evaluation metrics and missing calibration analysis",
+        "evidence": "Evaluation focuses mainly on AUROC without reporting metrics like FPR@95TPR or calibration plots; threshold selection and score calibration for abstention decisions are not discussed."
       },
       {
-        "point": "Limited evaluation scope and baseline coverage",
-        "evidence": "Experiments are restricted to English summarization and translation with no multilingual or other conditional generation tasks; selective generation baselines exclude recent quality estimation models; linguistic or statistical characterization of OOD splits is missing."
+        "point": "Reproducibility hindered by missing hyperparameter and dataset details",
+        "evidence": "Key details such as number of background samples, covariance regularization, logistic regression training parameters, and dataset splits are not specified."
+      },
+      {
+        "point": "Human evaluation protocol lacks detail and statistical rigor",
+        "evidence": "Information on annotator numbers, rating scales, inter-annotator agreement, and significance testing is absent, limiting confidence in human evaluation results."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is the method to the Gaussian assumption on embeddings and the choice of pooling strategy?",
-        "motivation": "Validating these assumptions is critical to ensure the robustness and generalizability of the Mahalanobis distance-based scores."
+        "question": "How does the proposed RMD method compare to recent generative OOD detection approaches like energy-based or likelihood ratio methods?",
+        "motivation": "Benchmarking against state-of-the-art methods is necessary to contextualize the contribution and understand relative strengths and weaknesses."
       },
       {
-        "question": "How does the proposed approach compare quantitatively to recent likelihood-ratio or energy-based OOD detection methods specific to generative models?",
-        "motivation": "Understanding relative performance against state-of-the-art alternatives is important for assessing the novelty and practical utility."
+        "question": "What is the impact of different embedding extraction and pooling strategies on OOD detection performance?",
+        "motivation": "Understanding sensitivity to embedding design choices can guide improvements and ensure robustness across models and tasks."
+      },
+      {
+        "question": "How are abstention thresholds selected and calibrated in practice, and how does calibration affect selective generation reliability?",
+        "motivation": "Proper calibration is critical for trustworthy deployment, especially when abstaining from generation to avoid low-quality outputs."
+      },
+      {
+        "question": "How does the method perform on other conditional generation tasks beyond summarization and translation, such as dialogue or code generation?",
+        "motivation": "Demonstrating generality across diverse tasks would strengthen claims of broad applicability."
+      },
+      {
+        "question": "What are the computational costs and latency implications of computing RMD scores in large-scale or real-time settings?",
+        "motivation": "Efficiency considerations are important for practical deployment in production systems."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison with recent generative-model-specific OOD detection methods. The paper omits comparison or discussion of recent likelihood-ratio, energy-based, and ensemble uncertainty OOD methods tailored for generative models, limiting understanding of novelty and relative advantage",
-    "point_002": "Insufficient empirical justification and analysis of key assumptions. No evidence is provided that the high-dimensional embeddings follow Gaussian distributions; no normality tests or alternative density models are explored. Pooling strategy (simple averaging) is neither justified nor ablated",
-    "point_003": "Reproducibility concerns due to missing experimental and implementation details. Critical details such as training protocols for logistic regression, Gaussian fitting parameters, dataset sampling and preprocessing for background Gaussians, and score combination methods for selective generation are not disclosed",
-    "point_004": "Limited evaluation scope and baseline coverage. Experiments are restricted to English summarization and translation with no multilingual or other conditional generation tasks; selective generation baselines exclude recent quality estimation models; linguistic or statistical characterization of OOD splits is missing"
+    "point_001": "Lack of comparison to recent state-of-the-art generative OOD detection methods. The paper only compares against perplexity and a binary logistic regression baseline, omitting energy-based, likelihood ratio, or latent density estimation approaches known in generative OOD detection literature",
+    "point_002": "Insufficient methodological ablations and justification for design choices. No ablation studies on embedding pooling strategies, Gaussian distribution assumptions, or fusion methods for combining OOD scores with perplexity are provided, leaving optimality and robustness unclear",
+    "point_003": "Limited evaluation metrics and missing calibration analysis. Evaluation focuses mainly on AUROC without reporting metrics like FPR@95TPR or calibration plots; threshold selection and score calibration for abstention decisions are not discussed",
+    "point_004": "Reproducibility hindered by missing hyperparameter and dataset details. Key details such as number of background samples, covariance regularization, logistic regression training parameters, and dataset splits are not specified",
+    "point_005": "Human evaluation protocol lacks detail and statistical rigor. Information on annotator numbers, rating scales, inter-annotator agreement, and significance testing is absent, limiting confidence in human evaluation results"
   }
 }

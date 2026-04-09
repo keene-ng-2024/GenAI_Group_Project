@@ -3,42 +3,118 @@
   "title": "Explaining Patterns in Data with Language Models via Interpretable Autoprompting",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 131.21,
+  "latency_seconds": 113.12,
   "structured": {
-    "summary": "This paper proposes iPrompt, an iterative method that leverages fixed large language models to generate natural language explanations (prompts) describing dataset input-output relationships without finetuning. By iteratively proposing, reranking, and refining candidate prompts based on zero-shot LLM accuracy, iPrompt produces interpretable prompts that generalize across models and datasets, including scientific and neuroscience domains.",
+    "summary": "The paper proposes iPrompt, an interpretable autoprompting method that uses a fixed large language model (LLM) to generate natural language explanations of dataset patterns by iteratively proposing, reranking, and refining candidate prompts. It demonstrates improved recovery of ground-truth explanations, transferability across LLMs, and applicability to scientific datasets, thereby enhancing prompt interpretability and human understanding.",
     "strengths": [
       {
-        "point": "Generates human-interpretable natural language prompts explaining datasets",
-        "evidence": "iPrompt produces fluent, semantically meaningful explanations that outperform prior uninterpretable token-based autoprompting baselines like AutoPrompt, as validated by keyword matching, human evaluation, and qualitative analysis."
+        "point": "Generates fluent, human-readable natural language explanations rather than uninterpretable token sequences.",
+        "evidence": "iPrompt explicitly produces natural language prompts and outperforms AutoPrompt, which optimizes discrete token sequences, in human interpretability and prompt quality."
       },
       {
-        "point": "Demonstrates cross-model transferability and domain generality",
-        "evidence": "Prompts generated on smaller GPT-J 6B transfer effectively to GPT-3 175B, improving zero-shot accuracy; applications include synthetic math, NLP, sentiment analysis, scientific datasets, and fMRI neuroscience data with meaningful semantic patterns."
+        "point": "Demonstrates cross-model transferability of generated prompts.",
+        "evidence": "Prompts generated on GPT-J (6B) generalize well to GPT-3 (175B), often outperforming human-written prompts on downstream tasks like sentiment classification."
+      },
+      {
+        "point": "Applies method to diverse scientific domains, showing potential for aiding scientific discovery.",
+        "evidence": "Successfully extracts meaningful explanations in chemical toxicity, protein sequence classification, and neuroscience fMRI semantic mapping."
+      },
+      {
+        "point": "Uses a fixed LLM for inference-only prompt generation, reducing memory and training complexity.",
+        "evidence": "The method requires no gradient access or fine-tuning, relying solely on iterative sampling and reranking with a frozen LLM."
+      },
+      {
+        "point": "Includes human evaluations and ablation studies to validate components of the approach.",
+        "evidence": "Human judgments confirm improved interpretability; ablations show iterative refinement and conditioning choices critically impact performance."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison to existing natural language explanation and rationale generation methods",
-        "evidence": "The paper lacks explicit discussion and empirical comparison with related prior work on rationale mining, explanation extraction, and prompt engineering literature, leading to overstated novelty claims."
+        "point": "Baseline comparisons omit recent state-of-the-art natural language explanation generation methods.",
+        "evidence": "The paper compares mainly to AutoPrompt and zero-shot suffix decoding but excludes chain-of-thought prompting, few-shot explanation generation, or explanation-tuned models."
       },
       {
-        "point": "Lack of rigorous validation and transparency in human evaluation and reranking assumptions",
-        "evidence": "Human evaluation protocols lack detail on annotator instructions, reliability, and blinding; zero-shot reranking's assumption correlating accuracy with interpretability is not empirically verified or analyzed for failure modes."
+        "point": "Lacks theoretical or empirical justification for the iterative truncation and regeneration strategy.",
+        "evidence": "No comparison to alternative exploration methods like beam search or reinforcement learning is provided, leaving the heuristic choice unexplained."
+      },
+      {
+        "point": "Evaluation metrics do not fully capture semantic fidelity or faithfulness of explanations.",
+        "evidence": "Metrics rely on human judgments, MRR, and zero-shot accuracy but omit embedding-based semantic similarity or automatic explanation quality measures."
+      },
+      {
+        "point": "Key implementation details for reproducibility are missing.",
+        "evidence": "Hyperparameters such as number of candidates per iteration, truncation lengths, iteration counts, and stopping criteria are not specified."
+      },
+      {
+        "point": "Claims of cross-modal generalizability and transferability are insufficiently supported.",
+        "evidence": "Neuroscience application still relies on text-based semantic categories; transferability is tested on only two LLMs."
+      },
+      {
+        "point": "No quantitative or expert validation of scientific applications, limiting confidence in practical impact.",
+        "evidence": "fMRI semantic maps are evaluated qualitatively without neuroscientist validation or quantitative metrics."
+      },
+      {
+        "point": "No discussion of computational efficiency or runtime costs of iterative refinement.",
+        "evidence": "The paper does not report inference calls, runtime, or resource requirements."
+      },
+      {
+        "point": "Potential biases or knowledge gaps in the fixed LLM affecting explanation quality are unaddressed.",
+        "evidence": "No analysis of how LLM hallucinations or calibration issues might impact prompt correctness or fairness."
+      },
+      {
+        "point": "No error analysis or failure case reporting to assess robustness.",
+        "evidence": "The paper lacks discussion of scenarios where iPrompt fails or produces misleading explanations."
+      },
+      {
+        "point": "No user studies or downstream task evaluations demonstrating practical utility beyond interpretability judgments.",
+        "evidence": "Human evaluations focus on prompt interpretability but do not assess impact on human decision-making or model performance."
       }
     ],
     "questions": [
       {
-        "question": "How robust and stable are the generated prompts across different random seeds and initializations?",
-        "motivation": "Understanding stability is crucial for reproducibility and to ensure consistent interpretability of explanations."
+        "question": "How does iPrompt compare to recent explanation generation methods like chain-of-thought prompting or few-shot explanation tuning?",
+        "motivation": "Understanding relative advantages is critical to establish novelty and practical superiority."
       },
       {
-        "question": "How does iPrompt perform on standard explainability benchmarks and multimodal datasets?",
-        "motivation": "Evaluating on widely-used explainability and multimodal tasks would clarify the method's broader applicability and limits."
+        "question": "What is the sensitivity of iPrompt\u2019s performance to hyperparameters such as truncation length, number of candidates, and iteration count?",
+        "motivation": "Clarifying this would aid reproducibility and inform efficient deployment."
+      },
+      {
+        "question": "Can iPrompt generate multiple diverse explanations to capture ambiguity or multiple valid interpretations in datasets?",
+        "motivation": "Supporting explanation diversity is important for comprehensive interpretability and scientific insight."
+      },
+      {
+        "question": "How robust is iPrompt to noisy, ambiguous, or out-of-distribution data where LLM likelihoods may be unreliable?",
+        "motivation": "Assessing robustness is essential for real-world applicability."
+      },
+      {
+        "question": "What are the computational costs and scalability limits of the iterative proposal and reranking process?",
+        "motivation": "Understanding resource requirements is necessary for practical adoption."
+      },
+      {
+        "question": "How do prompt length and linguistic complexity affect interpretability, reranking accuracy, and cross-model transferability?",
+        "motivation": "Insights here could guide better prompt design and refinement."
+      },
+      {
+        "question": "Can the approach be extended and validated on truly non-text modalities such as images or audio?",
+        "motivation": "Empirical evidence is needed to support claims of cross-modal generalizability."
+      },
+      {
+        "question": "Are there plans to release detailed code, datasets, and instructions to facilitate reproducibility?",
+        "motivation": "Transparency and accessibility are key for community adoption and further research."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison to existing natural language explanation and rationale generation methods. The paper lacks explicit discussion and empirical comparison with related prior work on rationale mining, explanation extraction, and prompt engineering literature, leading to overstated novelty claims",
-    "point_002": "Lack of rigorous validation and transparency in human evaluation and reranking assumptions. Human evaluation protocols lack detail on annotator instructions, reliability, and blinding; zero-shot reranking's assumption correlating accuracy with interpretability is not empirically verified or analyzed for failure modes"
+    "point_001": "Baseline comparisons omit recent state-of-the-art natural language explanation generation methods.. The paper compares mainly to AutoPrompt and zero-shot suffix decoding but excludes chain-of-thought prompting, few-shot explanation generation, or explanation-tuned models",
+    "point_002": "Lacks theoretical or empirical justification for the iterative truncation and regeneration strategy.. No comparison to alternative exploration methods like beam search or reinforcement learning is provided, leaving the heuristic choice unexplained",
+    "point_003": "Evaluation metrics do not fully capture semantic fidelity or faithfulness of explanations.. Metrics rely on human judgments, MRR, and zero-shot accuracy but omit embedding-based semantic similarity or automatic explanation quality measures",
+    "point_004": "Key implementation details for reproducibility are missing.. Hyperparameters such as number of candidates per iteration, truncation lengths, iteration counts, and stopping criteria are not specified",
+    "point_005": "Claims of cross-modal generalizability and transferability are insufficiently supported.. Neuroscience application still relies on text-based semantic categories; transferability is tested on only two LLMs",
+    "point_006": "No quantitative or expert validation of scientific applications, limiting confidence in practical impact.. fMRI semantic maps are evaluated qualitatively without neuroscientist validation or quantitative metrics",
+    "point_007": "No discussion of computational efficiency or runtime costs of iterative refinement.. The paper does not report inference calls, runtime, or resource requirements",
+    "point_008": "Potential biases or knowledge gaps in the fixed LLM affecting explanation quality are unaddressed.. No analysis of how LLM hallucinations or calibration issues might impact prompt correctness or fairness",
+    "point_009": "No error analysis or failure case reporting to assess robustness.. The paper lacks discussion of scenarios where iPrompt fails or produces misleading explanations",
+    "point_010": "No user studies or downstream task evaluations demonstrating practical utility beyond interpretability judgments.. Human evaluations focus on prompt interpretability but do not assess impact on human decision-making or model performance"
   }
 }
