@@ -1,0 +1,140 @@
+{
+  "paper_id": "paper_0035",
+  "title": "Forgetful causal masking makes causal language models better zero-shot learners",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 67.34,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nLarge language models (LLMs) such as GPT-3 and PaLM, trained with the next-token-prediction (causal language modeling) objective, have demonstrated impressive zero-shot and few-shot learning capabilities. However, these causal decoder-only models still face limitations:\n\n- Their zero-shot and few-shot adaptation is imperfect compared to human performance.\n- Their finetuning performance is relatively inferior to masked language models (e.g., BERT, T5).\n- Existing approaches that combine masked and causal language modeling often introduce extra computational cost, parameters, or complex attention masking strategies, limiting practical usability.\n- Prompt engineering and finetuning methods improve performance but require careful design or large supervised datasets and do not improve pre-training itself.\n\nThe motivation is to improve the zero-shot, few-shot, and finetuning performance of causal language models without adding computational overhead or complexity, by enhancing the pre-training objective.\n\n---\n\n### Proposed Method\n\n**Forgetful Causal Masking (FCM)** is introduced as a simple, scalable pre-training technique for causal language models that randomly masks out some past tokens during next-token prediction. Key aspects include:\n\n- **Random Masking of Past Tokens:** During training, a random subset of past tokens (up to a maximum mask ratio \u03b7, typically 15%) is masked out, preventing the model from over-attending to recent tokens and encouraging it to attend to more distant context.\n- **Causal Attention Masking:** The masking is efficiently implemented by combining it with the standard causal attention mask, preserving the autoregressive nature.\n- **Preserving BOS Token:** The beginning-of-sentence token is never masked to maintain training stability.\n- **No Extra Computation or Parameters:** FCM modifies only the input masking during training, without adding parameters or increasing computational cost.\n- **Model Architecture:** The method is applied to PaLM\u2019s decoder-only Transformer architecture with SentencePiece tokenizer and tested across model sizes from 128M to 8B parameters.\n- **Training Dataset:** Models are trained on the publicly available C4 dataset (~180B tokens), smaller than the datasets used in original PaLM or GPT-3.\n\nFCM can be viewed as a form of input dropout focused on past tokens, but distinct from standard dropout and complementary to it.\n\n---\n\n### Results\n\n**Evaluation Tasks:** The method is evaluated on a diverse suite of benchmarks covering:\n\n- Cloze and completion tasks (LAMBADA, StoryCloze)\n- Commonsense reasoning (PIQA, ARC, OpenBookQA)\n- Winograd-style tasks (Winograd, WinoGrande)\n- Natural language understanding (SuperGLUE)\n- Natural language inference (Adversarial NLI)\n\n**Key Findings:**\n\n- **Zero-shot and Few-shot Performance:**  \n  - FCM significantly outperforms the baseline PaLM model on 17/19 zero-shot tasks, 15/19 one-shot, and 15/19 few-shot tasks.  \n  - On SuperGLUE zero-shot, FCM improves PaLM 1B from 55.7 to 59.2 average score.  \n  - FCM 8B model trained on C4 matches the zero-shot performance of PaLM 8B trained on a much larger 780B token dataset with higher-quality data.\n\n- **Finetuning Performance:**  \n  - On SuperGLUE finetuning, FCM improves PaLM 1B from 67.0 to 68.7 average score, narrowing the gap with encoder-decoder models like T5 and UL2 which use span-corruption objectives.  \n  - FCM models outperform PaLM models trained on the same dataset and training budget.\n\n- **Model Scalability:**  \n  - FCM is effective across model sizes from 128M to 8B parameters.  \n  - Larger FCM models trained on smaller datasets can match or exceed performance of larger models trained on bigger datasets.\n\n- **Ablation Studies:**  \n  - Sampling a random mask ratio between 0 and 0.15 yields better performance than fixed mask ratios.  \n  - FCM random masking improves performance over PaLM and is complementary but distinct from dropout, which alone harms performance.\n\n---\n\n### Claimed Contributions\n\n1. **Introduction of Forgetful Causal Masking (FCM):**  \n   A simple, scalable pre-training method for causal language models that randomly masks past tokens during next-token prediction, improving learned representations without extra computation or parameters.\n\n2. **Empirical Demonstration of Effectiveness:**  \n   Extensive evaluation across zero-shot, few-shot, and finetuning benchmarks shows significant improvements over strong baselines (PaLM) on diverse NLP tasks including commonsense reasoning, NLU, and cloze completion.\n\n3. **Scalability Across Model Sizes:**  \n   FCM is shown to work effectively for models ranging from 128 million to 8 billion parameters, demonstrating robustness and scalability.\n\n4. **Efficiency and Practicality:**  \n   Unlike prior methods combining masked and causal modeling, FCM requires no complex attention masking or additional parameters, making it easy to implement and computationally efficient.\n\n5. **Bridging Performance Gaps:**  \n   FCM narrows the performance gap between causal language models and masked encoder-decoder models on finetuning tasks, while maintaining superior zero-shot and few-shot capabilities.\n\n---\n\n**In summary,** the paper proposes Forgetful Causal Masking, a novel and efficient pre-training technique that improves causal language models\u2019 zero-shot, few-shot, and finetuning performance by randomly masking past tokens during training. The method is simple, scalable, and empirically validated to outperform strong baselines without additional computational cost."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty - Incomplete Comparison to Related Masking Approaches:**  \n   While the paper claims FCM is distinct from prior masked and causal language modeling hybrids, it does not sufficiently compare or contrast with recent works that apply partial masking or span corruption in decoder-only models (e.g., prefix language modeling or span-masked causal models). A more thorough literature review and empirical comparison to these related methods would clarify the novelty claim (see \u201cProposed Method\u201d and \u201cRelated Work\u201d sections).\n\n2. **Methodology - Lack of Justification for Maximum Mask Ratio \u03b7 = 15%:**  \n   The choice of a maximum mask ratio \u03b7 of 15% is stated as typical but not justified with theoretical or empirical rationale. The ablation studies vary mask ratio between 0 and 0.15 but do not explore higher ratios or explain why 15% is optimal. This leaves open whether performance gains are sensitive to this hyperparameter or if better values exist (see \u201cAblation Studies\u201d).\n\n3. **Methodology - No Analysis of Masking Distribution Impact:**  \n   The paper samples a random mask ratio uniformly between 0 and 0.15 but does not analyze the impact of different masking distributions (e.g., fixed mask ratio, non-uniform sampling). It is unclear if uniform sampling is the best strategy or if adaptive masking could yield further improvements (see \u201cAblation Studies\u201d).\n\n4. **Methodology - Potential Impact on Long-Range Dependency Modeling Not Explored:**  \n   FCM masks past tokens randomly, which could disrupt learning of long-range dependencies. The paper does not analyze whether this masking harms or helps the model\u2019s ability to capture long-distance context, especially on tasks requiring long-range reasoning (e.g., LAMBADA). This is a critical assumption left unexamined (see \u201cResults\u201d and \u201cProposed Method\u201d).\n\n5. **Evaluation - Dataset Size and Quality Differences Affect Comparisons:**  \n   The paper compares FCM 8B trained on the smaller C4 dataset (~180B tokens) to PaLM 8B trained on a much larger and higher-quality dataset (780B tokens). While this highlights FCM\u2019s efficiency, it complicates apples-to-apples comparisons. The paper does not provide controlled experiments isolating dataset effects from the masking method (see \u201cResults\u201d).\n\n6. **Evaluation - Limited Baselines Beyond PaLM:**  \n   The evaluation primarily compares FCM to PaLM models. It lacks comparisons to other strong causal language models (e.g., GPT-3, LLaMA) or encoder-decoder models beyond T5 and UL2. This limits understanding of FCM\u2019s relative gains in the broader model landscape (see \u201cResults\u201d and \u201cClaimed Contributions\u201d).\n\n7. **Evaluation - Finetuning Gains Are Modest and Not Statistically Tested:**  \n   Improvements on finetuning tasks (e.g., SuperGLUE finetuning from 67.0 to 68.7) are relatively small and no statistical significance tests or confidence intervals are reported. It is unclear if these gains are robust or within noise margins (see \u201cResults\u201d).\n\n8. **Evaluation - Metrics Focused on Average Scores May Mask Task-Specific Performance:**  \n   The paper reports average scores across multiple tasks but does not provide detailed per-task results or error analyses. This obscures whether FCM improves uniformly or only on certain task types, limiting interpretability (see \u201cResults\u201d).\n\n9. **Reproducibility - Missing Details on Masking Implementation and Integration:**  \n   The paper states FCM is implemented by combining random masking with causal attention masks but does not provide sufficient details on how masking is integrated into the attention mechanism or training pipeline. This hinders reproducibility (see \u201cProposed Method\u201d).\n\n10. **Reproducibility - Lack of Hyperparameter and Training Configuration Details:**  \n    Critical training details such as learning rate schedules, batch sizes, optimizer settings, and number of training steps are not fully disclosed. These details are essential for replicating results and assessing training efficiency (see \u201cTraining Dataset\u201d and \u201cModel Architecture\u201d).\n\n11. **Clarity - Ambiguity in Terminology \u201cForgetful\u201d and Its Intuition:**  \n    The term \u201cForgetful Causal Masking\u201d is not clearly motivated or explained in terms of why \u201cforgetfulness\u201d is an appropriate metaphor. The intuition behind how masking past tokens leads to better generalization could be elaborated for clarity (see \u201cProposed Method\u201d).\n\n12. **Clarity - Insufficient Explanation of How BOS Token Preservation Affects Stability:**  \n    The paper mentions preserving the beginning-of-sentence token to maintain training stability but does not explain why masking BOS would destabilize training or provide empirical evidence supporting this design choice (see \u201cProposed Method\u201d).\n\n13. **Limitations - No Discussion of Potential Negative Effects on Downstream Tasks:**  \n    The paper does not discuss scenarios where FCM might degrade performance, such as tasks requiring precise token-level prediction or generation fidelity. Potential trade-offs or failure modes are not acknowledged (see \u201cResults\u201d and \u201cLimitations\u201d).\n\n14. **Limitations - Applicability Limited to Decoder-Only Architectures:**  \n    FCM is only evaluated on decoder-only Transformer models. The paper does not discuss whether the method extends to encoder-decoder or encoder-only models, limiting generalizability claims (see \u201cModel Architecture\u201d and \u201cClaimed Contributions\u201d).\n\n15. **Generalisability - Evaluation Restricted to English and C4 Dataset:**  \n    All experiments are conducted on English datasets and the C4 corpus. The paper does not assess whether FCM benefits transfer to multilingual models or other domains, leaving open questions about broader applicability (see \u201cTraining Dataset\u201d and \u201cResults\u201d).\n\n16. **Generalisability - No Assessment of Impact on Generation Quality or Downstream Applications:**  \n    The evaluation focuses on zero/few-shot and finetuning benchmarks but does not assess generation quality metrics (e.g., perplexity, human evaluation) or downstream application performance, which are important for practical adoption (see \u201cResults\u201d).\n\n---\n\nThese points collectively highlight areas where the paper could improve in rigor, clarity, and scope to strengthen its contributions and practical impact."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"The paper proposes Forgetful Causal Masking (FCM), a simple and efficient pre-training technique for causal language models that randomly masks past tokens during next-token prediction. This approach improves zero-shot, few-shot, and finetuning performance across diverse NLP benchmarks without adding computational overhead or parameters, demonstrating scalability from 128M to 8B parameter models.\",\n  \"strengths\": [\n    {\n      \"point\": \"Simple and efficient pre-training method\",\n      \"evidence\": \"FCM modifies only input masking during training without adding parameters or increasing computational cost.\"\n    },\n    {\n      \"point\": \"Empirical improvements across multiple benchmarks\",\n      \"evidence\": \"FCM significantly outperforms PaLM on 17/19 zero-shot tasks and narrows the finetuning gap with encoder-decoder models on SuperGLUE.\"\n    },\n    {\n      \"point\": \"Scalability across model sizes\",\n      \"evidence\": \"FCM is effective for models ranging from 128M to 8B parameters and can match larger models trained on bigger datasets.\"\n    },\n    {\n      \"point\": \"Practicality and ease of implementation\",\n      \"evidence\": \"Unlike prior masked-causal hybrids, FCM requires no complex attention masking or extra parameters, facilitating adoption.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Insufficient comparison to related masking approaches\",\n      \"evidence\": \"The paper lacks thorough literature review and empirical comparison to recent partial masking or span corruption methods in decoder-only models.\"\n    },\n    {\n      \"point\": \"Lack of justification for maximum mask ratio \u03b7 = 15%\",\n      \"evidence\": \"Ablation studies do not explore mask ratios beyond 15% or provide rationale for this choice.\"\n    },\n    {\n      \"point\": \"No analysis of masking distribution impact\",\n      \"evidence\": \"The effect of uniform versus fixed or adaptive masking distributions is not examined.\"\n    },\n    {\n      \"point\": \"Potential disruption of long-range dependency modeling unexamined\",\n      \"evidence\": \"Random masking of past tokens may harm learning of long-distance context, but this is not analyzed.\"\n    },\n    {\n      \"point\": \"Dataset size and quality differences complicate comparisons\",\n      \"evidence\": \"FCM 8B is trained on smaller C4 dataset compared to PaLM 8B's larger, higher-quality dataset, without controlled experiments isolating dataset effects.\"\n    },\n    {\n      \"point\": \"Limited baselines beyond PaLM\",\n      \"evidence\": \"Comparisons to other strong causal or encoder-decoder models like GPT-3 or LLaMA are missing.\"\n    },\n    {\n      \"point\": \"Modest finetuning gains without statistical testing\",\n      \"evidence\": \"Reported improvements on finetuning tasks are small and lack significance tests or confidence intervals.\"\n    },\n    {\n      \"point\": \"Evaluation metrics focus on averages, masking task-specific performance\",\n      \"evidence\": \"Detailed per-task results and error analyses are not provided.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing implementation details\",\n      \"evidence\": \"Insufficient description of masking integration with attention and training configurations.\"\n    },\n    {\n      \"point\": \"Ambiguity in terminology and intuition\",\n      \"evidence\": \"The term 'Forgetful' is not clearly motivated, and the rationale for preserving BOS token lacks explanation.\"\n    },\n    {\n      \"point\": \"No discussion of potential negative effects or limitations\",\n      \"evidence\": \"Possible degradation on tasks requiring precise token-level prediction is not addressed.\"\n    },\n    {\n      \"point\": \"Applicability limited to decoder-only architectures\",\n      \"evidence\": \"No exploration of extension to encoder-decoder or encoder-only models.\"\n    },\n    {\n      \"point\": \"Generalisability restricted to English and C4 dataset\",\n      \"evidence\": \"No experiments on multilingual or other domain datasets.\"\n    },\n    {\n      \"point\": \"No assessment of generation quality or downstream application impact\",\n      \"evidence\": \"Metrics like perplexity or human evaluation are not reported.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does FCM compare empirically to other partial masking or span corruption methods in decoder-only models?\",\n      \"motivation\": \"Clarifying novelty and relative benefits requires direct comparisons to related approaches.\"\n    },\n    {\n      \"question\": \"What is the impact of varying the maximum mask ratio beyond 15%, and could adaptive masking strategies improve performance?\",\n      \"motivation\": \"Understanding sensitivity to this hyperparameter could optimize the method further.\"\n    },\n    {\n      \"question\": \"Does random masking of past tokens impair the model's ability to capture long-range dependencies, especially on tasks requiring long-distance reasoning?\",\n      \"motivation\": \"Evaluating this is critical to ensure the method does not degrade important capabilities.\"\n    },\n    {\n      \"question\": \"Can FCM be effectively applied to encoder-decoder or encoder-only architectures, and how would it perform in multilingual or domain-specific settings?\",\n      \"motivation\": \"Assessing generalizability would broaden the method's applicability.\"\n    },\n    {\n      \"question\": \"Are the reported finetuning improvements statistically significant and robust across runs?\",\n      \"motivation\": \"Establishing reliability of gains is important for practical adoption.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "The paper proposes Forgetful Causal Masking (FCM), a simple and efficient pre-training technique for causal language models that randomly masks past tokens during next-token prediction. This approach improves zero-shot, few-shot, and finetuning performance across diverse NLP benchmarks without adding computational overhead or parameters, demonstrating scalability from 128M to 8B parameter models.",
+    "strengths": [
+      {
+        "point": "Simple and efficient pre-training method",
+        "evidence": "FCM modifies only input masking during training without adding parameters or increasing computational cost."
+      },
+      {
+        "point": "Empirical improvements across multiple benchmarks",
+        "evidence": "FCM significantly outperforms PaLM on 17/19 zero-shot tasks and narrows the finetuning gap with encoder-decoder models on SuperGLUE."
+      },
+      {
+        "point": "Scalability across model sizes",
+        "evidence": "FCM is effective for models ranging from 128M to 8B parameters and can match larger models trained on bigger datasets."
+      },
+      {
+        "point": "Practicality and ease of implementation",
+        "evidence": "Unlike prior masked-causal hybrids, FCM requires no complex attention masking or extra parameters, facilitating adoption."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to related masking approaches",
+        "evidence": "The paper lacks thorough literature review and empirical comparison to recent partial masking or span corruption methods in decoder-only models."
+      },
+      {
+        "point": "Lack of justification for maximum mask ratio \u03b7 = 15%",
+        "evidence": "Ablation studies do not explore mask ratios beyond 15% or provide rationale for this choice."
+      },
+      {
+        "point": "No analysis of masking distribution impact",
+        "evidence": "The effect of uniform versus fixed or adaptive masking distributions is not examined."
+      },
+      {
+        "point": "Potential disruption of long-range dependency modeling unexamined",
+        "evidence": "Random masking of past tokens may harm learning of long-distance context, but this is not analyzed."
+      },
+      {
+        "point": "Dataset size and quality differences complicate comparisons",
+        "evidence": "FCM 8B is trained on smaller C4 dataset compared to PaLM 8B's larger, higher-quality dataset, without controlled experiments isolating dataset effects."
+      },
+      {
+        "point": "Limited baselines beyond PaLM",
+        "evidence": "Comparisons to other strong causal or encoder-decoder models like GPT-3 or LLaMA are missing."
+      },
+      {
+        "point": "Modest finetuning gains without statistical testing",
+        "evidence": "Reported improvements on finetuning tasks are small and lack significance tests or confidence intervals."
+      },
+      {
+        "point": "Evaluation metrics focus on averages, masking task-specific performance",
+        "evidence": "Detailed per-task results and error analyses are not provided."
+      },
+      {
+        "point": "Reproducibility hindered by missing implementation details",
+        "evidence": "Insufficient description of masking integration with attention and training configurations."
+      },
+      {
+        "point": "Ambiguity in terminology and intuition",
+        "evidence": "The term 'Forgetful' is not clearly motivated, and the rationale for preserving BOS token lacks explanation."
+      },
+      {
+        "point": "No discussion of potential negative effects or limitations",
+        "evidence": "Possible degradation on tasks requiring precise token-level prediction is not addressed."
+      },
+      {
+        "point": "Applicability limited to decoder-only architectures",
+        "evidence": "No exploration of extension to encoder-decoder or encoder-only models."
+      },
+      {
+        "point": "Generalisability restricted to English and C4 dataset",
+        "evidence": "No experiments on multilingual or other domain datasets."
+      },
+      {
+        "point": "No assessment of generation quality or downstream application impact",
+        "evidence": "Metrics like perplexity or human evaluation are not reported."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does FCM compare empirically to other partial masking or span corruption methods in decoder-only models?",
+        "motivation": "Clarifying novelty and relative benefits requires direct comparisons to related approaches."
+      },
+      {
+        "question": "What is the impact of varying the maximum mask ratio beyond 15%, and could adaptive masking strategies improve performance?",
+        "motivation": "Understanding sensitivity to this hyperparameter could optimize the method further."
+      },
+      {
+        "question": "Does random masking of past tokens impair the model's ability to capture long-range dependencies, especially on tasks requiring long-distance reasoning?",
+        "motivation": "Evaluating this is critical to ensure the method does not degrade important capabilities."
+      },
+      {
+        "question": "Can FCM be effectively applied to encoder-decoder or encoder-only architectures, and how would it perform in multilingual or domain-specific settings?",
+        "motivation": "Assessing generalizability would broaden the method's applicability."
+      },
+      {
+        "question": "Are the reported finetuning improvements statistically significant and robust across runs?",
+        "motivation": "Establishing reliability of gains is important for practical adoption."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to related masking approaches. The paper lacks thorough literature review and empirical comparison to recent partial masking or span corruption methods in decoder-only models",
+    "point_002": "Lack of justification for maximum mask ratio \u03b7 = 15%. Ablation studies do not explore mask ratios beyond 15% or provide rationale for this choice",
+    "point_003": "No analysis of masking distribution impact. The effect of uniform versus fixed or adaptive masking distributions is not examined",
+    "point_004": "Potential disruption of long-range dependency modeling unexamined. Random masking of past tokens may harm learning of long-distance context, but this is not analyzed",
+    "point_005": "Dataset size and quality differences complicate comparisons. FCM 8B is trained on smaller C4 dataset compared to PaLM 8B's larger, higher-quality dataset, without controlled experiments isolating dataset effects",
+    "point_006": "Limited baselines beyond PaLM. Comparisons to other strong causal or encoder-decoder models like GPT-3 or LLaMA are missing",
+    "point_007": "Modest finetuning gains without statistical testing. Reported improvements on finetuning tasks are small and lack significance tests or confidence intervals",
+    "point_008": "Evaluation metrics focus on averages, masking task-specific performance. Detailed per-task results and error analyses are not provided",
+    "point_009": "Reproducibility hindered by missing implementation details. Insufficient description of masking integration with attention and training configurations",
+    "point_010": "Ambiguity in terminology and intuition. The term 'Forgetful' is not clearly motivated, and the rationale for preserving BOS token lacks explanation",
+    "point_011": "No discussion of potential negative effects or limitations. Possible degradation on tasks requiring precise token-level prediction is not addressed",
+    "point_012": "Applicability limited to decoder-only architectures. No exploration of extension to encoder-decoder or encoder-only models",
+    "point_013": "Generalisability restricted to English and C4 dataset. No experiments on multilingual or other domain datasets",
+    "point_014": "No assessment of generation quality or downstream application impact. Metrics like perplexity or human evaluation are not reported"
+  }
+}

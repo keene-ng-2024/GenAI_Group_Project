@@ -1,0 +1,163 @@
+{
+  "paper_id": "paper_0012",
+  "title": "Preserving Semantics in Textual Adversarial Attacks",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 49.53,
+  "token_usage": {
+    "input": 12043,
+    "output": 3126
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Current textual adversarial attacks aim to fool NLP classifiers by modifying input text while preserving its original meaning. However, many existing attacks fail to truly preserve semantics, often producing adversarial examples that change the meaning of the text.\n- **Motivation:** The failure arises primarily from the similarity metrics used to evaluate semantic preservation, which rely on text encoders trained mostly in an unsupervised manner. These encoders struggle with antonym recognition because antonyms often appear in similar contexts, causing semantically opposite sentences to be considered similar.\n- **Impact:** This flaw undermines the reliability of adversarial attacks for evaluating model robustness and for applications like data augmentation or harmful content detection.\n\n---\n\n### Proposed Method\n\n- **Semantics-Preserving Encoder (SPE):**  \n  - A novel sentence encoder trained fully supervised on multiple annotated datasets to better capture semantic differences, especially antonyms.\n  - Combines embeddings from multiple classifiers trained on diverse tasks (e.g., Natural Language Inference, emotion classification, sentiment analysis) using fastText models.\n  - Sentence embeddings from each classifier are averaged to form a robust, high-quality semantic representation.\n  - Uses cosine similarity with a threshold (empirically set to 0.95) to determine semantic similarity between original and adversarial sentences.\n  - Designed to be a drop-in replacement for existing similarity metrics like Universal Sentence Encoder (USE) and BERTScore.\n  - Computationally efficient due to low-dimensional embeddings (hidden layer dimension = 10) and fastText\u2019s lightweight architecture.\n\n---\n\n### Results\n\n- **Datasets:** Evaluated on four datasets covering various NLP tasks: Offensive Tweets, Hate Speech Tweets, Rotten Tomatoes movie reviews, and Yelp Reviews.\n- **Evaluation Metrics:**  \n  - Attack Success Rate (ASR): Percentage of adversarial examples that fool the classifier.  \n  - Realistic Attack Success Rate (rASR): Human-annotated measure reflecting how many adversarial examples truly preserve meaning while changing classifier label.  \n  - Time and modification rate (percentage of words changed).\n- **Findings:**  \n  - SPE significantly outperforms USE and BERTScore in maintaining semantic similarity, with rASR improvements of over 20% in some cases.  \n  - Existing methods show large drops from ASR to rASR (e.g., TextFooler+USE drops from 96% ASR to 41% rASR), indicating many adversarial examples do not preserve meaning. SPE minimizes this drop.  \n  - SPE-based attacks maintain high attack success rates while producing higher-quality adversarial examples as confirmed by human evaluators.  \n  - SPE speeds up adversarial attack execution compared to existing encoders.  \n  - Human evaluation involved 5 annotators scoring sentence pairs on semantic similarity, confirming SPE\u2019s superior performance.\n- **Qualitative Examples:** Provided adversarial examples show SPE-generated sentences preserve meaning better than those generated using other encoders.\n\n---\n\n### Claimed Contributions\n\n1. **Semantics-Preserving Encoder (SPE):**  \n   - A simple yet effective supervised sentence encoder that improves semantic preservation in textual adversarial attacks and can be integrated into any existing attack framework to enhance quality and speed.\n2. **New Evaluation Metric (rASR):**  \n   - Introduced a realistic attack success rate metric based on human judgments to better reflect the true performance of adversarial attacks beyond automatic metrics.\n3. **Comprehensive Evaluation:**  \n   - Conducted thorough manual and automatic evaluations of common sentence encoders on multiple relevant datasets, highlighting their limitations and demonstrating SPE\u2019s advantages.\n4. **Open Source Release:**  \n   - Released code, datasets, human evaluation results, and test samples publicly to support reproducibility and future benchmarking.\n\n---\n\n### Additional Notes\n\n- The paper discusses the limitations of unsupervised training methods (e.g., Skip-Gram, CBOW) in capturing antonym distinctions.\n- SPE leverages supervised training on diverse datasets to overcome these limitations.\n- Future work may extend SPE by incorporating large pre-trained language models fine-tuned on classification tasks for potentially higher accuracy.\n- The work emphasizes the importance of high-quality adversarial attacks for improving NLP model robustness, especially in critical applications like hate speech and offensive content detection.\n\n---\n\n**In summary, this paper identifies a critical flaw in current semantic similarity metrics used in textual adversarial attacks, proposes a supervised multi-classifier sentence encoder (SPE) to address it, and demonstrates through extensive experiments and human evaluation that SPE produces higher-quality adversarial examples that better preserve original semantics while maintaining attack effectiveness.**"
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty - Comparison to Prior Supervised Encoders:**  \n   The paper claims SPE is novel due to its supervised multi-classifier training, but it lacks comparison to other supervised sentence encoders trained on NLI or sentiment tasks (e.g., SBERT variants). Without benchmarking against these established supervised encoders, it is unclear how much novelty SPE offers beyond combining multiple classifiers\u2019 embeddings.\n\n2. **Methodology - Justification of Embedding Dimension:**  \n   SPE uses a very low hidden layer dimension (10) for embeddings, which is claimed to improve efficiency. However, the paper does not provide an ablation or justification for this choice. It is unclear if increasing embedding size would improve semantic discrimination or if 10 dimensions are sufficient for complex semantic nuances.\n\n3. **Methodology - Choice and Weighting of Classifiers:**  \n   The method averages embeddings from multiple classifiers trained on different tasks. The paper does not discuss whether all classifiers contribute equally or if some are more important. No ablation studies show the impact of removing or weighting individual classifiers, leaving the design choice unexplored.\n\n4. **Evaluation - Baseline Encoder Versions and Settings:**  \n   The paper compares SPE to USE and BERTScore but does not specify which versions or configurations of these encoders were used. Since USE and BERTScore have multiple variants with different training data and dimensionalities, this omission raises concerns about fairness and reproducibility of the comparisons.\n\n5. **Evaluation - Attack Framework Consistency:**  \n   It is unclear whether the same adversarial attack algorithms (e.g., TextFooler) were used across all similarity metrics or if SPE required modifications. The paper should clarify if the attack framework was held constant to ensure that improvements are due to the encoder and not attack tuning.\n\n6. **Evaluation - Human Evaluation Details:**  \n   The human evaluation involved 5 annotators scoring semantic similarity, but the paper does not report inter-annotator agreement statistics (e.g., Cohen\u2019s kappa). Without this, the reliability of the human judgments and thus the rASR metric is uncertain.\n\n7. **Evaluation - Dataset Diversity and Size:**  \n   The four datasets cover offensive language and sentiment but are all English and relatively similar in domain (social media and reviews). The paper does not test SPE on other NLP tasks or languages, limiting claims about generalizability.\n\n8. **Reproducibility - Training Details of SPE:**  \n   The paper lacks detailed hyperparameters for SPE training, such as learning rates, batch sizes, number of epochs, and dataset splits. This information is critical for reproducing the supervised training of the encoder.\n\n9. **Reproducibility - Code and Data Availability:**  \n   Although the paper claims to release code and datasets, it does not specify the license, repository location, or instructions for replicating the experiments, which are important for reproducibility.\n\n10. **Clarity - Explanation of rASR Metric:**  \n    The realistic attack success rate (rASR) is introduced as a human-annotated metric, but the paper does not clearly define how semantic preservation was operationalized or what threshold was used to count an adversarial example as semantically preserved.\n\n11. **Limitations - Handling of Subtle Semantic Changes:**  \n    The paper focuses on antonym detection but does not discuss how SPE handles more subtle semantic shifts, such as pragmatic or contextual changes that may alter meaning without antonyms. This limits understanding of SPE\u2019s semantic sensitivity.\n\n12. **Limitations - Potential Overfitting to Training Tasks:**  \n    Since SPE is trained on specific classification tasks (NLI, sentiment, emotion), it may overfit to those semantic distinctions and fail to generalize to other semantic phenomena. The paper does not acknowledge or test this possibility.\n\n13. **Generalisability - Applicability to Non-English Languages:**  \n    The paper only evaluates English datasets and uses fastText models trained on English. It does not discuss whether SPE can be extended to other languages or multilingual settings, which is important for broader applicability.\n\n14. **Generalisability - Use with Large Pretrained Models:**  \n    The paper mentions future work incorporating large pretrained models but does not discuss current limitations of SPE in leveraging contextual embeddings or whether SPE can integrate with transformer-based architectures.\n\n15. **Clarity - Presentation of Qualitative Examples:**  \n    While qualitative adversarial examples are provided, the paper does not systematically analyze or categorize the types of semantic errors avoided by SPE versus baselines, missing an opportunity to deepen understanding of its strengths and weaknesses."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper identifies limitations in current semantic similarity metrics used for textual adversarial attacks and proposes a supervised multi-classifier sentence encoder (SPE) to better capture semantic preservation, especially antonym distinctions. Through extensive experiments and human evaluation on multiple datasets, SPE demonstrates improved realistic attack success rates and faster attack execution compared to existing encoders.\",\n  \"strengths\": [\n    {\n      \"point\": \"Addresses a critical flaw in semantic similarity metrics for adversarial attacks\",\n      \"evidence\": \"Shows that unsupervised encoders fail to distinguish antonyms, leading to adversarial examples that do not preserve meaning.\"\n    },\n    {\n      \"point\": \"Proposes a supervised multi-classifier encoder combining diverse semantic tasks\",\n      \"evidence\": \"SPE integrates embeddings from classifiers trained on NLI, sentiment, and emotion datasets, improving semantic discrimination.\"\n    },\n    {\n      \"point\": \"Demonstrates improved semantic preservation with human-annotated realistic attack success rate (rASR)\",\n      \"evidence\": \"SPE achieves over 20% higher rASR compared to USE and BERTScore, confirmed by 5 annotators.\"\n    },\n    {\n      \"point\": \"Provides comprehensive evaluation including multiple datasets and qualitative examples\",\n      \"evidence\": \"Evaluated on four datasets covering offensive language and sentiment, with detailed quantitative and qualitative analyses.\"\n    },\n    {\n      \"point\": \"Releases code, datasets, and human evaluation results to support reproducibility\",\n      \"evidence\": \"Claims open source release of all resources used in experiments.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Lacks comparison to other supervised sentence encoders\",\n      \"evidence\": \"No benchmarking against established supervised encoders like SBERT variants trained on NLI or sentiment tasks.\"\n    },\n    {\n      \"point\": \"Insufficient justification for embedding dimension choice\",\n      \"evidence\": \"No ablation or analysis on whether 10-dimensional embeddings are optimal for semantic discrimination.\"\n    },\n    {\n      \"point\": \"No ablation on contribution or weighting of individual classifiers\",\n      \"evidence\": \"The method averages embeddings without exploring if some classifiers are more important or redundant.\"\n    },\n    {\n      \"point\": \"Unclear baseline encoder versions and configurations\",\n      \"evidence\": \"Paper does not specify which USE or BERTScore variants were used, raising concerns about fairness.\"\n    },\n    {\n      \"point\": \"Details of adversarial attack framework consistency are missing\",\n      \"evidence\": \"Unclear if the same attack algorithms and parameters were used across all similarity metrics.\"\n    },\n    {\n      \"point\": \"Human evaluation lacks inter-annotator agreement statistics\",\n      \"evidence\": \"No reported Cohen\u2019s kappa or similar measures to assess reliability of semantic similarity judgments.\"\n    },\n    {\n      \"point\": \"Limited dataset diversity and language coverage\",\n      \"evidence\": \"All datasets are English and from similar domains; no evaluation on other languages or NLP tasks.\"\n    },\n    {\n      \"point\": \"Reproducibility details on SPE training are incomplete\",\n      \"evidence\": \"Missing hyperparameters such as learning rates, batch sizes, epochs, and dataset splits.\"\n    },\n    {\n      \"point\": \"Code and data release lacks licensing and replication instructions\",\n      \"evidence\": \"No mention of repository location, license, or detailed usage guidelines.\"\n    },\n    {\n      \"point\": \"Explanation of rASR metric is insufficient\",\n      \"evidence\": \"No clear definition of semantic preservation threshold or operationalization of human annotation criteria.\"\n    },\n    {\n      \"point\": \"Does not address handling of subtle semantic changes beyond antonyms\",\n      \"evidence\": \"No discussion on pragmatic or contextual shifts that may alter meaning without antonyms.\"\n    },\n    {\n      \"point\": \"Potential overfitting to training tasks not acknowledged or tested\",\n      \"evidence\": \"SPE trained on specific classification tasks may not generalize to other semantic phenomena.\"\n    },\n    {\n      \"point\": \"No discussion on applicability to non-English or multilingual settings\",\n      \"evidence\": \"Uses English fastText models only; no experiments or plans for other languages.\"\n    },\n    {\n      \"point\": \"Limited integration with large pretrained transformer models\",\n      \"evidence\": \"Future work mentioned but current SPE does not leverage contextual embeddings or transformer architectures.\"\n    },\n    {\n      \"point\": \"Qualitative examples lack systematic analysis\",\n      \"evidence\": \"No categorization or deeper error analysis of semantic errors avoided by SPE versus baselines.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does SPE compare to other supervised sentence encoders like SBERT variants?\",\n      \"motivation\": \"Benchmarking against established supervised encoders is necessary to establish novelty and effectiveness.\"\n    },\n    {\n      \"question\": \"Would increasing the embedding dimension improve semantic discrimination beyond 10 dimensions?\",\n      \"motivation\": \"Understanding the tradeoff between embedding size and semantic quality is important for practical use.\"\n    },\n    {\n      \"question\": \"What is the impact of individual classifiers on the final embedding quality?\",\n      \"motivation\": \"Knowing if some classifiers dominate or if all contribute equally can inform model design and efficiency.\"\n    },\n    {\n      \"question\": \"Were the same adversarial attack algorithms and parameters used across all similarity metrics?\",\n      \"motivation\": \"Ensuring consistent attack settings is critical to fairly attribute improvements to the encoder.\"\n    },\n    {\n      \"question\": \"What is the inter-annotator agreement for the human semantic similarity judgments?\",\n      \"motivation\": \"Reliability of human evaluation affects confidence in the rASR metric and conclusions drawn.\"\n    },\n    {\n      \"question\": \"Can SPE generalize to other languages and NLP tasks beyond English offensive and sentiment datasets?\",\n      \"motivation\": \"Broader applicability is important for real-world deployment and impact.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper identifies limitations in current semantic similarity metrics used for textual adversarial attacks and proposes a supervised multi-classifier sentence encoder (SPE) to better capture semantic preservation, especially antonym distinctions. Through extensive experiments and human evaluation on multiple datasets, SPE demonstrates improved realistic attack success rates and faster attack execution compared to existing encoders.",
+    "strengths": [
+      {
+        "point": "Addresses a critical flaw in semantic similarity metrics for adversarial attacks",
+        "evidence": "Shows that unsupervised encoders fail to distinguish antonyms, leading to adversarial examples that do not preserve meaning."
+      },
+      {
+        "point": "Proposes a supervised multi-classifier encoder combining diverse semantic tasks",
+        "evidence": "SPE integrates embeddings from classifiers trained on NLI, sentiment, and emotion datasets, improving semantic discrimination."
+      },
+      {
+        "point": "Demonstrates improved semantic preservation with human-annotated realistic attack success rate (rASR)",
+        "evidence": "SPE achieves over 20% higher rASR compared to USE and BERTScore, confirmed by 5 annotators."
+      },
+      {
+        "point": "Provides comprehensive evaluation including multiple datasets and qualitative examples",
+        "evidence": "Evaluated on four datasets covering offensive language and sentiment, with detailed quantitative and qualitative analyses."
+      },
+      {
+        "point": "Releases code, datasets, and human evaluation results to support reproducibility",
+        "evidence": "Claims open source release of all resources used in experiments."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lacks comparison to other supervised sentence encoders",
+        "evidence": "No benchmarking against established supervised encoders like SBERT variants trained on NLI or sentiment tasks."
+      },
+      {
+        "point": "Insufficient justification for embedding dimension choice",
+        "evidence": "No ablation or analysis on whether 10-dimensional embeddings are optimal for semantic discrimination."
+      },
+      {
+        "point": "No ablation on contribution or weighting of individual classifiers",
+        "evidence": "The method averages embeddings without exploring if some classifiers are more important or redundant."
+      },
+      {
+        "point": "Unclear baseline encoder versions and configurations",
+        "evidence": "Paper does not specify which USE or BERTScore variants were used, raising concerns about fairness."
+      },
+      {
+        "point": "Details of adversarial attack framework consistency are missing",
+        "evidence": "Unclear if the same attack algorithms and parameters were used across all similarity metrics."
+      },
+      {
+        "point": "Human evaluation lacks inter-annotator agreement statistics",
+        "evidence": "No reported Cohen\u2019s kappa or similar measures to assess reliability of semantic similarity judgments."
+      },
+      {
+        "point": "Limited dataset diversity and language coverage",
+        "evidence": "All datasets are English and from similar domains; no evaluation on other languages or NLP tasks."
+      },
+      {
+        "point": "Reproducibility details on SPE training are incomplete",
+        "evidence": "Missing hyperparameters such as learning rates, batch sizes, epochs, and dataset splits."
+      },
+      {
+        "point": "Code and data release lacks licensing and replication instructions",
+        "evidence": "No mention of repository location, license, or detailed usage guidelines."
+      },
+      {
+        "point": "Explanation of rASR metric is insufficient",
+        "evidence": "No clear definition of semantic preservation threshold or operationalization of human annotation criteria."
+      },
+      {
+        "point": "Does not address handling of subtle semantic changes beyond antonyms",
+        "evidence": "No discussion on pragmatic or contextual shifts that may alter meaning without antonyms."
+      },
+      {
+        "point": "Potential overfitting to training tasks not acknowledged or tested",
+        "evidence": "SPE trained on specific classification tasks may not generalize to other semantic phenomena."
+      },
+      {
+        "point": "No discussion on applicability to non-English or multilingual settings",
+        "evidence": "Uses English fastText models only; no experiments or plans for other languages."
+      },
+      {
+        "point": "Limited integration with large pretrained transformer models",
+        "evidence": "Future work mentioned but current SPE does not leverage contextual embeddings or transformer architectures."
+      },
+      {
+        "point": "Qualitative examples lack systematic analysis",
+        "evidence": "No categorization or deeper error analysis of semantic errors avoided by SPE versus baselines."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does SPE compare to other supervised sentence encoders like SBERT variants?",
+        "motivation": "Benchmarking against established supervised encoders is necessary to establish novelty and effectiveness."
+      },
+      {
+        "question": "Would increasing the embedding dimension improve semantic discrimination beyond 10 dimensions?",
+        "motivation": "Understanding the tradeoff between embedding size and semantic quality is important for practical use."
+      },
+      {
+        "question": "What is the impact of individual classifiers on the final embedding quality?",
+        "motivation": "Knowing if some classifiers dominate or if all contribute equally can inform model design and efficiency."
+      },
+      {
+        "question": "Were the same adversarial attack algorithms and parameters used across all similarity metrics?",
+        "motivation": "Ensuring consistent attack settings is critical to fairly attribute improvements to the encoder."
+      },
+      {
+        "question": "What is the inter-annotator agreement for the human semantic similarity judgments?",
+        "motivation": "Reliability of human evaluation affects confidence in the rASR metric and conclusions drawn."
+      },
+      {
+        "question": "Can SPE generalize to other languages and NLP tasks beyond English offensive and sentiment datasets?",
+        "motivation": "Broader applicability is important for real-world deployment and impact."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Lacks comparison to other supervised sentence encoders. No benchmarking against established supervised encoders like SBERT variants trained on NLI or sentiment tasks",
+    "point_002": "Insufficient justification for embedding dimension choice. No ablation or analysis on whether 10-dimensional embeddings are optimal for semantic discrimination",
+    "point_003": "No ablation on contribution or weighting of individual classifiers. The method averages embeddings without exploring if some classifiers are more important or redundant",
+    "point_004": "Unclear baseline encoder versions and configurations. Paper does not specify which USE or BERTScore variants were used, raising concerns about fairness",
+    "point_005": "Details of adversarial attack framework consistency are missing. Unclear if the same attack algorithms and parameters were used across all similarity metrics",
+    "point_006": "Human evaluation lacks inter-annotator agreement statistics. No reported Cohen\u2019s kappa or similar measures to assess reliability of semantic similarity judgments",
+    "point_007": "Limited dataset diversity and language coverage. All datasets are English and from similar domains; no evaluation on other languages or NLP tasks",
+    "point_008": "Reproducibility details on SPE training are incomplete. Missing hyperparameters such as learning rates, batch sizes, epochs, and dataset splits",
+    "point_009": "Code and data release lacks licensing and replication instructions. No mention of repository location, license, or detailed usage guidelines",
+    "point_010": "Explanation of rASR metric is insufficient. No clear definition of semantic preservation threshold or operationalization of human annotation criteria",
+    "point_011": "Does not address handling of subtle semantic changes beyond antonyms. No discussion on pragmatic or contextual shifts that may alter meaning without antonyms",
+    "point_012": "Potential overfitting to training tasks not acknowledged or tested. SPE trained on specific classification tasks may not generalize to other semantic phenomena",
+    "point_013": "No discussion on applicability to non-English or multilingual settings. Uses English fastText models only; no experiments or plans for other languages",
+    "point_014": "Limited integration with large pretrained transformer models. Future work mentioned but current SPE does not leverage contextual embeddings or transformer architectures",
+    "point_015": "Qualitative examples lack systematic analysis. No categorization or deeper error analysis of semantic errors avoided by SPE versus baselines"
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "paper_id": "paper_0038",
+  "title": "No Parameters Left Behind: Sensitivity Guided Adaptive Learning Rate for Training Large Transformer Models",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 43.63,
+  "token_usage": {
+    "input": 9715,
+    "output": 2903
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Large-scale Transformer models contain significant parameter redundancy, where many parameters appear unnecessary and can be pruned without much loss in performance. However, it is unclear whether these parameters are truly redundant or simply under-trained due to conventional training strategies.\n- **Motivation:** Existing pruning methods remove parameters deemed redundant, but this may overlook the potential contribution of these parameters if they were properly optimized. Different training strategies (learning rates, random seeds, optimizers) yield models with varying sets of redundant parameters, suggesting redundancy depends on training rather than inherent uselessness.\n- **Goal:** To improve model generalization by reducing redundancy not through pruning but by encouraging sufficient training of all parameters, thereby making previously under-fitted parameters useful.\n\n---\n\n### Proposed Method\n\n- **Method Name:** SAGE (Sensitivity-guided Adaptive learninG ratE)\n- **Core Idea:** Adaptively adjust the learning rate of each parameter based on its *sensitivity* and the *local temporal variation* of sensitivity.\n  - **Sensitivity:** A gradient-based measure reflecting the contribution of a parameter to model performance; low sensitivity implies redundancy.\n  - **Local Temporal Variation:** Measures uncertainty in sensitivity due to mini-batch sampling and instability over iterations.\n- **Learning Rate Adjustment:**\n  - Parameters with **low sensitivity** (under-fitted/redundant) get **increased learning rates** to promote training.\n  - Parameters with **high sensitivity** (well-fitted) get **decreased learning rates** to prevent overfitting.\n  - The learning rate for each parameter is proportional to the ratio of local temporal variation to sensitivity, balancing training promotion and regularization.\n- **Implementation:** SAGE can be applied on top of various optimizers (SGD, Adam, Adamax) with minimal computational overhead (extra element-wise operations and storing moving averages).\n\n---\n\n### Results\n\n- **Natural Language Understanding (NLU):**\n  - Fine-tuning BERT-base and RoBERTa-large on GLUE benchmark.\n  - Improvements of +1.4 and +0.6 average task scores on dev sets respectively.\n  - Larger gains on smaller datasets (e.g., +2 points on RTE, CoLA).\n- **Neural Machine Translation (NMT):**\n  - Transformer-base models trained from scratch on IWSLT\u201914 De-En (low-resource) and WMT\u201916 En-De (rich-resource).\n  - BLEU score improvements of ~0.6 and ~0.4 points respectively.\n- **Image Classification:**\n  - Vision Transformer (ViT) models fine-tuned on CIFAR100 and ImageNet.\n  - Significant accuracy gains over baselines.\n- **Additional Findings:**\n  - SAGE leads to more balanced sensitivity distribution across parameters, indicating more sufficient training.\n  - Pruning experiments show parameters in SAGE-trained models contribute more, even those with low sensitivity.\n  - SAGE reduces uncertainty in sensitivity, making it a more reliable redundancy indicator.\n  - Learning curves show faster validation loss decrease and less overfitting with SAGE.\n  - Decision boundary visualization indicates smoother and larger margin boundaries with SAGE.\n  - SAGE is complementary to state-of-the-art regularization methods (e.g., SMART adversarial regularization).\n  - Works well combined with adaptive gradient optimizers without conflict.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Hypothesis:** Redundant parameters in large models are often under-trained rather than inherently useless.\n2. **New Adaptive Learning Rate Schedule (SAGE):** Uses parameter sensitivity and its temporal variation to guide per-parameter learning rates, promoting sufficient training and preventing overfitting.\n3. **Empirical Validation:** Demonstrated effectiveness across diverse tasks (NLU, NMT, image classification) and models (BERT, RoBERTa, Transformer, ViT).\n4. **Improved Generalization:** SAGE reduces redundancy and improves model generalization consistently.\n5. **Complementarity:** Compatible with various optimizers and state-of-the-art regularization techniques.\n6. **Insightful Analysis:** Shows balanced parameter training, more reliable sensitivity measures, and better decision boundaries.\n\n---\n\n**In summary,** this work challenges the notion of inherent parameter redundancy by proposing a sensitivity-guided adaptive learning rate method that encourages all parameters to be sufficiently trained, resulting in improved generalization across multiple domains and model architectures."
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty - Missing Comparison to Related Adaptive LR Methods:**  \nThe paper proposes SAGE as a sensitivity-guided adaptive learning rate method but does not sufficiently compare to prior per-parameter adaptive learning rate techniques such as Adagrad, RMSProp, or more recent sensitivity-based optimizers. While it mentions compatibility with Adam and Adamax, a direct empirical comparison or discussion of how SAGE differs from or improves upon these established adaptive optimizers is lacking, which weakens the novelty claim.\n\n2. **Methodology - Justification for Sensitivity Metric Choice:**  \nThe paper uses a gradient-based sensitivity measure to guide learning rates but does not justify why this particular sensitivity metric is superior to alternatives (e.g., Hessian-based measures, Fisher information). The rationale for choosing this sensitivity definition and its robustness across different tasks is not thoroughly discussed.\n\n3. **Methodology - Lack of Ablation on Local Temporal Variation Component:**  \nWhile local temporal variation is a key component in adjusting learning rates, the paper does not present an ablation study isolating its effect. It remains unclear how much performance gain comes from incorporating temporal variation versus using sensitivity alone.\n\n4. **Evaluation - Limited Baseline Diversity in NMT Experiments:**  \nThe NMT experiments only compare SAGE against standard Transformer training without including recent strong baselines or pruning methods. This limits understanding of how SAGE performs relative to state-of-the-art redundancy reduction or adaptive training techniques in machine translation.\n\n5. **Evaluation - Metrics Focused Mainly on Accuracy/BLEU Without Efficiency Measures:**  \nThe evaluation emphasizes improvements in accuracy and BLEU scores but does not report training time, convergence speed, or computational overhead beyond a qualitative statement of \"minimal overhead.\" Quantitative efficiency metrics would clarify practical trade-offs.\n\n6. **Evaluation - No Statistical Significance Testing Reported:**  \nReported improvements (e.g., +1.4 on GLUE, +0.6 BLEU) lack confidence intervals or significance testing. Given the modest gains, it is important to establish that improvements are statistically meaningful rather than due to random variation.\n\n7. **Reproducibility - Missing Hyperparameter Details for SAGE:**  \nThe paper does not provide detailed hyperparameter settings for SAGE, such as how sensitivity and temporal variation are computed (window sizes, smoothing factors), or how the learning rate scaling ratio is calibrated. This omission hinders reproducibility.\n\n8. **Reproducibility - Lack of Code or Pseudocode for SAGE Algorithm:**  \nNo pseudocode or algorithmic description is provided to clarify the step-by-step implementation of SAGE. This makes it difficult for practitioners to implement the method correctly, especially given its per-parameter adaptive nature.\n\n9. **Clarity - Ambiguous Definition of Sensitivity and Temporal Variation:**  \nThe definitions of sensitivity and local temporal variation are described conceptually but lack precise mathematical formulation in the summary. This ambiguity reduces clarity on how these quantities are computed and used.\n\n10. **Limitations - No Discussion on Potential Overfitting Risks with Increased LR for Low Sensitivity Parameters:**  \nWhile increasing learning rates for low sensitivity parameters aims to reduce under-training, the paper does not discuss potential risks of overfitting or instability caused by this strategy, especially in noisy or small datasets.\n\n11. **Limitations - Applicability to Extremely Large Models or Distributed Training Not Addressed:**  \nThe paper does not discuss how SAGE scales to very large models (e.g., billion-parameter Transformers) or distributed training setups where per-parameter adaptive learning rates may introduce communication or memory overhead.\n\n12. **Generalisability - Experiments Limited to Transformer-Based Architectures and ViT:**  \nThough the paper covers NLP, NMT, and vision tasks, all experiments use Transformer or Transformer-derived architectures. It remains unclear whether SAGE benefits extend to other model families such as CNNs (beyond ViT), RNNs, or non-attention-based models.\n\n13. **Generalisability - No Evaluation on Out-of-Distribution or Robustness Benchmarks:**  \nThe paper claims improved generalization but does not evaluate on robustness or out-of-distribution datasets, which would strengthen claims about the method\u2019s ability to reduce redundancy and improve model reliability.\n\n14. **Evaluation - Pruning Experiments Lack Quantitative Metrics:**  \nThe pruning experiments claim that parameters in SAGE-trained models contribute more, but no quantitative metrics (e.g., accuracy drop vs. pruning ratio curves) or detailed analysis are provided to substantiate this claim.\n\n15. **Clarity - Insufficient Explanation of Complementarity with Other Regularization Methods:**  \nThe paper states that SAGE is complementary to methods like SMART adversarial regularization but does not explain how these methods interact or whether combined training requires special tuning, leaving the practical integration unclear."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes SAGE, a sensitivity-guided adaptive learning rate method that adjusts per-parameter learning rates based on gradient-based sensitivity and its local temporal variation to reduce parameter redundancy by encouraging sufficient training rather than pruning. Evaluated on NLP, NMT, and vision tasks with Transformer-based models, SAGE demonstrates consistent improvements in accuracy and generalization while being compatible with popular optimizers and regularization methods.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel adaptive learning rate method that targets parameter redundancy by promoting sufficient training of low-sensitivity parameters.\",\n      \"evidence\": \"SAGE increases learning rates for low sensitivity parameters and decreases them for high sensitivity ones, balancing training and regularization.\"\n    },\n    {\n      \"point\": \"Empirical validation across diverse tasks and models showing consistent performance gains.\",\n      \"evidence\": \"Improvements on GLUE benchmark (+1.4 avg), NMT BLEU scores (+0.4 to +0.6), and ViT image classification accuracy.\"\n    },\n    {\n      \"point\": \"Compatibility with various optimizers and regularization techniques with minimal computational overhead.\",\n      \"evidence\": \"SAGE can be applied on top of SGD, Adam, Adamax and complements SMART adversarial regularization.\"\n    },\n    {\n      \"point\": \"Insightful analysis demonstrating more balanced parameter training, reduced sensitivity uncertainty, and improved decision boundaries.\",\n      \"evidence\": \"Experiments show smoother decision boundaries, faster convergence, and more reliable sensitivity measures.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Lack of direct comparison with existing adaptive learning rate methods and sensitivity-based optimizers.\",\n      \"evidence\": \"No empirical or detailed discussion contrasting SAGE with Adagrad, RMSProp, or other sensitivity-guided optimizers.\"\n    },\n    {\n      \"point\": \"Insufficient justification and clarity on the choice and computation of the sensitivity metric and local temporal variation.\",\n      \"evidence\": \"No rationale for using gradient-based sensitivity over alternatives; definitions lack precise mathematical formulation.\"\n    },\n    {\n      \"point\": \"Missing ablation studies isolating the impact of local temporal variation on performance.\",\n      \"evidence\": \"No experiments showing how much gain comes specifically from incorporating temporal variation.\"\n    },\n    {\n      \"point\": \"Limited baseline diversity in NMT experiments and absence of robustness or out-of-distribution evaluations.\",\n      \"evidence\": \"NMT comparisons only against standard Transformer; no robustness benchmarks to support generalization claims.\"\n    },\n    {\n      \"point\": \"No quantitative efficiency metrics or statistical significance testing reported.\",\n      \"evidence\": \"Training time and convergence speed not quantified; improvements lack confidence intervals or significance analysis.\"\n    },\n    {\n      \"point\": \"Reproducibility concerns due to missing hyperparameter details and absence of pseudocode or algorithmic description.\",\n      \"evidence\": \"No detailed settings for sensitivity computation or learning rate scaling; no step-by-step implementation provided.\"\n    },\n    {\n      \"point\": \"No discussion on potential overfitting risks or scalability to extremely large models and distributed training.\",\n      \"evidence\": \"Risks of increasing learning rates for low sensitivity parameters not addressed; scalability challenges unexamined.\"\n    },\n    {\n      \"point\": \"Experiments limited to Transformer-based architectures, limiting generalizability claims.\",\n      \"evidence\": \"No evaluation on CNNs beyond ViT, RNNs, or other model families.\"\n    },\n    {\n      \"point\": \"Pruning experiments lack quantitative metrics to substantiate claims about parameter contribution.\",\n      \"evidence\": \"No accuracy drop vs. pruning ratio curves or detailed analysis provided.\"\n    },\n    {\n      \"point\": \"Insufficient explanation of how SAGE complements other regularization methods in practice.\",\n      \"evidence\": \"No details on interaction or tuning when combined with SMART adversarial regularization.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does SAGE compare empirically and theoretically to existing adaptive learning rate methods like Adagrad or RMSProp?\",\n      \"motivation\": \"Understanding relative advantages is critical to assess novelty and practical impact.\"\n    },\n    {\n      \"question\": \"What is the sensitivity of SAGE's performance to the choice and computation of the sensitivity metric and temporal variation parameters?\",\n      \"motivation\": \"Clarifying robustness and guiding practitioners on hyperparameter tuning is important for adoption.\"\n    },\n    {\n      \"question\": \"Can SAGE scale efficiently to billion-parameter models and distributed training environments without prohibitive overhead?\",\n      \"motivation\": \"Scalability is essential for applicability to state-of-the-art large-scale models.\"\n    },\n    {\n      \"question\": \"Does SAGE improve robustness or out-of-distribution generalization beyond standard accuracy metrics?\",\n      \"motivation\": \"Evaluating on robustness benchmarks would strengthen claims about improved generalization.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes SAGE, a sensitivity-guided adaptive learning rate method that adjusts per-parameter learning rates based on gradient-based sensitivity and its local temporal variation to reduce parameter redundancy by encouraging sufficient training rather than pruning. Evaluated on NLP, NMT, and vision tasks with Transformer-based models, SAGE demonstrates consistent improvements in accuracy and generalization while being compatible with popular optimizers and regularization methods.",
+    "strengths": [
+      {
+        "point": "Novel adaptive learning rate method that targets parameter redundancy by promoting sufficient training of low-sensitivity parameters.",
+        "evidence": "SAGE increases learning rates for low sensitivity parameters and decreases them for high sensitivity ones, balancing training and regularization."
+      },
+      {
+        "point": "Empirical validation across diverse tasks and models showing consistent performance gains.",
+        "evidence": "Improvements on GLUE benchmark (+1.4 avg), NMT BLEU scores (+0.4 to +0.6), and ViT image classification accuracy."
+      },
+      {
+        "point": "Compatibility with various optimizers and regularization techniques with minimal computational overhead.",
+        "evidence": "SAGE can be applied on top of SGD, Adam, Adamax and complements SMART adversarial regularization."
+      },
+      {
+        "point": "Insightful analysis demonstrating more balanced parameter training, reduced sensitivity uncertainty, and improved decision boundaries.",
+        "evidence": "Experiments show smoother decision boundaries, faster convergence, and more reliable sensitivity measures."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of direct comparison with existing adaptive learning rate methods and sensitivity-based optimizers.",
+        "evidence": "No empirical or detailed discussion contrasting SAGE with Adagrad, RMSProp, or other sensitivity-guided optimizers."
+      },
+      {
+        "point": "Insufficient justification and clarity on the choice and computation of the sensitivity metric and local temporal variation.",
+        "evidence": "No rationale for using gradient-based sensitivity over alternatives; definitions lack precise mathematical formulation."
+      },
+      {
+        "point": "Missing ablation studies isolating the impact of local temporal variation on performance.",
+        "evidence": "No experiments showing how much gain comes specifically from incorporating temporal variation."
+      },
+      {
+        "point": "Limited baseline diversity in NMT experiments and absence of robustness or out-of-distribution evaluations.",
+        "evidence": "NMT comparisons only against standard Transformer; no robustness benchmarks to support generalization claims."
+      },
+      {
+        "point": "No quantitative efficiency metrics or statistical significance testing reported.",
+        "evidence": "Training time and convergence speed not quantified; improvements lack confidence intervals or significance analysis."
+      },
+      {
+        "point": "Reproducibility concerns due to missing hyperparameter details and absence of pseudocode or algorithmic description.",
+        "evidence": "No detailed settings for sensitivity computation or learning rate scaling; no step-by-step implementation provided."
+      },
+      {
+        "point": "No discussion on potential overfitting risks or scalability to extremely large models and distributed training.",
+        "evidence": "Risks of increasing learning rates for low sensitivity parameters not addressed; scalability challenges unexamined."
+      },
+      {
+        "point": "Experiments limited to Transformer-based architectures, limiting generalizability claims.",
+        "evidence": "No evaluation on CNNs beyond ViT, RNNs, or other model families."
+      },
+      {
+        "point": "Pruning experiments lack quantitative metrics to substantiate claims about parameter contribution.",
+        "evidence": "No accuracy drop vs. pruning ratio curves or detailed analysis provided."
+      },
+      {
+        "point": "Insufficient explanation of how SAGE complements other regularization methods in practice.",
+        "evidence": "No details on interaction or tuning when combined with SMART adversarial regularization."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does SAGE compare empirically and theoretically to existing adaptive learning rate methods like Adagrad or RMSProp?",
+        "motivation": "Understanding relative advantages is critical to assess novelty and practical impact."
+      },
+      {
+        "question": "What is the sensitivity of SAGE's performance to the choice and computation of the sensitivity metric and temporal variation parameters?",
+        "motivation": "Clarifying robustness and guiding practitioners on hyperparameter tuning is important for adoption."
+      },
+      {
+        "question": "Can SAGE scale efficiently to billion-parameter models and distributed training environments without prohibitive overhead?",
+        "motivation": "Scalability is essential for applicability to state-of-the-art large-scale models."
+      },
+      {
+        "question": "Does SAGE improve robustness or out-of-distribution generalization beyond standard accuracy metrics?",
+        "motivation": "Evaluating on robustness benchmarks would strengthen claims about improved generalization."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Lack of direct comparison with existing adaptive learning rate methods and sensitivity-based optimizers.. No empirical or detailed discussion contrasting SAGE with Adagrad, RMSProp, or other sensitivity-guided optimizers",
+    "point_002": "Insufficient justification and clarity on the choice and computation of the sensitivity metric and local temporal variation.. No rationale for using gradient-based sensitivity over alternatives; definitions lack precise mathematical formulation",
+    "point_003": "Missing ablation studies isolating the impact of local temporal variation on performance.. No experiments showing how much gain comes specifically from incorporating temporal variation",
+    "point_004": "Limited baseline diversity in NMT experiments and absence of robustness or out-of-distribution evaluations.. NMT comparisons only against standard Transformer; no robustness benchmarks to support generalization claims",
+    "point_005": "No quantitative efficiency metrics or statistical significance testing reported.. Training time and convergence speed not quantified; improvements lack confidence intervals or significance analysis",
+    "point_006": "Reproducibility concerns due to missing hyperparameter details and absence of pseudocode or algorithmic description.. No detailed settings for sensitivity computation or learning rate scaling; no step-by-step implementation provided",
+    "point_007": "No discussion on potential overfitting risks or scalability to extremely large models and distributed training.. Risks of increasing learning rates for low sensitivity parameters not addressed; scalability challenges unexamined",
+    "point_008": "Experiments limited to Transformer-based architectures, limiting generalizability claims.. No evaluation on CNNs beyond ViT, RNNs, or other model families",
+    "point_009": "Pruning experiments lack quantitative metrics to substantiate claims about parameter contribution.. No accuracy drop vs. pruning ratio curves or detailed analysis provided",
+    "point_010": "Insufficient explanation of how SAGE complements other regularization methods in practice.. No details on interaction or tuning when combined with SMART adversarial regularization"
+  }
+}
