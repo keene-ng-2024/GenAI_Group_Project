@@ -1,0 +1,121 @@
+{
+  "paper_id": "paper_0008",
+  "title": "Task Ambiguity in Humans and Language Models",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 41.84,
+  "token_usage": {
+    "input": 14913,
+    "output": 2922
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Real-world tasks given to language models (LMs) are often ambiguously specified, meaning the intended task is not clearly defined by instructions or examples. This ambiguity poses challenges for both humans and LMs in correctly inferring the user\u2019s intent.\n- **Motivation:** Most existing NLP benchmarks provide clear task specifications, which do not reflect real-world scenarios where users may provide vague or incomplete instructions. Understanding how LMs and humans handle task ambiguity is crucial for safe, robust, and generalizable model deployment, especially in complex domains like programming or legal reasoning.\n- **Key Challenge:** Task ambiguity arises when multiple plausible tasks fit the given instructions or examples, requiring disambiguation based on subtle cues.\n\n---\n\n### Proposed Method\n\n- **AmbiBench Benchmark:** Introduced a new benchmark called AmbiBench consisting of six ambiguously-specified binary sentence classification tasks. Each sentence contains two linguistic features (e.g., animal vs. human subject, indoor vs. outdoor location), and the task is to classify based on one salient feature that is ambiguous without clear instructions or sufficient examples.\n- **Task Setup:**\n  - Tasks involve classifying sentences based on one of two possible features.\n  - Ambiguity is controlled by varying the informativeness of instructions (informative vs. uninformative) and the number of labeled examples (from zero to twenty).\n  - Two prompt formats for LMs: Arrow format and Q/A format.\n- **Evaluation:**\n  - Compared performance of humans and various LMs, including OpenAI\u2019s models (both standard and RLHF-trained), AI21\u2019s Jurassic-1 Jumbo, and T0++.\n  - Human participants recruited via Prolific, answering in a manner analogous to LMs.\n- **Finetuning Experiment:**\n  - Investigated whether finetuning a standard LM on a small set of ambiguous in-context examples improves its ability to disambiguate tasks.\n  - Control finetuning on unambiguous examples was also performed to isolate the effect of ambiguity.\n  \n---\n\n### Results\n\n- **Using Natural Language Instructions:**\n  - Humans perform near perfectly when given informative instructions.\n  - Only the largest LMs trained with Reinforcement Learning from Human Feedback (RLHF), e.g., text-davinci-002 (175B parameters), approach or exceed human performance.\n  - Non-RLHF models and smaller models perform poorly, often failing to follow instructions reliably.\n  - With uninformative instructions, humans and many models perform near chance (~50%), but some models output invalid labels.\n- **Using Multiple Examples:**\n  - Increasing the number of labeled examples improves disambiguation.\n  - The RLHF-trained text-davinci-002 model significantly outperforms humans and other models in identifying the intended task from examples.\n  - Other large models without RLHF and smaller models perform worse.\n- **Finetuning on Ambiguous Examples:**\n  - Finetuning a standard LM on a small dataset of ambiguous in-context examples closes the performance gap with RLHF models.\n  - The finetuned model even surpasses the RLHF model on early examples.\n  - Control finetuning on unambiguous examples does not improve performance, highlighting the importance of ambiguity in training data.\n- **Implications:**\n  - RLHF models\u2019 superior performance may stem from exposure to ambiguous instructions and examples during training.\n  - Explicit finetuning on ambiguous tasks is a promising route to improve LM robustness to task ambiguity without RLHF.\n\n---\n\n### Claimed Contributions\n\n1. **Problem Formulation:** Introduced and motivated the study of task ambiguity in large language models, distinguishing it from input ambiguity.\n2. **Benchmark Creation:** Developed AmbiBench, a controlled benchmark of six ambiguously-specified classification tasks to systematically study task ambiguity.\n3. **Empirical Findings:**\n   - Demonstrated that most LMs struggle to disambiguate tasks from ambiguous instructions or few examples.\n   - Showed that large-scale RLHF-trained models can approach or exceed human-level disambiguation.\n4. **Methodological Innovation:** Proposed and validated a finetuning approach on ambiguous in-context examples that enables standard LMs to generalize better to ambiguous tasks, outperforming RLHF models in some settings.\n5. **Broader Impact:** Highlighted the importance of addressing task ambiguity for safe and robust deployment of LMs and suggested future directions including multimodal and real-world complex tasks.\n\n---\n\n### Additional Notes\n\n- The study carefully controlled experimental conditions for fair human-model comparison.\n- Limitations include the simplified nature of AmbiBench (only two possible tasks per example) and potential human fatigue effects.\n- The authors plan to release code and data for reproducibility.\n- Ethical considerations included fair compensation for human participants.\n\n---\n\n**In summary, this work systematically studies how humans and language models handle task ambiguity, introduces a novel benchmark for this purpose, and identifies training strategies (RLHF and ambiguity-focused finetuning) that significantly improve model performance in ambiguous task settings.**"
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty - Prior Work on Ambiguity in NLP:**  \nThe paper claims to introduce task ambiguity as distinct from input ambiguity but does not sufficiently discuss or compare to prior work on ambiguity in NLP, such as ambiguity in intent detection, semantic parsing, or instruction following (e.g., ambiguous prompts in few-shot learning). A more thorough literature review and positioning relative to these related areas would clarify the novelty of AmbiBench and the problem formulation (Problem & Motivation section).\n\n2. **Methodology - Justification of Binary Classification Tasks:**  \nAmbiBench consists solely of binary classification tasks with two possible linguistic features per sentence. The paper does not justify why this simplified setting is representative of real-world task ambiguity, which often involves multiple possible interpretations or more complex task spaces. This limits the scope and may oversimplify the ambiguity challenge (Proposed Method section).\n\n3. **Methodology - Choice of Prompt Formats:**  \nThe paper uses two prompt formats (Arrow and Q/A) but does not provide an ablation or analysis of how these formats affect model performance or human comparability. It is unclear whether one format is more natural or effective for disambiguation, which could influence results (Proposed Method, Evaluation).\n\n4. **Evaluation - Human Baseline Details:**  \nWhile humans perform near perfectly with informative instructions, the paper does not detail the human participants\u2019 linguistic or domain expertise, nor how fatigue or learning effects were controlled. This raises questions about the reliability and representativeness of the human baseline (Evaluation, Additional Notes).\n\n5. **Evaluation - RLHF Model Superiority Attribution:**  \nThe authors attribute RLHF models\u2019 superior performance to exposure to ambiguous instructions during training but do not provide empirical evidence or ablations to support this claim. Without controlled experiments isolating RLHF training data characteristics, this remains speculative (Results, Implications).\n\n6. **Evaluation - Finetuning Dataset Size and Selection:**  \nThe finetuning experiment shows improvements but lacks details on the size, diversity, and selection criteria of the ambiguous in-context examples used. This omission hinders reproducibility and understanding of how sensitive the approach is to finetuning data quality (Proposed Method, Results).\n\n7. **Evaluation - Comparison to Other Disambiguation Techniques:**  \nThe paper does not compare its finetuning approach to other potential disambiguation strategies, such as prompt engineering, active learning, or uncertainty estimation. This limits understanding of the relative effectiveness of their method (Results, Claimed Contributions).\n\n8. **Reproducibility - Model Hyperparameters and Training Details:**  \nKey implementation details for finetuning, such as learning rates, number of epochs, batch sizes, and hardware used, are missing. Without these, reproducing the finetuning results or extending the method is challenging (Additional Notes).\n\n9. **Reproducibility - AmbiBench Dataset Availability and Format:**  \nAlthough the authors plan to release code and data, the paper does not specify the dataset format, licensing, or whether the benchmark includes metadata about ambiguity levels. This information is critical for adoption and benchmarking by the community (Additional Notes).\n\n10. **Clarity - Definition and Operationalization of Ambiguity:**  \nThe paper\u2019s operational definition of task ambiguity (two plausible tasks per example) is somewhat narrow and could confuse readers expecting a broader notion of ambiguity. More explicit discussion and examples illustrating ambiguity gradations would improve clarity (Problem & Motivation).\n\n11. **Limitations - Real-World Task Complexity:**  \nThe paper acknowledges the simplified nature of AmbiBench but does not discuss how the proposed methods might scale or adapt to tasks with more complex or multimodal ambiguity, such as multi-turn dialogues or image+text inputs (Limitations, Broader Impact).\n\n12. **Limitations - Human Fatigue Effects:**  \nThe authors mention potential human fatigue but do not report any measures taken to mitigate or quantify its impact on performance. This omission weakens the validity of human-model comparisons, especially for tasks requiring subtle disambiguation (Additional Notes).\n\n13. **Generalisability - Beyond Binary Classification:**  \nIt remains unclear whether the finetuning approach and findings generalize to tasks beyond binary classification or to tasks with more than two ambiguous interpretations. The paper does not explore or discuss this limitation (Limitations, Claimed Contributions).\n\n14. **Evaluation - Metrics Beyond Accuracy:**  \nThe evaluation focuses primarily on accuracy and invalid label rates but does not consider other metrics such as confidence calibration, response consistency, or error analysis by ambiguity type. Including these would provide a richer understanding of model behavior (Results).\n\n15. **Clarity - Presentation of Results:**  \nSome results, such as the finetuning improvements surpassing RLHF models on early examples, are mentioned but not clearly visualized or statistically tested in the paper. More detailed tables or figures with significance testing would enhance interpretability (Results)."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper introduces AmbiBench, a benchmark designed to study task ambiguity in language models through six binary classification tasks with ambiguous instructions. It empirically evaluates human and model performance, showing that RLHF-trained models excel at disambiguation, and proposes finetuning on ambiguous examples as an effective alternative to RLHF. The work highlights the challenges of task ambiguity and suggests directions for improving model robustness.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel benchmark for task ambiguity\",\n      \"evidence\": \"AmbiBench provides a controlled setting with six ambiguously-specified binary classification tasks to systematically study task ambiguity.\"\n    },\n    {\n      \"point\": \"Comprehensive empirical evaluation\",\n      \"evidence\": \"The paper compares humans, various LMs including RLHF and non-RLHF models, across different instruction informativeness and example counts.\"\n    },\n    {\n      \"point\": \"Insightful finetuning approach\",\n      \"evidence\": \"Finetuning on ambiguous in-context examples improves standard LM performance, even surpassing RLHF models on early examples.\"\n    },\n    {\n      \"point\": \"Clear motivation and problem formulation\",\n      \"evidence\": \"The paper distinguishes task ambiguity from input ambiguity and motivates its importance for real-world LM deployment.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited scope with only binary classification tasks\",\n      \"evidence\": \"AmbiBench tasks involve only two possible linguistic features per sentence, which may oversimplify real-world task ambiguity.\"\n    },\n    {\n      \"point\": \"Insufficient comparison to prior work on ambiguity\",\n      \"evidence\": \"The paper lacks a thorough literature review on ambiguity in NLP tasks such as intent detection or semantic parsing.\"\n    },\n    {\n      \"point\": \"Lack of detailed human baseline information\",\n      \"evidence\": \"Details on human participants\u2019 expertise, fatigue mitigation, and learning effects are missing, raising questions about baseline reliability.\"\n    },\n    {\n      \"point\": \"Unsubstantiated claims about RLHF superiority\",\n      \"evidence\": \"No empirical ablations or controlled experiments are provided to confirm that RLHF models\u2019 advantage stems from exposure to ambiguous instructions.\"\n    },\n    {\n      \"point\": \"Missing finetuning and dataset details\",\n      \"evidence\": \"Key hyperparameters, dataset size, selection criteria, and dataset format/licensing are not specified, hindering reproducibility.\"\n    },\n    {\n      \"point\": \"Limited evaluation metrics and analysis\",\n      \"evidence\": \"Evaluation focuses mainly on accuracy and invalid label rates without deeper error analysis, confidence calibration, or statistical testing.\"\n    },\n    {\n      \"point\": \"No comparison to alternative disambiguation methods\",\n      \"evidence\": \"The paper does not benchmark finetuning against prompt engineering, active learning, or uncertainty estimation techniques.\"\n    },\n    {\n      \"point\": \"Narrow operational definition of ambiguity\",\n      \"evidence\": \"Defining ambiguity as two plausible tasks per example may confuse readers expecting broader ambiguity notions.\"\n    },\n    {\n      \"point\": \"Unclear generalizability beyond binary tasks\",\n      \"evidence\": \"The paper does not explore or discuss whether findings extend to tasks with more than two ambiguous interpretations or multimodal inputs.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does the finetuning approach compare to other disambiguation strategies like prompt engineering or active learning?\",\n      \"motivation\": \"Understanding relative effectiveness is important for practical deployment and further research.\"\n    },\n    {\n      \"question\": \"Can the methods and findings generalize to more complex tasks with multiple ambiguous interpretations or multimodal inputs?\",\n      \"motivation\": \"Real-world applications often involve richer ambiguity, so scalability and adaptability are critical.\"\n    },\n    {\n      \"question\": \"What specific aspects of RLHF training contribute to improved ambiguity resolution, and can these be isolated empirically?\",\n      \"motivation\": \"Clarifying this would guide future model training and benchmarking.\"\n    },\n    {\n      \"question\": \"How were human participant factors such as expertise and fatigue controlled or accounted for?\",\n      \"motivation\": \"Ensuring reliable human baselines is essential for fair human-model comparisons.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper introduces AmbiBench, a benchmark designed to study task ambiguity in language models through six binary classification tasks with ambiguous instructions. It empirically evaluates human and model performance, showing that RLHF-trained models excel at disambiguation, and proposes finetuning on ambiguous examples as an effective alternative to RLHF. The work highlights the challenges of task ambiguity and suggests directions for improving model robustness.",
+    "strengths": [
+      {
+        "point": "Novel benchmark for task ambiguity",
+        "evidence": "AmbiBench provides a controlled setting with six ambiguously-specified binary classification tasks to systematically study task ambiguity."
+      },
+      {
+        "point": "Comprehensive empirical evaluation",
+        "evidence": "The paper compares humans, various LMs including RLHF and non-RLHF models, across different instruction informativeness and example counts."
+      },
+      {
+        "point": "Insightful finetuning approach",
+        "evidence": "Finetuning on ambiguous in-context examples improves standard LM performance, even surpassing RLHF models on early examples."
+      },
+      {
+        "point": "Clear motivation and problem formulation",
+        "evidence": "The paper distinguishes task ambiguity from input ambiguity and motivates its importance for real-world LM deployment."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited scope with only binary classification tasks",
+        "evidence": "AmbiBench tasks involve only two possible linguistic features per sentence, which may oversimplify real-world task ambiguity."
+      },
+      {
+        "point": "Insufficient comparison to prior work on ambiguity",
+        "evidence": "The paper lacks a thorough literature review on ambiguity in NLP tasks such as intent detection or semantic parsing."
+      },
+      {
+        "point": "Lack of detailed human baseline information",
+        "evidence": "Details on human participants\u2019 expertise, fatigue mitigation, and learning effects are missing, raising questions about baseline reliability."
+      },
+      {
+        "point": "Unsubstantiated claims about RLHF superiority",
+        "evidence": "No empirical ablations or controlled experiments are provided to confirm that RLHF models\u2019 advantage stems from exposure to ambiguous instructions."
+      },
+      {
+        "point": "Missing finetuning and dataset details",
+        "evidence": "Key hyperparameters, dataset size, selection criteria, and dataset format/licensing are not specified, hindering reproducibility."
+      },
+      {
+        "point": "Limited evaluation metrics and analysis",
+        "evidence": "Evaluation focuses mainly on accuracy and invalid label rates without deeper error analysis, confidence calibration, or statistical testing."
+      },
+      {
+        "point": "No comparison to alternative disambiguation methods",
+        "evidence": "The paper does not benchmark finetuning against prompt engineering, active learning, or uncertainty estimation techniques."
+      },
+      {
+        "point": "Narrow operational definition of ambiguity",
+        "evidence": "Defining ambiguity as two plausible tasks per example may confuse readers expecting broader ambiguity notions."
+      },
+      {
+        "point": "Unclear generalizability beyond binary tasks",
+        "evidence": "The paper does not explore or discuss whether findings extend to tasks with more than two ambiguous interpretations or multimodal inputs."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does the finetuning approach compare to other disambiguation strategies like prompt engineering or active learning?",
+        "motivation": "Understanding relative effectiveness is important for practical deployment and further research."
+      },
+      {
+        "question": "Can the methods and findings generalize to more complex tasks with multiple ambiguous interpretations or multimodal inputs?",
+        "motivation": "Real-world applications often involve richer ambiguity, so scalability and adaptability are critical."
+      },
+      {
+        "question": "What specific aspects of RLHF training contribute to improved ambiguity resolution, and can these be isolated empirically?",
+        "motivation": "Clarifying this would guide future model training and benchmarking."
+      },
+      {
+        "question": "How were human participant factors such as expertise and fatigue controlled or accounted for?",
+        "motivation": "Ensuring reliable human baselines is essential for fair human-model comparisons."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Limited scope with only binary classification tasks. AmbiBench tasks involve only two possible linguistic features per sentence, which may oversimplify real-world task ambiguity",
+    "point_002": "Insufficient comparison to prior work on ambiguity. The paper lacks a thorough literature review on ambiguity in NLP tasks such as intent detection or semantic parsing",
+    "point_003": "Lack of detailed human baseline information. Details on human participants\u2019 expertise, fatigue mitigation, and learning effects are missing, raising questions about baseline reliability",
+    "point_004": "Unsubstantiated claims about RLHF superiority. No empirical ablations or controlled experiments are provided to confirm that RLHF models\u2019 advantage stems from exposure to ambiguous instructions",
+    "point_005": "Missing finetuning and dataset details. Key hyperparameters, dataset size, selection criteria, and dataset format/licensing are not specified, hindering reproducibility",
+    "point_006": "Limited evaluation metrics and analysis. Evaluation focuses mainly on accuracy and invalid label rates without deeper error analysis, confidence calibration, or statistical testing",
+    "point_007": "No comparison to alternative disambiguation methods. The paper does not benchmark finetuning against prompt engineering, active learning, or uncertainty estimation techniques",
+    "point_008": "Narrow operational definition of ambiguity. Defining ambiguity as two plausible tasks per example may confuse readers expecting broader ambiguity notions",
+    "point_009": "Unclear generalizability beyond binary tasks. The paper does not explore or discuss whether findings extend to tasks with more than two ambiguous interpretations or multimodal inputs"
+  }
+}

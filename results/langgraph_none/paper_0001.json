@@ -1,0 +1,139 @@
+{
+  "paper_id": "paper_0001",
+  "title": "Ask Me Anything: A simple strategy for prompting language models",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 57.99,
+  "token_usage": {
+    "input": 30770,
+    "output": 2950
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary of \"ASK ME ANYTHING: A SIMPLE STRATEGY FOR PROMPTING LANGUAGE MODELS\"**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Prompting large language models (LLMs) for new tasks is brittle and labor-intensive. Small changes in prompts can cause large performance variations, requiring painstaking manual prompt engineering.\n- **Motivation:** To reduce the effort and brittleness in prompt design by leveraging multiple imperfect prompts and aggregating their outputs to improve overall task performance without additional model training.\n\n---\n\n### Proposed Method: ASK ME ANYTHING PROMPTING (AMA)\n\n1. **Effective Prompt Formats:**\n   - Identified that open-ended question-answering (QA) prompts (e.g., \"Who went to the park?\") outperform restrictive prompts (e.g., \"Output True or False\").\n   - Open-ended prompts align better with the language modeling objective and yield significant performance improvements (up to 72% on some tasks).\n\n2. **Scalable Prompt Collection:**\n   - Use the LLM recursively to transform task inputs into effective open-ended QA formats via a two-step pipeline:\n     - `question()` prompts: Convert statements into various types of questions (yes/no, wh-, cloze).\n     - `answer()` prompts: Generate answers to these questions given the context.\n   - Combine different `question()` and `answer()` prompt templates to create multiple prompt chains, producing diverse noisy votes per input.\n\n3. **Prompt Aggregation via Weak Supervision (WS):**\n   - Simple majority voting (MV) is insufficient due to varying prompt accuracies and correlated errors.\n   - Apply weak supervision techniques to model and learn the accuracies and dependencies among prompts without labeled data.\n   - Use a probabilistic graphical model to aggregate noisy prompt outputs into a final prediction, improving reliability and accuracy.\n\n---\n\n### Results\n\n- **Benchmarks & Models:**\n  - Evaluated AMA on 20 popular language benchmarks spanning tasks like NLU, classification, QA, and NLI.\n  - Tested across 14 open-source LLMs from 4 families (Neo, BLOOM, OPT, T0) ranging from 125M to 175B parameters.\n\n- **Performance Gains:**\n  - AMA achieves an average absolute improvement of 10.2% over few-shot baselines (k=3) across models and tasks.\n  - Enables the GPT-Neo-6B (6B parameters) model to match or exceed the few-shot performance of GPT3-175B (175B parameters) on 15 out of 20 benchmarks.\n  - Weak supervision aggregation outperforms majority voting by up to 8.7 points and models dependencies to gain up to 9.6 points on some tasks.\n\n- **Insights:**\n  - Largest gains on tasks requiring understanding of provided context (reading comprehension, NLU).\n  - Smaller gains on closed-book or knowledge-intensive tasks relying on memorized facts.\n  - Diagnostic evaluations show that models with better question generation and answer generation capabilities benefit more from AMA.\n\n---\n\n### Claimed Contributions\n\n1. **Identification of Effective Prompt Formats:**\n   - Demonstrated that open-ended QA prompts significantly improve prompting effectiveness across diverse tasks and models.\n\n2. **Scalable Prompt Generation:**\n   - Proposed a recursive, task-agnostic method to generate multiple diverse prompts at scale using the LLM itself.\n\n3. **Reliable Aggregation via Weak Supervision:**\n   - Introduced the use of weak supervision to model prompt accuracies and dependencies, enabling robust aggregation of noisy prompt outputs without labeled data.\n\n4. **Empirical Validation:**\n   - Showed consistent performance improvements across multiple LLM families and sizes.\n   - Enabled smaller open-source models to rival or surpass much larger proprietary models on standard benchmarks.\n\n5. **Theoretical and Diagnostic Analysis:**\n   - Provided an information-theoretic framework to analyze information flow in prompt aggregation.\n   - Developed diagnostic tasks to understand model capabilities related to AMA\u2019s effectiveness.\n\n6. **Open-Source Release:**\n   - Released code, prompts, and diagnostic datasets to facilitate reproducibility and further research.\n\n---\n\n### Summary\n\nAMA is a simple yet powerful prompting strategy that leverages multiple diverse, open-ended question-answering prompts generated recursively by the LLM itself, combined with a weak supervision-based aggregation method. This approach mitigates the brittleness and manual effort of prompt engineering, significantly improves performance across a wide range of tasks and models, and enables smaller open-source LLMs to compete with much larger models like GPT3-175B."
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty - Limited Comparison to Prior Prompt Ensembling Methods:**  \nWhile the paper claims novelty in aggregating multiple prompts via weak supervision, it lacks a thorough comparison to existing prompt ensembling or prompt combination techniques (e.g., prompt ensembling in zero-shot/few-shot settings or multi-prompt voting methods). The paper should explicitly position AMA relative to these prior approaches to clarify the incremental contribution of weak supervision aggregation beyond majority voting.\n\n2. **Methodology - Justification for Choice of Weak Supervision Model:**  \nThe paper uses a probabilistic graphical model for weak supervision aggregation but does not justify why this specific model was chosen over other aggregation methods such as weighted voting, Bayesian model averaging, or learned ensemble methods. An ablation comparing different aggregation frameworks would strengthen the methodological rigor.\n\n3. **Methodology - Lack of Ablation on Prompt Diversity Sources:**  \nAMA generates prompts by combining different `question()` and `answer()` templates, but the paper does not ablate which types of question templates (yes/no, wh-, cloze) or answer templates contribute most to performance gains. This leaves unclear which prompt variations are most valuable.\n\n4. **Evaluation - Baselines Limited to Few-Shot Prompting Only:**  \nThe evaluation compares AMA primarily against few-shot prompting baselines with k=3 examples. It does not compare against other strong baselines such as chain-of-thought prompting, self-consistency decoding, or prompt tuning methods, which could provide a more comprehensive assessment of AMA\u2019s relative effectiveness.\n\n5. **Evaluation - Potential Model Size Confound in GPT-Neo-6B vs GPT3-175B Comparison:**  \nThe claim that GPT-Neo-6B matches or exceeds GPT3-175B on 15/20 benchmarks (Section Results) is impressive but may be confounded by differences in prompt design or evaluation protocols. The paper should clarify if the same prompt templates and evaluation settings were used for both models to ensure a fair apples-to-apples comparison.\n\n6. **Evaluation - Metrics Focused on Accuracy Without Calibration or Confidence Analysis:**  \nThe paper reports absolute accuracy improvements but does not analyze model calibration or confidence in aggregated predictions. Since weak supervision models estimate prompt accuracies, it would be valuable to assess whether AMA also improves confidence calibration or uncertainty estimation.\n\n7. **Reproducibility - Missing Details on Prompt Template Construction:**  \nAlthough the paper mentions multiple `question()` and `answer()` prompt templates, it does not provide detailed examples or the exact prompt texts used. This omission hinders reproducibility and makes it difficult for others to replicate the recursive prompt generation pipeline.\n\n8. **Reproducibility - Lack of Hyperparameter Settings for Weak Supervision Model:**  \nThe paper does not specify hyperparameters or training details (e.g., number of EM iterations, initialization) for the weak supervision aggregation model. These details are critical for reproducing the aggregation results.\n\n9. **Clarity - Ambiguity in Definition of \u201cOpen-Ended QA Prompts\u201d:**  \nThe paper states that open-ended QA prompts outperform restrictive prompts but does not clearly define what constitutes \u201copen-ended\u201d versus \u201crestrictive\u201d prompts beyond a few examples. A more precise characterization or taxonomy would improve clarity.\n\n10. **Clarity - Insufficient Explanation of Information-Theoretic Framework:**  \nThe theoretical analysis section mentions an information-theoretic framework for analyzing prompt aggregation but provides limited detail or intuition. This section is difficult to follow and would benefit from expanded explanation and concrete examples.\n\n11. **Limitations - No Discussion of Computational Overhead:**  \nAMA requires generating multiple prompts and aggregating their outputs, which likely increases inference time and computational cost. The paper does not discuss this overhead or its implications for practical deployment.\n\n12. **Limitations - Limited Analysis on Knowledge-Intensive Tasks:**  \nThe paper notes smaller gains on closed-book or knowledge-intensive tasks but does not analyze why AMA underperforms in these settings or propose potential remedies. This limits understanding of AMA\u2019s applicability scope.\n\n13. **Generalisability - Evaluation Restricted to English and Specific Benchmarks:**  \nAll experiments are conducted on English-language benchmarks. The paper does not evaluate or discuss AMA\u2019s effectiveness on multilingual tasks or domains with different linguistic structures, limiting claims of generalizability.\n\n14. **Generalisability - Unclear Performance on Very Small Models (<125M):**  \nThe smallest models evaluated are 125M parameters. It remains unclear whether AMA\u2019s recursive prompt generation and weak supervision aggregation remain effective for very small LLMs or non-LLM models.\n\n15. **Generalisability - No Evaluation on Real-World or Noisy Data:**  \nThe benchmarks used are standard academic datasets. The paper does not test AMA on real-world noisy inputs or user-generated data, which could affect prompt generation quality and aggregation reliability."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"The paper proposes ASK ME ANYTHING (AMA), a prompting strategy that generates multiple diverse open-ended QA prompts recursively using the LLM itself and aggregates their outputs via a weak supervision model to improve performance on various NLP tasks. AMA reduces prompt brittleness and manual engineering effort, enabling smaller open-source models to rival much larger ones like GPT3-175B across multiple benchmarks.\",\n  \"strengths\": [\n    {\n      \"point\": \"Effective use of open-ended QA prompts to improve prompting robustness\",\n      \"evidence\": \"Open-ended prompts outperform restrictive prompts by up to 72% on some tasks, aligning better with the language modeling objective.\"\n    },\n    {\n      \"point\": \"Scalable recursive prompt generation pipeline\",\n      \"evidence\": \"Combines multiple question() and answer() templates to generate diverse noisy prompt outputs without manual engineering.\"\n    },\n    {\n      \"point\": \"Weak supervision aggregation improves over majority voting\",\n      \"evidence\": \"Probabilistic graphical model captures prompt accuracies and dependencies, yielding up to 9.6 points gain on some tasks.\"\n    },\n    {\n      \"point\": \"Comprehensive empirical evaluation across 20 benchmarks and 14 models\",\n      \"evidence\": \"AMA achieves average 10.2% absolute improvement over few-shot baselines and enables GPT-Neo-6B to match or exceed GPT3-175B on 15/20 benchmarks.\"\n    },\n    {\n      \"point\": \"Open-source release of code, prompts, and diagnostics\",\n      \"evidence\": \"Facilitates reproducibility and further research.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited comparison to prior prompt ensembling methods\",\n      \"evidence\": \"Paper lacks explicit positioning of AMA relative to existing prompt ensembling or multi-prompt voting techniques.\"\n    },\n    {\n      \"point\": \"Insufficient justification and ablation of weak supervision model choice\",\n      \"evidence\": \"No comparison to alternative aggregation methods like weighted voting or learned ensembles.\"\n    },\n    {\n      \"point\": \"No ablation on which prompt template types contribute most\",\n      \"evidence\": \"Unclear which question or answer template variations drive performance gains.\"\n    },\n    {\n      \"point\": \"Evaluation baselines limited to few-shot prompting\",\n      \"evidence\": \"No comparison to chain-of-thought prompting, self-consistency decoding, or prompt tuning methods.\"\n    },\n    {\n      \"point\": \"Potential confound in model size comparisons\",\n      \"evidence\": \"Unclear if prompt templates and evaluation protocols were identical for GPT-Neo-6B vs GPT3-175B.\"\n    },\n    {\n      \"point\": \"Lack of analysis on calibration or confidence of aggregated predictions\",\n      \"evidence\": \"Only accuracy reported despite weak supervision estimating prompt accuracies.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing prompt template details and hyperparameters\",\n      \"evidence\": \"Exact prompt texts and weak supervision training details not provided.\"\n    },\n    {\n      \"point\": \"Clarity issues in defining open-ended QA prompts and theoretical framework\",\n      \"evidence\": \"Ambiguous definitions and limited explanation of information-theoretic analysis.\"\n    },\n    {\n      \"point\": \"No discussion of computational overhead or inference cost\",\n      \"evidence\": \"AMA requires multiple prompt generations and aggregation but cost implications not addressed.\"\n    },\n    {\n      \"point\": \"Limited analysis on knowledge-intensive tasks and real-world noisy data\",\n      \"evidence\": \"Smaller gains on closed-book tasks unexplained; no evaluation on noisy or multilingual data.\"\n    },\n    {\n      \"point\": \"Unclear generalizability to very small models (<125M parameters)\",\n      \"evidence\": \"Smallest evaluated models are 125M; effectiveness on smaller or non-LLM models unknown.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does AMA compare to existing prompt ensembling or multi-prompt aggregation methods?\",\n      \"motivation\": \"Clarifying incremental novelty and situating AMA within prior work is critical for assessing contribution.\"\n    },\n    {\n      \"question\": \"What is the impact of different prompt template types on performance gains?\",\n      \"motivation\": \"Understanding which prompt variations matter most can guide more efficient prompt design.\"\n    },\n    {\n      \"question\": \"How does AMA affect model calibration and confidence estimation?\",\n      \"motivation\": \"Since weak supervision models estimate prompt accuracies, assessing calibration would inform reliability.\"\n    },\n    {\n      \"question\": \"What are the computational costs and latency implications of AMA in practice?\",\n      \"motivation\": \"Multiple prompt generations and aggregation may increase inference time, affecting deployment feasibility.\"\n    },\n    {\n      \"question\": \"Can AMA generalize to multilingual, noisy, or very small models?\",\n      \"motivation\": \"Evaluating broader applicability is important for real-world adoption.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "The paper proposes ASK ME ANYTHING (AMA), a prompting strategy that generates multiple diverse open-ended QA prompts recursively using the LLM itself and aggregates their outputs via a weak supervision model to improve performance on various NLP tasks. AMA reduces prompt brittleness and manual engineering effort, enabling smaller open-source models to rival much larger ones like GPT3-175B across multiple benchmarks.",
+    "strengths": [
+      {
+        "point": "Effective use of open-ended QA prompts to improve prompting robustness",
+        "evidence": "Open-ended prompts outperform restrictive prompts by up to 72% on some tasks, aligning better with the language modeling objective."
+      },
+      {
+        "point": "Scalable recursive prompt generation pipeline",
+        "evidence": "Combines multiple question() and answer() templates to generate diverse noisy prompt outputs without manual engineering."
+      },
+      {
+        "point": "Weak supervision aggregation improves over majority voting",
+        "evidence": "Probabilistic graphical model captures prompt accuracies and dependencies, yielding up to 9.6 points gain on some tasks."
+      },
+      {
+        "point": "Comprehensive empirical evaluation across 20 benchmarks and 14 models",
+        "evidence": "AMA achieves average 10.2% absolute improvement over few-shot baselines and enables GPT-Neo-6B to match or exceed GPT3-175B on 15/20 benchmarks."
+      },
+      {
+        "point": "Open-source release of code, prompts, and diagnostics",
+        "evidence": "Facilitates reproducibility and further research."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison to prior prompt ensembling methods",
+        "evidence": "Paper lacks explicit positioning of AMA relative to existing prompt ensembling or multi-prompt voting techniques."
+      },
+      {
+        "point": "Insufficient justification and ablation of weak supervision model choice",
+        "evidence": "No comparison to alternative aggregation methods like weighted voting or learned ensembles."
+      },
+      {
+        "point": "No ablation on which prompt template types contribute most",
+        "evidence": "Unclear which question or answer template variations drive performance gains."
+      },
+      {
+        "point": "Evaluation baselines limited to few-shot prompting",
+        "evidence": "No comparison to chain-of-thought prompting, self-consistency decoding, or prompt tuning methods."
+      },
+      {
+        "point": "Potential confound in model size comparisons",
+        "evidence": "Unclear if prompt templates and evaluation protocols were identical for GPT-Neo-6B vs GPT3-175B."
+      },
+      {
+        "point": "Lack of analysis on calibration or confidence of aggregated predictions",
+        "evidence": "Only accuracy reported despite weak supervision estimating prompt accuracies."
+      },
+      {
+        "point": "Reproducibility hindered by missing prompt template details and hyperparameters",
+        "evidence": "Exact prompt texts and weak supervision training details not provided."
+      },
+      {
+        "point": "Clarity issues in defining open-ended QA prompts and theoretical framework",
+        "evidence": "Ambiguous definitions and limited explanation of information-theoretic analysis."
+      },
+      {
+        "point": "No discussion of computational overhead or inference cost",
+        "evidence": "AMA requires multiple prompt generations and aggregation but cost implications not addressed."
+      },
+      {
+        "point": "Limited analysis on knowledge-intensive tasks and real-world noisy data",
+        "evidence": "Smaller gains on closed-book tasks unexplained; no evaluation on noisy or multilingual data."
+      },
+      {
+        "point": "Unclear generalizability to very small models (<125M parameters)",
+        "evidence": "Smallest evaluated models are 125M; effectiveness on smaller or non-LLM models unknown."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does AMA compare to existing prompt ensembling or multi-prompt aggregation methods?",
+        "motivation": "Clarifying incremental novelty and situating AMA within prior work is critical for assessing contribution."
+      },
+      {
+        "question": "What is the impact of different prompt template types on performance gains?",
+        "motivation": "Understanding which prompt variations matter most can guide more efficient prompt design."
+      },
+      {
+        "question": "How does AMA affect model calibration and confidence estimation?",
+        "motivation": "Since weak supervision models estimate prompt accuracies, assessing calibration would inform reliability."
+      },
+      {
+        "question": "What are the computational costs and latency implications of AMA in practice?",
+        "motivation": "Multiple prompt generations and aggregation may increase inference time, affecting deployment feasibility."
+      },
+      {
+        "question": "Can AMA generalize to multilingual, noisy, or very small models?",
+        "motivation": "Evaluating broader applicability is important for real-world adoption."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Limited comparison to prior prompt ensembling methods. Paper lacks explicit positioning of AMA relative to existing prompt ensembling or multi-prompt voting techniques",
+    "point_002": "Insufficient justification and ablation of weak supervision model choice. No comparison to alternative aggregation methods like weighted voting or learned ensembles",
+    "point_003": "No ablation on which prompt template types contribute most. Unclear which question or answer template variations drive performance gains",
+    "point_004": "Evaluation baselines limited to few-shot prompting. No comparison to chain-of-thought prompting, self-consistency decoding, or prompt tuning methods",
+    "point_005": "Potential confound in model size comparisons. Unclear if prompt templates and evaluation protocols were identical for GPT-Neo-6B vs GPT3-175B",
+    "point_006": "Lack of analysis on calibration or confidence of aggregated predictions. Only accuracy reported despite weak supervision estimating prompt accuracies",
+    "point_007": "Reproducibility hindered by missing prompt template details and hyperparameters. Exact prompt texts and weak supervision training details not provided",
+    "point_008": "Clarity issues in defining open-ended QA prompts and theoretical framework. Ambiguous definitions and limited explanation of information-theoretic analysis",
+    "point_009": "No discussion of computational overhead or inference cost. AMA requires multiple prompt generations and aggregation but cost implications not addressed",
+    "point_010": "Limited analysis on knowledge-intensive tasks and real-world noisy data. Smaller gains on closed-book tasks unexplained; no evaluation on noisy or multilingual data",
+    "point_011": "Unclear generalizability to very small models (<125M parameters). Smallest evaluated models are 125M; effectiveness on smaller or non-LLM models unknown"
+  }
+}

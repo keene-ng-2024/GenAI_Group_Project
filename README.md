@@ -27,6 +27,9 @@ are workflow structure, input format, and model (Vertex AI only).
 | LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | JSONL body_text |
 | LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
 | LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
+| CrewAI (none) | `src/platforms/crewai_critique.py` | None | GPT-4.1-mini | JSONL body_text |
+| CrewAI (fixed) | `src/platforms/crewai_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
+| CrewAI (dynamic) | `src/platforms/crewai_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
 
 *Vertex AI uses Gemini 2.5 Flash due to platform model lock-in.
 
@@ -205,15 +208,7 @@ Output in this exact JSON format:
   "questions": [
     {"question": "open question", "motivation": "why this matters"},
     {"question": "open question", "motivation": "why this matters"}
-<<<<<<< HEAD
   ],
-  "scores": {
-    "correctness": 3,
-    "novelty": 3,
-    "recommendation": "borderline",
-    "confidence": 3
-  }
->>>>>>> origin/main
 }
 ```
 
@@ -273,19 +268,18 @@ paper-critique-agent-study/
 │       ├── scorer.py               # compare output vs ground truth → scores
 │       └── metrics.py              # precision/recall, plots, summary tables
 │
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_build_critique_dicts.ipynb
-│   ├── 03_run_baseline.ipynb
-│   ├── 04_run_agents.ipynb
-│   └── 05_evaluation_results.ipynb
-│
 ├── results/
 │   ├── baseline/
-│   └── agents/
-│
-└── report/
-    └── final_report.pdf
+│   ├── agents/
+│   ├── n8n/
+│   ├── n8n_noloop/
+│   ├── dify/
+│   ├── langgraph_none/
+│   ├── langgraph_fixed/
+│   ├── langgraph_dynamic/
+│   ├── crewai_none/
+│   ├── crewai_fixed/
+│   └── crewai_dynamic/
 ```
 
 ---
@@ -374,8 +368,6 @@ Before running, confirm all LLM nodes in both workflows are set to **temperature
 - Open **Model parameters** and confirm `temperature: 0.2`
 - The DSL files in this repo already have these values set correctly
 
----
-
 ### 5. Run the pipeline
 
 ```bash
@@ -404,14 +396,11 @@ python -m src.evaluation.scorer baseline
 python -m src.evaluation.scorer agents
 python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
-python -m src.evaluation.scorer dify_single_critic
-python -m src.evaluation.scorer dify_dual_critic
+python -m src.evaluation.scorer dify
 
 # Print comparison table + plots
 python -m src.evaluation.metrics
 ```
-
-Or run everything interactively via the notebooks in order (01 → 05).
 
 ---
 
