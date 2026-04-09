@@ -3,61 +3,97 @@
   "title": "Contrastive Novelty Learning: Anticipating Outliers with Large Language Models",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 125.15,
+  "latency_seconds": 106.5,
   "structured": {
-    "summary": "This paper proposes CoNAL, a novel framework leveraging large language models to generate semantically novel out-of-distribution (OOD) classes and corresponding examples, coupled with a contrastive confidence loss to train classifiers that abstain on OOD inputs. Experiments show improved open-set selective classification and OOD detection performance across multiple NLP datasets without degrading in-distribution accuracy.",
+    "summary": "This paper proposes Contrastive Novelty-Augmented Learning (CoNAL), a method that leverages large language models to generate semantically novel out-of-distribution examples for text classification and trains classifiers with a novel contrastive confidence loss to improve selective prediction under open-set label shift. CoNAL demonstrates consistent improvements in detecting and abstaining on novel classes across multiple NLP datasets without sacrificing in-distribution accuracy.",
     "strengths": [
       {
-        "point": "Innovative use of LLMs for generating novel OOD labels and examples",
-        "evidence": "CoNAL's Novelty Prompting stage uses GPT-3 and GPT-J to create semantically novel and plausible novel class labels and examples, enabling better OOD representation without requiring real OOD data."
+        "point": "Innovative use of LLMs for generating semantically novel OOD examples",
+        "evidence": "The two-stage Novelty Prompting approach uses GPT-3 to generate diverse novel labels and GPT-J to generate task-format novel examples, enabling effective augmentation for selective prediction."
       },
       {
-        "point": "Contrastive Confidence Loss effectively improves OOD abstention",
-        "evidence": "CCL encourages the model to have relatively lower confidence on generated novel examples than in-distribution examples, outperforming prior methods like Outlier Exposure and ensembles while maintaining in-distribution accuracy."
+        "point": "Contrastive Confidence Loss (CCL) effectively reduces overconfidence on novel examples",
+        "evidence": "CCL encourages a confidence margin between ID and novel examples, outperforming Outlier Exposure and vanilla contrastive training, while maintaining or improving in-distribution accuracy."
       },
       {
-        "point": "Comprehensive evaluation across diverse datasets and settings",
-        "evidence": "Experiments on four NLP datasets with multiple open-set splits demonstrate consistent gains in OOD detection (5.5% AUROC improvement) and OSSC accuracy (2.3% AUAC improvement), with robustness analyses on generation noise, LLM size, and generation budgets."
+        "point": "Comprehensive empirical evaluation across multiple datasets and architectures",
+        "evidence": "Experiments on 14 splits from 4 NLP datasets with RoBERTa and DeBERTa classifiers show consistent AUAC and AUROC improvements over strong baselines including ensembles and OE."
+      },
+      {
+        "point": "Demonstrated robustness and practicality",
+        "evidence": "CoNAL remains effective with smaller LLMs for label generation, reduced novel example budgets, and different classifier architectures, indicating practical applicability."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparisons to recent NLP-specific OOD detection methods",
-        "evidence": "The paper omits comparisons to energy-based, Mahalanobis distance, spectral normalization, and other contemporary NLP OOD detection approaches, weakening claims of state-of-the-art performance."
+        "point": "Limited comparison to prior synthetic OOD generation methods",
+        "evidence": "The related work section lacks engagement with broader synthetic OOD generation literature such as adversarial or paraphrasing-based methods, leaving CoNAL's novelty relative to these unclear."
       },
       {
-        "point": "Insufficient ablation studies on key components and hyperparameters",
-        "evidence": "No ablation or quantitative analysis is provided on the impact of synonym filtering during novel label generation, contrastive loss hyperparameters, or the size and quality of generated novel examples."
+        "point": "Insufficient ablation and justification for two-stage prompting design",
+        "evidence": "No experiments compare single-LLM prompting versus the two-stage approach or analyze trade-offs in generation quality and cost."
       },
       {
-        "point": "Dependence on GPT-3 API raises reproducibility and stability concerns",
-        "evidence": "Reliance on GPT-3 for label generation involves opaque, evolving model behavior and training data, complicating exact replication and wider adoption."
+        "point": "Unclear semantic similarity filtering criteria for novel label selection",
+        "evidence": "The paper does not specify how semantic similarity is measured or thresholds used to filter out synonyms and related labels."
       },
       {
-        "point": "Limited dataset diversity and artificial open-set splits constrain generalizability",
-        "evidence": "Experiments use only four datasets with artificial splits that may not reflect real-world open-set complexity or semantic novelty of novel classes."
+        "point": "Evaluation excludes standard selective prediction baselines and natural OOD data",
+        "evidence": "Baselines like deep ensembles, MC dropout, and calibration methods are missing; also, no evaluation on natural or unseen OOD datasets beyond generated novel examples."
       },
       {
-        "point": "No analysis of confidence calibration, error modes, or bias introduced by synthetic data",
-        "evidence": "The work lacks evaluation of calibration metrics on in-distribution data, qualitative error analysis, or discussion of potential biases and artifacts induced by LLM-generated OOD examples."
+        "point": "Lack of detailed prompt templates, hyperparameters, and computational cost analysis",
+        "evidence": "Exact prompts, generation settings, and API cost or runtime metrics are not provided, hindering reproducibility and practical assessment."
+      },
+      {
+        "point": "No qualitative or human evaluation of generated novel examples",
+        "evidence": "The paper does not include sample generated labels/examples or human judgments of their plausibility and diversity."
+      },
+      {
+        "point": "Limited analysis of confidence threshold selection and sensitivity",
+        "evidence": "The method's robustness to threshold choice and strategies for threshold determination are not discussed."
+      },
+      {
+        "point": "Absence of statistical significance testing for reported improvements",
+        "evidence": "No confidence intervals or hypothesis tests accompany the performance gains."
+      },
+      {
+        "point": "No discussion of ethical risks or potential biases in LLM-generated data",
+        "evidence": "Potential harms from generated novel examples are not addressed."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is CoNAL\u2019s performance to the choice and quality of generated novel labels and examples?",
-        "motivation": "Understanding this is critical to assess robustness and guide practical generation strategies or alternative data sources."
+        "question": "How does CoNAL compare to other synthetic OOD generation techniques such as adversarial or paraphrasing-based methods?",
+        "motivation": "Understanding relative advantages would clarify CoNAL's novelty and guide practitioners in choosing augmentation strategies."
       },
       {
-        "question": "Can CoNAL generalize to truly novel classes outside LLM knowledge or to other NLP tasks beyond classification?",
-        "motivation": "Evaluating these would clarify the approach\u2019s real-world applicability and limitations."
+        "question": "What are the effects of varying the semantic similarity filtering thresholds and the number/diversity of generated novel classes on selective prediction performance?",
+        "motivation": "This would inform optimal generation strategies and robustness to label selection."
+      },
+      {
+        "question": "How sensitive is CoNAL's performance to the choice of confidence threshold for abstention, and what practical methods exist for threshold selection?",
+        "motivation": "Threshold tuning is critical for deployment and affects abstention reliability."
+      },
+      {
+        "question": "Can CoNAL generalize to natural OOD datasets or unseen novel classes not generated by LLMs?",
+        "motivation": "Evaluating real-world applicability beyond synthetic examples is essential for practical impact."
+      },
+      {
+        "question": "What are the computational costs and resource requirements of CoNAL, especially regarding LLM API usage, and are there open-source alternatives?",
+        "motivation": "Cost and accessibility affect feasibility for wider adoption."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparisons to recent NLP-specific OOD detection methods. The paper omits comparisons to energy-based, Mahalanobis distance, spectral normalization, and other contemporary NLP OOD detection approaches, weakening claims of state-of-the-art performance",
-    "point_002": "Insufficient ablation studies on key components and hyperparameters. No ablation or quantitative analysis is provided on the impact of synonym filtering during novel label generation, contrastive loss hyperparameters, or the size and quality of generated novel examples",
-    "point_003": "Dependence on GPT-3 API raises reproducibility and stability concerns. Reliance on GPT-3 for label generation involves opaque, evolving model behavior and training data, complicating exact replication and wider adoption",
-    "point_004": "Limited dataset diversity and artificial open-set splits constrain generalizability. Experiments use only four datasets with artificial splits that may not reflect real-world open-set complexity or semantic novelty of novel classes",
-    "point_005": "No analysis of confidence calibration, error modes, or bias introduced by synthetic data. The work lacks evaluation of calibration metrics on in-distribution data, qualitative error analysis, or discussion of potential biases and artifacts induced by LLM-generated OOD examples"
+    "point_001": "Limited comparison to prior synthetic OOD generation methods. The related work section lacks engagement with broader synthetic OOD generation literature such as adversarial or paraphrasing-based methods, leaving CoNAL's novelty relative to these unclear",
+    "point_002": "Insufficient ablation and justification for two-stage prompting design. No experiments compare single-LLM prompting versus the two-stage approach or analyze trade-offs in generation quality and cost",
+    "point_003": "Unclear semantic similarity filtering criteria for novel label selection. The paper does not specify how semantic similarity is measured or thresholds used to filter out synonyms and related labels",
+    "point_004": "Evaluation excludes standard selective prediction baselines and natural OOD data. Baselines like deep ensembles, MC dropout, and calibration methods are missing; also, no evaluation on natural or unseen OOD datasets beyond generated novel examples",
+    "point_005": "Lack of detailed prompt templates, hyperparameters, and computational cost analysis. Exact prompts, generation settings, and API cost or runtime metrics are not provided, hindering reproducibility and practical assessment",
+    "point_006": "No qualitative or human evaluation of generated novel examples. The paper does not include sample generated labels/examples or human judgments of their plausibility and diversity",
+    "point_007": "Limited analysis of confidence threshold selection and sensitivity. The method's robustness to threshold choice and strategies for threshold determination are not discussed",
+    "point_008": "Absence of statistical significance testing for reported improvements. No confidence intervals or hypothesis tests accompany the performance gains",
+    "point_009": "No discussion of ethical risks or potential biases in LLM-generated data. Potential harms from generated novel examples are not addressed"
   }
 }

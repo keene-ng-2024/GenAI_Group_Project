@@ -3,75 +3,108 @@
   "title": "True Few-Shot Learning with Language Models",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 127.14,
+  "latency_seconds": 83.48,
   "structured": {
-    "summary": "This paper rigorously investigates the challenge of model selection in true few-shot learning scenarios where no held-out validation data are available. Through extensive experiments across multiple language models, NLP tasks, and selection criteria (CV, MDL), the authors demonstrate that classical model selection methods yield only marginal gains and often fail to reliably select better prompts or hyperparameters, highlighting a fundamental limitation in current few-shot learning paradigms.",
+    "summary": "This paper rigorously investigates model selection challenges in true few-shot learning settings, where no held-out validation data is available for tuning prompts or hyperparameters. Through extensive experiments on multiple language models and NLP tasks, it demonstrates that common model selection methods like leave-one-out cross-validation and minimum description length only marginally outperform random selection and fall far short of validation-based tuning, highlighting model selection as a fundamental bottleneck for practical few-shot learning.",
     "strengths": [
       {
-        "point": "Clear formalization and distinction of few-shot learning regimes",
-        "evidence": "The paper defines and distinguishes 'multi-distribution', 'tuned', and 'true' few-shot learning, providing a useful framework to clarify assumptions and interpret results."
+        "point": "Clear formalization and disambiguation of few-shot learning settings",
+        "evidence": "The paper distinguishes multi-distribution, tuned, and true few-shot learning settings, providing conceptual clarity that enhances rigor in the field (Section 1)."
       },
       {
-        "point": "Comprehensive empirical evaluation across models, tasks, and selection criteria",
-        "evidence": "Experiments span GPT-3 models (0.08B to 175B parameters), multiple NLP benchmarks (LAMA, SuperGLUE), and both prompt and fine-tuning hyperparameter selection using CV, MDL, and their variants."
+        "point": "Comprehensive empirical evaluation across diverse models and tasks",
+        "evidence": "Experiments include 9 pretrained LMs (GPT-3 variants, GPT-2 variants, DistilGPT-2), 41 LAMA relations, 3 classification tasks, and hyperparameter tuning on 8 SuperGLUE tasks, supporting broad conclusions (Section 5)."
       },
       {
-        "point": "Identification of fundamental difficulties in model selection without held-out data",
-        "evidence": "Results consistently show that CV and MDL perform marginally better than random selection, with high variance and frequent worse-than-average choices, especially for larger models and few examples."
+        "point": "Demonstration that CV and MDL model selection methods perform only marginally better than random",
+        "evidence": "Results show prompt selection accuracy around 21% for GPT-3 175B and hyperparameter selection often worse than random, with high variance and instability (Tables 2 and 3)."
       },
       {
-        "point": "Insightful discussion on implications for prior few-shot learning claims",
-        "evidence": "The authors highlight that prior work's reliance on large validation sets inflates few-shot learning performance and advocate for stricter reporting and realistic benchmarking."
+        "point": "Insightful identification of model selection as a major bottleneck for true few-shot learning",
+        "evidence": "The paper highlights that prior few-shot work relying on held-out data likely overestimates true few-shot capabilities and recommends stricter evaluation protocols (Section 6)."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to recent meta-learning or learned model selection techniques",
-        "evidence": "The paper does not evaluate or discuss methods like learned prompt ranking or hyperparameter prediction via meta-models, which could provide stronger baselines or alternative solutions."
+        "point": "Narrow empirical focus on LOOCV and MDL without thorough exploration of alternative model selection methods",
+        "evidence": "Other promising approaches like Bayesian CV, meta-learning selectors, or unsupervised criteria are only briefly mentioned without detailed experiments or comparisons (Additional Notes)."
       },
       {
-        "point": "Unrealistic assumptions and limited analysis of leave-one-out CV on extremely small datasets",
-        "evidence": "Applying LOOCV on as few as five training examples likely leads to unstable estimates, but alternative CV schemes or mitigation strategies are not explored."
+        "point": "Lack of ablation comparing LOOCV to other cross-validation variants",
+        "evidence": "The paper does not justify the choice of LOOCV over k-fold or repeated CV, which might yield more stable estimates in small-sample regimes (Section 3)."
       },
       {
-        "point": "No empirical evaluation in the multi-distribution few-shot learning regime",
-        "evidence": "While defined, experiments only target single-task true few-shot settings, missing evaluation of scenarios where multiple small datasets could enable meta-learning or transfer-based model selection."
+        "point": "Insufficient detail on marginalization over example orderings and computational costs",
+        "evidence": "The number of permutations used, computational overhead, and quantitative impact on variance reduction are not specified, limiting reproducibility (Section 3)."
       },
       {
-        "point": "High computational cost and impracticality of exhaustive search over many candidate prompts and hyperparameters",
-        "evidence": "The methodology relies on exhaustive evaluation, which may be infeasible in realistic settings; more efficient search or pruning methods are not investigated."
+        "point": "Absence of statistical significance testing for prompt selection accuracy differences",
+        "evidence": "Reported prompt selection accuracies lack confidence intervals or tests to confirm whether differences from random are significant (Table 2)."
       },
       {
-        "point": "Limited analysis of factors influencing model selection reliability",
-        "evidence": "No ablations on candidate prompt diversity, training example ordering effects, or distributional shifts; also lacks investigation into failure modes or uncertainty-based selection criteria."
+        "point": "Limited description of held-out validation sets used for oracle model selection",
+        "evidence": "Details on size, sampling, and relation to training data are missing, making it hard to contextualize the gap between true and tuned few-shot settings (Section 5)."
       },
       {
-        "point": "Sparse details and reproducibility concerns regarding prompt set construction",
-        "evidence": "The paper does not elaborate on how candidate prompts were generated or their linguistic diversity, limiting interpretability and reproducibility."
+        "point": "Missing detailed hyperparameter search spaces and code repository link",
+        "evidence": "Exact hyperparameter ranges for ADAPET and code availability are not provided, hindering reproducibility (Section 5, Claimed Contributions)."
       },
       {
-        "point": "Absence of practical heuristics or guidance for practitioners given negative findings",
-        "evidence": "Despite demonstrating limitations, the paper does not offer actionable recommendations or suggest promising directions (e.g., regularization, data augmentation) to improve model selection stability."
+        "point": "Inconsistent and sometimes ambiguous usage of 'true few-shot learning'",
+        "evidence": "Terminology and dataset split descriptions occasionally blur distinctions, reducing clarity (Sections 1, 4, 5)."
+      },
+      {
+        "point": "Limited exploration of combining or ensembling model selection criteria",
+        "evidence": "Although interpolations between CV and MDL are mentioned, no detailed experiments on ensembles or hybrid methods are presented (Additional Notes)."
+      },
+      {
+        "point": "No discussion or experiments leveraging unlabeled data or semi-supervised methods for model selection",
+        "evidence": "Potential avenues to improve model selection in low-data regimes remain unexplored (Section 6)."
+      },
+      {
+        "point": "Exclusive focus on English benchmarks without addressing multilingual or low-resource settings",
+        "evidence": "Experiments are limited to English datasets, limiting generalizability (Section 5)."
+      },
+      {
+        "point": "Lack of deeper analysis on why larger models exacerbate variance and instability in model selection",
+        "evidence": "The paper notes this trend but does not investigate underlying causes or mitigation strategies (Section 5)."
+      },
+      {
+        "point": "Computational cost and practical feasibility of CV and MDL methods are not critically examined",
+        "evidence": "Real-world resource constraints and scalability considerations are not analyzed (Section 5)."
       }
     ],
     "questions": [
       {
-        "question": "How do learned or meta-learning based model selection methods perform in true few-shot settings compared to classical CV/MDL?",
-        "motivation": "Including such methods could reveal whether the difficulty is fundamental or can be alleviated by leveraging prior knowledge across tasks."
+        "question": "Would alternative model selection methods such as meta-learning based selectors, unsupervised criteria, or Bayesian model evidence approximations perform better in true few-shot settings?",
+        "motivation": "Exploring these could identify more reliable and practical selection strategies, overcoming the limitations of LOOCV and MDL."
       },
       {
-        "question": "Can alternative validation strategies (e.g., repeated k-fold CV, bootstrap, or unsupervised criteria) yield more reliable model selection from few examples?",
-        "motivation": "Exploring these could mitigate the instability of LOOCV on extremely small datasets and improve practical model selection."
+        "question": "How does the quality and diversity of the prompt pool affect the difficulty of model selection and the relative performance of selection criteria?",
+        "motivation": "Understanding this relationship could inform prompt design and improve selection robustness."
+      },
+      {
+        "question": "Can leveraging unlabeled data or semi-supervised approaches improve model selection accuracy without violating true few-shot constraints?",
+        "motivation": "Such methods might provide additional signals to guide selection when labeled data is scarce."
+      },
+      {
+        "question": "What are the computational trade-offs and practical feasibility of applying CV and MDL model selection methods in real-world low-resource scenarios?",
+        "motivation": "Assessing this is crucial for adoption and for designing efficient model selection pipelines."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison to recent meta-learning or learned model selection techniques. The paper does not evaluate or discuss methods like learned prompt ranking or hyperparameter prediction via meta-models, which could provide stronger baselines or alternative solutions",
-    "point_002": "Unrealistic assumptions and limited analysis of leave-one-out CV on extremely small datasets. Applying LOOCV on as few as five training examples likely leads to unstable estimates, but alternative CV schemes or mitigation strategies are not explored",
-    "point_003": "No empirical evaluation in the multi-distribution few-shot learning regime. While defined, experiments only target single-task true few-shot settings, missing evaluation of scenarios where multiple small datasets could enable meta-learning or transfer-based model selection",
-    "point_004": "High computational cost and impracticality of exhaustive search over many candidate prompts and hyperparameters. The methodology relies on exhaustive evaluation, which may be infeasible in realistic settings; more efficient search or pruning methods are not investigated",
-    "point_005": "Limited analysis of factors influencing model selection reliability. No ablations on candidate prompt diversity, training example ordering effects, or distributional shifts; also lacks investigation into failure modes or uncertainty-based selection criteria",
-    "point_006": "Sparse details and reproducibility concerns regarding prompt set construction. The paper does not elaborate on how candidate prompts were generated or their linguistic diversity, limiting interpretability and reproducibility",
-    "point_007": "Absence of practical heuristics or guidance for practitioners given negative findings. Despite demonstrating limitations, the paper does not offer actionable recommendations or suggest promising directions (e.g., regularization, data augmentation) to improve model selection stability"
+    "point_001": "Narrow empirical focus on LOOCV and MDL without thorough exploration of alternative model selection methods. Other promising approaches like Bayesian CV, meta-learning selectors, or unsupervised criteria are only briefly mentioned without detailed experiments or comparisons (Additional Notes)",
+    "point_002": "Lack of ablation comparing LOOCV to other cross-validation variants. The paper does not justify the choice of LOOCV over k-fold or repeated CV, which might yield more stable estimates in small-sample regimes (Section 3)",
+    "point_003": "Insufficient detail on marginalization over example orderings and computational costs. The number of permutations used, computational overhead, and quantitative impact on variance reduction are not specified, limiting reproducibility (Section 3)",
+    "point_004": "Absence of statistical significance testing for prompt selection accuracy differences. Reported prompt selection accuracies lack confidence intervals or tests to confirm whether differences from random are significant (Table 2)",
+    "point_005": "Limited description of held-out validation sets used for oracle model selection. Details on size, sampling, and relation to training data are missing, making it hard to contextualize the gap between true and tuned few-shot settings (Section 5)",
+    "point_006": "Missing detailed hyperparameter search spaces and code repository link. Exact hyperparameter ranges for ADAPET and code availability are not provided, hindering reproducibility (Section 5, Claimed Contributions)",
+    "point_007": "Inconsistent and sometimes ambiguous usage of 'true few-shot learning'. Terminology and dataset split descriptions occasionally blur distinctions, reducing clarity (Sections 1, 4, 5)",
+    "point_008": "Limited exploration of combining or ensembling model selection criteria. Although interpolations between CV and MDL are mentioned, no detailed experiments on ensembles or hybrid methods are presented (Additional Notes)",
+    "point_009": "No discussion or experiments leveraging unlabeled data or semi-supervised methods for model selection. Potential avenues to improve model selection in low-data regimes remain unexplored (Section 6)",
+    "point_010": "Exclusive focus on English benchmarks without addressing multilingual or low-resource settings. Experiments are limited to English datasets, limiting generalizability (Section 5)",
+    "point_011": "Lack of deeper analysis on why larger models exacerbate variance and instability in model selection. The paper notes this trend but does not investigate underlying causes or mitigation strategies (Section 5)",
+    "point_012": "Computational cost and practical feasibility of CV and MDL methods are not critically examined. Real-world resource constraints and scalability considerations are not analyzed (Section 5)"
   }
 }

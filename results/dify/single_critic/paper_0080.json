@@ -3,69 +3,111 @@
   "title": "Using Document Similarity Methods to create Parallel Datasets for Code Translation",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 52.22,
+  "latency_seconds": 40.61,
   "structured": {
-    "summary": "The paper proposes using document similarity measures, particularly Word Mover\u2019s Distance, to automatically mine noisy parallel source code datasets from non-parallel corpora, facilitating supervised code translation across multiple programming languages. It demonstrates that translation models trained on these noisy datasets maintain robust performance, and extends experiments to a broader set of languages beyond prior work. The approach offers a practical solution to the scarcity of parallel code data, validated through extensive empirical evaluation.",
+    "summary": "This paper proposes a method to create noisy parallel datasets for code translation by leveraging document similarity metrics to pair code documents across programming languages. The approach enables supervised training of code translation models on a wider range of language pairs without requiring manually curated parallel corpora, demonstrating robustness to noise and practical utility across 10 language pairs.",
     "strengths": [
       {
-        "point": "Effective use of document similarity methods for mining noisy parallel code datasets",
-        "evidence": "WMD-based similarity consistently outperforms classical metrics (TF-IDF, BM25, LSI, LDA) in match and pseudo-match accuracy across multiple datasets including CodeNet."
+        "point": "Novel approach to generate noisy parallel code datasets using document similarity",
+        "evidence": "The paper introduces a simple yet effective method that pairs code documents based on similarity metrics such as Word Movers Distance, enabling creation of large-scale parallel datasets without manual annotation."
       },
       {
-        "point": "Demonstrated robustness of code translation models to noise in training data",
-        "evidence": "Models trained on datasets with up to ~30% noise show only modest degradation (1-2% drop) in BLEU, CodeBLEU, and exact match scores."
+        "point": "Empirical demonstration of model robustness to noisy training data",
+        "evidence": "Experiments show that models like CodeBERT and GraphCodeBERT maintain good translation performance even with up to ~30% noise in training pairs, indicating tolerance to imperfect data."
       },
       {
-        "point": "Extension to multiple and diverse programming languages",
-        "evidence": "Mining and evaluation performed on 10 languages from CodeNet, showing improved translation accuracy over random pairing and enabling supervised training beyond common language pairs."
+        "point": "Comprehensive evaluation of multiple document similarity metrics for code",
+        "evidence": "The study benchmarks TF-IDF, Okapi-BM25, LDA, LSI, and WMD, identifying WMD as the most effective metric for pairing code documents across languages."
+      },
+      {
+        "point": "Extension of code translation to a broader set of language pairs",
+        "evidence": "The method is applied to create noisy parallel datasets and train models for 10 language pairs, including less commonly studied ones, demonstrating scalability and generality."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison with recent neural code similarity embeddings",
-        "evidence": "No ablation or benchmark against pretrained neural models like CodeBERT or GraphCodeBERT embeddings for similarity search, which may yield better alignment quality."
+        "point": "Lack of comparison to state-of-the-art supervised and unsupervised code translation models",
+        "evidence": "The paper does not benchmark against recent models like TransCoder or CodeT5, making it unclear how competitive the trained models are relative to existing approaches."
       },
       {
-        "point": "Insufficient justification and exploration of similarity threshold choice and alignment constraints",
-        "evidence": "Threshold \u03b4 selection appears heuristic without sensitivity analysis; one-to-one matching assumption excludes many-to-one or partial code alignments."
+        "point": "Insufficient analysis and justification of similarity threshold selection",
+        "evidence": "The choice of similarity thresholds for pairing is not systematically studied or justified, and no ablation is provided to understand its impact on dataset quality or model performance."
       },
       {
-        "point": "Evaluation metrics do not fully assess semantic correctness or functional equivalence",
-        "evidence": "Reliance on BLEU, CodeBLEU, and exact match without runtime validation or unit test-based correctness for most language pairs limits insight into translation quality."
+        "point": "No exploration of combining or ensembling similarity metrics",
+        "evidence": "Only individual similarity metrics are evaluated; potential improvements from metric combinations or ensembles are not investigated."
       },
       {
-        "point": "Limited reproducibility details and no public code or dataset release stated",
-        "evidence": "Missing precise preprocessing, tokenization, hyperparameters, and no explicit statement on dataset or code availability."
+        "point": "Evaluation metrics focus on surface similarity without semantic or human evaluation",
+        "evidence": "Metrics like BLEU, CodeBLEU, and Exact Match are used, but there is no semantic correctness assessment or human evaluation to verify translation quality given noisy data."
       },
       {
-        "point": "No statistical significance testing or confidence intervals reported",
-        "evidence": "Performance improvements (~1-2%) lack tests to confirm robustness beyond variance."
+        "point": "Missing analysis of error types and failure modes due to noise",
+        "evidence": "The paper does not analyze common translation errors or systematic issues arising from noisy training pairs, limiting understanding of model limitations."
+      },
+      {
+        "point": "Omission of preprocessing and tokenization details affecting reproducibility",
+        "evidence": "Details on code tokenization, normalization, and handling of comments or identifiers are not provided, which are important for similarity computation and model input."
+      },
+      {
+        "point": "No public release of code or datasets to facilitate reproducibility",
+        "evidence": "Despite creating large-scale noisy datasets and pairing algorithms, the paper does not provide access to code or data."
+      },
+      {
+        "point": "Limited discussion on language-specific challenges and code semantics",
+        "evidence": "The approach treats all language pairs similarly and relies on token-level similarity, ignoring syntactic or semantic program structures that could improve pairing quality."
+      },
+      {
+        "point": "Generalizability not tested on diverse or real-world codebases",
+        "evidence": "Experiments focus on popular imperative/object-oriented languages and curated datasets; no evaluation on functional languages or messy industrial codebases is presented."
+      },
+      {
+        "point": "Ambiguity in defining and quantifying 'noise' in parallel datasets",
+        "evidence": "The paper refers to datasets as noisy but lacks precise definitions or quantifications beyond approximate accuracy percentages."
+      },
+      {
+        "point": "Insufficient explanation of adapting Word Movers Distance to code tokens",
+        "evidence": "The paper highlights WMD's effectiveness but does not clarify how it is computed or adapted for code tokens differing from natural language words."
       }
     ],
     "questions": [
       {
-        "question": "How would similarity-based mining perform using neural code embeddings tailored for semantic similarity?",
-        "motivation": "Assessing this would clarify whether WMD truly outperforms or if neural approaches can further improve dataset quality."
+        "question": "How does the proposed method compare quantitatively to state-of-the-art supervised and unsupervised code translation models like TransCoder or CodeT5?",
+        "motivation": "Understanding comparative performance is critical to assess the practical value and novelty of the approach."
       },
       {
-        "question": "What is the impact of relaxing the one-to-one matching constraint to allow many-to-one or partial code alignments?",
-        "motivation": "This could increase dataset size and quality by capturing realistic code correspondence patterns."
+        "question": "What is the impact of varying the similarity threshold on the quality of paired datasets and downstream translation performance?",
+        "motivation": "A principled selection or tuning of this hyperparameter could improve dataset quality and model results."
       },
       {
-        "question": "How do noisy parallel datasets affect semantic correctness and potential downstream bugs in translated code?",
-        "motivation": "Understanding error types and mitigation strategies is crucial for safe real-world deployment."
+        "question": "Can combining multiple similarity metrics or incorporating structural code information improve pairing accuracy and reduce noise?",
+        "motivation": "Exploring ensembles or semantic features may enhance dataset quality beyond token-level similarity."
       },
       {
-        "question": "Can fine-grained alignment at function or code block level improve mining and translation performance compared to document-level alignment?",
-        "motivation": "Finer granularity may yield higher quality pairs and better translation fidelity."
+        "question": "How do noisy pairs affect specific types of translation errors, and can error analysis guide improvements?",
+        "motivation": "Identifying systematic failure modes could inform better data curation or model design."
+      },
+      {
+        "question": "How well does the method generalize to diverse programming paradigms, such as functional or domain-specific languages, and to real-world codebases?",
+        "motivation": "Demonstrating broad applicability is important for practical adoption."
+      },
+      {
+        "question": "Could human evaluation or semantic correctness metrics provide deeper insights into translation quality beyond surface-level metrics?",
+        "motivation": "Semantic correctness is crucial for code translation utility and safety."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison with recent neural code similarity embeddings. No ablation or benchmark against pretrained neural models like CodeBERT or GraphCodeBERT embeddings for similarity search, which may yield better alignment quality",
-    "point_002": "Insufficient justification and exploration of similarity threshold choice and alignment constraints. Threshold \u03b4 selection appears heuristic without sensitivity analysis; one-to-one matching assumption excludes many-to-one or partial code alignments",
-    "point_003": "Evaluation metrics do not fully assess semantic correctness or functional equivalence. Reliance on BLEU, CodeBLEU, and exact match without runtime validation or unit test-based correctness for most language pairs limits insight into translation quality",
-    "point_004": "Limited reproducibility details and no public code or dataset release stated. Missing precise preprocessing, tokenization, hyperparameters, and no explicit statement on dataset or code availability",
-    "point_005": "No statistical significance testing or confidence intervals reported. Performance improvements (~1-2%) lack tests to confirm robustness beyond variance"
+    "point_001": "Lack of comparison to state-of-the-art supervised and unsupervised code translation models. The paper does not benchmark against recent models like TransCoder or CodeT5, making it unclear how competitive the trained models are relative to existing approaches",
+    "point_002": "Insufficient analysis and justification of similarity threshold selection. The choice of similarity thresholds for pairing is not systematically studied or justified, and no ablation is provided to understand its impact on dataset quality or model performance",
+    "point_003": "No exploration of combining or ensembling similarity metrics. Only individual similarity metrics are evaluated; potential improvements from metric combinations or ensembles are not investigated",
+    "point_004": "Evaluation metrics focus on surface similarity without semantic or human evaluation. Metrics like BLEU, CodeBLEU, and Exact Match are used, but there is no semantic correctness assessment or human evaluation to verify translation quality given noisy data",
+    "point_005": "Missing analysis of error types and failure modes due to noise. The paper does not analyze common translation errors or systematic issues arising from noisy training pairs, limiting understanding of model limitations",
+    "point_006": "Omission of preprocessing and tokenization details affecting reproducibility. Details on code tokenization, normalization, and handling of comments or identifiers are not provided, which are important for similarity computation and model input",
+    "point_007": "No public release of code or datasets to facilitate reproducibility. Despite creating large-scale noisy datasets and pairing algorithms, the paper does not provide access to code or data",
+    "point_008": "Limited discussion on language-specific challenges and code semantics. The approach treats all language pairs similarly and relies on token-level similarity, ignoring syntactic or semantic program structures that could improve pairing quality",
+    "point_009": "Generalizability not tested on diverse or real-world codebases. Experiments focus on popular imperative/object-oriented languages and curated datasets; no evaluation on functional languages or messy industrial codebases is presented",
+    "point_010": "Ambiguity in defining and quantifying 'noise' in parallel datasets. The paper refers to datasets as noisy but lacks precise definitions or quantifications beyond approximate accuracy percentages",
+    "point_011": "Insufficient explanation of adapting Word Movers Distance to code tokens. The paper highlights WMD's effectiveness but does not clarify how it is computed or adapted for code tokens differing from natural language words"
   }
 }

@@ -3,98 +3,83 @@
   "title": "Forgetful causal masking makes causal language models better zero-shot learners",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 53.3,
+  "latency_seconds": 36.61,
   "structured": {
-    "summary": "This paper proposes Perplection, a method for zero-shot prompt template selection in text classification using perplexity scores computed by pretrained language models. By selecting templates with lower perplexity, the approach aims to approximate language distribution alignment without any labeled development data, achieving competitive zero-shot classification performance across multiple Chinese and English datasets.",
+    "summary": "The paper proposes Perplection, an annotation-free method for zero-shot prompt template selection in text classification by leveraging perplexity scores from pre-trained masked language models to estimate language discrepancy. Experiments on multiple Chinese and English datasets demonstrate that templates with lower perplexity correlate with higher zero-shot accuracy, enabling effective prompt selection without labeled data.",
     "strengths": [
       {
-        "point": "Addresses a realistic zero-shot scenario by eliminating the need for labeled development data in prompt template selection.",
-        "evidence": "Perplection selects templates a priori using only perplexity computed from pretrained LMs, unlike prior methods requiring annotated dev sets."
+        "point": "Annotation-free prompt selection method",
+        "evidence": "Perplection selects prompt templates solely based on perplexity computed by a pre-trained language model, requiring no human-annotated development set."
       },
       {
-        "point": "Demonstrates a clear correlation between perplexity and zero-shot classification accuracy.",
-        "evidence": "Pilot study and experiments on multiple datasets show that templates with lower perplexity consistently yield higher zero-shot accuracy."
+        "point": "Strong empirical correlation between perplexity and zero-shot accuracy",
+        "evidence": "Pilot studies and main experiments show a consistent negative correlation between template perplexity and classification accuracy across multiple datasets."
       },
       {
-        "point": "Provides competitive or superior performance compared to recent state-of-the-art prompt tuning methods that require supervision.",
-        "evidence": "Experiments show Perplection matches or outperforms Zero-PET and NSP-BERT despite not using labeled dev data."
+        "point": "Competitive performance against state-of-the-art zero-shot methods",
+        "evidence": "Perplection outperforms random template selection and achieves accuracy close to or better than Zero-PET and NSP-BERT without using labeled data."
       },
       {
-        "point": "Extends evaluation across multiple languages and datasets, indicating method generality.",
-        "evidence": "Experiments conducted on Chinese and English datasets with both handcrafted and automatically generated templates."
+        "point": "Applicability to multiple languages and datasets",
+        "evidence": "Experiments conducted on eight Chinese and three English datasets covering sentiment and topic classification."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks comparison with recent prompt selection methods that do not require labeled data and use gradient or mutual information based scoring.",
-        "evidence": "No experiments or discussion contrasting Perplection with recent black-box prompt tuning or zero-shot prompt refinement techniques."
+        "point": "Lack of comparison to recent unsupervised prompt scoring methods",
+        "evidence": "No baselines such as mutual information, embedding similarity, or pseudo-label confidence methods (e.g., Gao et al., 2021; Zhao et al., 2021) are included."
       },
       {
-        "point": "Core hypothesis linking lower perplexity to better classification lacks theoretical or formal justification.",
-        "evidence": "Perplexity measures fluency but not class separability; the assumption remains empirically observed but unexplored theoretically."
+        "point": "Insufficient theoretical justification for perplexity-accuracy correlation",
+        "evidence": "The paper lacks formal analysis or discussion of failure modes where low perplexity may not imply better prompt alignment."
       },
       {
-        "point": "Perplexity computation details are insufficiently described, hindering reproducibility.",
-        "evidence": "Paper omits masking strategies, tokenization specifics, batch sizes, and LM parameter settings affecting perplexity calculation."
+        "point": "Limited control for template length and complexity effects on perplexity",
+        "evidence": "No systematic ablation or normalization strategy is provided despite acknowledging that perplexity favors longer sentences."
       },
       {
-        "point": "Use of small, handcrafted template pools limits generality and robustness of findings.",
-        "evidence": "Experiments mostly use four templates per dataset; gains reduce on larger or auto-generated template pools."
+        "point": "Sparse details on perplexity computation and automatic template generation",
+        "evidence": "The variant of RoBERTa used, tokenizer settings, aggregation method for perplexity, and automatic template generation process are under-specified."
       },
       {
-        "point": "Baseline comparisons are limited, omitting stronger zero-shot selection baselines beyond random.",
-        "evidence": "No comparison to LM-scoring prompt ensembles or paraphrase diversity methods."
+        "point": "Evaluation limited to accuracy without robustness or calibration metrics",
+        "evidence": "No analysis of confidence calibration, domain shift robustness, or statistical significance testing is reported."
       },
       {
-        "point": "State-of-the-art baselines cited are not strictly zero-shot, confounding performance claims.",
-        "evidence": "Zero-PET and NSP-BERT use annotated dev sets, unlike Perplection."
+        "point": "Limited task and language diversity",
+        "evidence": "Experiments focus mainly on Chinese and English sentiment/topic classification, without exploring other NLP tasks or languages."
       },
       {
-        "point": "Ambiguities remain around concepts like 'language discrepancy' and treatment of template length effects.",
-        "evidence": "No formal metric for language discrepancy; template length normalization not discussed."
-      },
-      {
-        "point": "Limitations such as domain shift effects and applicability beyond classification are acknowledged but not empirically studied.",
-        "evidence": "No experiments on datasets with large domain mismatch or on generation/structured prediction tasks."
-      },
-      {
-        "point": "Potential impact of label word choice on perplexity and template ranking is unexamined.",
-        "evidence": "No ablation or analysis on how synonym selection for label tokens influences perplexity."
-      },
-      {
-        "point": "Evaluation metrics focus solely on accuracy, lacking uncertainty or calibration analyses.",
-        "evidence": "Paper does not assess confidence or trustworthiness of zero-shot predictions."
+        "point": "No exploration of applicability to decoder-only or generative models",
+        "evidence": "The method is only evaluated with masked language models, leaving generalization to autoregressive models untested."
       }
     ],
     "questions": [
       {
-        "question": "How would Perplection perform compared to recent zero-shot prompt selection methods based on gradient or mutual information scoring?",
-        "motivation": "Understanding relative performance against other annotation-free prompt ranking methods is critical to establish novelty and practical utility."
+        "question": "How does Perplection compare to recent unsupervised prompt scoring methods based on mutual information or embedding similarity?",
+        "motivation": "Understanding relative effectiveness against strong baselines is crucial to establish novelty and practical value."
       },
       {
-        "question": "Can the assumption that lower perplexity correlates with better class separability be theoretically or empirically validated beyond observed correlation?",
-        "motivation": "Providing theoretical grounding would strengthen the method's credibility and guide its application scope."
+        "question": "What are the theoretical limitations or failure cases of using perplexity as a proxy for prompt effectiveness?",
+        "motivation": "Clarifying when perplexity may mislead prompt selection would guide appropriate application and future improvements."
       },
       {
-        "question": "How sensitive is Perplection to variations in perplexity computation details such as masking strategies and tokenization?",
-        "motivation": "Clarifying this would improve reproducibility and reveal robustness to implementation choices."
+        "question": "How sensitive is Perplection to the number and diversity of candidate templates?",
+        "motivation": "Knowing the impact of template pool size and quality informs practical deployment and automatic template generation strategies."
       },
       {
-        "question": "Does Perplection maintain effectiveness with larger, more diverse, or automatically generated template pools?",
-        "motivation": "Evaluating scalability and robustness is essential for real-world adoption where template sets are not small or handcrafted."
+        "question": "Can Perplection be adapted to decoder-only or generative language models and tasks beyond classification?",
+        "motivation": "Extending applicability would broaden the method's utility in modern NLP settings."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lacks comparison with recent prompt selection methods that do not require labeled data and use gradient or mutual information based scoring.. No experiments or discussion contrasting Perplection with recent black-box prompt tuning or zero-shot prompt refinement techniques",
-    "point_002": "Core hypothesis linking lower perplexity to better classification lacks theoretical or formal justification.. Perplexity measures fluency but not class separability; the assumption remains empirically observed but unexplored theoretically",
-    "point_003": "Perplexity computation details are insufficiently described, hindering reproducibility.. Paper omits masking strategies, tokenization specifics, batch sizes, and LM parameter settings affecting perplexity calculation",
-    "point_004": "Use of small, handcrafted template pools limits generality and robustness of findings.. Experiments mostly use four templates per dataset; gains reduce on larger or auto-generated template pools",
-    "point_005": "Baseline comparisons are limited, omitting stronger zero-shot selection baselines beyond random.. No comparison to LM-scoring prompt ensembles or paraphrase diversity methods",
-    "point_006": "State-of-the-art baselines cited are not strictly zero-shot, confounding performance claims.. Zero-PET and NSP-BERT use annotated dev sets, unlike Perplection",
-    "point_007": "Ambiguities remain around concepts like 'language discrepancy' and treatment of template length effects.. No formal metric for language discrepancy; template length normalization not discussed",
-    "point_008": "Limitations such as domain shift effects and applicability beyond classification are acknowledged but not empirically studied.. No experiments on datasets with large domain mismatch or on generation/structured prediction tasks",
-    "point_009": "Potential impact of label word choice on perplexity and template ranking is unexamined.. No ablation or analysis on how synonym selection for label tokens influences perplexity",
-    "point_010": "Evaluation metrics focus solely on accuracy, lacking uncertainty or calibration analyses.. Paper does not assess confidence or trustworthiness of zero-shot predictions"
+    "point_001": "Lack of comparison to recent unsupervised prompt scoring methods. No baselines such as mutual information, embedding similarity, or pseudo-label confidence methods (e.g., Gao et al., 2021; Zhao et al., 2021) are included",
+    "point_002": "Insufficient theoretical justification for perplexity-accuracy correlation. The paper lacks formal analysis or discussion of failure modes where low perplexity may not imply better prompt alignment",
+    "point_003": "Limited control for template length and complexity effects on perplexity. No systematic ablation or normalization strategy is provided despite acknowledging that perplexity favors longer sentences",
+    "point_004": "Sparse details on perplexity computation and automatic template generation. The variant of RoBERTa used, tokenizer settings, aggregation method for perplexity, and automatic template generation process are under-specified",
+    "point_005": "Evaluation limited to accuracy without robustness or calibration metrics. No analysis of confidence calibration, domain shift robustness, or statistical significance testing is reported",
+    "point_006": "Limited task and language diversity. Experiments focus mainly on Chinese and English sentiment/topic classification, without exploring other NLP tasks or languages",
+    "point_007": "No exploration of applicability to decoder-only or generative models. The method is only evaluated with masked language models, leaving generalization to autoregressive models untested"
   }
 }

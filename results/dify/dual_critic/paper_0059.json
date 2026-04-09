@@ -3,111 +3,162 @@
   "title": "BertNet: Harvesting Knowledge Graphs from Pretrained Language Models",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 146.43,
+  "latency_seconds": 99.95,
   "structured": {
-    "summary": "This paper introduces BertNet, a novel framework to extract explicit symbolic knowledge graphs with arbitrary and complex relations from pretrained language models using minimal input\u2014an initial prompt and a few example entity pairs. Through automatic prompt paraphrasing, weighted prompt scoring, and an efficient entity pair search with pruning, BertNet harvests large-scale, accurate, and novel knowledge graphs without requiring external training or corpora. The approach advances beyond existing methods by enabling diverse relation extraction, interpretability, and application to various LM architectures.",
+    "summary": "This paper proposes BertNet, a novel framework to automatically harvest explicit symbolic knowledge graphs with arbitrary relations from pretrained language models using minimal user input. By generating diverse paraphrased prompts and efficiently searching large entity vocabularies with confidence-weighted scoring, BertNet extracts both binary and complex relations, demonstrating competitive accuracy and interpretability compared to prior methods.",
     "strengths": [
       {
-        "point": "Novel framework for extracting diverse arbitrary relations from any pretrained LM with minimal supervision",
-        "evidence": "BertNet uses only an initial prompt and a few example entity pairs to harvest explicit knowledge graphs of over 400 new relations, surpassing diversity in existing KGs like ConceptNet."
+        "point": "Novel framework enabling arbitrary relation KG harvesting from pretrained LMs",
+        "evidence": "The method requires only an initial prompt and example entity pairs to define relations, allowing extraction of hundreds of new relations beyond fixed KG schemas."
       },
       {
-        "point": "Automatic prompt diversification and weighting improves accuracy and robustness",
-        "evidence": "Use of paraphrase-generated prompts with LM likelihood-based weighting yields ~4% accuracy gain over single best prompt and significantly outperforms human-written prompts."
+        "point": "Effective multi-prompt ensemble with confidence weighting improves extraction accuracy",
+        "evidence": "Human evaluations show that combining diverse paraphrased prompts weighted by LM likelihoods yields higher accuracy (~73%) than single prompts or AutoPrompt baselines."
       },
       {
-        "point": "Efficient search with pruning enables scalable exploration of large vocabularies for entity pairs",
-        "evidence": "Pruning reduces quadratic search complexity allowing KG extraction over ~50K vocabulary in about one hour on a single GPU."
+        "point": "Efficient two-stage search and pruning strategy over large entity vocabularies",
+        "evidence": "The approach first proposes candidates using minimum token log-likelihoods, then re-ranks with full consistency scores, enabling scalable KG extraction."
       },
       {
-        "point": "Comprehensive empirical evaluation across multiple relation sets and LMs, including complex and n-ary relations",
-        "evidence": "Experiments on ConceptNet, WikiPedia, human-written, and analogical reasoning relation sets show consistent accuracy (~65-80%) and novelty gains; applicable to masked and autoregressive LMs."
+        "point": "Supports complex and n-ary relations beyond binary triples",
+        "evidence": "The paper demonstrates extraction of nuanced relations (e.g., 'can but not good at') and n-ary relations (e.g., 'A can do B at C'), expanding KG expressiveness."
       },
       {
-        "point": "Provides interpretable symbolic KGs reflecting LM-encoded knowledge and facilitating analysis",
-        "evidence": "Extracted KGs enable comparison of knowledge capacity across model sizes, architectures, and training strategies."
+        "point": "Provides symbolic interpretability of pretrained LM knowledge",
+        "evidence": "Harvested KGs enable analysis of knowledge capacity differences across model sizes, architectures, and training strategies, facilitating model understanding."
+      },
+      {
+        "point": "Extensive empirical validation on multiple relation sets and LMs",
+        "evidence": "Evaluations on ConceptNet, LAMA, human-written complex relations, and hundreds of automatically derived relations show competitive or superior accuracy compared to COMET and text mining."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison to recent continuous prompt tuning methods",
-        "evidence": "No experimental or theoretical comparison to state-of-the-art continuous prompt optimization methods like Prefix Tuning or Soft Prompt Tuning."
+        "point": "Incomplete comparison with recent prompt-based knowledge extraction methods",
+        "evidence": "The paper omits discussion and empirical comparison with methods like KnowPrompt, PTR, or continuous prompt embeddings, weakening novelty claims."
       },
       {
-        "point": "Limited robustness analysis regarding choice and noise in example entity pairs",
-        "evidence": "Method relies on as few as two example pairs but does not study sensitivity to representativeness or ambiguity of these examples."
+        "point": "Lack of ablation and justification for paraphrase model choice and filtering thresholds",
+        "evidence": "No analysis is provided on how different paraphrase models or linguistic diversity filtering parameters affect KG extraction accuracy."
       },
       {
-        "point": "Use of edit distance for prompt diversity filtering is simplistic and unvalidated",
-        "evidence": "No comparison to semantically informed similarity metrics; possible retention of redundant prompts or loss of useful paraphrases."
+        "point": "Unvalidated assumption that LM likelihoods correlate with prompt quality for confidence weighting",
+        "evidence": "No ablation or alternative weighting schemes are compared to verify that LM likelihood-based confidence improves robustness."
       },
       {
-        "point": "Weighted prompt confidence scoring may overfit to provided examples and depends on LM likelihood calibration",
-        "evidence": "LM likelihoods are known to be poorly calibrated; the paper lacks analysis of calibration effects or alternative weighting schemes."
+        "point": "Insufficient details on entity vocabulary size, selection criteria, and representation",
+        "evidence": "The paper does not specify vocabulary size or entity filtering methods, hindering reproducibility and understanding of search coverage."
       },
       {
-        "point": "Evaluation focuses primarily on precision; recall and coverage are not assessed",
-        "evidence": "Without recall metrics or KG coverage analysis, the completeness and bias of extracted knowledge remain unclear."
+        "point": "No quantitative analysis of computational cost, runtime, or scalability",
+        "evidence": "Despite proposing efficient search strategies, no runtime or memory usage metrics are reported to assess practicality at large scale."
       },
       {
-        "point": "Human evaluation lacks inter-annotator agreement statistics and qualitative error analysis",
-        "evidence": "No reported IAA metrics or discussion on annotation difficulty and ambiguity, potentially inflating reported precision."
+        "point": "Human annotation protocols and inter-annotator agreement not reported",
+        "evidence": "Accuracy is based on human evaluation, but annotation guidelines, number of annotators, and agreement statistics are missing."
       },
       {
-        "point": "No qualitative analysis or error examination of generated prompts and extracted triples",
-        "evidence": "Absent examples or discussion on failure modes limits understanding of prompt diversification and extraction limitations."
+        "point": "Baseline comparisons lack clarity on experimental conditions",
+        "evidence": "It is unclear if baselines like COMET and text mining were evaluated under identical entity vocabularies, relation sets, and metrics."
       },
       {
-        "point": "Claims on n-ary relation extraction are not empirically validated",
-        "evidence": "No experiments demonstrating effectiveness on relations involving more than two entities."
+        "point": "Sparse and anecdotal evaluation of complex and n-ary relation extraction",
+        "evidence": "Only a few illustrative examples are provided without systematic quantitative evaluation or error analysis."
       },
       {
-        "point": "Lack of theoretical analysis and large-scale validation on scalability of entity pair search",
-        "evidence": "Experiments limited to vocabularies around 50K; no complexity analysis or testing on larger or domain-specific vocabularies."
+        "point": "No analysis of sensitivity to relation definition quality or user effort",
+        "evidence": "The impact of initial prompt and example entity pair quality on extraction results is not studied."
       },
       {
-        "point": "No methods for detecting or resolving contradictory or inconsistent extracted triples",
-        "evidence": "Multiple prompts and entity pairs may yield conflicts; no discussion or mechanisms addressing KG consistency."
+        "point": "Interpretability claims lack empirical support or user studies",
+        "evidence": "No qualitative analyses or downstream task experiments demonstrate benefits of symbolic KG interpretability."
       },
       {
-        "point": "Insufficient detail on implementation aspects like pruning thresholds and search heuristics",
-        "evidence": "High-level description without exact hyperparameters or pseudocode hinders reproducibility."
+        "point": "Missing hyperparameter and implementation details critical for reproducibility",
+        "evidence": "Key parameters such as number of paraphrases, pruning thresholds, and scoring formulas are not fully specified."
+      },
+      {
+        "point": "No error analysis of extracted knowledge or common failure modes",
+        "evidence": "The paper does not analyze hallucinated facts, ambiguous tuples, or relation misinterpretations."
+      },
+      {
+        "point": "No discussion or comparison with retrieval-augmented knowledge extraction methods",
+        "evidence": "Methods combining LMs with retrieval (e.g., REALM, RAG) are not addressed."
+      },
+      {
+        "point": "No analysis of relation novelty or redundancy among harvested relations",
+        "evidence": "It is unclear whether new relations are truly novel or paraphrases of existing KG relations."
+      },
+      {
+        "point": "Limited discussion on downstream utility or integration of harvested KGs",
+        "evidence": "No experiments show how the harvested KGs improve tasks like QA or reasoning."
+      },
+      {
+        "point": "Clarity issues in describing complex and n-ary relation extraction",
+        "evidence": "The explanation is abstract and lacks concrete algorithmic details or examples."
+      },
+      {
+        "point": "Limited analysis of knowledge distillation effects on KG quality",
+        "evidence": "The observation that DistilBERT improves accuracy is not deeply investigated."
+      },
+      {
+        "point": "Handling of noisy, biased, or unethical knowledge not explored in depth",
+        "evidence": "No concrete filtering methods or evaluations of harmful content prevalence are provided."
       }
     ],
     "questions": [
       {
-        "question": "How does BertNet compare quantitatively and qualitatively to continuous prompt tuning methods such as Prefix Tuning or Soft Prompt Tuning for knowledge extraction?",
-        "motivation": "Understanding relative strengths clarifies the novelty and practical advantages of the proposed prompt paraphrasing approach."
+        "question": "How does BertNet compare empirically to recent prompt-based knowledge extraction methods like KnowPrompt or PTR?",
+        "motivation": "Understanding relative performance and novelty requires direct comparison to state-of-the-art prompt tuning approaches."
       },
       {
-        "question": "How sensitive is the method to the choice, number, and quality of example entity pairs used for supervision?",
-        "motivation": "Robustness to example selection is critical for practical deployment and generalization across relations."
+        "question": "How sensitive is the KG extraction quality to the choice and number of initial prompts and example entity pairs?",
+        "motivation": "Assessing user effort and robustness is critical for practical adoption and guiding relation definition."
       },
       {
-        "question": "Can the method be extended and empirically validated for n-ary relation extraction effectively?",
-        "motivation": "Many real-world relations involve more than two entities; verifying this capability is important for broader applicability."
+        "question": "What is the computational cost and scalability of the proposed two-stage search on very large vocabularies and relation sets?",
+        "motivation": "Evaluating runtime and resource requirements informs feasibility for large-scale KG construction."
       },
       {
-        "question": "What strategies can be employed to detect and resolve contradictory or inconsistent triples in the harvested knowledge graphs?",
-        "motivation": "Ensuring KG consistency is essential for downstream applications and user trust."
+        "question": "Can the symbolic KGs harvested by BertNet improve downstream tasks such as question answering or reasoning?",
+        "motivation": "Demonstrating practical utility would strengthen impact and motivate adoption."
       },
       {
-        "question": "How does prompt length, complexity, or linguistic structure impact extraction accuracy and novelty?",
-        "motivation": "Insights here could guide better prompt engineering and further improve results."
+        "question": "How effective is the LM likelihood-based confidence weighting compared to alternative prompt weighting schemes?",
+        "motivation": "Validating this assumption is important for ensuring robustness and guiding future prompt ensemble designs."
+      },
+      {
+        "question": "What are common failure modes or error types in the extracted knowledge, and how can they be mitigated?",
+        "motivation": "Error analysis is essential for improving extraction quality and reliability."
+      },
+      {
+        "question": "How can the approach be extended or adapted to domain-specific LMs and specialized knowledge graphs?",
+        "motivation": "Domain adaptation is important for broad applicability in areas like healthcare or finance."
+      },
+      {
+        "question": "What concrete methods can be employed to detect and filter biased, unethical, or harmful knowledge in the harvested KGs?",
+        "motivation": "Responsible deployment requires effective mitigation of harmful content inherited from pretrained LMs."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison to recent continuous prompt tuning methods. No experimental or theoretical comparison to state-of-the-art continuous prompt optimization methods like Prefix Tuning or Soft Prompt Tuning",
-    "point_002": "Limited robustness analysis regarding choice and noise in example entity pairs. Method relies on as few as two example pairs but does not study sensitivity to representativeness or ambiguity of these examples",
-    "point_003": "Use of edit distance for prompt diversity filtering is simplistic and unvalidated. No comparison to semantically informed similarity metrics; possible retention of redundant prompts or loss of useful paraphrases",
-    "point_004": "Weighted prompt confidence scoring may overfit to provided examples and depends on LM likelihood calibration. LM likelihoods are known to be poorly calibrated; the paper lacks analysis of calibration effects or alternative weighting schemes",
-    "point_005": "Evaluation focuses primarily on precision; recall and coverage are not assessed. Without recall metrics or KG coverage analysis, the completeness and bias of extracted knowledge remain unclear",
-    "point_006": "Human evaluation lacks inter-annotator agreement statistics and qualitative error analysis. No reported IAA metrics or discussion on annotation difficulty and ambiguity, potentially inflating reported precision",
-    "point_007": "No qualitative analysis or error examination of generated prompts and extracted triples. Absent examples or discussion on failure modes limits understanding of prompt diversification and extraction limitations",
-    "point_008": "Claims on n-ary relation extraction are not empirically validated. No experiments demonstrating effectiveness on relations involving more than two entities",
-    "point_009": "Lack of theoretical analysis and large-scale validation on scalability of entity pair search. Experiments limited to vocabularies around 50K; no complexity analysis or testing on larger or domain-specific vocabularies",
-    "point_010": "No methods for detecting or resolving contradictory or inconsistent extracted triples. Multiple prompts and entity pairs may yield conflicts; no discussion or mechanisms addressing KG consistency",
-    "point_011": "Insufficient detail on implementation aspects like pruning thresholds and search heuristics. High-level description without exact hyperparameters or pseudocode hinders reproducibility"
+    "point_001": "Incomplete comparison with recent prompt-based knowledge extraction methods. The paper omits discussion and empirical comparison with methods like KnowPrompt, PTR, or continuous prompt embeddings, weakening novelty claims",
+    "point_002": "Lack of ablation and justification for paraphrase model choice and filtering thresholds. No analysis is provided on how different paraphrase models or linguistic diversity filtering parameters affect KG extraction accuracy",
+    "point_003": "Unvalidated assumption that LM likelihoods correlate with prompt quality for confidence weighting. No ablation or alternative weighting schemes are compared to verify that LM likelihood-based confidence improves robustness",
+    "point_004": "Insufficient details on entity vocabulary size, selection criteria, and representation. The paper does not specify vocabulary size or entity filtering methods, hindering reproducibility and understanding of search coverage",
+    "point_005": "No quantitative analysis of computational cost, runtime, or scalability. Despite proposing efficient search strategies, no runtime or memory usage metrics are reported to assess practicality at large scale",
+    "point_006": "Human annotation protocols and inter-annotator agreement not reported. Accuracy is based on human evaluation, but annotation guidelines, number of annotators, and agreement statistics are missing",
+    "point_007": "Baseline comparisons lack clarity on experimental conditions. It is unclear if baselines like COMET and text mining were evaluated under identical entity vocabularies, relation sets, and metrics",
+    "point_008": "Sparse and anecdotal evaluation of complex and n-ary relation extraction. Only a few illustrative examples are provided without systematic quantitative evaluation or error analysis",
+    "point_009": "No analysis of sensitivity to relation definition quality or user effort. The impact of initial prompt and example entity pair quality on extraction results is not studied",
+    "point_010": "Interpretability claims lack empirical support or user studies. No qualitative analyses or downstream task experiments demonstrate benefits of symbolic KG interpretability",
+    "point_011": "Missing hyperparameter and implementation details critical for reproducibility. Key parameters such as number of paraphrases, pruning thresholds, and scoring formulas are not fully specified",
+    "point_012": "No error analysis of extracted knowledge or common failure modes. The paper does not analyze hallucinated facts, ambiguous tuples, or relation misinterpretations",
+    "point_013": "No discussion or comparison with retrieval-augmented knowledge extraction methods. Methods combining LMs with retrieval (e.g., REALM, RAG) are not addressed",
+    "point_014": "No analysis of relation novelty or redundancy among harvested relations. It is unclear whether new relations are truly novel or paraphrases of existing KG relations",
+    "point_015": "Limited discussion on downstream utility or integration of harvested KGs. No experiments show how the harvested KGs improve tasks like QA or reasoning",
+    "point_016": "Clarity issues in describing complex and n-ary relation extraction. The explanation is abstract and lacks concrete algorithmic details or examples",
+    "point_017": "Limited analysis of knowledge distillation effects on KG quality. The observation that DistilBERT improves accuracy is not deeply investigated",
+    "point_018": "Handling of noisy, biased, or unethical knowledge not explored in depth. No concrete filtering methods or evaluations of harmful content prevalence are provided"
   }
 }

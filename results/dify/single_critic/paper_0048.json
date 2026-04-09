@@ -3,93 +3,65 @@
   "title": "Leveraging Automated Unit Tests for Unsupervised Code Translation",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 46.15,
+  "latency_seconds": 39.96,
   "structured": {
-    "summary": "This paper proposes TransCoder-ST, an unsupervised code translation framework that leverages automated unit test generation and multilingual test translation to filter pseudo-parallel data, thereby improving semantic correctness of translations. By using EvoSuite-generated tests and iterative self-training, the method significantly outperforms prior unsupervised baselines on multiple language pairs (Java, Python, C++).",
+    "summary": "This paper proposes TransCoder-ST, an unsupervised code translation method that leverages automated unit tests to filter noisy back-translated code, thereby creating a high-quality parallel corpus for self-training. Evaluated on Java, Python, and C++, the approach significantly improves computational accuracy over prior state-of-the-art models by using both offline and online self-training strategies.",
     "strengths": [
       {
-        "point": "Innovative use of automated unit tests to filter noisy pseudo-parallel data",
-        "evidence": "The approach integrates EvoSuite-generated unit tests with mutation score filtering (>90%) to ensure only semantically correct translations are used for self-training, leading to substantial improvements in computational accuracy."
+        "point": "Innovative use of automated unit tests for filtering back-translated code",
+        "evidence": "The method uses EvoSuite-generated Java unit tests and translates them to Python and C++ to semantically filter candidate translations, ensuring higher quality training data."
       },
       {
-        "point": "Demonstrated significant performance gains over state-of-the-art unsupervised models",
-        "evidence": "TransCoder-ST achieves up to +12.6% CA@1 improvement and reduces error rates by up to 35.7% compared to TransCoder and DOBF across Java\u2194Python and Java\u2194C++ translation tasks."
+        "point": "Significant empirical improvements over state-of-the-art baselines",
+        "evidence": "Offline self-training improved CA@1 by 7.4 percentage points and online self-training by 12.6 points on average, with up to 24 points improvement for Python\u2192C++."
       },
       {
-        "point": "Comprehensive evaluation on large-scale datasets and multiple language pairs",
-        "evidence": "The work evaluates on over 100K Java functions with generated tests, creating parallel sets with Python and C++ and reporting detailed ablations and online/offline training comparisons."
+        "point": "Comprehensive evaluation including ablations and qualitative examples",
+        "evidence": "Ablation studies demonstrate the importance of mutation score filtering, caching, and beam search; qualitative examples show correction of semantic errors like operator precedence and data structure instantiation."
       },
       {
-        "point": "Bridges software engineering tools and machine learning for code translation",
-        "evidence": "Leveraging mature tools like EvoSuite for test generation and applying multilingual test translation scripts is a novel cross-disciplinary contribution enhancing unsupervised code translation."
+        "point": "Creation of a large multilingual parallel dataset without human supervision",
+        "evidence": "Generated 103,488 Java functions with high-quality unit tests and a parallel dataset of 135,000 functions across Java, Python, and C++."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited comparison to stronger or recent baselines beyond TransCoder and DOBF",
-        "evidence": "Evaluation omits other unsupervised approaches that may leverage semantic information or symbolic execution, leaving unclear the relative advancement of TransCoder-ST."
+        "point": "Lack of comparison to other semantic filtering or static analysis methods",
+        "evidence": "The paper does not discuss or compare to prior work using static analyzers or type checkers for filtering code translations."
       },
       {
-        "point": "Strong reliance on EvoSuite and high mutation score thresholds limits generality",
-        "evidence": "Assumes availability of high-coverage unit tests (>90% mutation score), which may not hold for many languages or complex codebases; Python support relies on translated Java tests."
+        "point": "Method relies solely on Java unit test generation with limited justification",
+        "evidence": "Only Java unit tests are generated automatically via EvoSuite; Python and C++ tests are translated via scripts without evaluation of translation quality or coverage impact."
       },
       {
-        "point": "Lack of analysis on false negatives and test translation fidelity",
-        "evidence": "The paper does not quantify how often correct translations are erroneously filtered out due to incomplete or flaky tests, nor does it evaluate errors introduced by the scripted multilingual test translation."
+        "point": "Evaluation metric based solely on passing unit tests may miss semantic errors",
+        "evidence": "Computational accuracy (CA@N) depends on unit test passing, which may not capture all semantic correctness aspects; no complementary human evaluation or runtime behavior analysis is provided."
       },
       {
-        "point": "Insufficient exploration of training hyperparameters and filtering criteria",
-        "evidence": "Effects of beam size, filtering strictness, mutation score thresholds, and cache parameters in online training are not thoroughly ablated or justified."
+        "point": "Reproducibility hindered by missing details on unit test translation scripts and training hyperparameters",
+        "evidence": "The paper lacks detailed descriptions or code for translating unit tests and does not exhaustively specify hyperparameters for offline and online self-training."
       },
       {
-        "point": "Evaluation metric focuses solely on unit test pass rates, ignoring code readability and style",
-        "evidence": "No human evaluation or metrics assessing idiomatic or maintainable code are provided, limiting understanding of practical translation quality."
-      },
-      {
-        "point": "Reproducibility concerns due to omitted scripts and parameter details",
-        "evidence": "Critical components like multilingual test translation scripts, cache update policies, and EvoSuite hyperparameters are not provided or detailed."
-      },
-      {
-        "point": "Potential bias toward simpler functions favored by EvoSuite filtering",
-        "evidence": "Filtering may exclude complex or large functions with lower test coverage, possibly biasing the model to easier translation cases."
-      },
-      {
-        "point": "Limited discussion on handling semantic equivalences not captured by unit tests",
-        "evidence": "No mechanism to identify or reconcile translations differing semantically yet passing tests, such as integer overflow behavior differences."
-      },
-      {
-        "point": "No user studies or real-world migration task evaluations to assess practical impact",
-        "evidence": "Improved CA@1 scores demonstrate technical gains, but usability and developer acceptance remain untested."
+        "point": "Limited discussion on scalability and applicability to real-world, large-scale codebases",
+        "evidence": "Focuses on relatively small functions amenable to unit testing; does not address challenges in scaling to complex modules or legacy migration tasks."
       }
     ],
     "questions": [
       {
-        "question": "How does the method perform when EvoSuite cannot generate high-coverage tests for target languages?",
-        "motivation": "Understanding limitations in less mature ecosystems is critical for assessing real-world applicability and generalization."
+        "question": "How does the quality and completeness of translated unit tests for Python and C++ affect filtering accuracy and final model performance?",
+        "motivation": "Understanding this is crucial since errors in translated tests could allow incorrect translations to pass filtering or reject correct ones, impacting training quality."
       },
       {
-        "question": "Can integrating supervised fine-tuning with limited parallel data further boost TransCoder-ST?",
-        "motivation": "Many practical scenarios have some parallel code; exploring combined approaches might yield stronger performance."
-      },
-      {
-        "question": "What is the impact of false negatives in test filtering on model recall and dataset size?",
-        "motivation": "Quantifying trade-offs between precision and recall in filtering is important to optimize training data quality and quantity."
-      },
-      {
-        "question": "How robust is the multilingual test translation process, and what errors does it introduce?",
-        "motivation": "Test translation errors can propagate to filtering decisions, affecting model quality; understanding this helps improve pipeline reliability."
+        "question": "Can the approach be extended effectively to languages lacking mature unit test generation tools, and how would that impact generalizability?",
+        "motivation": "The method's reliance on automated unit tests limits applicability; exploring alternatives or adaptations is important for broader adoption."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited comparison to stronger or recent baselines beyond TransCoder and DOBF. Evaluation omits other unsupervised approaches that may leverage semantic information or symbolic execution, leaving unclear the relative advancement of TransCoder-ST",
-    "point_002": "Strong reliance on EvoSuite and high mutation score thresholds limits generality. Assumes availability of high-coverage unit tests (>90% mutation score), which may not hold for many languages or complex codebases; Python support relies on translated Java tests",
-    "point_003": "Lack of analysis on false negatives and test translation fidelity. The paper does not quantify how often correct translations are erroneously filtered out due to incomplete or flaky tests, nor does it evaluate errors introduced by the scripted multilingual test translation",
-    "point_004": "Insufficient exploration of training hyperparameters and filtering criteria. Effects of beam size, filtering strictness, mutation score thresholds, and cache parameters in online training are not thoroughly ablated or justified",
-    "point_005": "Evaluation metric focuses solely on unit test pass rates, ignoring code readability and style. No human evaluation or metrics assessing idiomatic or maintainable code are provided, limiting understanding of practical translation quality",
-    "point_006": "Reproducibility concerns due to omitted scripts and parameter details. Critical components like multilingual test translation scripts, cache update policies, and EvoSuite hyperparameters are not provided or detailed",
-    "point_007": "Potential bias toward simpler functions favored by EvoSuite filtering. Filtering may exclude complex or large functions with lower test coverage, possibly biasing the model to easier translation cases",
-    "point_008": "Limited discussion on handling semantic equivalences not captured by unit tests. No mechanism to identify or reconcile translations differing semantically yet passing tests, such as integer overflow behavior differences",
-    "point_009": "No user studies or real-world migration task evaluations to assess practical impact. Improved CA@1 scores demonstrate technical gains, but usability and developer acceptance remain untested"
+    "point_001": "Lack of comparison to other semantic filtering or static analysis methods. The paper does not discuss or compare to prior work using static analyzers or type checkers for filtering code translations",
+    "point_002": "Method relies solely on Java unit test generation with limited justification. Only Java unit tests are generated automatically via EvoSuite; Python and C++ tests are translated via scripts without evaluation of translation quality or coverage impact",
+    "point_003": "Evaluation metric based solely on passing unit tests may miss semantic errors. Computational accuracy (CA@N) depends on unit test passing, which may not capture all semantic correctness aspects; no complementary human evaluation or runtime behavior analysis is provided",
+    "point_004": "Reproducibility hindered by missing details on unit test translation scripts and training hyperparameters. The paper lacks detailed descriptions or code for translating unit tests and does not exhaustively specify hyperparameters for offline and online self-training",
+    "point_005": "Limited discussion on scalability and applicability to real-world, large-scale codebases. Focuses on relatively small functions amenable to unit testing; does not address challenges in scaling to complex modules or legacy migration tasks"
   }
 }
