@@ -3,70 +3,105 @@
   "title": "Thrust: Adaptively Propels Large Language Models with External Knowledge",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 59.66,
+  "latency_seconds": 40.82,
   "structured": {
-    "summary": "The paper introduces IAPEK, an instance-level adaptive retrieval framework that decides when to augment pretrained language models with external knowledge based on a novel metric called Thrust, which estimates the model's internal knowledge sufficiency. Extensive experiments across multiple tasks demonstrate that Thrust-guided selective retrieval improves accuracy and efficiency compared to naive all-instance retrieval.",
+    "summary": "The paper proposes IAPEK, an instance-level adaptive retrieval framework that uses a novel metric called Thrust to decide when to augment pre-trained language models (PTLMs) with external knowledge. By selectively retrieving knowledge only for instances deemed insufficiently covered internally, the method improves performance and reduces retrieval costs across multiple NLP tasks.",
     "strengths": [
       {
         "point": "Novel adaptive retrieval framework",
-        "evidence": "IAPEK selectively retrieves external knowledge only when necessary, improving efficiency and reducing noise."
+        "evidence": "IAPEK selectively retrieves external knowledge per instance based on the Thrust metric, improving efficiency and reducing noise compared to indiscriminate retrieval."
       },
       {
-        "point": "Thrust metric effectively estimates knowledge sufficiency",
-        "evidence": "Thrust score distributions correlate well with task knowledge requirements and guide retrieval decisions that yield performance gains."
+        "point": "Effective and lightweight Thrust metric",
+        "evidence": "Thrust measures internal knowledgeability via clustering of hidden representations, requiring only about 200 samples per task and minimal computation at inference."
       },
       {
-        "point": "Extensive empirical evaluation",
-        "evidence": "Evaluated on 7 classification and 5 open-domain QA datasets, showing consistent accuracy improvements and cost savings."
+        "point": "Comprehensive empirical evaluation",
+        "evidence": "Experiments on 7 multiple-choice and 5 open-domain QA datasets with various PTLMs (zero-shot and fine-tuned) demonstrate consistent performance gains and retrieval cost reduction."
       },
       {
-        "point": "Practical insights on knowledge augmentation",
-        "evidence": "Demonstrates that zero-shot PTLMs often do not benefit from external knowledge, while fine-tuned models do, highlighting realistic deployment considerations."
+        "point": "Practical insights on fine-tuning and retrieval",
+        "evidence": "Findings show fine-tuned models better utilize external knowledge and that adaptive retrieval outperforms always retrieving knowledge, avoiding noise."
+      },
+      {
+        "point": "Robustness across model layers",
+        "evidence": "Thrust is shown to be robust to the choice of representation layer, simplifying its application across different PTLM architectures."
       }
     ],
     "weaknesses": [
       {
-        "point": "Insufficient comparison with prior adaptive retrieval or uncertainty-based methods",
-        "evidence": "The paper does not adequately position Thrust relative to existing confidence or uncertainty-based gating techniques."
+        "point": "Lack of comparison to learned retrieval policies",
+        "evidence": "The paper does not compare Thrust against adaptive retrieval methods using learned gating or reinforcement learning, which are stronger baselines in retrieval-augmented generation literature."
       },
       {
-        "point": "Lack of detailed methodology on clustering and distance metrics",
-        "evidence": "Missing specifics on clustering algorithm, initialization, hyperparameter sensitivity, and ablations on distance metric choice."
+        "point": "Insufficient theoretical and ablation analysis of Thrust design",
+        "evidence": "No ablation or justification is provided for the specific weighted average of normalized vectors formula, nor comparisons to simpler or alternative confidence metrics."
       },
       {
-        "point": "Limited evaluation of retrieval effectiveness and efficiency metrics",
-        "evidence": "No precision/recall of retrieved knowledge, latency, or end-to-end cost metrics reported despite motivation on efficiency."
+        "point": "Unclear clustering methodology and sensitivity",
+        "evidence": "Details on clustering algorithm, number of clusters, and their impact on Thrust scores are missing, though clustering quality directly affects metric reliability."
       },
       {
-        "point": "Restricted generalizability and applicability",
-        "evidence": "Requires ~200 task-specific examples for clustering, limiting zero-shot use; also less clear performance on generation tasks without clear clusters."
+        "point": "Missing baseline comparisons using PTLM confidence scores",
+        "evidence": "The evaluation omits comparisons to standard uncertainty measures derived from PTLM outputs (e.g., softmax probabilities, entropy) as retrieval decision heuristics."
       },
       {
-        "point": "No statistical significance testing or confidence intervals",
-        "evidence": "Reported accuracy improvements lack formal significance validation."
+        "point": "Limited evaluation metrics and analysis",
+        "evidence": "Focus is mainly on accuracy and retrieval cost; other relevant metrics like precision/recall of knowledge usage, latency, model calibration, and detailed failure analysis are lacking."
       },
       {
-        "point": "Ambiguity in thrust score computation and threshold selection",
-        "evidence": "Mathematical formulation is abstract with no pseudocode; threshold \u03bb tuning details are missing."
+        "point": "Reproducibility concerns",
+        "evidence": "Key details such as threshold selection procedure, external knowledge base characteristics, and code release scope are insufficiently described."
+      },
+      {
+        "point": "Ambiguity in key concepts and explanations",
+        "evidence": "Definitions of 'internal knowledgeability' and the step-by-step computation of Thrust are vague, potentially confusing readers."
+      },
+      {
+        "point": "Limited task generalizability",
+        "evidence": "Experiments focus on classification and QA tasks; applicability to other NLP tasks like generation or summarization remains untested."
+      },
+      {
+        "point": "Cold-start and black-box LLM scenarios not empirically addressed",
+        "evidence": "Although acknowledged as limitations, no experiments or concrete solutions are provided for these important practical cases."
       }
     ],
     "questions": [
       {
-        "question": "How does Thrust compare quantitatively to uncertainty-based or confidence-based retrieval gating approaches?",
-        "motivation": "Clarifying novelty and empirical advantages over prior adaptive retrieval methods is important for assessing contribution."
+        "question": "How does Thrust compare to learned retrieval policies or gating mechanisms?",
+        "motivation": "Understanding this would clarify the novelty and practical advantage of the proposed heuristic over adaptive methods that learn retrieval decisions."
       },
       {
-        "question": "Can the method be extended to work effectively in true zero-shot scenarios without task-specific labeled samples for clustering?",
-        "motivation": "Addressing cold start limitations would enhance applicability to many real-world tasks."
+        "question": "What is the impact of clustering choices on Thrust\u2019s reliability and performance?",
+        "motivation": "Since Thrust depends on cluster quality, insights into clustering algorithm selection, number of clusters, and sensitivity are critical for reproducibility and robustness."
+      },
+      {
+        "question": "Can simpler confidence measures from PTLM outputs serve as effective baselines for adaptive retrieval?",
+        "motivation": "Evaluating these would establish whether Thrust\u2019s complexity is justified or if standard uncertainty metrics suffice."
+      },
+      {
+        "question": "How does the threshold \u03bb for retrieval decision get selected and how sensitive is performance to this hyperparameter?",
+        "motivation": "Threshold tuning affects the trade-off between retrieval cost and accuracy; transparency here is important for practical deployment."
+      },
+      {
+        "question": "How does the method perform on tasks beyond classification and QA, such as generation or summarization?",
+        "motivation": "Demonstrating generalizability would increase the method\u2019s applicability and impact."
+      },
+      {
+        "question": "What are the failure modes of Thrust, especially on datasets like ARC-C, and how can they be mitigated?",
+        "motivation": "Understanding limitations and failure cases is essential for improving robustness and guiding future work."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Insufficient comparison with prior adaptive retrieval or uncertainty-based methods. The paper does not adequately position Thrust relative to existing confidence or uncertainty-based gating techniques",
-    "point_002": "Lack of detailed methodology on clustering and distance metrics. Missing specifics on clustering algorithm, initialization, hyperparameter sensitivity, and ablations on distance metric choice",
-    "point_003": "Limited evaluation of retrieval effectiveness and efficiency metrics. No precision/recall of retrieved knowledge, latency, or end-to-end cost metrics reported despite motivation on efficiency",
-    "point_004": "Restricted generalizability and applicability. Requires ~200 task-specific examples for clustering, limiting zero-shot use; also less clear performance on generation tasks without clear clusters",
-    "point_005": "No statistical significance testing or confidence intervals. Reported accuracy improvements lack formal significance validation",
-    "point_006": "Ambiguity in thrust score computation and threshold selection. Mathematical formulation is abstract with no pseudocode; threshold \u03bb tuning details are missing"
+    "point_001": "Lack of comparison to learned retrieval policies. The paper does not compare Thrust against adaptive retrieval methods using learned gating or reinforcement learning, which are stronger baselines in retrieval-augmented generation literature",
+    "point_002": "Insufficient theoretical and ablation analysis of Thrust design. No ablation or justification is provided for the specific weighted average of normalized vectors formula, nor comparisons to simpler or alternative confidence metrics",
+    "point_003": "Unclear clustering methodology and sensitivity. Details on clustering algorithm, number of clusters, and their impact on Thrust scores are missing, though clustering quality directly affects metric reliability",
+    "point_004": "Missing baseline comparisons using PTLM confidence scores. The evaluation omits comparisons to standard uncertainty measures derived from PTLM outputs (e.g., softmax probabilities, entropy) as retrieval decision heuristics",
+    "point_005": "Limited evaluation metrics and analysis. Focus is mainly on accuracy and retrieval cost; other relevant metrics like precision/recall of knowledge usage, latency, model calibration, and detailed failure analysis are lacking",
+    "point_006": "Reproducibility concerns. Key details such as threshold selection procedure, external knowledge base characteristics, and code release scope are insufficiently described",
+    "point_007": "Ambiguity in key concepts and explanations. Definitions of 'internal knowledgeability' and the step-by-step computation of Thrust are vague, potentially confusing readers",
+    "point_008": "Limited task generalizability. Experiments focus on classification and QA tasks; applicability to other NLP tasks like generation or summarization remains untested",
+    "point_009": "Cold-start and black-box LLM scenarios not empirically addressed. Although acknowledged as limitations, no experiments or concrete solutions are provided for these important practical cases"
   }
 }

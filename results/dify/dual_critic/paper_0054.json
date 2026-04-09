@@ -3,69 +3,122 @@
   "title": "Pre-Trained Language Models for Interactive Decision-Making",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 97.06,
+  "latency_seconds": 105.59,
   "structured": {
-    "summary": "This paper proposes a framework (LID) that leverages pretrained language models, specifically GPT-2, as sequential decision-making policies by encoding goals, observations, and action histories as token sequences. The approach demonstrates improved combinatorial generalization and task success rates in embodied environments both via imitation learning on expert data and through a novel active data gathering method without expert supervision. The work highlights that LM pretraining provides a strong inductive bias for compositional policy learning beyond natural language inputs.",
+    "summary": "This paper introduces LID, a framework leveraging pre-trained language models as policy networks for sequential decision-making by encoding goals, observations, and histories as sequences. It demonstrates improved combinatorial generalization in embodied environments and proposes an active data gathering method to learn policies without expert data, outperforming standard RL baselines. Analyses highlight the importance of sequential input structure and LM pretraining, while showing flexibility in input encoding formats.",
     "strengths": [
       {
-        "point": "Demonstrates substantial improvement in combinatorial generalization for sequential decision-making tasks using LM initialization.",
-        "evidence": "On VirtualHome and BabyAI benchmarks, LID-Text outperforms LSTM and MLP baselines by a large margin on novel tasks requiring generalization."
+        "point": "Innovative use of pre-trained language models as general policy networks for sequential decision-making",
+        "evidence": "LID converts all policy inputs into sequences and fine-tunes a GPT-2 backbone, achieving substantial success improvements on novel tasks in VirtualHome and BabyAI."
       },
       {
-        "point": "Introduces an active data gathering (ADG) method enabling policy learning without expert trajectories in long-horizon, partially observable environments.",
-        "evidence": "LID-ADG achieves up to 46% success where RL baselines like PPO and DQN perform near chance, and can bootstrap RL policies effectively."
+        "point": "Active data gathering (LID-ADG) enables learning without expert demonstrations",
+        "evidence": "LID-ADG outperforms RL baselines like PPO and DQN+HER on complex embodied tasks with sparse rewards, demonstrating sample-efficient policy learning from relabeled failed trajectories."
       },
       {
-        "point": "Provides analysis showing that sequential input representation and LM weight initialization are key drivers of generalization gains.",
-        "evidence": "Ablations reveal that token semantics (natural language vs. random tokens) matter less than preserving sequential structure and fine-tuning pretrained weights."
+        "point": "Comprehensive ablations clarify the role of LM pretraining and sequential input structure",
+        "evidence": "Training from scratch or removing sequential input structure significantly reduces generalization performance, while input encoding format (natural language vs arbitrary tokens) is less critical."
+      },
+      {
+        "point": "Demonstrated combinatorial generalization to novel tasks and environments",
+        "evidence": "LID achieves +43.6% success improvement on novel VirtualHome tasks and outperforms baselines on BabyAI with fewer training examples."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited evaluation against alternative pretrained sequential models beyond GPT-2 weakens claims about LM-specific benefits.",
-        "evidence": "No comparisons to video-pretrained Transformers or RL-pretrained sequence models were provided."
+        "point": "Lack of comparison to recent transformer-based RL methods without LM pretraining",
+        "evidence": "No empirical or conceptual comparison to Decision Transformer or Trajectory Transformer, leaving unclear if gains stem from LM pretraining or general sequence modeling."
       },
       {
-        "point": "Active data gathering relies on handcrafted hindsight goal relabeling heuristics without exploring scalable or learned relabeling methods.",
-        "evidence": "The ADG approach depends on manually designed rules for goal relabeling, limiting generalizability to other domains."
+        "point": "Unjustified exclusive use of GPT-2 backbone without architecture ablations",
+        "evidence": "No experiments with alternative LM architectures (e.g., BERT, T5) or model sizes to assess generality of results."
       },
       {
-        "point": "Experiments are confined to simulation and do not assess applicability to real-world robotics with noisy, continuous, or partial observations.",
-        "evidence": "All results are on VirtualHome and BabyAI simulators, with no discussion or experiments on physical robots or real sensor data."
+        "point": "Reliance on hand-designed hindsight relabeling heuristics without sensitivity analysis",
+        "evidence": "LID-ADG depends on manual subgoal relabeling rules; no ablations or exploration of automated relabeling methods provided."
       },
       {
-        "point": "Insufficient ablations on LM architecture variants, model scale, and fine-tuning strategies reduce methodological rigor.",
-        "evidence": "Only GPT-2 is used without exploration of larger models, encoder-decoder architectures, or quantitative analysis of freezing vs. fine-tuning."
+        "point": "Limited evaluation environments lacking real-world complexity and robustness testing",
+        "evidence": "Experiments confined to VirtualHome and BabyAI, both simulated and deterministic; no tests on noisy, stochastic, or continuous control domains."
       },
       {
-        "point": "Reproducibility is hindered by sparse reporting of hyperparameters, training protocols, and tokenization details for non-language inputs.",
-        "evidence": "Key training settings and embedding procedures for arbitrary tokens are not clearly described."
+        "point": "Potentially unfair RL baselines with near-zero success on novel tasks and unclear training budgets",
+        "evidence": "Baselines like PPO and DQN+HER achieve near-zero success without detailed hyperparameter tuning or capacity matching."
+      },
+      {
+        "point": "Missing exploration of partial fine-tuning or parameter-efficient adaptation methods",
+        "evidence": "Only full fine-tuning vs freezing LM weights compared; no investigation of adapters, prompt tuning, or partial layer updates."
+      },
+      {
+        "point": "Insufficient analysis of input encoding impact on sample efficiency and robustness",
+        "evidence": "While final performance is similar across encodings, differences in convergence speed or noise robustness are not analyzed."
+      },
+      {
+        "point": "No quantitative analysis of partial observability handling or history length effects",
+        "evidence": "No experiments varying input history length or comparing to explicit memory mechanisms."
+      },
+      {
+        "point": "Lack of discussion on action space scalability and handling unseen actions",
+        "evidence": "Action prediction relies on discrete verbs and objects with embedding inner products; scalability to large or continuous action spaces is unaddressed."
+      },
+      {
+        "point": "Missing key implementation details hindering reproducibility",
+        "evidence": "Fine-tuning hyperparameters, training iterations, and compute resources are not fully specified."
+      },
+      {
+        "point": "Unclear description of sequential input construction and temporal ordering",
+        "evidence": "Paper lacks detailed explanation of how sequences are formed, ordered, truncated, or padded across modalities."
+      },
+      {
+        "point": "Limited failure case analysis without quantitative diagnostics",
+        "evidence": "Failures are qualitatively described but no error categorization or diagnostic experiments are provided."
+      },
+      {
+        "point": "No evaluation of robustness to environment stochasticity or observation noise",
+        "evidence": "Environments appear deterministic and noise-free; robustness under realistic perturbations is untested."
+      },
+      {
+        "point": "No discussion of computational cost, inference latency, or scalability with LM size",
+        "evidence": "Practical deployment considerations related to GPT-2 backbone complexity are not addressed."
       }
     ],
     "questions": [
       {
-        "question": "How does the approach compare to other pretrained sequential models beyond language models?",
-        "motivation": "To clarify whether gains stem specifically from language model pretraining or from generic sequence modeling inductive biases."
+        "question": "How does LID compare empirically to transformer-based RL methods trained from scratch without LM pretraining?",
+        "motivation": "To isolate the benefit of LM pretraining versus general sequence modeling capacity and better position the contribution."
       },
       {
-        "question": "Can the handcrafted hindsight relabeling heuristics in ADG be replaced with learned or automated methods?",
-        "motivation": "To improve scalability and applicability of ADG to diverse environments without domain-specific engineering."
+        "question": "How sensitive is LID-ADG performance to the choice of hindsight relabeling heuristics, and can automated relabeling methods be integrated?",
+        "motivation": "Understanding this would clarify the method's robustness and applicability to environments lacking manual relabeling rules."
       },
       {
-        "question": "How does the method perform under real-world conditions with noisy sensors, continuous action spaces, and partial observability?",
-        "motivation": "To assess practical feasibility and robustness for embodied AI and robotics applications."
+        "question": "How does the choice of LM architecture and size affect policy performance and generalization?",
+        "motivation": "Exploring alternatives could reveal whether results generalize beyond GPT-2 and inform trade-offs between model complexity and effectiveness."
       },
       {
-        "question": "What are the computational costs and training stability considerations when fine-tuning large LMs for decision-making policies?",
-        "motivation": "Understanding efficiency and potential catastrophic forgetting is crucial for deploying LM-based policies."
+        "question": "How does LID handle partial observability in terms of input history length, and what are the computational trade-offs?",
+        "motivation": "To assess the method's capability to maintain relevant memory and scale to long-horizon tasks."
+      },
+      {
+        "question": "What is the computational cost and inference latency of using a GPT-2 backbone in real-time decision-making scenarios?",
+        "motivation": "Important for practical deployment and understanding scalability to larger or resource-constrained environments."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited evaluation against alternative pretrained sequential models beyond GPT-2 weakens claims about LM-specific benefits.. No comparisons to video-pretrained Transformers or RL-pretrained sequence models were provided",
-    "point_002": "Active data gathering relies on handcrafted hindsight goal relabeling heuristics without exploring scalable or learned relabeling methods.. The ADG approach depends on manually designed rules for goal relabeling, limiting generalizability to other domains",
-    "point_003": "Experiments are confined to simulation and do not assess applicability to real-world robotics with noisy, continuous, or partial observations.. All results are on VirtualHome and BabyAI simulators, with no discussion or experiments on physical robots or real sensor data",
-    "point_004": "Insufficient ablations on LM architecture variants, model scale, and fine-tuning strategies reduce methodological rigor.. Only GPT-2 is used without exploration of larger models, encoder-decoder architectures, or quantitative analysis of freezing vs. fine-tuning",
-    "point_005": "Reproducibility is hindered by sparse reporting of hyperparameters, training protocols, and tokenization details for non-language inputs.. Key training settings and embedding procedures for arbitrary tokens are not clearly described"
+    "point_001": "Lack of comparison to recent transformer-based RL methods without LM pretraining. No empirical or conceptual comparison to Decision Transformer or Trajectory Transformer, leaving unclear if gains stem from LM pretraining or general sequence modeling",
+    "point_002": "Unjustified exclusive use of GPT-2 backbone without architecture ablations. No experiments with alternative LM architectures (e.g., BERT, T5) or model sizes to assess generality of results",
+    "point_003": "Reliance on hand-designed hindsight relabeling heuristics without sensitivity analysis. LID-ADG depends on manual subgoal relabeling rules; no ablations or exploration of automated relabeling methods provided",
+    "point_004": "Limited evaluation environments lacking real-world complexity and robustness testing. Experiments confined to VirtualHome and BabyAI, both simulated and deterministic; no tests on noisy, stochastic, or continuous control domains",
+    "point_005": "Potentially unfair RL baselines with near-zero success on novel tasks and unclear training budgets. Baselines like PPO and DQN+HER achieve near-zero success without detailed hyperparameter tuning or capacity matching",
+    "point_006": "Missing exploration of partial fine-tuning or parameter-efficient adaptation methods. Only full fine-tuning vs freezing LM weights compared; no investigation of adapters, prompt tuning, or partial layer updates",
+    "point_007": "Insufficient analysis of input encoding impact on sample efficiency and robustness. While final performance is similar across encodings, differences in convergence speed or noise robustness are not analyzed",
+    "point_008": "No quantitative analysis of partial observability handling or history length effects. No experiments varying input history length or comparing to explicit memory mechanisms",
+    "point_009": "Lack of discussion on action space scalability and handling unseen actions. Action prediction relies on discrete verbs and objects with embedding inner products; scalability to large or continuous action spaces is unaddressed",
+    "point_010": "Missing key implementation details hindering reproducibility. Fine-tuning hyperparameters, training iterations, and compute resources are not fully specified",
+    "point_011": "Unclear description of sequential input construction and temporal ordering. Paper lacks detailed explanation of how sequences are formed, ordered, truncated, or padded across modalities",
+    "point_012": "Limited failure case analysis without quantitative diagnostics. Failures are qualitatively described but no error categorization or diagnostic experiments are provided",
+    "point_013": "No evaluation of robustness to environment stochasticity or observation noise. Environments appear deterministic and noise-free; robustness under realistic perturbations is untested",
+    "point_014": "No discussion of computational cost, inference latency, or scalability with LM size. Practical deployment considerations related to GPT-2 backbone complexity are not addressed"
   }
 }

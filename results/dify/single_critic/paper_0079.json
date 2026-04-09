@@ -3,83 +3,123 @@
   "title": "Explaining Patterns in Data with Language Models via Interpretable Autoprompting",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 58.09,
+  "latency_seconds": 39.66,
   "structured": {
-    "summary": "The paper proposes iPrompt, an interpretable autoprompting method that generates natural language explanations for dataset patterns by iteratively sampling and reranking prompts using a fixed large language model. It demonstrates improved interpretability and generalization over existing autoprompting baselines across diverse tasks including synthetic, linguistic, sentiment, and scientific datasets.",
+    "summary": "The paper proposes iPrompt, an interpretable autoprompting method that generates natural language explanations of dataset patterns by searching for prompts that maximize zero-shot accuracy of a fixed large language model. Evaluated on diverse synthetic, natural language, and scientific datasets, iPrompt produces fluent, human-interpretable prompts that generalize across LLMs and outperform existing autoprompting baselines.",
     "strengths": [
       {
-        "point": "Novel task formulation focusing on natural language explanations of dataset patterns",
-        "evidence": "Defines the problem as generating fluent, human-interpretable prompts that explain input-output relationships rather than just optimizing for prediction accuracy."
+        "point": "Novel approach to generate human-interpretable natural language explanations via autoprompting",
+        "evidence": "iPrompt inverts the prediction problem to search for natural language prompts that explain dataset patterns, producing fluent and semantically meaningful explanations."
       },
       {
-        "point": "Iterative prompt generation and reranking leveraging zero-shot LLM evaluation",
-        "evidence": "Proposes an inference-only method using GPT-J for candidate proposal and reranking by accuracy, enabling interpretable and transferable prompts without gradient access."
+        "point": "Demonstrated effectiveness across diverse datasets including scientific domains",
+        "evidence": "Experiments show iPrompt recovers ground-truth explanations on synthetic tasks, outperforms baselines on NLU and sentiment tasks, and generates meaningful prompts for chemical toxicity, protein classification, and fMRI semantic mapping."
       },
       {
-        "point": "Comprehensive empirical validation on diverse datasets including scientific domains",
-        "evidence": "Shows superior performance to AutoPrompt and suffix decoding baselines on multiple tasks and demonstrates meaningful explanations for proteins, chemicals, and fMRI data."
+        "point": "Prompts generalize well across different LLM architectures and sizes",
+        "evidence": "Prompts generated on GPT-J 6B transfer effectively to GPT-3, outperforming human-written prompts on some tasks."
       },
       {
-        "point": "Practical advantage of using smaller LLMs for prompt generation with transfer to larger models",
-        "evidence": "Prompts generated using GPT-J (6B) achieve competitive zero-shot accuracy on GPT-3 and OPT, indicating scalability and resource efficiency."
+        "point": "Method requires only inference calls without gradient access",
+        "evidence": "iPrompt uses iterative sampling and zero-shot reranking, making it computationally efficient and applicable to black-box LLMs."
+      },
+      {
+        "point": "Human evaluation confirms interpretability and accuracy of generated prompts",
+        "evidence": "ML PhD students rated iPrompt prompts as more interpretable and accurate compared to baselines."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited baseline comparisons excluding recent natural language explanation methods",
-        "evidence": "Evaluations compare mainly against AutoPrompt and suffix decoding, lacking comparisons to post hoc explanation generators or explanation mining techniques."
+        "point": "Lack of comparison to prior explanation or rationale generation methods",
+        "evidence": "The paper does not situate iPrompt relative to existing natural language explanation techniques such as chain-of-thought prompting or rationale extraction."
       },
       {
-        "point": "Insufficient analysis of the impact of LLM size on explanation quality",
-        "evidence": "Experiments use GPT-J primarily with limited ablation on how explanation fidelity varies with model scale."
+        "point": "Limited and potentially unfair baselines",
+        "evidence": "Baselines include AutoPrompt designed for discrete token prompts, not natural language explanations, and no comparisons to human-written or other explanation generation methods are provided."
       },
       {
-        "point": "Unclear and incomplete description of candidate prompt perturbation and generation details",
-        "evidence": "Algorithm 1 and Section 4.1 lack precise parameters and examples for truncation and random modification steps, hindering reproducibility."
+        "point": "Insufficient methodological details impacting reproducibility",
+        "evidence": "Key parameters such as LLM sampling temperature, top-k/top-p values, number of samples per iteration, and prompt rendering templates are not fully specified."
       },
       {
-        "point": "No human baseline explanation sets or quantitative human interpretability evaluation for scientific datasets",
-        "evidence": "Scientific datasets lack ground-truth human explanations and user studies, evaluations rely on qualitative analysis and indirect metrics."
+        "point": "Sparse details on human evaluation protocol and reliability",
+        "evidence": "No information on inter-rater agreement, evaluation instructions, or example prompts shown to raters is provided."
       },
       {
-        "point": "Potential overfitting risk due to reranking on the same dataset without validation split",
-        "evidence": "Reranking uses accuracy on dataset examples used during proposal without explicit measures to prevent prompt memorization."
+        "point": "No theoretical analysis or guarantees about convergence or prompt quality",
+        "evidence": "The method is heuristic and empirical without formal justification or bounds."
       },
       {
-        "point": "Lack of discussion on failure cases, prompt length sensitivity, and generalizability beyond text",
-        "evidence": "No ablation on iterative refinement necessity, no analysis of prompt complexity effects, and no elaboration on applicability to non-text modalities."
+        "point": "Limited discussion on scalability and computational cost",
+        "evidence": "Experiments use relatively small datasets and do not analyze performance or cost on large or high-dimensional datasets."
       },
       {
-        "point": "Presentation and algorithmic formalism are limited",
-        "evidence": "Algorithm lacks formal pseudocode and complexity or computational cost analysis, reducing clarity for practitioners."
+        "point": "Potential bias toward LLM pretraining distribution not addressed",
+        "evidence": "Since prompts are generated by the LLM itself, explanations may reflect model biases rather than true dataset patterns."
+      },
+      {
+        "point": "Ambiguity in search space definition and iterative search details",
+        "evidence": "Constraints on prompt vocabulary, length, and syntactic structure are unclear; iterative search stopping criteria and candidate selection are not fully described."
+      },
+      {
+        "point": "Limited evaluation metrics focusing mainly on accuracy and interpretability",
+        "evidence": "No assessment of explanation faithfulness, diversity, or robustness to noise is included."
+      },
+      {
+        "point": "Generalisability claims limited by evaluation on text-based datasets only",
+        "evidence": "Although extensions to other modalities are mentioned, experiments are restricted to text or text-derived data."
+      },
+      {
+        "point": "Transferability across diverse LLM architectures insufficiently explored",
+        "evidence": "Only GPT-J and GPT-3 are tested; no evaluation on encoder-only or smaller models."
       }
     ],
     "questions": [
       {
-        "question": "How does iPrompt compare to recent non-autoprompting explanation methods in terms of explanation quality and human interpretability?",
-        "motivation": "Benchmarking against a wider range of explanation techniques would clarify iPrompt's relative strengths and weaknesses."
+        "question": "How does iPrompt compare to existing natural language explanation or rationale generation methods?",
+        "motivation": "Understanding relative advantages or complementarities would clarify novelty and practical impact."
       },
       {
-        "question": "What is the effect of LLM size and architecture on the quality and generalization of generated explanations?",
-        "motivation": "Understanding the scalability and resource trade-offs is critical for practical deployment and adoption."
+        "question": "Why does few-shot evaluation degrade reranking performance, and could alternative scoring functions improve prompt selection?",
+        "motivation": "Better understanding reranking choices could enhance method effectiveness and robustness."
       },
       {
-        "question": "Can the method be extended or adapted to other data modalities beyond text and sequences, such as images or audio?",
-        "motivation": "Evaluating generalizability beyond textual inputs would broaden the impact and applicability of iPrompt."
+        "question": "What are the effects of prompt length and complexity on interpretability and accuracy?",
+        "motivation": "Identifying optimal prompt characteristics could improve explanation quality."
       },
       {
-        "question": "How robust are the generated explanations to prompt length, complexity, and input noise?",
-        "motivation": "Insights into sensitivity would guide prompt design and identify limitations in real-world noisy data scenarios."
+        "question": "How scalable is iPrompt to large, complex, or high-dimensional datasets in terms of computational cost and prompt quality?",
+        "motivation": "Assessing scalability is critical for real-world applicability."
+      },
+      {
+        "question": "To what extent do generated explanations faithfully reflect true dataset patterns versus LLM pretraining biases?",
+        "motivation": "Ensuring explanation faithfulness is essential for trustworthy insights."
+      },
+      {
+        "question": "Can iPrompt be effectively adapted to multimodal or non-language datasets?",
+        "motivation": "Demonstrating broader applicability would increase method impact."
+      },
+      {
+        "question": "What are the detailed human evaluation protocols and inter-rater reliability metrics?",
+        "motivation": "Clarifying evaluation rigor strengthens confidence in interpretability claims."
+      },
+      {
+        "question": "How sensitive are results to LLM sampling parameters and prompt rendering templates?",
+        "motivation": "Understanding parameter sensitivity aids reproducibility and method tuning."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited baseline comparisons excluding recent natural language explanation methods. Evaluations compare mainly against AutoPrompt and suffix decoding, lacking comparisons to post hoc explanation generators or explanation mining techniques",
-    "point_002": "Insufficient analysis of the impact of LLM size on explanation quality. Experiments use GPT-J primarily with limited ablation on how explanation fidelity varies with model scale",
-    "point_003": "Unclear and incomplete description of candidate prompt perturbation and generation details. Algorithm 1 and Section 4.1 lack precise parameters and examples for truncation and random modification steps, hindering reproducibility",
-    "point_004": "No human baseline explanation sets or quantitative human interpretability evaluation for scientific datasets. Scientific datasets lack ground-truth human explanations and user studies, evaluations rely on qualitative analysis and indirect metrics",
-    "point_005": "Potential overfitting risk due to reranking on the same dataset without validation split. Reranking uses accuracy on dataset examples used during proposal without explicit measures to prevent prompt memorization",
-    "point_006": "Lack of discussion on failure cases, prompt length sensitivity, and generalizability beyond text. No ablation on iterative refinement necessity, no analysis of prompt complexity effects, and no elaboration on applicability to non-text modalities",
-    "point_007": "Presentation and algorithmic formalism are limited. Algorithm lacks formal pseudocode and complexity or computational cost analysis, reducing clarity for practitioners"
+    "point_001": "Lack of comparison to prior explanation or rationale generation methods. The paper does not situate iPrompt relative to existing natural language explanation techniques such as chain-of-thought prompting or rationale extraction",
+    "point_002": "Limited and potentially unfair baselines. Baselines include AutoPrompt designed for discrete token prompts, not natural language explanations, and no comparisons to human-written or other explanation generation methods are provided",
+    "point_003": "Insufficient methodological details impacting reproducibility. Key parameters such as LLM sampling temperature, top-k/top-p values, number of samples per iteration, and prompt rendering templates are not fully specified",
+    "point_004": "Sparse details on human evaluation protocol and reliability. No information on inter-rater agreement, evaluation instructions, or example prompts shown to raters is provided",
+    "point_005": "No theoretical analysis or guarantees about convergence or prompt quality. The method is heuristic and empirical without formal justification or bounds",
+    "point_006": "Limited discussion on scalability and computational cost. Experiments use relatively small datasets and do not analyze performance or cost on large or high-dimensional datasets",
+    "point_007": "Potential bias toward LLM pretraining distribution not addressed. Since prompts are generated by the LLM itself, explanations may reflect model biases rather than true dataset patterns",
+    "point_008": "Ambiguity in search space definition and iterative search details. Constraints on prompt vocabulary, length, and syntactic structure are unclear; iterative search stopping criteria and candidate selection are not fully described",
+    "point_009": "Limited evaluation metrics focusing mainly on accuracy and interpretability. No assessment of explanation faithfulness, diversity, or robustness to noise is included",
+    "point_010": "Generalisability claims limited by evaluation on text-based datasets only. Although extensions to other modalities are mentioned, experiments are restricted to text or text-derived data",
+    "point_011": "Transferability across diverse LLM architectures insufficiently explored. Only GPT-J and GPT-3 are tested; no evaluation on encoder-only or smaller models"
   }
 }

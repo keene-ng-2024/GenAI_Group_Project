@@ -3,69 +3,97 @@
   "title": "Pre-trained Language Models can be Fully Zero-Shot Learners",
   "platform": "dify_single_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 51.27,
+  "latency_seconds": 74.43,
   "structured": {
-    "summary": "This paper proposes NPPrompt, a fully zero-shot prompting method that automatically constructs verbalizers by retrieving label word neighbors in a PLM's embedding space, enabling classification without any labeled data, manual verbalizer design, or fine-tuning. Experiments show substantial improvements over prior zero-shot baselines and competitiveness with few-shot and GPT-3 approaches across diverse NLP tasks.",
+    "summary": "The paper proposes NPPrompt, a fully zero-shot method that automatically constructs verbalizers by retrieving nearest neighbor words in a PLM's embedding space, enabling prompt-based classification and QA without any labeled or unlabeled data or manual prompt design. It demonstrates strong performance improvements over prior zero-shot methods and competitive results compared to few-shot and human-engineered approaches across multiple NLP tasks.",
     "strengths": [
       {
-        "point": "Novel nonparametric verbalizer construction using PLM embedding neighbors",
-        "evidence": "Automatically generates label word sets from vocabulary nearest neighbors of label names, removing the need for manual verbalizer design."
+        "point": "Novel fully zero-shot verbalizer construction without manual effort or additional data",
+        "evidence": "Uses nearest neighbor search in PLM embedding space to automatically find label words, removing the need for manual verbalizers or unlabeled data."
       },
       {
-        "point": "Strong experimental validation across multiple tasks and datasets",
-        "evidence": "Demonstrates 12-15% absolute accuracy gains on topic classification and GLUE zero-shot tasks, outperforming prior zero-shot methods and GPT-3 zero-shot in some cases."
+        "point": "Strong empirical performance across diverse NLP tasks",
+        "evidence": "Outperforms previous zero-shot methods by large margins on text classification (+12.8%), GLUE (+15.6%), and multiple-choice QA; surpasses GPT-3 zero-shot despite smaller model size."
       },
       {
-        "point": "Method requires no additional data, fine-tuning, or manual prompt engineering",
-        "evidence": "Fully zero-shot setup using only label names and the PLM, with no unlabeled data or human-crafted verbalizers."
+        "point": "Comprehensive ablation studies validating design choices",
+        "evidence": "Shows cosine similarity is best for neighbor search; summing logits weighted by similarity outperforms alternatives; performance stable across neighborhood sizes."
+      },
+      {
+        "point": "Generalizability to various PLMs and multi-word labels",
+        "evidence": "Demonstrated effectiveness with RoBERTa-large and other PLMs; method can handle multi-word label names automatically."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison with contemporaneous prompt tuning methods without manual verbalizers",
-        "evidence": "No direct comparison to methods like Prompt Tuning or Prefix Tuning that learn continuous prompt embeddings without manual verbalizers."
+        "point": "Lack of comparison to recent prompt mining and automatic verbalizer methods",
+        "evidence": "No experiments comparing against PTR (Zhu et al., 2021) or LM-BFF (Liu et al., 2021), weakening novelty claims."
       },
       {
-        "point": "Insufficient analysis of label name ambiguity and multi-token label handling",
-        "evidence": "No investigation of how polysemous or ambiguous label names affect neighbor selection; unclear how multi-token labels are mapped to masked tokens and logits aggregated."
+        "point": "Insufficient theoretical justification for cosine similarity and embedding space choice",
+        "evidence": "No linguistic or theoretical rationale provided for why cosine similarity in PLM embedding space effectively captures label semantics."
       },
       {
-        "point": "Limited discussion on scalability to large or fine-grained label sets and multilingual settings",
-        "evidence": "Experiments focus on small label sets (<20); no evaluation on large hierarchical label spaces or non-English PLMs."
+        "point": "Fixed neighborhood size k without exploration of adaptive or label-specific values",
+        "evidence": "Uses fixed k=10 or 20 across all labels and tasks without investigating adaptive selection."
       },
       {
-        "point": "Missing details on hyperparameters, evaluation setup, and reproducibility",
-        "evidence": "Top-k selection criteria and weighting schemes not fully documented; dataset preprocessing and random seeds not specified."
+        "point": "Evaluation lacks statistical significance testing and human baselines",
+        "evidence": "Reported improvements do not include confidence intervals or significance tests; no human performance or qualitative error analysis provided."
       },
       {
-        "point": "No error analysis, qualitative examples, or runtime efficiency evaluation",
-        "evidence": "Purely quantitative results without insight into failure modes or computational costs compared to naive prompting or GPT-3."
+        "point": "Limited task diversity and language scope",
+        "evidence": "Experiments restricted to English classification, NLI, paraphrasing, and multiple-choice QA; no evaluation on sequence labeling, generation, retrieval, or other languages."
+      },
+      {
+        "point": "Reproducibility concerns due to missing prompt template details and vocabulary filtering",
+        "evidence": "No comprehensive list or rationale for prompt templates; unclear how special tokens, subwords, or multi-word labels are handled during neighbor search."
+      },
+      {
+        "point": "Ambiguities in method description, especially logit aggregation",
+        "evidence": "Section 3.2 does not clarify normalization of logits or tie-breaking in aggregation."
+      },
+      {
+        "point": "Limited analysis of limitations related to label name quality and polysemy",
+        "evidence": "No systematic study on performance degradation with ambiguous or polysemous labels; no mitigation strategies discussed."
+      },
+      {
+        "point": "No experiments or discussion on multilingual applicability",
+        "evidence": "All experiments conducted on English datasets and PLMs; method\u2019s transferability to morphologically rich or low-resource languages unaddressed."
       }
     ],
     "questions": [
       {
-        "question": "How does NPPrompt perform relative to learned continuous prompt tuning methods that do not require manual verbalizers?",
-        "motivation": "Understanding comparative advantages would clarify the practical novelty and applicability of NPPrompt."
+        "question": "How does NPPrompt compare quantitatively and qualitatively to recent prompt mining and automatic verbalizer generation methods?",
+        "motivation": "Understanding relative advantages and novelty requires benchmarking against state-of-the-art automated prompt design approaches."
       },
       {
-        "question": "How robust is the neighbor-based verbalizer approach to ambiguous or polysemous label names and multi-token labels?",
-        "motivation": "Clarification is needed to assess generalization to diverse label naming conventions common in real-world tasks."
+        "question": "Can adaptive or label-specific neighborhood sizes improve verbalizer quality and downstream performance?",
+        "motivation": "Fixed k may not suit all labels; exploring adaptive strategies could enhance robustness and accuracy."
       },
       {
-        "question": "Can the method scale effectively to large label sets, hierarchical labels, or multilingual contexts?",
-        "motivation": "Ensuring applicability beyond small English classification tasks is critical for broad utility."
+        "question": "How robust is the method to ambiguous, polysemous, or low-quality label names, and can this be mitigated?",
+        "motivation": "Real-world applications often involve noisy or ambiguous labels; addressing this is critical for practical deployment."
       },
       {
-        "question": "What are the computational costs of the top-k neighbor search and aggregated inference compared to simpler zero-shot prompting?",
-        "motivation": "Efficiency impacts usability, especially when deploying at scale or in resource-constrained environments."
+        "question": "What is the impact of prompt template choice and vocabulary filtering on performance and reproducibility?",
+        "motivation": "Prompt design and token selection are known to affect zero-shot results; transparency here is essential for replicability."
+      },
+      {
+        "question": "Does the method generalize to languages other than English and to tasks beyond classification and multiple-choice QA?",
+        "motivation": "Broader applicability would increase the method\u2019s utility and relevance across NLP."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison with contemporaneous prompt tuning methods without manual verbalizers. No direct comparison to methods like Prompt Tuning or Prefix Tuning that learn continuous prompt embeddings without manual verbalizers",
-    "point_002": "Insufficient analysis of label name ambiguity and multi-token label handling. No investigation of how polysemous or ambiguous label names affect neighbor selection; unclear how multi-token labels are mapped to masked tokens and logits aggregated",
-    "point_003": "Limited discussion on scalability to large or fine-grained label sets and multilingual settings. Experiments focus on small label sets (<20); no evaluation on large hierarchical label spaces or non-English PLMs",
-    "point_004": "Missing details on hyperparameters, evaluation setup, and reproducibility. Top-k selection criteria and weighting schemes not fully documented; dataset preprocessing and random seeds not specified",
-    "point_005": "No error analysis, qualitative examples, or runtime efficiency evaluation. Purely quantitative results without insight into failure modes or computational costs compared to naive prompting or GPT-3"
+    "point_001": "Lack of comparison to recent prompt mining and automatic verbalizer methods. No experiments comparing against PTR (Zhu et al., 2021) or LM-BFF (Liu et al., 2021), weakening novelty claims",
+    "point_002": "Insufficient theoretical justification for cosine similarity and embedding space choice. No linguistic or theoretical rationale provided for why cosine similarity in PLM embedding space effectively captures label semantics",
+    "point_003": "Fixed neighborhood size k without exploration of adaptive or label-specific values. Uses fixed k=10 or 20 across all labels and tasks without investigating adaptive selection",
+    "point_004": "Evaluation lacks statistical significance testing and human baselines. Reported improvements do not include confidence intervals or significance tests; no human performance or qualitative error analysis provided",
+    "point_005": "Limited task diversity and language scope. Experiments restricted to English classification, NLI, paraphrasing, and multiple-choice QA; no evaluation on sequence labeling, generation, retrieval, or other languages",
+    "point_006": "Reproducibility concerns due to missing prompt template details and vocabulary filtering. No comprehensive list or rationale for prompt templates; unclear how special tokens, subwords, or multi-word labels are handled during neighbor search",
+    "point_007": "Ambiguities in method description, especially logit aggregation. Section 3.2 does not clarify normalization of logits or tie-breaking in aggregation",
+    "point_008": "Limited analysis of limitations related to label name quality and polysemy. No systematic study on performance degradation with ambiguous or polysemous labels; no mitigation strategies discussed",
+    "point_009": "No experiments or discussion on multilingual applicability. All experiments conducted on English datasets and PLMs; method\u2019s transferability to morphologically rich or low-resource languages unaddressed"
   }
 }

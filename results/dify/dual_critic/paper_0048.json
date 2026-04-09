@@ -3,102 +3,82 @@
   "title": "Leveraging Automated Unit Tests for Unsupervised Code Translation",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 125.7,
+  "latency_seconds": 88.65,
   "structured": {
-    "summary": "This paper presents a novel approach to unsupervised code translation that leverages automated unit test generation and mutation testing to filter noisy pseudo-parallel data, thereby improving semantic correctness. By generating high-quality unit tests for Java functions and translating these tests to Python and C++, the method filters candidate translations that pass the tests to create a verified parallel corpus for self-training, yielding significant accuracy improvements across multiple language pairs.",
+    "summary": "This paper proposes TransCoder-ST, a self-training method for unsupervised source code translation that leverages automatically generated unit tests to filter back-translated code, thereby improving semantic correctness. By generating and translating EvoSuite unit tests for Java functions and using them to validate candidate translations into Python and C++, the approach creates high-quality parallel data for fine-tuning, resulting in substantial improvements over prior unsupervised models across multiple language pairs.",
     "strengths": [
       {
-        "point": "Innovative use of automated unit tests and mutation testing to filter noisy translations",
-        "evidence": "The paper uses EvoSuite-generated Java unit tests with mutation score thresholds to select high-quality tests that verify semantic correctness of translations."
+        "point": "Innovative use of unit tests to filter back-translated code",
+        "evidence": "The method uses EvoSuite-generated Java unit tests translated into Python and C++ to verify candidate translations, ensuring semantic correctness before including them as parallel data."
       },
       {
-        "point": "Demonstrated significant improvements in computational accuracy over strong unsupervised baselines",
-        "evidence": "Offline and online self-training improve CA@1 by up to 24% absolute and reduce error rates by over 25% on Java, Python, and C++ translation tasks."
+        "point": "Significant empirical improvements over state-of-the-art unsupervised models",
+        "evidence": "Achieves up to 24 percentage points absolute gain in computational accuracy and reduces error rates by over 35% compared to TransCoder and DOBF across Java, Python, and C++."
       },
       {
-        "point": "Generation of a large, semantically validated parallel corpus from monolingual code",
-        "evidence": "Constructed a dataset of approximately 135k function pairs across three languages filtered by passing unit tests."
+        "point": "Comprehensive evaluation including offline and online self-training",
+        "evidence": "Both offline and online training approaches are explored, with ablation studies demonstrating the importance of mutation score filtering, caching, and beam search decoding."
       },
       {
-        "point": "Two complementary self-training strategies (offline and online) with ablations demonstrating their effectiveness",
-        "evidence": "Experiments reveal the benefits of mutation score filtering, cache usage in online training, and beam search decoding for pseudo-label generation."
+        "point": "Creation of a large filtered parallel dataset",
+        "evidence": "Generates a multilingual parallel dataset of 135,000 functions by filtering Java functions with high mutation scores, enabling effective fine-tuning."
       },
       {
-        "point": "Direct use of semantic correctness metric (computational accuracy) aligned with program behavior",
-        "evidence": "Evaluation relies on whether translated functions pass unit tests rather than surface similarity metrics like BLEU."
+        "point": "Qualitative analysis showing improved semantic fidelity",
+        "evidence": "Examples illustrate better handling of operator precedence, data structures, and language idioms, indicating deeper semantic understanding."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lack of comparison and positioning relative to prior semantic filtering and verification methods",
-        "evidence": "The paper does not discuss related work such as property-based testing, symbolic execution, or formal verification for code translation filtering."
+        "point": "Lack of validation for correctness of translated unit tests",
+        "evidence": "No empirical or qualitative analysis is provided to confirm that unit tests translated from Java to Python and C++ preserve semantic equivalence."
       },
       {
-        "point": "Insufficient empirical analysis and justification of key hyperparameters such as mutation score threshold",
-        "evidence": "No ablation studies or sensitivity analyses on mutation score cutoffs to understand trade-offs between filtering strictness and data size."
+        "point": "Dependence on EvoSuite-generated Java tests limits generalizability",
+        "evidence": "The approach currently relies solely on Java unit tests with no experiments or discussion on extending test generation to Python or C++."
       },
       {
-        "point": "Limited details on translating Java unit tests to Python and C++, raising reproducibility concerns",
-        "evidence": "The methodology section lacks explanations on how test assertions and constructs are reliably converted across languages."
+        "point": "Evaluation metric (Computational Accuracy) may not fully capture semantic correctness",
+        "evidence": "Passing unit tests is an imperfect proxy; the paper lacks complementary evaluations such as human judgments or semantic equivalence checks."
       },
       {
-        "point": "Potential evaluation bias from using Java-centric unit tests to assess Python and C++ translations not quantified",
-        "evidence": "The effect of test coverage differences and idiomatic language constructs on computational accuracy metrics is not analyzed."
+        "point": "Insufficient details and release of test translation scripts and training hyperparameters",
+        "evidence": "The 'simple scripts' for test translation and key training parameters are not provided, hindering reproducibility."
       },
       {
-        "point": "No experiments or case studies validating generalization to other languages or test generation tools",
-        "evidence": "Claims of extensibility remain unsubstantiated beyond Java, Python, and C++."
+        "point": "Limited discussion of dataset bias and computational cost",
+        "evidence": "No analysis of potential biases introduced by filtering or the scalability of the unit test generation and filtering pipeline."
       },
       {
-        "point": "Absence of runtime, scalability, and resource usage analysis",
-        "evidence": "The computational cost of EvoSuite test generation, mutation testing, cross-language test translation, and iterative training is not reported."
-      },
-      {
-        "point": "No qualitative or error analysis of remaining translation failures",
-        "evidence": "The paper lacks detailed investigation into the nature or causes of errors that persist after self-training."
-      },
-      {
-        "point": "No human evaluation or developer feedback to assess practical usefulness of translations",
-        "evidence": "Evaluation metrics are automated only, without any qualitative assessments of code readability or maintainability."
-      },
-      {
-        "point": "Insufficient explanation and intuition for mutation testing and integration into filtering pipeline",
-        "evidence": "Sections on mutation testing are terse and may be inaccessible to readers unfamiliar with the concept."
-      },
-      {
-        "point": "No discussion of ethical or security implications of incorrect code translations",
-        "evidence": "Potential risks from relying solely on unit tests without formal guarantees are not addressed."
+        "point": "Speculative claim about extension to natural language translation lacks support",
+        "evidence": "No concrete proposal or evidence is provided for applying the method beyond code translation."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive are translation improvements to the mutation score threshold used to filter unit test suites?",
-        "motivation": "Understanding this can guide practical deployment and balance between dataset size and semantic reliability."
+        "question": "How reliably do the translated unit tests preserve the semantics of the original Java tests?",
+        "motivation": "Ensuring that test translations are semantically equivalent is critical because incorrect tests could either filter out valid translations or accept invalid ones, affecting data quality and model performance."
       },
       {
-        "question": "What is the impact of imperfections in test translation across languages on the evaluation and training pipeline?",
-        "motivation": "Languages differ in idioms and runtime behaviors; verifying semantic equivalence of translated tests is critical for fair assessment."
+        "question": "Can the approach be extended to generate and translate unit tests for non-Java languages to broaden applicability?",
+        "motivation": "Current reliance on Java limits the method's use cases; exploring test generation for Python and C++ would enhance generalizability and impact."
       },
       {
-        "question": "Can this approach be extended to languages without mature unit test generation tools or to multi-function/module code contexts?",
-        "motivation": "Real-world codebases involve interdependent components; applicability beyond isolated functions is important for practical adoption."
+        "question": "How does the model perform on larger code units beyond individual functions, such as classes or modules?",
+        "motivation": "Real-world code translation often involves complex structures; understanding scalability to larger units is important for practical deployment."
       },
       {
-        "question": "How does the method compare with other semantic filtering approaches such as symbolic execution or formal verification?",
-        "motivation": "Positioning relative to existing semantic validation techniques would clarify novelty and potential synergies."
+        "question": "What is the computational overhead of generating, translating, and running unit tests during training and inference?",
+        "motivation": "Assessing scalability and efficiency is necessary to evaluate the method's feasibility for large-scale or time-sensitive applications."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lack of comparison and positioning relative to prior semantic filtering and verification methods. The paper does not discuss related work such as property-based testing, symbolic execution, or formal verification for code translation filtering",
-    "point_002": "Insufficient empirical analysis and justification of key hyperparameters such as mutation score threshold. No ablation studies or sensitivity analyses on mutation score cutoffs to understand trade-offs between filtering strictness and data size",
-    "point_003": "Limited details on translating Java unit tests to Python and C++, raising reproducibility concerns. The methodology section lacks explanations on how test assertions and constructs are reliably converted across languages",
-    "point_004": "Potential evaluation bias from using Java-centric unit tests to assess Python and C++ translations not quantified. The effect of test coverage differences and idiomatic language constructs on computational accuracy metrics is not analyzed",
-    "point_005": "No experiments or case studies validating generalization to other languages or test generation tools. Claims of extensibility remain unsubstantiated beyond Java, Python, and C++",
-    "point_006": "Absence of runtime, scalability, and resource usage analysis. The computational cost of EvoSuite test generation, mutation testing, cross-language test translation, and iterative training is not reported",
-    "point_007": "No qualitative or error analysis of remaining translation failures. The paper lacks detailed investigation into the nature or causes of errors that persist after self-training",
-    "point_008": "No human evaluation or developer feedback to assess practical usefulness of translations. Evaluation metrics are automated only, without any qualitative assessments of code readability or maintainability",
-    "point_009": "Insufficient explanation and intuition for mutation testing and integration into filtering pipeline. Sections on mutation testing are terse and may be inaccessible to readers unfamiliar with the concept",
-    "point_010": "No discussion of ethical or security implications of incorrect code translations. Potential risks from relying solely on unit tests without formal guarantees are not addressed"
+    "point_001": "Lack of validation for correctness of translated unit tests. No empirical or qualitative analysis is provided to confirm that unit tests translated from Java to Python and C++ preserve semantic equivalence",
+    "point_002": "Dependence on EvoSuite-generated Java tests limits generalizability. The approach currently relies solely on Java unit tests with no experiments or discussion on extending test generation to Python or C++",
+    "point_003": "Evaluation metric (Computational Accuracy) may not fully capture semantic correctness. Passing unit tests is an imperfect proxy; the paper lacks complementary evaluations such as human judgments or semantic equivalence checks",
+    "point_004": "Insufficient details and release of test translation scripts and training hyperparameters. The 'simple scripts' for test translation and key training parameters are not provided, hindering reproducibility",
+    "point_005": "Limited discussion of dataset bias and computational cost. No analysis of potential biases introduced by filtering or the scalability of the unit test generation and filtering pipeline",
+    "point_006": "Speculative claim about extension to natural language translation lacks support. No concrete proposal or evidence is provided for applying the method beyond code translation"
   }
 }

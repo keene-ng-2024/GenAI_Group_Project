@@ -3,61 +3,70 @@
   "title": "How Should Pre-Trained Language Models Be Fine-Tuned Towards Adversarial Robustness?",
   "platform": "dify_dual_critic",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 96.9,
+  "latency_seconds": 122.15,
   "structured": {
-    "summary": "This paper proposes Robust Informative Fine-Tuning (RIFT), an information-theoretic adversarial fine-tuning method for pre-trained language models that mitigates catastrophic forgetting by maximizing the conditional mutual information between the fine-tuned and pre-trained model features given the label. Empirical results on sentiment analysis and natural language inference tasks demonstrate that RIFT improves adversarial robustness against synonym substitution attacks, outperforming existing baselines while maintaining or improving clean accuracy.",
+    "summary": "This paper proposes RIFT, a novel adversarial fine-tuning method for pre-trained language models that maximizes conditional mutual information between fine-tuned and pre-trained features conditioned on class labels to mitigate catastrophic forgetting and improve robustness against word substitution attacks. Empirical results on IMDB and SNLI demonstrate that RIFT consistently outperforms strong baselines in robust accuracy while maintaining or improving clean accuracy.",
     "strengths": [
       {
-        "point": "Addresses catastrophic forgetting in adversarial fine-tuning of PLMs via an information-theoretic framework",
-        "evidence": "The method maximizes conditional mutual information I(S; T | Y) to preserve pre-trained robust features aligned within class manifolds, which is novel and conceptually well-motivated."
+        "point": "Novel information-theoretic approach to adversarial fine-tuning",
+        "evidence": "RIFT maximizes conditional mutual information I(S; T | Y) to retain robust pre-trained features, providing a theoretically motivated alternative to parameter-space regularization."
       },
       {
-        "point": "Consistent empirical improvements on multiple datasets, models, and attack types",
-        "evidence": "RIFT outperforms strong baselines on IMDB and SNLI under Genetic and PWWS synonym substitution attacks, with up to 2.9% robust accuracy gains."
+        "point": "Consistent empirical improvements in robustness and clean accuracy",
+        "evidence": "On IMDB and SNLI with BERT and RoBERTa, RIFT outperforms baselines including ASCC-Defense, weight decay, and mixout under Genetic and PWWS attacks."
+      },
+      {
+        "point": "Clear decomposition and rationale for conditioning on class labels",
+        "evidence": "The paper decomposes I(S; Y, T) into I(S; Y) + I(S; T | Y) and argues with ablations that conditioning on Y better fits downstream tasks."
+      },
+      {
+        "point": "Open-source code release",
+        "evidence": "The authors provide code to facilitate reproducibility and further research."
       }
     ],
     "weaknesses": [
       {
-        "point": "Lacks comparison or discussion of related prior work using mutual information or contrastive representation alignment",
-        "evidence": "No comparison to InfoMin principle, contrastive knowledge distillation, or other MI-based robustness approaches, weakening novelty claims."
+        "point": "Missing comparison to prior mutual information and contrastive learning methods",
+        "evidence": "The paper does not cite or position RIFT relative to InfoMax-based fine-tuning, contrastive learning in NLP, or MI regularization for robustness."
       },
       {
-        "point": "Limited evaluation scope and robustness assessment",
-        "evidence": "Experiments only on two classification tasks with simple labels, and robustness tested solely on synonym substitution attacks; other NLP tasks and adversarial methods are unexplored."
+        "point": "Insufficient theoretical and empirical justification for conditioning on Y",
+        "evidence": "Beyond an ablation, no formal proofs or detailed analyses demonstrate how conditioning on labels improves robustness or filters irrelevant correlations."
       },
       {
-        "point": "Insufficient ablation and analysis of critical hyperparameters and training details",
-        "evidence": "No ablation on InfoNCE temperature, negative sampling, or \u03b1 trade-off beyond narrow ranges; unclear if pre-trained extractor is frozen; no computational cost or stability analysis."
+        "point": "Limited evaluation scope and adversarial attacks",
+        "evidence": "Experiments are restricted to two sentence classification tasks and two word substitution attacks, lacking broader NLP tasks and stronger or adaptive attacks."
       },
       {
-        "point": "Missing theoretical and quantitative analyses supporting key claims",
-        "evidence": "Limited intuitive explanation for why conditioning on labels improves alignment; no quantitative cluster quality metrics or MI estimator bias discussion; no layer-wise feature alignment analysis."
+        "point": "Incomplete reproducibility details",
+        "evidence": "Critical hyperparameters for adversarial example generation, training settings, and feature extraction layers are not fully specified."
       },
       {
-        "point": "Reproducibility hindered by missing implementation details and lack of multiple runs",
-        "evidence": "Key hyperparameters, optimizer settings, and random seed variance are not fully specified or reported."
+        "point": "No analysis of interaction between adversarial training and MI maximization",
+        "evidence": "The paper does not study whether joint optimization causes conflicts or synergy during training."
+      },
+      {
+        "point": "Lack of discussion on computational overhead and potential overfitting to pre-trained features",
+        "evidence": "Training efficiency and adaptability trade-offs are not addressed."
       }
     ],
     "questions": [
       {
-        "question": "Does conditioning on labels in mutual information maximization provide unique benefits over unconditional MI or other contrastive objectives?",
-        "motivation": "Clarifying this would strengthen theoretical understanding and justify the core design choice of RIFT."
+        "question": "How does RIFT compare to recent state-of-the-art adversarial fine-tuning methods like FreeLB or SMART?",
+        "motivation": "Comparisons to stronger baselines are necessary to validate RIFT's empirical gains."
       },
       {
-        "question": "How does RIFT perform on other NLP tasks beyond classification and under diverse adversarial attacks such as paraphrasing or character-level perturbations?",
-        "motivation": "Evaluating generalizability and broader robustness is important for practical adoption."
-      },
-      {
-        "question": "What is the computational overhead of RIFT compared to standard adversarial fine-tuning, and how sensitive are results to hyperparameter choices like temperature and \u03b1?",
-        "motivation": "Understanding efficiency and robustness to design choices is crucial for real-world deployment."
+        "question": "What is the impact of choosing different layers or representations for feature extraction functions F_s and F_t on MI estimation and robustness?",
+        "motivation": "Clarifying this would guide practical application and improve understanding of what features are most beneficial to retain."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Lacks comparison or discussion of related prior work using mutual information or contrastive representation alignment. No comparison to InfoMin principle, contrastive knowledge distillation, or other MI-based robustness approaches, weakening novelty claims",
-    "point_002": "Limited evaluation scope and robustness assessment. Experiments only on two classification tasks with simple labels, and robustness tested solely on synonym substitution attacks; other NLP tasks and adversarial methods are unexplored",
-    "point_003": "Insufficient ablation and analysis of critical hyperparameters and training details. No ablation on InfoNCE temperature, negative sampling, or \u03b1 trade-off beyond narrow ranges; unclear if pre-trained extractor is frozen; no computational cost or stability analysis",
-    "point_004": "Missing theoretical and quantitative analyses supporting key claims. Limited intuitive explanation for why conditioning on labels improves alignment; no quantitative cluster quality metrics or MI estimator bias discussion; no layer-wise feature alignment analysis",
-    "point_005": "Reproducibility hindered by missing implementation details and lack of multiple runs. Key hyperparameters, optimizer settings, and random seed variance are not fully specified or reported"
+    "point_001": "Missing comparison to prior mutual information and contrastive learning methods. The paper does not cite or position RIFT relative to InfoMax-based fine-tuning, contrastive learning in NLP, or MI regularization for robustness",
+    "point_002": "Insufficient theoretical and empirical justification for conditioning on Y. Beyond an ablation, no formal proofs or detailed analyses demonstrate how conditioning on labels improves robustness or filters irrelevant correlations",
+    "point_003": "Limited evaluation scope and adversarial attacks. Experiments are restricted to two sentence classification tasks and two word substitution attacks, lacking broader NLP tasks and stronger or adaptive attacks",
+    "point_004": "Incomplete reproducibility details. Critical hyperparameters for adversarial example generation, training settings, and feature extraction layers are not fully specified",
+    "point_005": "No analysis of interaction between adversarial training and MI maximization. The paper does not study whether joint optimization causes conflicts or synergy during training",
+    "point_006": "Lack of discussion on computational overhead and potential overfitting to pre-trained features. Training efficiency and adaptability trade-offs are not addressed"
   }
 }
