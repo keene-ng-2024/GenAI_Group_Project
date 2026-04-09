@@ -1,0 +1,89 @@
+{
+  "paper_id": "paper_0073",
+  "title": "Knowledge Unlearning for Mitigating Privacy Risks in Language Models ",
+  "platform": "n8n_noloop",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 46.78,
+  "structured": {
+    "summary": "This paper proposes knowledge unlearning, a post hoc method using unlikelihood training to selectively forget specific token sequences in pretrained language models, aiming to mitigate privacy risks without full retraining. The approach demonstrates improved privacy guarantees and computational efficiency compared to data deduplication, with minimal or even positive impact on general language modeling performance.",
+    "strengths": [
+      {
+        "point": "Efficient post hoc privacy mitigation method",
+        "evidence": "Knowledge unlearning requires only a few parameter update iterations and is approximately 3,500,000 times more efficient in FLOPs than retraining from scratch."
+      },
+      {
+        "point": "Improves or maintains general LM performance",
+        "evidence": "Unlearning sometimes improves LM performance significantly (e.g., +8.0% to +10.1% on Lambada) and sequential unlearning prevents performance degradation."
+      },
+      {
+        "point": "Novel metrics for privacy evaluation",
+        "evidence": "Proposes Extraction Likelihood (EL) and Memorization Accuracy (MA) metrics to quantify privacy risk and define practical forgetting thresholds."
+      },
+      {
+        "point": "Demonstrated stronger privacy guarantees than data deduplication",
+        "evidence": "Empirical results show reduced extraction likelihood and only ~3% of sensitive tokens retrievable after unlearning, compared to near-complete extraction before."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison to existing unlearning and privacy methods",
+        "evidence": "No empirical or detailed discussion of prior machine unlearning or influence-function-based data removal methods beyond deduplication and DP."
+      },
+      {
+        "point": "Insufficient justification and ablation of unlikelihood training",
+        "evidence": "No comparison to alternative forgetting mechanisms or explanation why unlikelihood training is optimal."
+      },
+      {
+        "point": "Evaluation limited in scope and validation of metrics",
+        "evidence": "Extraction Likelihood metric lacks thorough validation; evaluation covers few data domains and no human or downstream privacy impact assessments."
+      },
+      {
+        "point": "Reproducibility concerns due to missing hyperparameter and data selection details",
+        "evidence": "Critical unlearning hyperparameters and criteria for selecting target sequences are not clearly described."
+      },
+      {
+        "point": "Limited generalizability and scalability analysis",
+        "evidence": "Tested only on GPT-Neo and OPT models; no runtime/resource usage reported for very large models or real-world RTBF request scenarios."
+      },
+      {
+        "point": "Forgetting threshold explanation and dependency on validation data unclear",
+        "evidence": "Forgetting thresholds based on EL and MA are confusingly explained and sensitive to validation data choice without mitigation strategies."
+      },
+      {
+        "point": "No discussion of potential negative side effects",
+        "evidence": "Possible unintended forgetting, task degradation, or bias amplification are not addressed."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does knowledge unlearning compare empirically to other machine unlearning or selective forgetting methods?",
+        "motivation": "Understanding relative effectiveness and novelty requires benchmarking against existing approaches."
+      },
+      {
+        "question": "How robust and reliable are the Extraction Likelihood and Memorization Accuracy metrics in reflecting real-world privacy leakage?",
+        "motivation": "Validation of these metrics is critical to trust the privacy guarantees claimed."
+      },
+      {
+        "question": "What are the effects of unlikelihood training hyperparameters and chunk sizes on forgetting efficacy and LM performance?",
+        "motivation": "Clarifying sensitivity to these choices is important for reproducibility and practical deployment."
+      },
+      {
+        "question": "Can the method scale efficiently to very large models and handle numerous heterogeneous RTBF requests in real-world settings?",
+        "motivation": "Scalability and applicability to production-scale models and privacy demands are key for impact."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Limited comparison to existing unlearning and privacy methods. No empirical or detailed discussion of prior machine unlearning or influence-function-based data removal methods beyond deduplication and DP.",
+    "point_002": "Insufficient justification and ablation of unlikelihood training. No comparison to alternative forgetting mechanisms or explanation why unlikelihood training is optimal.",
+    "point_003": "Evaluation limited in scope and validation of metrics. Extraction Likelihood metric lacks thorough validation; evaluation covers few data domains and no human or downstream privacy impact assessments.",
+    "point_004": "Reproducibility concerns due to missing hyperparameter and data selection details. Critical unlearning hyperparameters and criteria for selecting target sequences are not clearly described.",
+    "point_005": "Limited generalizability and scalability analysis. Tested only on GPT-Neo and OPT models; no runtime/resource usage reported for very large models or real-world RTBF request scenarios.",
+    "point_006": "Forgetting threshold explanation and dependency on validation data unclear. Forgetting thresholds based on EL and MA are confusingly explained and sensitive to validation data choice without mitigation strategies.",
+    "point_007": "No discussion of potential negative side effects. Possible unintended forgetting, task degradation, or bias amplification are not addressed."
+  },
+  "transcript": {
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nPretrained Language Models (LMs) memorize extensive knowledge from their training data, including sensitive personal information (e.g., names, phone numbers, emails) and proprietary content. This memorization poses significant privacy risks, as adversaries can extract such private data from LMs. Existing privacy mitigation methods primarily involve:\n\n- **Data preprocessing:** Removing private information from training data before training.\n- **Differential Privacy (DP):** Training models with DP guarantees.\n\nBoth approaches require retraining the entire LM, which is computationally expensive and impractical for large-scale models. Additionally, data preprocessing assumes private information is easily identifiable, and DP requires predefined privacy boundaries, which may not align with individual privacy expectations.\n\nThere is a need for an efficient, post hoc method to mitigate privacy risks in LMs without retraining from scratch, especially to support dynamic requests such as the \"Right To Be Forgotten\" (RTBF).\n\n---\n\n### Proposed Method\n\n**Knowledge Unlearning** is introduced as a novel, efficient post hoc approach to mitigate privacy risks in pretrained LMs by selectively forgetting specific token sequences without retraining the entire model.\n\n- The method applies **unlikelihood training**: instead of minimizing the negative log-likelihood (standard training), it maximizes it (gradient ascent) on target token sequences to \"unlearn\" them.\n- This approach requires only a few parameter update iterations.\n- Sequential unlearning (forgetting small chunks of data sequentially) is more effective and less harmful to overall LM performance than batch unlearning (forgetting all target data at once).\n- The method is evaluated on GPT-Neo models (125M, 1.3B, 2.7B parameters).\n- A novel metric, **Extraction Likelihood (EL)**, is proposed to quantify privacy risk by measuring how much of a target token sequence can be extracted by varying the prefix length given to the LM.\n- **Memorization Accuracy (MA)** is also used to measure how much the LM has memorized a sequence.\n- A practical forgetting threshold is defined based on EL and MA values compared to unseen validation data, to empirically determine when a sequence is considered \"forgotten.\"\n\n---\n\n### Results\n\n- Knowledge unlearning effectively reduces the extraction likelihood of target sequences, providing stronger empirical privacy guarantees than data deduplication methods (e.g., OPT models trained on deduplicated data).\n- The method achieves this with little to no degradation in general LM performance across 9 diverse NLP benchmarks (linguistic reasoning, commonsense reasoning, scientific reasoning).\n- In some cases, unlearning even improves LM performance significantly (e.g., +8.0% to +10.1% improvement on the Lambada benchmark).\n- Larger models (1.3B and 2.7B) forget target sequences faster and with less performance degradation than smaller models.\n- Sequential unlearning (dividing data into smaller chunks and forgetting sequentially) prevents performance degradation seen in batch unlearning.\n- The difficulty of unlearning depends on the domain of the target data; structured data (e.g., code, emails) is easier to forget with less LM performance impact than unstructured text (e.g., journal reviews).\n- Computational efficiency: Knowledge unlearning is approximately 3,500,000 times more efficient (in FLOPs) than retraining the LM from scratch with data preprocessing.\n- Empirical examples show that after unlearning, extraction attacks retrieve only a small fraction (~3%) of the original sensitive token sequences, compared to near-complete extraction before unlearning.\n\n---\n\n### Claimed Contributions\n\n1. **Introduction of Knowledge Unlearning** as a post hoc, computationally efficient method to mitigate privacy risks in pretrained LMs by forgetting specific token sequences with minimal impact on general LM capabilities.\n2. **Empirical demonstration** that knowledge unlearning provides stronger privacy guarantees than data deduplication methods while being orders of magnitude more computationally efficient.\n3. **Discovery that sequential unlearning** is more stable and less harmful to LM performance than batch unlearning, and that the domain of the forgotten data critically affects unlearning difficulty.\n4. **Proposal of novel metrics (Extraction Likelihood and Memorization Accuracy)** and a practical guideline to quantify privacy risks and empirically define when a token sequence is considered forgotten.\n5. **Observation that knowledge unlearning can sometimes improve LM performance**, suggesting that forgetting certain sequences may help the model generalize better.\n\n---\n\n### Additional Notes\n\n- The method is tested on GPT-Neo and compared against OPT models trained on deduplicated data.\n- The authors release code and datasets for replication.\n- Limitations include dependency on the choice of validation data for forgetting thresholds and the simplicity of the extraction likelihood metric.\n- Direct comparison with Differential Privacy methods was not performed due to lack of open-source DP-pretrained LMs.\n- The approach supports dynamic privacy requests post-deployment, aligning with real-world RTBF requirements.\n\n---\n\n**In summary, this work proposes a novel, efficient knowledge unlearning technique for pretrained language models that effectively mitigates privacy risks by forgetting specific token sequences post hoc, without retraining the entire model and often without sacrificing, or even improving, general language modeling performance.**",
+    "critic": "1. **Novelty - Lack of Comparison to Related Unlearning Methods:**  \nWhile the paper introduces knowledge unlearning via unlikelihood training, it does not sufficiently compare or discuss prior work on machine unlearning or data removal in neural networks beyond data deduplication and DP. For example, recent methods that perform selective forgetting or influence function-based data removal are not cited or empirically compared, which limits understanding of the novelty and relative effectiveness of the proposed approach.\n\n2. **Methodology - Justification for Unlikelihood Training Choice:**  \nThe paper employs unlikelihood training (gradient ascent on negative log-likelihood) to forget sequences but does not provide a detailed justification or ablation comparing this approach to alternative forgetting mechanisms (e.g., fine-tuning with negative examples, adversarial forgetting). It remains unclear why unlikelihood training is optimal or necessary for effective unlearning.\n\n3. **Methodology - Impact of Sequential Unlearning Chunk Size:**  \nSequential unlearning is claimed to be more effective than batch unlearning, but the paper does not explore or justify the choice of chunk sizes or the number of sequential iterations. An ablation varying chunk size would clarify how sensitive the method is to this hyperparameter and whether there is an optimal granularity for unlearning.\n\n4. **Evaluation - Baselines Limited to Deduplication Only:**  \nThe main empirical privacy baseline is OPT models trained on deduplicated data, which is a data preprocessing approach. The paper does not compare against any existing post hoc privacy mitigation methods or approximate DP-trained models, even if only on smaller scales, which would provide a more comprehensive evaluation of privacy gains.\n\n5. **Evaluation - Extraction Likelihood Metric Simplicity and Validation:**  \nThe novel Extraction Likelihood (EL) metric is central to privacy evaluation, but its formulation and validation are only briefly described. The paper lacks a thorough analysis of EL\u2019s sensitivity, robustness, or correlation with actual privacy leakage in real-world attacks, raising questions about its sufficiency as a privacy risk measure.\n\n6. **Evaluation - Memorization Accuracy (MA) Metric Ambiguity:**  \nMA is used alongside EL to define forgetting thresholds, but the paper does not clearly define how MA is computed or how it complements EL. The relationship between these two metrics and their combined thresholding strategy is not fully explained, which may confuse readers about how forgetting is operationalized.\n\n7. **Evaluation - Limited Diversity of Target Data Domains:**  \nAlthough the paper notes that structured data (code, emails) is easier to forget than unstructured text (journal reviews), the evaluation only covers a few data domains. It is unclear how the method performs on other sensitive data types such as medical records, conversational data, or multilingual corpora, limiting claims of generalizability.\n\n8. **Evaluation - Lack of Human Evaluation or Downstream Privacy Impact:**  \nThe evaluation focuses on token-level extraction likelihood and LM benchmark performance but does not include human evaluation of privacy leakage or downstream impact on tasks sensitive to privacy. This omission weakens the practical significance of the privacy claims.\n\n9. **Reproducibility - Missing Details on Unlearning Hyperparameters:**  \nThe paper does not provide sufficient details on critical hyperparameters for unlikelihood training, such as learning rates, number of iterations per chunk, or optimizer settings. Without these, reproducing the efficiency and effectiveness claims is challenging.\n\n10. **Reproducibility - Dataset and Target Sequence Selection Criteria:**  \nWhile code and datasets are released, the paper lacks a clear description of how target sequences for unlearning are selected or constructed, including their length, frequency, or representativeness. This information is essential for replicating the privacy mitigation experiments.\n\n11. **Clarity - Confusing Explanation of Forgetting Thresholds:**  \nThe practical forgetting threshold based on EL and MA compared to unseen validation data is introduced but explained in a way that is difficult to follow. The paper would benefit from a clearer, step-by-step description or a visual illustration of how thresholds are determined and applied.\n\n12. **Limitations - Dependency on Validation Data for Forgetting Thresholds:**  \nThe authors acknowledge that forgetting thresholds depend on validation data choice but do not analyze how sensitive the method is to this choice or propose strategies to mitigate this dependency. This limitation could undermine the reliability of the forgetting criterion in diverse deployment scenarios.\n\n13. **Limitations - No Discussion of Potential Negative Side Effects:**  \nAlthough some improvements in LM performance are reported post-unlearning, the paper does not discuss potential negative side effects such as unintended forgetting of related knowledge, degradation on rare but important tasks, or increased model bias, which are important for real-world adoption.\n\n14. **Generalisability - Tested Only on GPT-Neo and OPT Models:**  \nThe method is evaluated only on GPT-Neo models and compared to OPT models trained on deduplicated data. It remains unclear how well knowledge unlearning would transfer to other architectures (e.g., decoder-only vs encoder-decoder), larger-scale models like GPT-3, or multilingual LMs.\n\n15. **Generalisability - Scalability to Very Large Models and Real-World RTBF Requests:**  \nWhile computational efficiency is claimed to be orders of magnitude better than retraining, the paper does not provide concrete runtime or resource usage numbers on very large models or discuss how the method scales with the number and complexity of real-world RTBF requests, which may be numerous and heterogeneous."
+  }
+}

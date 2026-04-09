@@ -1,0 +1,94 @@
+{
+  "paper_id": "paper_0031",
+  "title": "One Question Answering Model for Many Languages with Cross-lingual Dense Passage Retrieval",
+  "platform": "n8n_noloop",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 51.51,
+  "structured": {
+    "summary": "CORA presents a unified multilingual open question answering model that jointly performs cross-lingual dense passage retrieval and answer generation without relying on external translation or language-specific modules. It introduces an iterative training approach with automatic cross-lingual data expansion, achieving substantial improvements on multilingual QA benchmarks across diverse and unseen languages.",
+    "strengths": [
+      {
+        "point": "Unified cross-lingual retrieval and generation model",
+        "evidence": "CORA integrates multilingual dense passage retrieval (mDPR) and multilingual answer generation (mGEN) into a single model that retrieves passages across languages and generates answers directly in the target language."
+      },
+      {
+        "point": "Iterative training with automatic cross-lingual data expansion",
+        "evidence": "The model alternates parameter updates with mining new positive and negative passages using Wikipedia language links and model predictions, improving cross-lingual retrieval and generation without additional human annotation or machine translation."
+      },
+      {
+        "point": "Strong empirical gains on multilingual QA benchmarks",
+        "evidence": "CORA outperforms prior state-of-the-art by 21.4 F1 on XOR-TYDI QA and achieves 4.9 F1 improvement on MKQA overall, including 5.4 F1 on 9 unseen languages, demonstrating effectiveness across diverse and low-resource languages."
+      },
+      {
+        "point": "Detailed analysis of cross-lingual retrieval benefits",
+        "evidence": "Human evaluation shows 96% relevance of cross-lingually retrieved passages, and analysis reveals improved answer coverage and ability to answer previously unanswerable questions due to cross-lingual evidence."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to prior multilingual dense retrieval baselines",
+        "evidence": "The paper lacks direct baselines isolating the retrieval component against existing multilingual dense retrievers, making it unclear how much novelty the retrieval method alone contributes."
+      },
+      {
+        "point": "Limited ablation on contributions of mDPR vs. mGEN",
+        "evidence": "No separate analysis quantifies how much multilingual generation alone improves performance if retrieval is fixed, leaving unclear which component drives gains."
+      },
+      {
+        "point": "Evaluation lacks recent end-to-end multilingual QA baselines and diverse metrics",
+        "evidence": "Baselines do not include recent joint retrieval-generation models; evaluation relies mainly on F1 without exact match, BLEU, or human fluency assessments."
+      },
+      {
+        "point": "Reproducibility details are incomplete",
+        "evidence": "Key hyperparameters, model sizes, retrieval top-k values, and specifics of the cross-lingual data expansion procedure are insufficiently described."
+      },
+      {
+        "point": "Clarity issues regarding unseen languages and generation conditioning",
+        "evidence": "The definition of 'unseen languages' is ambiguous, and the paper does not explain how mGEN encodes or concatenates multiple retrieved passages for answer generation."
+      },
+      {
+        "point": "Limited discussion of scalability and domain generalization",
+        "evidence": "No analysis on scaling to larger or noisier document collections or handling domains/languages with limited Wikipedia coverage; potential Wikipedia bias is unacknowledged."
+      },
+      {
+        "point": "No evaluation on code-switching or truly low-resource languages",
+        "evidence": "The model is not tested on mixed-language questions or extremely low-resource languages with scarce data, limiting claims of generalizability."
+      },
+      {
+        "point": "Lack of qualitative examples",
+        "evidence": "The paper does not include examples of retrieved passages and generated answers, which would aid understanding of model behavior."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does CORA\u2019s retrieval component compare quantitatively to existing multilingual dense retrievers when isolated?",
+        "motivation": "Understanding the retrieval novelty is important to assess the contribution of the unified model versus prior retrieval methods."
+      },
+      {
+        "question": "How sensitive is the iterative training and data expansion process to hyperparameters and iteration counts?",
+        "motivation": "Clarifying robustness and convergence would help reproduce and potentially improve the training procedure."
+      },
+      {
+        "question": "Can CORA handle code-switched or mixed-language questions and documents effectively?",
+        "motivation": "Many real-world multilingual scenarios involve code-switching, so this capability is important for practical deployment."
+      },
+      {
+        "question": "What are the computational costs and scalability limits of CORA when applied to larger or noisier multilingual corpora?",
+        "motivation": "Scalability is critical for real-world applications involving large-scale document collections."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to prior multilingual dense retrieval baselines. The paper lacks direct baselines isolating the retrieval component against existing multilingual dense retrievers, making it unclear how much novelty the retrieval method alone contributes.",
+    "point_002": "Limited ablation on contributions of mDPR vs. mGEN. No separate analysis quantifies how much multilingual generation alone improves performance if retrieval is fixed, leaving unclear which component drives gains.",
+    "point_003": "Evaluation lacks recent end-to-end multilingual QA baselines and diverse metrics. Baselines do not include recent joint retrieval-generation models; evaluation relies mainly on F1 without exact match, BLEU, or human fluency assessments.",
+    "point_004": "Reproducibility details are incomplete. Key hyperparameters, model sizes, retrieval top-k values, and specifics of the cross-lingual data expansion procedure are insufficiently described.",
+    "point_005": "Clarity issues regarding unseen languages and generation conditioning. The definition of 'unseen languages' is ambiguous, and the paper does not explain how mGEN encodes or concatenates multiple retrieved passages for answer generation.",
+    "point_006": "Limited discussion of scalability and domain generalization. No analysis on scaling to larger or noisier document collections or handling domains/languages with limited Wikipedia coverage; potential Wikipedia bias is unacknowledged.",
+    "point_007": "No evaluation on code-switching or truly low-resource languages. The model is not tested on mixed-language questions or extremely low-resource languages with scarce data, limiting claims of generalizability.",
+    "point_008": "Lack of qualitative examples. The paper does not include examples of retrieved passages and generated answers, which would aid understanding of model behavior."
+  },
+  "transcript": {
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Multilingual open question answering (QA) requires answering questions posed in many languages using a large collection of multilingual documents. Existing open QA systems primarily focus on English and rely on pipelines involving machine translation (MT) and language-specific retrieval modules, which suffer from error propagation and limited coverage for low-resource languages or questions requiring cross-lingual knowledge retrieval.\n\n- **Motivation:** Many languages lack large-scale annotated QA datasets and comprehensive knowledge sources. Prior approaches translate questions to English, perform English QA, and translate answers back, which is suboptimal especially for low-resource languages and cross-cultural questions. There is a need for a unified QA model that can perform cross-lingual retrieval and generate answers directly in the target language without relying on external translation or language-specific components.\n\n---\n\n### Proposed Method\n\n- **Model Name:** CORA (Cross-lingual Open-Retrieval Answer Generation)\n\n- **Core Idea:** A single unified model that performs dense passage retrieval across multiple languages and generates answers in the target language conditioned on retrieved multilingual passages.\n\n- **Components:**\n  - **Multilingual Dense Passage Retriever (mDPR):** Extends DPR to encode questions and passages from multiple languages into a shared embedding space using a multilingual pretrained model (e.g., mBERT). Retrieves top-k relevant passages across languages based on inner product similarity.\n  - **Multilingual Answer Generator (mGEN):** A multilingual sequence-to-sequence model (e.g., mT5) that autoregressively generates answers in the target language from the retrieved multilingual passages.\n\n- **Training Approach:**\n  - **Iterative Training:** Alternates between parameter updates and cross-lingual data expansion.\n  - **Parameter Updates:** Train mDPR on question-passage pairs with positive and negative passages; train mGEN to generate answers from retrieved passages.\n  - **Cross-lingual Data Expansion:** Automatically augment training data by mining new positive and negative passages using Wikipedia language links and model predictions, without requiring additional human annotation or machine translation.\n  - **Data Sources:** Initial training data combines multilingual QA datasets (XOR-TYDI QA, TYDI QA) and English QA datasets (Natural Questions). Wikipedia dumps from 13 languages are used as the multilingual document collection.\n\n- **Inference:** For a question in language L, mDPR retrieves relevant passages from the multilingual collection, and mGEN generates the answer directly in language L.\n\n---\n\n### Results\n\n- **Datasets:** Evaluated on XOR-TYDI QA (7 languages) and MKQA (25 languages, 9 unseen during training).\n\n- **Performance:**\n  - On XOR-TYDI QA, CORA outperforms previous state-of-the-art by 21.4 F1 points on average across 7 languages.\n  - On MKQA, CORA achieves significant improvements over baselines (including translate-test pipelines and monolingual BM25 retrieval) with gains of 4.9 F1 points overall and 5.4 F1 points on 9 unseen languages.\n  - CORA achieves roughly 30 F1 on many languages, including low-resource and unseen languages.\n  - Ablation studies show the importance of iterative training, cross-lingual training data, and retrieval from multiple languages beyond English.\n\n- **Analysis:**\n  - Cross-lingual retrieval enables finding relevant passages in languages other than the question or answer language, improving answer coverage.\n  - Human evaluation confirms high relevance (96%) of cross-lingually retrieved passages.\n  - CORA can answer some questions previously labeled unanswerable due to lack of evidence in annotation languages.\n  - Error analysis reveals main errors stem from retrieval mistakes and generation language mismatches.\n\n---\n\n### Claimed Contributions\n\n1. **Unified Multilingual Open QA Model:** CORA is the first large-scale unified model that performs cross-lingual dense passage retrieval and answer generation for many languages without relying on language-specific translation or retrieval modules.\n\n2. **Iterative Cross-lingual Training and Data Expansion:** Introduces an iterative training approach that automatically expands training data using Wikipedia language links and model predictions, enabling improved cross-lingual retrieval and generation without additional human annotation or machine translation.\n\n3. **State-of-the-Art Performance:** Demonstrates substantial improvements over previous methods on two multilingual open QA benchmarks across 26 typologically diverse languages, including 9 unseen languages.\n\n4. **Cross-lingual Retrieval Analysis:** Provides detailed analyses showing the importance and effectiveness of cross-lingual retrieval in improving QA performance, especially in low-resource and unseen languages.\n\n5. **Public Release:** Plans to publicly release code and models to facilitate further research in multilingual open QA.\n\n---\n\n**Overall, CORA advances multilingual open QA by enabling direct cross-lingual retrieval and answer generation in a single model, significantly improving performance and coverage across many languages without relying on external translation or language-specific components.**",
+    "critic": "1. **Novelty - Comparison to Prior Cross-lingual Retrieval Models:**  \nWhile CORA claims to be the first unified model for cross-lingual dense retrieval and answer generation without external translation, the paper does not sufficiently compare to prior multilingual dense retrieval methods that also use shared embedding spaces (e.g., mDPR variants or multilingual dense retrievers in other QA contexts). The related work section and experiments lack direct baselines that isolate the contribution of cross-lingual dense retrieval versus prior multilingual retrieval approaches, making it unclear how much novelty the retrieval component alone contributes.\n\n2. **Methodology - Justification for Iterative Training Design:**  \nThe iterative training approach alternating parameter updates and cross-lingual data expansion is central to CORA\u2019s success, but the paper provides limited ablation or analysis on the number of iterations, convergence behavior, or sensitivity to hyperparameters in this process (Section \u201cTraining Approach\u201d). More detailed justification or experiments varying iteration counts would clarify the robustness and necessity of this design choice.\n\n3. **Methodology - Lack of Ablation on mDPR vs. mGEN Contributions:**  \nAlthough ablations show the importance of iterative training and cross-lingual data, the paper does not separately ablate the contributions of the multilingual dense passage retriever (mDPR) and the multilingual answer generator (mGEN). For example, how much does mGEN\u2019s multilingual generation capacity alone improve performance if retrieval is fixed? This separation would clarify which component drives gains.\n\n4. **Evaluation - Baselines Do Not Include Recent Multilingual End-to-End Models:**  \nThe baselines on XOR-TYDI QA and MKQA mainly include translate-test pipelines and BM25 retrieval. The paper does not compare against recent end-to-end multilingual QA models that jointly perform retrieval and generation or use dense retrieval without translation. This omission weakens claims of state-of-the-art performance.\n\n5. **Evaluation - Metrics Limited to F1 Score:**  \nThe evaluation relies primarily on F1 scores for answer quality. Given the generation component, additional metrics such as exact match (EM), BLEU, or human evaluation of answer fluency and correctness would provide a more comprehensive assessment of answer quality, especially for low-resource and unseen languages.\n\n6. **Evaluation - Unclear if Retrieval and Generation Errors Are Separately Quantified:**  \nThe error analysis mentions retrieval mistakes and generation language mismatches but does not quantify their relative impact or provide detailed breakdowns (e.g., retrieval recall, precision, generation accuracy). More granular evaluation would help identify bottlenecks.\n\n7. **Reproducibility - Missing Details on Model Architectures and Hyperparameters:**  \nThe paper states mBERT and mT5 are used for mDPR and mGEN, but does not specify model sizes, training batch sizes, learning rates, or retrieval top-k values used during training and inference. These details are critical for reproducibility.\n\n8. **Reproducibility - Lack of Details on Cross-lingual Data Expansion Procedure:**  \nThe cross-lingual data expansion is a key novelty, but the exact procedure for mining new positive and negative passages using Wikipedia language links and model predictions is insufficiently detailed. For example, how are thresholds set for selecting positives/negatives? How often is data expansion performed?\n\n9. **Clarity - Ambiguity in Definition of \u201cUnseen Languages\u201d in MKQA Evaluation:**  \nThe paper reports results on 9 unseen languages in MKQA but does not clearly define \u201cunseen\u201d (e.g., no training data, no Wikipedia documents, or no fine-tuning?). Clarifying this would help interpret generalization claims.\n\n10. **Clarity - Insufficient Explanation of How mGEN Conditions on Retrieved Passages:**  \nIt is stated that mGEN generates answers conditioned on retrieved passages, but the paper does not explain how passages are encoded or concatenated as input, or how the model handles multiple passages (e.g., concatenation order, truncation). This is important for understanding the generation process.\n\n11. **Limitations - No Discussion of Scalability to Larger Document Collections:**  \nThe experiments use Wikipedia dumps from 13 languages, but the paper does not discuss how CORA would scale to larger or noisier document collections, or the computational cost of cross-lingual dense retrieval over many languages.\n\n12. **Limitations - Potential Bias Toward Wikipedia as Knowledge Source:**  \nSince training and retrieval rely heavily on Wikipedia language links and documents, the method may be biased toward topics well-covered in Wikipedia and may not generalize to domains or languages with limited Wikipedia presence. This limitation is not acknowledged.\n\n13. **Generalisability - Unclear if CORA Can Handle Code-Switching or Mixed-Language Questions:**  \nThe paper focuses on questions in a single language and retrieval across languages, but does not address whether CORA can handle code-switched questions or documents containing multiple languages, which are common in multilingual settings.\n\n14. **Generalisability - Limited Evaluation on Truly Low-Resource Languages:**  \nAlthough CORA shows improvements on low-resource and unseen languages, the paper does not specify the resource levels or linguistic typology of these languages in detail. It is unclear how well the model performs on extremely low-resource languages with scarce Wikipedia coverage.\n\n15. **Clarity - Missing Examples of Generated Answers and Retrieved Passages:**  \nIncluding qualitative examples of retrieved passages and generated answers, especially for cross-lingual retrieval cases, would improve clarity and help readers understand the model\u2019s behavior and strengths."
+  }
+}

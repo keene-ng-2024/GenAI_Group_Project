@@ -64,7 +64,7 @@ def create_initial_state(
     """
     truncate_chars = cfg["agent"].get("truncate_body_chars", 12000)
     title = paper.get("title", paper_id)
-    full_text = paper.get("full_text", "")
+    full_text = paper.get("body_text", paper.get("full_text", ""))
     paper_text = full_text[:truncate_chars] if full_text else paper.get("abstract", title)
     
     return AgentState(

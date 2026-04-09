@@ -1,0 +1,104 @@
+{
+  "paper_id": "paper_0059",
+  "title": "BertNet: Harvesting Knowledge Graphs from Pretrained Language Models ",
+  "platform": "n8n_noloop",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 44.01,
+  "structured": {
+    "summary": "This paper proposes an automatic framework to extract symbolic knowledge graphs from pretrained language models using minimal input, including a relation prompt and a few seed entity pairs. It introduces a novel weighted prompt generation method and a two-stage search to harvest diverse, novel, and complex relations, demonstrating competitive performance without relying on training data or external KGs.",
+    "strengths": [
+      {
+        "point": "Novel framework for zero-shot KG extraction from pretrained LMs",
+        "evidence": "The method requires only a relation prompt and a few seed pairs, without large annotated datasets or external knowledge bases."
+      },
+      {
+        "point": "Automatic generation and weighting of diverse prompts improves extraction accuracy",
+        "evidence": "Using GPT-3 paraphrasing and LM likelihood-based weighting yields ~9% accuracy improvement over human-written prompts and further gains with multiple prompts."
+      },
+      {
+        "point": "Efficient two-stage search and re-ranking strategy enables scalable extraction",
+        "evidence": "The approach harvests one relation KG in about one hour on a single GPU, supporting multi-token entities and complex n-ary relations."
+      },
+      {
+        "point": "Comprehensive empirical evaluation across multiple LMs and relation types",
+        "evidence": "Experiments on ConceptNet, LAMA, and newly defined complex relations show competitive accuracy and precision-recall compared to baselines like COMET and LPAQA."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison to recent prompt-based KG extraction methods",
+        "evidence": "Limited empirical or detailed discussion on methods like AutoPrompt or other prompt engineering approaches weakens novelty claims."
+      },
+      {
+        "point": "Lack of justification and analysis for weighted prompt scoring",
+        "evidence": "No ablation or robustness study on why LM likelihood reliably measures prompt quality or sensitivity to seed pair selection."
+      },
+      {
+        "point": "Missing details on handling multi-token entities and complex relations",
+        "evidence": "No explanation or ablation on identification and scoring of multi-token entities during search despite claims of support."
+      },
+      {
+        "point": "Human evaluation setup lacks critical details",
+        "evidence": "No annotation guidelines, inter-annotator agreement, or quality control measures reported, raising concerns about reliability of accuracy scores."
+      },
+      {
+        "point": "Baseline comparisons may be unfair due to differing assumptions",
+        "evidence": "COMET and LPAQA rely on training data or external KGs, unlike the zero-shot setting here, but this discrepancy is not discussed."
+      },
+      {
+        "point": "Reproducibility hindered by missing implementation details",
+        "evidence": "Key information about GPT-3 variant, prompt templates, paraphrase filtering, and search hyperparameters is omitted."
+      },
+      {
+        "point": "Clarity issues in explaining consistency scoring and interpretability claims",
+        "evidence": "Consistency is vaguely defined without formalization or examples; 'symbolic interpretations' of LMs are ambiguously described."
+      },
+      {
+        "point": "Limited discussion on scalability, bias, and noise handling",
+        "evidence": "No analysis on scaling to large KGs, propagation of biases from seed pairs or prompts, or resolution of contradictory knowledge."
+      },
+      {
+        "point": "Generalisability to other languages, domains, and LM architectures not explored",
+        "evidence": "Experiments are restricted to English and specific masked LMs without evaluation on autoregressive models or multilingual settings."
+      },
+      {
+        "point": "Evaluation of complex and n-ary relations is brief and lacks error analysis",
+        "evidence": "Results on 14 complex relations are mentioned but not detailed, leaving validation of this claim insufficient."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How sensitive is the weighted prompt scoring to the choice and quality of seed entity pairs?",
+        "motivation": "Understanding robustness to seed selection is crucial for practical applicability and reliability of the method."
+      },
+      {
+        "question": "Can the framework scale effectively to extract large-scale KGs with hundreds or thousands of relations?",
+        "motivation": "Scalability is essential for real-world deployment and to fulfill the promise of flexible, comprehensive KG construction."
+      },
+      {
+        "question": "How does the method handle contradictory or noisy knowledge encoded in pretrained LMs?",
+        "motivation": "Addressing noise and conflicts is important to ensure the quality and trustworthiness of the extracted KGs."
+      },
+      {
+        "question": "What are the implications of the harvested KGs as 'symbolic interpretations' of LMs in terms of explainability?",
+        "motivation": "Clarifying interpretability claims would help understand the utility of the extracted KGs beyond static knowledge snapshots."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison to recent prompt-based KG extraction methods. Limited empirical or detailed discussion on methods like AutoPrompt or other prompt engineering approaches weakens novelty claims.",
+    "point_002": "Lack of justification and analysis for weighted prompt scoring. No ablation or robustness study on why LM likelihood reliably measures prompt quality or sensitivity to seed pair selection.",
+    "point_003": "Missing details on handling multi-token entities and complex relations. No explanation or ablation on identification and scoring of multi-token entities during search despite claims of support.",
+    "point_004": "Human evaluation setup lacks critical details. No annotation guidelines, inter-annotator agreement, or quality control measures reported, raising concerns about reliability of accuracy scores.",
+    "point_005": "Baseline comparisons may be unfair due to differing assumptions. COMET and LPAQA rely on training data or external KGs, unlike the zero-shot setting here, but this discrepancy is not discussed.",
+    "point_006": "Reproducibility hindered by missing implementation details. Key information about GPT-3 variant, prompt templates, paraphrase filtering, and search hyperparameters is omitted.",
+    "point_007": "Clarity issues in explaining consistency scoring and interpretability claims. Consistency is vaguely defined without formalization or examples; 'symbolic interpretations' of LMs are ambiguously described.",
+    "point_008": "Limited discussion on scalability, bias, and noise handling. No analysis on scaling to large KGs, propagation of biases from seed pairs or prompts, or resolution of contradictory knowledge.",
+    "point_009": "Generalisability to other languages, domains, and LM architectures not explored. Experiments are restricted to English and specific masked LMs without evaluation on autoregressive models or multilingual settings.",
+    "point_010": "Evaluation of complex and n-ary relations is brief and lacks error analysis. Results on 14 complex relations are mentioned but not detailed, leaving validation of this claim insufficient."
+  },
+  "transcript": {
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Traditional symbolic knowledge graphs (KGs) are constructed via costly human crowdsourcing or complex text mining pipelines, limiting coverage and scalability. Large pretrained language models (LMs) like BERT implicitly encode vast knowledge but lack explicit, accessible, editable, and explainable representations.\n- **Motivation:** To combine the flexibility and scalability of neural LMs with the explicitness and interpretability of symbolic KGs by automatically harvesting KGs directly from pretrained LMs with minimal input, enabling extraction of rich, novel, and complex relations without reliance on large annotated datasets or existing KGs.\n\n---\n\n### Proposed Method\n\n- **Framework Overview:** An automatic, efficient, and scalable framework that extracts relational KGs from any pretrained fill-in-the-blank LM (e.g., BERT, RoBERTa, DistilBERT).\n- **Input:** Minimal\u2014an initial prompt defining the relation (e.g., \"The potential risk of A is B\") and a few (e.g., 5) seed entity pairs.\n- **Key Components:**\n  1. **Automatic Creation of Diverse Weighted Prompts:**\n     - Paraphrase the initial prompt using an off-the-shelf paraphrase model (GPT-3) to generate a diverse set of prompts semantically describing the same relation.\n     - Assign confidence weights to each prompt based on compatibility with seed entity pairs, measured via LM likelihood scores.\n  2. **Efficient Search for Consistent Knowledge Tuples:**\n     - Define consistency of candidate entity pairs as weighted average compatibility across all prompts.\n     - Use a two-stage search: first propose candidates via thresholding on individual likelihoods, then re-rank using full consistency scores.\n     - Supports multi-token entities and can be extended to complex or n-ary relations (e.g., \"A is capable of but not good at B\", \"A can do B at C\").\n- **Outcome:** Harvested KGs (e.g., BERTNet, RoBERTaNet) containing diverse, novel, and complex relations, serving also as symbolic interpretations of the source LMs.\n\n---\n\n### Results\n\n- **Datasets & Relations:**\n  - Extracted knowledge for 20 ConceptNet relations, 41 LAMA factual relations, and 14 newly defined complex relations.\n- **Human Evaluation:**\n  - Conducted on Amazon Mechanical Turk with 3 annotators per tuple.\n  - Extracted KGs from RoBERTa showed competitive accuracy compared to other methods like COMET, despite no training data.\n- **Prompt Creation Ablation:**\n  - Automatically created prompts significantly improved accuracy (~9% over human-written prompts).\n  - Using multiple prompts further improved accuracy (~4% gain).\n  - AutoPrompt method (prompt optimization with few seed pairs) performed worse due to insufficient training data.\n- **Precision-Recall Analysis:**\n  - Multi-prompt approach outperformed baselines (COMET, LPAQA) on ConceptNet and LAMA datasets in balancing precision and recall.\n- **Analysis Across LMs:**\n  - Larger models (BERT-large, RoBERTa-large) encode better knowledge than base versions.\n  - Better pretraining strategies (RoBERTa vs. BERT) yield better knowledge extraction.\n  - Knowledge distillation (DistilBERT) can improve knowledge quality by removing noise.\n- **Efficiency:**\n  - Harvesting one relation KG with RoBERTa-large takes about one hour on a single GPU.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Framework:** First to automatically construct symbolic KGs purely from pretrained LMs with minimal input (relation definition and few seed pairs), without reliance on large annotated data or existing KGs.\n2. **Automatic Prompt Generation:** Introduces an unsupervised method to generate diverse, weighted prompts that improve knowledge extraction consistency and accuracy.\n3. **Efficient Search Strategy:** Develops a scalable search and re-ranking method to find consistent entity pairs across multiple prompts.\n4. **Support for Complex Relations:** Extends KG extraction to sophisticated and n-ary relations not covered by prior methods.\n5. **Interpretability:** The harvested KGs serve as symbolic interpretations of black-box LMs, enabling analysis and comparison of knowledge capabilities across different LMs.\n6. **Empirical Validation:** Demonstrates competitive quality, diversity, and novelty of extracted KGs through extensive human evaluation and automatic metrics.\n7. **Insights into LMs:** Provides new understanding of how model size, pretraining, and distillation affect knowledge encoded in LMs.\n\n---\n\n**Overall, this work bridges the gap between implicit knowledge in neural LMs and explicit symbolic KGs, enabling scalable, flexible, and interpretable knowledge extraction with minimal supervision.**",
+    "critic": "1. **Novelty - Comparison to Prior Prompt-Based KG Extraction:**  \nWhile the paper claims novelty in automatic KG construction from pretrained LMs with minimal input, it insufficiently compares to recent prompt-based knowledge extraction methods beyond COMET and LPAQA (Results section). For example, methods like AutoPrompt or other prompt engineering approaches for KG extraction are only briefly mentioned and dismissed due to insufficient training data, but no detailed empirical comparison or discussion is provided. This weakens the claim of novelty in prompt generation and KG extraction.\n\n2. **Methodology - Justification for Weighted Prompt Scoring:**  \nThe approach assigns confidence weights to paraphrased prompts based on LM likelihoods with seed pairs (Proposed Method). However, the paper does not justify why LM likelihood is a reliable proxy for prompt quality or how sensitive the method is to seed pair selection. An ablation or analysis on the robustness of weighting to seed pair noise or quantity is missing.\n\n3. **Methodology - Limited Analysis of Multi-Token Entity Handling:**  \nThe paper claims support for multi-token entities and complex n-ary relations (Proposed Method), but provides no detailed explanation or ablation on how multi-token entities are identified or scored during search. This is a critical design choice that impacts extraction quality but is underexplored.\n\n4. **Evaluation - Human Evaluation Setup Details Missing:**  \nThe human evaluation is described as using 3 annotators per tuple on Mechanical Turk (Results), but the paper lacks details on annotation guidelines, inter-annotator agreement, or quality control measures. Without this, the reliability of reported accuracy scores is unclear.\n\n5. **Evaluation - Baseline Comparisons May Not Be Fully Fair:**  \nCOMET and LPAQA baselines are used for precision-recall comparisons (Results), but these methods rely on training data or external KGs, unlike the zero-shot approach here. The paper does not discuss how these fundamental differences affect fairness of comparison or whether baselines were adapted to zero-shot settings.\n\n6. **Evaluation - Metrics Focused Mainly on Accuracy and Precision-Recall:**  \nThe evaluation emphasizes accuracy and precision-recall but omits other relevant metrics such as coverage, novelty quantification, or relation diversity statistics. Given the claim of extracting novel and complex relations, these metrics would strengthen the empirical validation.\n\n7. **Reproducibility - Details on Paraphrase Model and Prompt Generation Missing:**  \nThe paper states using GPT-3 for paraphrasing prompts (Proposed Method) but does not specify the exact GPT-3 variant, prompt templates, or paraphrase filtering criteria. This hinders reproducibility of the automatic prompt generation step.\n\n8. **Reproducibility - Search Algorithm and Hyperparameters Not Fully Specified:**  \nThe two-stage search and re-ranking procedure is described conceptually, but key hyperparameters such as likelihood thresholds, candidate pool sizes, and re-ranking criteria are not detailed. This omission complicates replication of the extraction pipeline.\n\n9. **Clarity - Explanation of Consistency Scoring Is Vague:**  \nThe definition of consistency as a weighted average compatibility across prompts (Proposed Method) is stated but not mathematically formalized or illustrated with examples. This makes it difficult to grasp how consistency is computed and used in practice.\n\n10. **Limitations - Scalability Beyond Single Relation Extraction Not Discussed:**  \nWhile the method is efficient for harvesting one relation KG in about one hour (Results), the paper does not discuss scalability challenges or strategies when extracting large-scale KGs with hundreds or thousands of relations, which is critical for practical deployment.\n\n11. **Limitations - Potential Biases from Seed Pairs and Prompt Paraphrasing Not Addressed:**  \nThe framework relies heavily on a few seed entity pairs and paraphrased prompts, but the paper does not analyze how biases or errors in these inputs propagate to the extracted KG, nor does it propose mitigation strategies.\n\n12. **Generalisability - Evaluation Limited to English and Specific LM Architectures:**  \nAll experiments are conducted on English pretrained LMs (BERT, RoBERTa, DistilBERT) and datasets like ConceptNet and LAMA. The paper does not explore or discuss applicability to other languages, domains, or LM families (e.g., GPT-style autoregressive models).\n\n13. **Generalisability - Complex and N-ary Relation Extraction Evaluation Is Limited:**  \nThough the method claims support for complex and n-ary relations, the evaluation on 14 newly defined complex relations is briefly mentioned without detailed results or error analysis. This leaves the generalizability to complex relations insufficiently validated.\n\n14. **Clarity - Terminology Around \u201cSymbolic Interpretations\u201d Is Ambiguous:**  \nThe paper states that harvested KGs serve as symbolic interpretations of black-box LMs (Claimed Contributions), but does not clarify what interpretability means concretely here\u2014e.g., whether the KGs can explain LM predictions or just provide a static knowledge snapshot.\n\n15. **Methodology - No Discussion on Handling Contradictory or Noisy Knowledge:**  \nPretrained LMs can encode conflicting or outdated facts. The paper does not discuss how the framework detects or resolves contradictory tuples during extraction or whether the weighted prompt approach mitigates noise."
+  }
+}

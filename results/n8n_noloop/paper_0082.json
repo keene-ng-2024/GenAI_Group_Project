@@ -1,0 +1,108 @@
+{
+  "paper_id": "paper_0082",
+  "title": "Towards Continual Knowledge Learning of Language Models",
+  "platform": "n8n_noloop",
+  "model": "gpt-4.1-mini",
+  "latency_seconds": 57.89,
+  "structured": {
+    "summary": "This paper introduces Continual Knowledge Learning (CKL), a novel continual learning framework aimed at updating internal knowledge in language models while preserving time-invariant facts. It proposes a new benchmark with tailored datasets and a metric (FUAR) to evaluate the trade-off between forgetting and acquiring knowledge, and empirically shows that parameter-expansion methods outperform regularization and rehearsal baselines in this setting.",
+    "strengths": [
+      {
+        "point": "Novel formulation of continual knowledge learning problem",
+        "evidence": "CKL explicitly targets renewing internal world knowledge in LMs, distinguishing it from traditional continual learning tasks."
+      },
+      {
+        "point": "Comprehensive benchmark and metric design",
+        "evidence": "The paper constructs INVARIANT, UPDATED, and NEW LAMA datasets and introduces the FUAR metric to quantify forgetting versus acquisition trade-offs."
+      },
+      {
+        "point": "Extensive empirical evaluation across multiple methods and architectures",
+        "evidence": "Experiments compare regularization, rehearsal, and parameter-expansion methods on T5 and GPT-2, showing parameter-expansion methods achieve the best balance."
+      },
+      {
+        "point": "Insightful analysis of multi-phase continual pretraining challenges",
+        "evidence": "The study reveals increased forgetting and memory inefficiency in multi-phase CKL, highlighting practical limitations."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Insufficient comparison with recent targeted knowledge editing methods",
+        "evidence": "The paper does not thoroughly discuss or compare CKL with prior fact-editing approaches like MEMIT or ROME."
+      },
+      {
+        "point": "Lack of justification and analysis for corpus choice",
+        "evidence": "The use of CC-RECENT NEWS as the continual pretraining corpus is not justified, nor is there exploration of other domains or their impact."
+      },
+      {
+        "point": "Rehearsal baseline details and tuning are unclear",
+        "evidence": "Mix-Review method's mixing ratio and sampling strategy are not specified, raising concerns about fairness of baseline comparisons."
+      },
+      {
+        "point": "Missing ablations on parameter-expansion size and memory trade-offs",
+        "evidence": "No analysis is provided on how varying LoRA rank or adapter size affects performance versus memory overhead."
+      },
+      {
+        "point": "Reproducibility hindered by missing hyperparameter details and code availability",
+        "evidence": "Key training parameters and statements about code or dataset release are absent."
+      },
+      {
+        "point": "Limited evaluation on LM architectures and knowledge domains",
+        "evidence": "Experiments are restricted to T5 and GPT-2 and a news corpus, limiting generalizability to larger or multilingual models and other knowledge types."
+      },
+      {
+        "point": "FUAR metric explanation and sensitivity analysis are insufficient",
+        "evidence": "The paper lacks intuitive explanations, examples, or visualizations to help interpret FUAR behavior under different forgetting/acquisition scenarios."
+      },
+      {
+        "point": "No investigation into mechanisms of catastrophic forgetting",
+        "evidence": "The underlying causes of forgetting during continual pretraining (e.g., parameter drift) are not analyzed."
+      },
+      {
+        "point": "Limited discussion on scalability and external knowledge integration",
+        "evidence": "Multi-phase CKL memory inefficiency is noted but not addressed; external knowledge methods are not considered."
+      },
+      {
+        "point": "Downstream task improvements are not deeply analyzed",
+        "evidence": "The paper reports gains on KILT but does not dissect which tasks or knowledge types benefit most."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does CKL compare quantitatively and qualitatively with recent targeted knowledge editing methods like MEMIT or ROME?",
+        "motivation": "Clarifying this would better position CKL's novelty and practical advantages."
+      },
+      {
+        "question": "Would CKL methods generalize to other knowledge domains beyond recent news, such as scientific or cultural knowledge?",
+        "motivation": "Understanding domain generality is crucial for broad applicability of continual knowledge learning."
+      },
+      {
+        "question": "Can parameter-expansion methods be optimized to reduce memory overhead in multi-phase continual learning?",
+        "motivation": "Addressing scalability is key for real-world deployment of CKL approaches."
+      },
+      {
+        "question": "How sensitive and interpretable is the FUAR metric across different forgetting and acquisition scenarios?",
+        "motivation": "Better understanding FUAR would improve evaluation robustness and result interpretation."
+      },
+      {
+        "question": "What are the underlying mechanisms causing catastrophic forgetting during continual pretraining?",
+        "motivation": "Insights here could guide development of more effective CKL methods."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Insufficient comparison with recent targeted knowledge editing methods. The paper does not thoroughly discuss or compare CKL with prior fact-editing approaches like MEMIT or ROME.",
+    "point_002": "Lack of justification and analysis for corpus choice. The use of CC-RECENT NEWS as the continual pretraining corpus is not justified, nor is there exploration of other domains or their impact.",
+    "point_003": "Rehearsal baseline details and tuning are unclear. Mix-Review method's mixing ratio and sampling strategy are not specified, raising concerns about fairness of baseline comparisons.",
+    "point_004": "Missing ablations on parameter-expansion size and memory trade-offs. No analysis is provided on how varying LoRA rank or adapter size affects performance versus memory overhead.",
+    "point_005": "Reproducibility hindered by missing hyperparameter details and code availability. Key training parameters and statements about code or dataset release are absent.",
+    "point_006": "Limited evaluation on LM architectures and knowledge domains. Experiments are restricted to T5 and GPT-2 and a news corpus, limiting generalizability to larger or multilingual models and other knowledge types.",
+    "point_007": "FUAR metric explanation and sensitivity analysis are insufficient. The paper lacks intuitive explanations, examples, or visualizations to help interpret FUAR behavior under different forgetting/acquisition scenarios.",
+    "point_008": "No investigation into mechanisms of catastrophic forgetting. The underlying causes of forgetting during continual pretraining (e.g., parameter drift) are not analyzed.",
+    "point_009": "Limited discussion on scalability and external knowledge integration. Multi-phase CKL memory inefficiency is noted but not addressed; external knowledge methods are not considered.",
+    "point_010": "Downstream task improvements are not deeply analyzed. The paper reports gains on KILT but does not dissect which tasks or knowledge types benefit most."
+  },
+  "transcript": {
+    "reader": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nLarge Language Models (LMs) encode vast amounts of world knowledge in their parameters through pretraining on large corpora. However, this knowledge can quickly become outdated as the world changes, leading to challenges in:\n\n- Updating outdated knowledge,\n- Acquiring new knowledge,\n- While preserving time-invariant (unchanging) knowledge.\n\nRenewing internal knowledge in LMs is non-trivial due to catastrophic forgetting, where learning new information causes loss of previously learned knowledge. Existing works focus on modifying specific facts or rely on external retrieval, but scalable, general continual learning of world knowledge remains unexplored.\n\n---\n\n### Proposed Method\n\n**Continual Knowledge Learning (CKL):**\n\n- A novel continual learning formulation aimed at renewing internal world knowledge of LMs through continual pretraining on new corpora.\n- CKL treats initial pretraining on corpus D\u2080 as the \"previous task\" and continual pretraining on new corpus D\u2081 as the \"current task.\"\n- The goal is to retain time-invariant knowledge from D\u2080, update outdated knowledge, and acquire new knowledge from D\u2081.\n\n**Benchmark and Datasets:**\n\n- Constructed a new benchmark with three LAMA-based datasets:\n  1. **INVARIANT LAMA:** Measures retention of time-invariant knowledge that should not be forgotten.\n  2. **UPDATED LAMA:** Measures updating of outdated knowledge where facts differ between D\u2080 and D\u2081.\n  3. **NEW LAMA:** Measures acquisition of new knowledge present only in D\u2081.\n- Created a new corpus, **CC-RECENT NEWS**, containing recent news articles as D\u2081 for continual pretraining.\n- Developed a novel metric, **FUAR (Forgotten / (Updated + Acquired) Ratio)**, quantifying the trade-off between forgetting invariant knowledge and gaining updated/new knowledge. Lower FUAR indicates better continual knowledge learning.\n\n**Baseline Methods Explored:**\n\n- Categorized into three continual learning approaches adapted for CKL:\n  - **Regularization:** RecAdam optimizer variant.\n  - **Rehearsal:** Mix-Review method mixing samples from D\u2080 during continual pretraining.\n  - **Parameter-Expansion:** Methods freezing original parameters and adding new trainable parameters, including LoRA, K-Adapter, and a newly proposed Modular method.\n\n---\n\n### Results\n\n- **Main Findings:**\n  - Parameter-expansion methods (LoRA, K-Adapter, Modular) outperform regularization and rehearsal methods in balancing retention and acquisition of knowledge.\n  - Rehearsal (Mix-Review) performed poorly in CKL, contrasting with traditional CL settings, as mixing old data hindered learning new/updating knowledge.\n  - Vanilla continual pretraining (no special method) suffers from significant forgetting.\n  - FUAR metric effectively captures the trade-off, with parameter-expansion methods achieving the lowest FUAR.\n\n- **Multi-phase CKL:**\n  - Multiple sequential continual pretraining phases increase forgetting.\n  - Effectiveness of CKL methods decreases with more phases.\n  - Parameter-expansion methods face memory inefficiency as parameters grow with each phase.\n\n- **Additional Insights:**\n  - Repeated exposure to the same data during continual pretraining is a critical cause of forgetting.\n  - Learning rate tuning can balance forgetting and new knowledge acquisition.\n  - CKL methods transfer across different LM architectures (encoder-decoder T5 and decoder-only GPT-2), with parameter-expansion methods showing robustness.\n  - Continual pretraining on new data can improve performance on downstream knowledge-intensive tasks (KILT benchmark) requiring old knowledge, especially with parameter-expansion methods.\n\n---\n\n### Claimed Contributions\n\n1. **Formulation of CKL:** A new continual learning problem focused on renewing internal world knowledge in LMs, distinct from traditional CL tasks.\n\n2. **Benchmark and Metric:**\n   - Construction of a novel benchmark with datasets (INVARIANT, UPDATED, NEW LAMA) to evaluate retention, updating, and acquisition of knowledge.\n   - Introduction of the FUAR metric to quantify the trade-off between forgetting and learning.\n\n3. **Empirical Evaluation:**\n   - Extensive experiments comparing regularization, rehearsal, and parameter-expansion methods adapted for CKL.\n   - Demonstration that parameter-expansion methods are most effective but have memory trade-offs.\n   - Analysis of challenges in multi-phase continual pretraining and the impact of training dynamics.\n\n4. **Insights for Future Research:**\n   - Highlighting the unique challenges of CKL compared to traditional CL.\n   - Providing a foundation for designing ever-changing LMs that can continually update knowledge efficiently.\n\n---\n\n**Summary:**  \nThis work pioneers the study of continual knowledge learning in language models by formulating CKL, creating a comprehensive benchmark and metric, and evaluating multiple methods. It reveals that parameter-expansion approaches best mitigate forgetting while acquiring new knowledge, though challenges remain in memory efficiency and multi-phase learning. The study lays groundwork for future research on maintaining up-to-date, knowledge-rich LMs in dynamic real-world environments.",
+    "critic": "1. **Novelty - Prior Work on Knowledge Editing Not Fully Compared:**  \nWhile the paper claims CKL is distinct from prior knowledge editing or retrieval-augmented methods, it does not sufficiently compare or discuss recent advances in knowledge editing techniques (e.g., MEMIT, ROME) that also aim to update internal LM knowledge. A more thorough comparison or discussion in the Related Work section would clarify the novelty of CKL relative to these targeted fact-editing approaches.\n\n2. **Methodology - Justification for Dataset Construction and Corpus Choice:**  \nThe paper introduces the CC-RECENT NEWS corpus as D\u2081 for continual pretraining but does not justify why recent news articles are the best or only choice for new knowledge acquisition. It is unclear if the findings generalize to other domains or types of knowledge updates (e.g., scientific facts, cultural knowledge). An ablation or discussion on corpus domain impact is missing.\n\n3. **Evaluation - Rehearsal Baseline Implementation May Be Suboptimal:**  \nThe Mix-Review rehearsal method is reported to perform poorly, but the paper does not detail the mixing ratio or sampling strategy used. Without this, it is unclear if the rehearsal baseline was fairly optimized or if better tuning could improve its performance. This raises concerns about the fairness of the baseline comparison.\n\n4. **Evaluation - FUAR Metric Sensitivity and Interpretability:**  \nThe FUAR metric is novel but the paper lacks an analysis of its sensitivity to different scales of forgetting versus acquisition. For example, how does FUAR behave when forgetting is minimal but acquisition is also low? More discussion or visualization of FUAR\u2019s behavior would help interpret results better.\n\n5. **Methodology - Lack of Ablation on Parameter-Expansion Size and Complexity:**  \nParameter-expansion methods outperform others but introduce memory overhead. The paper does not ablate the size or number of added parameters (e.g., LoRA rank, number of adapters) to analyze the trade-off between performance gains and memory cost. This is important for practical deployment.\n\n6. **Reproducibility - Missing Hyperparameter Details for Continual Pretraining:**  \nKey training details such as learning rates, batch sizes, number of epochs for continual pretraining, and optimizer settings are not fully specified. Without these, reproducing the continual pretraining experiments and comparing methods fairly is difficult.\n\n7. **Clarity - Ambiguity in Definition of Time-Invariant Knowledge:**  \nThe paper defines time-invariant knowledge as facts that should not be forgotten but does not clearly specify how these are identified or labeled in the INVARIANT LAMA dataset. More explanation on dataset construction and annotation criteria is needed for clarity.\n\n8. **Limitations - Multi-Phase CKL Scalability Not Addressed:**  \nThe paper notes that parameter-expansion methods face memory inefficiency with multiple continual pretraining phases but does not propose or discuss potential solutions. This limitation is critical for real-world continual learning scenarios and should be acknowledged more explicitly.\n\n9. **Generalisability - Limited LM Architectures Evaluated:**  \nExperiments are conducted only on T5 and GPT-2 architectures. It remains unclear if CKL methods and findings generalize to larger or more recent LMs (e.g., GPT-3, PaLM) or multilingual models. This limits the scope of the conclusions.\n\n10. **Evaluation - Downstream Task Improvements Not Fully Explored:**  \nThe paper reports improvements on KILT tasks after continual pretraining but does not analyze which types of tasks benefit most or whether gains come from updated or invariant knowledge retention. A more detailed breakdown would strengthen claims about practical impact.\n\n11. **Methodology - No Analysis of Catastrophic Forgetting Mechanisms:**  \nWhile catastrophic forgetting is central to CKL, the paper does not investigate or analyze the underlying mechanisms causing forgetting during continual pretraining (e.g., parameter drift, representation changes). Such analysis could guide better method design.\n\n12. **Clarity - FUAR Metric Formula and Intuition Could Be Better Explained:**  \nThe paper introduces FUAR but the formula and its components are not intuitively explained for readers unfamiliar with continual learning metrics. A simple example or graphical illustration would improve understanding.\n\n13. **Reproducibility - Code and Dataset Availability Not Mentioned:**  \nThere is no explicit statement about releasing code, datasets (especially CC-RECENT NEWS), or pretrained models. This omission hinders reproducibility and follow-up research.\n\n14. **Limitations - External Knowledge Integration Not Considered:**  \nThe study focuses solely on internal knowledge renewal but does not discuss or compare with methods that integrate external knowledge sources dynamically, which may be complementary or more scalable.\n\n15. **Evaluation - Single Metric Reliance May Oversimplify Trade-offs:**  \nRelying primarily on FUAR may oversimplify the complex trade-offs between forgetting and learning. Additional metrics or qualitative analyses (e.g., per-fact accuracy, knowledge consistency) would provide a more comprehensive evaluation."
+  }
+}
