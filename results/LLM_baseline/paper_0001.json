@@ -1,96 +1,128 @@
 {
   "paper_id": "paper_0001",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 21.166,
+  "latency_seconds": 32.157,
   "token_usage": {
-    "input": 27738,
-    "output": 1047
+    "input": 27849,
+    "output": 1686
   },
   "structured": {
-    "summary": "The paper proposes ASK ME ANYTHING PROMPTING (AMA), a method that improves prompting of large language models by generating multiple open-ended question-answer prompts per input and aggregating their noisy predictions using weak supervision, resulting in significant performance gains across various models and tasks.",
+    "summary": "The paper proposes ASK ME ANYTHING PROMPTING (AMA), a method that generates multiple open-ended question-answering style prompts via recursive LLM chains and aggregates their noisy outputs using weak supervision to improve zero/few-shot performance of language models. AMA achieves significant performance gains across 20 benchmarks and 14 open-source LLMs, enabling smaller models to match or exceed GPT3-175B few-shot results.",
     "strengths": [
       {
-        "point": "Novel approach to prompting by generating multiple open-ended question-answer prompts per input and aggregating their outputs.",
-        "evidence": "Section 3.3 describes the recursive use of LLMs to generate question() and answer() prompt chains to create diverse prompts."
+        "point": "Identifies and empirically validates that open-ended question-answering prompt formats outperform restrictive prompts across multiple tasks and models.",
+        "evidence": "Section 3.2 shows a 72% performance improvement on SuperGLUE tasks by converting restrictive prompts to open-ended QA formats."
       },
       {
-        "point": "Use of weak supervision to model varying accuracies and dependencies among prompts for reliable aggregation.",
-        "evidence": "Section 3.4 details the application of weak supervision to learn prompt accuracies and dependencies without labeled data, outperforming majority vote."
+        "point": "Introduces a scalable, task-agnostic method to generate multiple diverse prompts by recursively applying LLMs with functional prompt-chains (question() and answer()).",
+        "evidence": "Section 3.3 describes the prompt() -chain approach to generate multiple prompt variants without manual rewriting."
       },
       {
-        "point": "Comprehensive evaluation across 20 popular benchmarks and 14 open-source LLMs spanning 125M to 175B parameters.",
-        "evidence": "Section 5 reports AMA's average 10.2% absolute lift over few-shot baselines and that GPT-Neo-6B matches or exceeds GPT3-175B on 15 of 20 tasks."
+        "point": "Uses weak supervision to model varying accuracies and dependencies among prompt outputs, improving aggregation beyond majority vote.",
+        "evidence": "Section 3.4 and Table 4 (Appendix B.2) demonstrate up to 8.7 points lift over majority vote and recovery of dependencies improving performance by up to 9.6 points."
       },
       {
-        "point": "Insightful analysis of prompt formats showing open-ended questions outperform restrictive prompts.",
-        "evidence": "Section 3.2 presents experiments demonstrating a 72% performance improvement by converting restrictive prompts to open-ended QA formats."
+        "point": "Extensive evaluation across 20 diverse benchmarks and 14 LLMs spanning 125M to 175B parameters, showing consistent gains and general applicability.",
+        "evidence": "Section 5 reports an average absolute lift of 10.2% across models and tasks, with AMA enabling GPT-Neo-6B to match or exceed GPT3-175B on 15 of 20 benchmarks."
+      },
+      {
+        "point": "Provides a theoretical information-theoretic analysis of the information flow through prompts and aggregation, connecting to weak supervision modeling.",
+        "evidence": "Section 4 and Appendix E present a decomposition of conditional entropy and an Ising model formulation linking prompt accuracies to information gain."
+      },
+      {
+        "point": "Releases code, prompts, and diagnostic evaluation splits to support reproducibility.",
+        "evidence": "Section 7 states that all prompts, code, and diagnostic splits are publicly released."
+      },
+      {
+        "point": "Demonstrates that AMA\u2019s prompt() -chains generalize across different model families and sizes, with diagnostic tasks explaining variation in lift.",
+        "evidence": "Section 5.2 and Figure 5 show AMA\u2019s gains across Neo, BLOOM, OPT, and T0 models, with diagnostics linking generative ability to lift."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited discussion on the computational cost and latency introduced by generating multiple prompts and aggregating outputs.",
-        "evidence": "The paper does not provide runtime or efficiency analysis of AMA compared to standard few-shot prompting."
+        "point": "Limited comparison to other prompt aggregation or ensembling methods beyond majority vote and weighted majority vote.",
+        "evidence": "Section 5.3 compares AMA only to majority vote and weighted majority vote baselines; no comparison to recent prompt ensembling or calibration methods."
       },
       {
-        "point": "Potential limitations on tasks requiring extensive external knowledge or temporal information.",
-        "evidence": "Section 5.1 notes smaller gains on closed-book tasks like NaturalQuestions and RealTimeQA where latent knowledge or temporal updates are critical."
+        "point": "The weak supervision aggregation relies on unlabeled data and structure learning, but the sensitivity to hyperparameters or dataset size is not explored.",
+        "evidence": "Section 3.4 and Appendix A.3 describe the WS algorithm but do not ablate effects of unlabeled data size or hyperparameters on aggregation quality."
       },
       {
-        "point": "The approach relies heavily on the LLM's ability to generate meaningful questions and answers, which may degrade on longer or complex inputs.",
-        "evidence": "Section G (Error Analysis) highlights failures in question() and answer() functions on long or complex contexts."
+        "point": "The method assumes availability of unlabeled data from the target distribution for weak supervision; applicability to fully zero-shot or low-resource settings is unclear.",
+        "evidence": "Section 3.1 and 3.4 use unlabeled data D for structure learning and parameter estimation, but no discussion on scenarios without such data."
       },
       {
-        "point": "The weak supervision aggregation method requires unlabeled data from the task distribution, which may not always be available.",
-        "evidence": "Section 3.4 and Appendix A.3 describe using unlabeled data from test and training sets to learn prompt dependencies."
+        "point": "The approach focuses on classification and QA tasks; it is unclear how well AMA generalizes to generation tasks or tasks with complex output spaces.",
+        "evidence": "Section 3.2 and 5 focus on classification and QA benchmarks; no experiments on open-ended generation or structured prediction tasks."
       },
       {
-        "point": "Limited exploration of how AMA performs on tasks with highly specialized or structured output spaces.",
-        "evidence": "Section 3.2 mentions challenges mapping open-ended answers to valid classes, but detailed evaluation on such tasks is sparse."
+        "point": "The recursive prompt generation via question() and answer() chains may introduce error propagation, especially on long or complex inputs, which is acknowledged but not deeply analyzed.",
+        "evidence": "Section G (Error Analysis) notes failures on long-context inputs and complex sentences but lacks quantitative analysis or mitigation strategies."
       },
       {
-        "point": "The method's effectiveness on non-GPT style models like T0 is lower and requires further investigation.",
-        "evidence": "Section 5.2 and Appendix B.1 show T0 benefits less from AMA, attributed to poorer generative capabilities."
+        "point": "The mapping from open-ended answers to valid output classes requires additional prompt steps, which may be brittle or task-specific.",
+        "evidence": "Section 3.2 discusses inserting a mapping prompt to convert free-form answers to class labels, but robustness and generality of this step are not evaluated."
       },
       {
-        "point": "No ablation studies isolating the contributions of prompt diversity versus weak supervision aggregation.",
-        "evidence": "While some comparisons to majority vote are shown, detailed ablations on prompt generation strategies are limited."
+        "point": "The paper does not clarify the computational cost or inference latency implications of running multiple prompt-chains and weak supervision aggregation.",
+        "evidence": "No discussion on runtime overhead or cost trade-offs compared to single prompt few-shot inference."
       },
       {
-        "point": "The paper does not address potential biases or ethical considerations arising from aggregating multiple imperfect prompts.",
-        "evidence": "Section 8 Ethics Statement acknowledges risks but does not propose mitigation strategies."
+        "point": "The evaluation compares AMA to few-shot GPT3-175B baselines with k\u226532 shots, but AMA uses only k=3 shots; the fairness of this comparison is not fully justified.",
+        "evidence": "Section 5.1 compares AMA (k=3) to GPT3-175B few-shot with k=32-70, which could bias results in favor of AMA."
+      },
+      {
+        "point": "The paper lacks detailed ablations on the number and diversity of prompt() -chains needed for optimal performance.",
+        "evidence": "Section 4 and 5 mention using 3-6 prompt-chains but do not systematically study the effect of prompt collection size or diversity."
+      },
+      {
+        "point": "The weak supervision model assumes the Ising model structure; potential model misspecification effects are not discussed.",
+        "evidence": "Section 4 and Appendix E rely on Ising model assumptions without exploring robustness to violations."
+      },
+      {
+        "point": "The paper does not address potential biases or failure modes introduced by the recursive prompt generation or weak supervision aggregation.",
+        "evidence": "Section 8 Ethics Statement acknowledges risks but does not analyze specific biases or error patterns introduced by AMA."
+      },
+      {
+        "point": "The clarity of the presentation suffers from dense notation and some missing figure references, making it challenging to follow the methodology.",
+        "evidence": "Sections 3.3 and 4 contain dense equations and references to figures (e.g., Figure 3) that are not clearly described or shown."
       }
     ],
     "questions": [
       {
-        "question": "How does AMA's computational cost and inference latency compare to standard few-shot prompting, especially for large-scale deployment?",
-        "motivation": "Understanding efficiency trade-offs is critical for practical adoption of AMA in real-world applications."
+        "question": "How sensitive is the weak supervision aggregation to the amount and domain match of the unlabeled data used for structure learning?",
+        "motivation": "Understanding this is critical for applying AMA in low-resource or domain-shift scenarios where unlabeled data may be limited or unavailable."
       },
       {
-        "question": "Can AMA be adapted or extended to handle tasks with highly structured outputs or multi-step reasoning beyond single-step classification or QA?",
-        "motivation": "Extending AMA's applicability to complex tasks would increase its utility and impact."
+        "question": "Can AMA be extended or adapted to tasks requiring open-ended generation or structured outputs beyond classification and QA?",
+        "motivation": "This would clarify the generalizability of AMA to a broader range of NLP tasks."
       },
       {
-        "question": "How sensitive is AMA to the quality and diversity of the generated question() and answer() prompt chains? Are there failure modes when prompts are too similar or low quality?",
-        "motivation": "Clarifying robustness to prompt generation quality would guide users in applying AMA effectively."
+        "question": "What is the computational overhead of AMA compared to standard few-shot prompting, and how does it scale with the number of prompt-chains?",
+        "motivation": "Practical deployment requires understanding the trade-offs between improved accuracy and increased inference cost."
       },
       {
-        "question": "Have the authors considered integrating retrieval or external knowledge sources to improve AMA's performance on knowledge-intensive or temporal tasks?",
-        "motivation": "Combining AMA with retrieval could address noted limitations on closed-book or domain-specific tasks."
+        "question": "How robust is the mapping step from open-ended answers to valid output classes across diverse tasks and models?",
+        "motivation": "This step is crucial for multi-class classification tasks, and brittleness here could limit AMA\u2019s applicability."
+      },
+      {
+        "question": "Have the authors considered combining AMA with prompt tuning or fine-tuning approaches to further improve performance?",
+        "motivation": "Exploring synergies with other prompt optimization methods could enhance AMA\u2019s effectiveness."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited discussion on the computational cost and latency introduced by generating multiple prompts and aggregating outputs. (The paper does not provide runtime or efficiency analysis of AMA compared to standard few-shot prompting.)",
-    "point_002": "Potential limitations on tasks requiring extensive external knowledge or temporal information. (Section 5.1 notes smaller gains on closed-book tasks like NaturalQuestions and RealTimeQA where latent knowledge or temporal updates are critical.)",
-    "point_003": "The approach relies heavily on the LLM's ability to generate meaningful questions and answers, which may degrade on longer or complex inputs. (Section G (Error Analysis) highlights failures in question() and answer() functions on long or complex contexts.)",
-    "point_004": "The weak supervision aggregation method requires unlabeled data from the task distribution, which may not always be available. (Section 3.4 and Appendix A.3 describe using unlabeled data from test and training sets to learn prompt dependencies.)",
-    "point_005": "Limited exploration of how AMA performs on tasks with highly specialized or structured output spaces. (Section 3.2 mentions challenges mapping open-ended answers to valid classes, but detailed evaluation on such tasks is sparse.)",
-    "point_006": "The method's effectiveness on non-GPT style models like T0 is lower and requires further investigation. (Section 5.2 and Appendix B.1 show T0 benefits less from AMA, attributed to poorer generative capabilities.)",
-    "point_007": "No ablation studies isolating the contributions of prompt diversity versus weak supervision aggregation. (While some comparisons to majority vote are shown, detailed ablations on prompt generation strategies are limited.)",
-    "point_008": "The paper does not address potential biases or ethical considerations arising from aggregating multiple imperfect prompts. (Section 8 Ethics Statement acknowledges risks but does not propose mitigation strategies.)",
-    "point_009": "How does AMA's computational cost and inference latency compare to standard few-shot prompting, especially for large-scale deployment? (Understanding efficiency trade-offs is critical for practical adoption of AMA in real-world applications.)",
-    "point_010": "Can AMA be adapted or extended to handle tasks with highly structured outputs or multi-step reasoning beyond single-step classification or QA? (Extending AMA's applicability to complex tasks would increase its utility and impact.)",
-    "point_011": "How sensitive is AMA to the quality and diversity of the generated question() and answer() prompt chains? Are there failure modes when prompts are too similar or low quality? (Clarifying robustness to prompt generation quality would guide users in applying AMA effectively.)",
-    "point_012": "Have the authors considered integrating retrieval or external knowledge sources to improve AMA's performance on knowledge-intensive or temporal tasks? (Combining AMA with retrieval could address noted limitations on closed-book or domain-specific tasks.)"
+    "point_001": "Limited comparison to other prompt aggregation or ensembling methods beyond majority vote and weighted majority vote.. Section 5.3 compares AMA only to majority vote and weighted majority vote baselines; no comparison to recent prompt ensembling or calibration methods",
+    "point_002": "The weak supervision aggregation relies on unlabeled data and structure learning, but the sensitivity to hyperparameters or dataset size is not explored.. Section 3.4 and Appendix A.3 describe the WS algorithm but do not ablate effects of unlabeled data size or hyperparameters on aggregation quality",
+    "point_003": "The method assumes availability of unlabeled data from the target distribution for weak supervision; applicability to fully zero-shot or low-resource settings is unclear.. Section 3.1 and 3.4 use unlabeled data D for structure learning and parameter estimation, but no discussion on scenarios without such data",
+    "point_004": "The approach focuses on classification and QA tasks; it is unclear how well AMA generalizes to generation tasks or tasks with complex output spaces.. Section 3.2 and 5 focus on classification and QA benchmarks; no experiments on open-ended generation or structured prediction tasks",
+    "point_005": "The recursive prompt generation via question() and answer() chains may introduce error propagation, especially on long or complex inputs, which is acknowledged but not deeply analyzed.. Section G (Error Analysis) notes failures on long-context inputs and complex sentences but lacks quantitative analysis or mitigation strategies",
+    "point_006": "The mapping from open-ended answers to valid output classes requires additional prompt steps, which may be brittle or task-specific.. Section 3.2 discusses inserting a mapping prompt to convert free-form answers to class labels, but robustness and generality of this step are not evaluated",
+    "point_007": "The paper does not clarify the computational cost or inference latency implications of running multiple prompt-chains and weak supervision aggregation.. No discussion on runtime overhead or cost trade-offs compared to single prompt few-shot inference",
+    "point_008": "The evaluation compares AMA to few-shot GPT3-175B baselines with k\u226532 shots, but AMA uses only k=3 shots; the fairness of this comparison is not fully justified.. Section 5.1 compares AMA (k=3) to GPT3-175B few-shot with k=32-70, which could bias results in favor of AMA",
+    "point_009": "The paper lacks detailed ablations on the number and diversity of prompt() -chains needed for optimal performance.. Section 4 and 5 mention using 3-6 prompt-chains but do not systematically study the effect of prompt collection size or diversity",
+    "point_010": "The weak supervision model assumes the Ising model structure; potential model misspecification effects are not discussed.. Section 4 and Appendix E rely on Ising model assumptions without exploring robustness to violations",
+    "point_011": "The paper does not address potential biases or failure modes introduced by the recursive prompt generation or weak supervision aggregation.. Section 8 Ethics Statement acknowledges risks but does not analyze specific biases or error patterns introduced by AMA",
+    "point_012": "The clarity of the presentation suffers from dense notation and some missing figure references, making it challenging to follow the methodology.. Sections 3.3 and 4 contain dense equations and references to figures (e.g., Figure 3) that are not clearly described or shown"
   }
 }

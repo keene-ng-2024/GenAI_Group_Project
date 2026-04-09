@@ -1,91 +1,132 @@
 {
   "paper_id": "paper_0005",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 14.324,
+  "latency_seconds": 46.701,
   "token_usage": {
-    "input": 17749,
-    "output": 990
+    "input": 17860,
+    "output": 1600
   },
   "structured": {
-    "summary": "This paper proposes MVP, a multi-task supervised pre-training approach for natural language generation (NLG) by leveraging a large-scale corpus of 77 labeled datasets across 11 diverse NLG tasks. The model uses a unified text-to-text format and incorporates task-specific soft prompts to enhance task performance, achieving state-of-the-art results on 13 out of 17 datasets and demonstrating strong generalization to unseen NLG and NLU tasks.",
+    "summary": "This paper proposes MVP, a multi-task supervised pre-training approach for natural language generation (NLG) that leverages a large-scale labeled corpus (MVPCorpus) collected from 77 datasets across 11 NLG tasks. The model uses a Transformer encoder-decoder backbone initialized from BART and incorporates task-specific soft prompts to improve task specialization. Extensive experiments demonstrate MVP's superiority over unsupervised pre-trained models and strong generalization to unseen NLG and NLU tasks.",
     "strengths": [
       {
-        "point": "Comprehensive multi-task supervised pre-training on a large and diverse NLG corpus",
-        "evidence": "MVPCorpus collected from 77 datasets over 11 NLG tasks, totaling 25 GB and 32M examples, enabling broad coverage and task diversity (Section 3.1)."
+        "point": "Comprehensive collection and unification of 77 labeled datasets across 11 diverse NLG tasks into a large-scale MVPCorpus for supervised pre-training.",
+        "evidence": "Section 3.1 and Appendix B.1 detail the dataset collection and task unification."
       },
       {
-        "point": "Effective use of task-specific soft prompts to mitigate multi-task learning interference",
-        "evidence": "Two-stage training with task-specific prefix-tuning prompts that store specialized knowledge and improve performance on specific tasks (Section 3.2 and 4.1)."
+        "point": "Demonstration that supervised multi-task pre-training outperforms unsupervised pre-training (BART) by a significant margin on 23 seen datasets.",
+        "evidence": "Section 4.1 and Table 2 show MVP outperforms BART by 7.0% on average."
       },
       {
-        "point": "Strong empirical performance with state-of-the-art results on multiple NLG benchmarks",
-        "evidence": "MVP outperforms unsupervised BART by 7.0% on average and achieves SOTA on 13 out of 17 datasets, including unseen tasks (Sections 4.1, 4.2, and 5)."
+        "point": "Introduction of task-specific soft prompts learned after backbone pre-training to alleviate multi-task learning interference and improve task specialization.",
+        "evidence": "Section 3.2 and experimental results in Section 4.1 (Table 2) demonstrate the effectiveness of MVP+S."
       },
       {
-        "point": "Demonstrated generalization ability to unseen NLG and NLU tasks",
-        "evidence": "MVP shows improved performance on unseen paraphrase generation, style transfer, and GLUE NLU benchmark compared to BART (Section 5)."
+        "point": "Extensive evaluation under both full fine-tuning and parameter-efficient tuning settings, showing MVP's robustness and efficiency.",
+        "evidence": "Section 4.2 and Table 3 present parameter-efficient tuning results."
+      },
+      {
+        "point": "Strong generalization ability of MVP to unseen NLG tasks (paraphrase generation, style transfer) and unseen NLU tasks (GLUE benchmark).",
+        "evidence": "Section 5 and Tables 4 and 5 report results on unseen tasks."
+      },
+      {
+        "point": "Open release of MVPCorpus, pre-trained models, task-specific prompts, and code to facilitate reproducibility and future research.",
+        "evidence": "Abstract, Section 1, and Reproducibility statement."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited analysis of model interpretability and robustness",
-        "evidence": "Authors acknowledge the need for further analysis on interpretability and robustness in the Limitations section."
+        "point": "Lack of ablation studies on the impact of individual datasets or tasks within MVPCorpus on overall model performance.",
+        "evidence": "No detailed analysis on dataset/task contribution is presented in Section 4 or Appendix."
       },
       {
-        "point": "Evaluation relies primarily on automatic metrics which may not fully capture generation quality",
-        "evidence": "Only basic metrics like BLEU, ROUGE, and METEOR are used; human evaluation is not reported (Limitations and Section 4)."
+        "point": "The choice of initializing MVP from BART rather than training from scratch may confound the benefits attributed solely to supervised multi-task pre-training.",
+        "evidence": "Section 3.3 states MVP is initialized from BART, but no ablation compares training from scratch."
       },
       {
-        "point": "No exploration of scaling effects or performance at larger model sizes",
-        "evidence": "Due to computational constraints, the study is limited to a 406M parameter model without experiments on larger scales (Limitations)."
+        "point": "Limited discussion or experiments on scaling MVP to larger model sizes or the effect of model capacity on supervised pre-training benefits.",
+        "evidence": "Limitations section acknowledges no study on different model scales."
       },
       {
-        "point": "Potential data leakage concerns despite efforts to remove overlapping examples",
-        "evidence": "Data leakage mitigation by removing overlapping n-grams is described, but the effectiveness of this approach is not deeply analyzed (Section B.2)."
+        "point": "Evaluation metrics rely mainly on automatic metrics (BLEU, ROUGE, METEOR) which are known to imperfectly correlate with human judgment, especially for open-ended generation tasks.",
+        "evidence": "Section 4 and Limitations mention only basic automatic metrics are used."
       },
       {
-        "point": "Unclear how well the approach would transfer to multilingual or non-English settings",
-        "evidence": "The current work focuses only on English datasets and leaves multilingual extension as future work (Conclusion)."
+        "point": "The paper does not compare MVP to other recent large-scale multi-task or instruction-tuned models for NLG, such as FLAN or T0 variants, beyond T0-3B zero-shot results.",
+        "evidence": "Related work and experiments mention T0 but lack comprehensive comparison with instruction-tuned NLG models."
       },
       {
-        "point": "Limited discussion on computational cost and efficiency compared to unsupervised pre-training",
-        "evidence": "Although the model is smaller than large PLMs, detailed training cost and efficiency comparisons are not provided (Discussion)."
+        "point": "The method for constructing task-specific soft prompts and their length (100 tokens) is not justified or ablated for sensitivity.",
+        "evidence": "Section 3.3 describes prompt length and MLP reparameterization but no ablation on prompt size or architecture."
       },
       {
-        "point": "The impact of task-specific prompt size and design choices on performance is not extensively studied",
-        "evidence": "Prompt length and architecture choices are fixed without ablation or sensitivity analysis (Section 3.3)."
+        "point": "The temperature-scaled mixing strategy for multi-task training is adopted from prior work but lacks detailed justification or ablation on its impact in this setting.",
+        "evidence": "Section 3.3 mentions temperature T=2 without further analysis."
+      },
+      {
+        "point": "The generalization evaluation on unseen NLU tasks uses only fine-tuning, not zero-shot or few-shot settings, limiting conclusions about zero-shot transfer.",
+        "evidence": "Section 5 and Appendix D.3 show zero-shot results only for seen tasks; unseen NLU tasks are fine-tuned."
+      },
+      {
+        "point": "Potential data leakage is addressed by n-gram overlap removal, but the impact of this cleaning on dataset size and model performance is not deeply analyzed.",
+        "evidence": "Appendix B.2 mentions removal of 17,848 examples but no ablation on effect."
+      },
+      {
+        "point": "The paper does not discuss or analyze the interpretability or robustness of the MVP model outputs, which are important for practical deployment.",
+        "evidence": "Limitations section notes interpretability and robustness require further analysis."
+      },
+      {
+        "point": "The paper focuses on English-only datasets and tasks, limiting claims about multilingual or cross-lingual generalization.",
+        "evidence": "Section 3.2 footnote and Conclusion mention only English tasks and future multilingual work."
+      },
+      {
+        "point": "The paper does not provide detailed computational cost or efficiency comparisons between MVP and baselines during pre-training or fine-tuning.",
+        "evidence": "Section 3.3 and Broader Impacts mention training steps but no detailed cost analysis."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is the MVP model's performance to the choice and design of task-specific prompts?",
-        "motivation": "Understanding prompt design impact could guide more efficient or effective prompt tuning strategies."
+        "question": "Have the authors considered ablations on the contribution of individual tasks or datasets within MVPCorpus to the final MVP performance?",
+        "motivation": "Understanding which tasks or datasets most benefit the model can guide future data collection and model design."
       },
       {
-        "question": "Can the supervised multi-task pre-training approach be effectively scaled to larger models and datasets?",
-        "motivation": "Scaling behavior is critical for practical adoption and to compare with large unsupervised PLMs."
+        "question": "What is the effect of training MVP from scratch without BART initialization on performance and convergence?",
+        "motivation": "Is the performance gain mainly due to supervised multi-task pre-training or inherited from BART?"
       },
       {
-        "question": "How does MVP perform on truly zero-shot NLG tasks without any fine-tuning?",
-        "motivation": "The paper mentions limited zero-shot ability; clarifying this would help understand generalization limits."
+        "question": "How sensitive is the model performance to the length and architecture of the task-specific soft prompts?",
+        "motivation": "Prompt design choices impact parameter efficiency and task specialization; ablations would clarify best practices."
       },
       {
-        "question": "What are the ethical considerations regarding bias and fairness in supervised pre-training with labeled datasets?",
-        "motivation": "Supervised data may encode biases; understanding mitigation strategies is important for responsible deployment."
+        "question": "Can the authors provide more analysis on the impact of the temperature-scaled mixing strategy and whether other mixing strategies were explored?",
+        "motivation": "Multi-task training dynamics can be sensitive to data mixing; understanding this helps reproducibility and optimization."
+      },
+      {
+        "question": "Have the authors evaluated MVP's zero-shot or few-shot capabilities on unseen NLG tasks without fine-tuning?",
+        "motivation": "Zero-shot generalization is important for practical applications and comparison to instruction-tuned models."
+      },
+      {
+        "question": "Could the authors provide more detailed computational cost comparisons (e.g., GPU hours, memory) between MVP and baselines during pre-training and fine-tuning?",
+        "motivation": "Efficiency is critical for adoption; understanding resource requirements aids practical evaluation."
+      },
+      {
+        "question": "Are there plans to extend MVP to multilingual or cross-lingual settings, and what challenges do the authors foresee?",
+        "motivation": "Multilingual generalization is a key frontier for NLG models."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited analysis of model interpretability and robustness (Authors acknowledge the need for further analysis on interpretability and robustness in the Limitations section.)",
-    "point_002": "Evaluation relies primarily on automatic metrics which may not fully capture generation quality (Only basic metrics like BLEU, ROUGE, and METEOR are used; human evaluation is not reported (Limitations and Section 4).)",
-    "point_003": "No exploration of scaling effects or performance at larger model sizes (Due to computational constraints, the study is limited to a 406M parameter model without experiments on larger scales (Limitations).)",
-    "point_004": "Potential data leakage concerns despite efforts to remove overlapping examples (Data leakage mitigation by removing overlapping n-grams is described, but the effectiveness of this approach is not deeply analyzed (Section B.2).)",
-    "point_005": "Unclear how well the approach would transfer to multilingual or non-English settings (The current work focuses only on English datasets and leaves multilingual extension as future work (Conclusion).)",
-    "point_006": "Limited discussion on computational cost and efficiency compared to unsupervised pre-training (Although the model is smaller than large PLMs, detailed training cost and efficiency comparisons are not provided (Discussion).)",
-    "point_007": "The impact of task-specific prompt size and design choices on performance is not extensively studied (Prompt length and architecture choices are fixed without ablation or sensitivity analysis (Section 3.3).)",
-    "point_008": "How sensitive is the MVP model's performance to the choice and design of task-specific prompts? (Understanding prompt design impact could guide more efficient or effective prompt tuning strategies.)",
-    "point_009": "Can the supervised multi-task pre-training approach be effectively scaled to larger models and datasets? (Scaling behavior is critical for practical adoption and to compare with large unsupervised PLMs.)",
-    "point_010": "How does MVP perform on truly zero-shot NLG tasks without any fine-tuning? (The paper mentions limited zero-shot ability; clarifying this would help understand generalization limits.)",
-    "point_011": "What are the ethical considerations regarding bias and fairness in supervised pre-training with labeled datasets? (Supervised data may encode biases; understanding mitigation strategies is important for responsible deployment.)"
+    "point_001": "Lack of ablation studies on the impact of individual datasets or tasks within MVPCorpus on overall model performance.. No detailed analysis on dataset/task contribution is presented in Section 4 or Appendix",
+    "point_002": "The choice of initializing MVP from BART rather than training from scratch may confound the benefits attributed solely to supervised multi-task pre-training.. Section 3.3 states MVP is initialized from BART, but no ablation compares training from scratch",
+    "point_003": "Limited discussion or experiments on scaling MVP to larger model sizes or the effect of model capacity on supervised pre-training benefits.. Limitations section acknowledges no study on different model scales",
+    "point_004": "Evaluation metrics rely mainly on automatic metrics (BLEU, ROUGE, METEOR) which are known to imperfectly correlate with human judgment, especially for open-ended generation tasks.. Section 4 and Limitations mention only basic automatic metrics are used",
+    "point_005": "The paper does not compare MVP to other recent large-scale multi-task or instruction-tuned models for NLG, such as FLAN or T0 variants, beyond T0-3B zero-shot results.. Related work and experiments mention T0 but lack comprehensive comparison with instruction-tuned NLG models",
+    "point_006": "The method for constructing task-specific soft prompts and their length (100 tokens) is not justified or ablated for sensitivity.. Section 3.3 describes prompt length and MLP reparameterization but no ablation on prompt size or architecture",
+    "point_007": "The temperature-scaled mixing strategy for multi-task training is adopted from prior work but lacks detailed justification or ablation on its impact in this setting.. Section 3.3 mentions temperature T=2 without further analysis",
+    "point_008": "The generalization evaluation on unseen NLU tasks uses only fine-tuning, not zero-shot or few-shot settings, limiting conclusions about zero-shot transfer.. Section 5 and Appendix D.3 show zero-shot results only for seen tasks; unseen NLU tasks are fine-tuned",
+    "point_009": "Potential data leakage is addressed by n-gram overlap removal, but the impact of this cleaning on dataset size and model performance is not deeply analyzed.. Appendix B.2 mentions removal of 17,848 examples but no ablation on effect",
+    "point_010": "The paper does not discuss or analyze the interpretability or robustness of the MVP model outputs, which are important for practical deployment.. Limitations section notes interpretability and robustness require further analysis",
+    "point_011": "The paper focuses on English-only datasets and tasks, limiting claims about multilingual or cross-lingual generalization.. Section 3.2 footnote and Conclusion mention only English tasks and future multilingual work",
+    "point_012": "The paper does not provide detailed computational cost or efficiency comparisons between MVP and baselines during pre-training or fine-tuning.. Section 3.3 and Broader Impacts mention training steps but no detailed cost analysis"
   }
 }

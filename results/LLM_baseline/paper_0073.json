@@ -1,91 +1,140 @@
 {
   "paper_id": "paper_0073",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 15.151,
+  "latency_seconds": 32.618,
   "token_usage": {
-    "input": 9823,
-    "output": 1080
+    "input": 9934,
+    "output": 1777
   },
   "structured": {
-    "summary": "This paper proposes knowledge unlearning as a post hoc method to mitigate privacy risks in pretrained language models by applying an unlikelihood training objective to forget specific token sequences. The approach is shown to be computationally efficient, effective at reducing extraction likelihood of private data, and sometimes improves general language modeling performance.",
+    "summary": "This paper proposes knowledge unlearning as a post hoc method to mitigate privacy risks in pretrained language models by applying an unlikelihood training objective to specific token sequences. The approach is empirically shown to reduce extraction likelihood of private data with minimal or even improved general language modeling performance, and is computationally far more efficient than retraining or data preprocessing methods.",
     "strengths": [
       {
-        "point": "Novel application of unlikelihood training for targeted knowledge unlearning in language models.",
-        "evidence": "Section 3.1 describes the methodology of negating the original training objective to forget specific token sequences, a novel approach distinct from prior machine unlearning work focused on image classification."
+        "point": "Introduces a simple yet effective unlikelihood training objective for knowledge unlearning that can be applied post hoc without retraining the entire LM.",
+        "evidence": "Section 3.1 describes negating the original training objective to forget specific token sequences, and Section 4.2 shows strong empirical results."
       },
       {
-        "point": "Comprehensive empirical evaluation on multiple GPT-Neo model sizes and diverse NLP benchmarks.",
-        "evidence": "Section 4 details experiments on GPT-Neo models (125M, 1.3B, 2.7B) evaluated on 9 NLP benchmarks including Hellaswag, Lambada, and ARC-Challenge to assess both privacy and general performance."
+        "point": "Proposes a novel metric, Extraction Likelihood (EL), to quantify privacy risks by measuring n-gram overlap in generated sequences with varying prefix lengths.",
+        "evidence": "Section 3.2 introduces EL as a general metric independent of specific extraction attacks."
       },
       {
-        "point": "Introduction of new metrics (Extraction Likelihood and Memorization Accuracy) to quantify privacy risks and define forgetting.",
-        "evidence": "Section 3.2 introduces Extraction Likelihood (EL) and Memorization Accuracy (MA) metrics and an empirical forgetting threshold to measure when token sequences are considered forgotten."
+        "point": "Demonstrates that sequential unlearning of smaller data chunks is more stable and preserves LM performance better than batch unlearning.",
+        "evidence": "Section 4.2 and Figure 2 show that sequential unlearning avoids performance degradation seen when forgetting many samples at once."
       },
       {
-        "point": "Demonstration of significant computational efficiency over data preprocessing methods while providing stronger empirical privacy guarantees.",
-        "evidence": "Section 4.2 and Appendix C report that knowledge unlearning is approximately 3,500,000x more computationally efficient than retraining with deduplicated data, while achieving lower extraction likelihood."
+        "point": "Provides extensive evaluation on multiple LM sizes (125M to 2.7B parameters) and diverse NLP benchmarks to assess general language modeling capabilities after unlearning.",
+        "evidence": "Section 4.1 and Table 2 report results on 9 benchmarks including Lambada, Hellaswag, and scientific reasoning tasks."
+      },
+      {
+        "point": "Compares knowledge unlearning with a strong baseline of data deduplication (OPT models) and shows stronger empirical privacy guarantees with orders of magnitude less computation.",
+        "evidence": "Section 4.2 and Table 2 discuss comparison with OPT LMs pretrained on deduplicated data."
+      },
+      {
+        "point": "Analyzes the effect of domain and data structure on the difficulty of unlearning, highlighting that structured data is easier to forget with less LM performance degradation.",
+        "evidence": "Section 4.3 and Table 4 provide domain-wise analysis of unlearning difficulty."
+      },
+      {
+        "point": "Openly releases code and datasets to facilitate reproducibility.",
+        "evidence": "Abstract and Section 1 mention releasing code and datasets at a provided URL."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited comparison with differential privacy methods due to lack of open-source DP pretrained models.",
-        "evidence": "Section H (Limitations) acknowledges the inability to directly compare with DP approaches, which are a major alternative for privacy protection."
+        "point": "The Forgetting Threshold depends heavily on the choice of validation corpus D' and may not generalize well to other datasets or real-world privacy standards.",
+        "evidence": "Section 3.2 and Limitations in Appendix H acknowledge dependence on D' and empirical nature of threshold."
       },
       {
-        "point": "Forgetting threshold depends on the choice of validation data and may not generalize to all privacy scenarios.",
-        "evidence": "Section 3.2 and Limitations note that the empirical forgetting threshold is dependent on the validation corpus D' and may not cover all real-world extraction attacks."
+        "point": "The evaluation metric EL uses a fixed n-gram length (n=10) and greedy decoding, which may not capture more sophisticated or adaptive extraction attacks.",
+        "evidence": "Section 3.2 defines EL with n=10 and greedy decoding; Appendix H notes that real-world attacks may be more complex."
       },
       {
-        "point": "Unlearning effectiveness varies significantly by domain and data structure, with some domains harder to forget.",
-        "evidence": "Section 4.3 and Table 4 show that structured data (e.g., Enron emails) are easier to forget with less performance degradation than unstructured data (e.g., PubMed), indicating domain dependence."
+        "point": "Comparison with differential privacy (DP) methods is missing due to lack of open-source DP-pretrained LMs, limiting understanding of relative privacy guarantees.",
+        "evidence": "Appendix H states inability to compare with DP methods and leaves it for future work."
       },
       {
-        "point": "Potential degradation of language model performance when unlearning large batches of data at once.",
-        "evidence": "Section 4.2 and Figure 2a demonstrate that batch unlearning with large sample sizes (e.g., s=128) causes substantial performance degradation, requiring sequential unlearning to mitigate."
+        "point": "The method assumes that target sequences to be forgotten are known a priori, which may not hold in many practical privacy scenarios where private data is unknown or unstructured.",
+        "evidence": "Abstract and Section 1 emphasize knowledge unlearning effectiveness when data vulnerable to extraction attacks are known."
       },
       {
-        "point": "The method relies on greedy decoding for evaluation, which may not fully capture extraction risks under stronger adversaries.",
-        "evidence": "Section 4.1 mentions using naive greedy decoding to compute EL and MA, which may underestimate extraction likelihood compared to more sophisticated attacks."
+        "point": "The paper does not provide ablation studies on key hyperparameters such as learning rate, batch size (s), or number of unlearning epochs beyond limited discussion.",
+        "evidence": "Section 4.1 and Appendix D briefly discuss learning rate effects but lack systematic ablations."
       },
       {
-        "point": "Lack of theoretical privacy guarantees; the approach provides empirical but not formal privacy assurances.",
-        "evidence": "Throughout the paper, privacy guarantees are empirical and based on metrics like EL and MA, with no formal proofs or differential privacy bounds."
+        "point": "The impact of unlearning on perplexity is contradictory: perplexity increases after unlearning despite stable or improved benchmark performance, but this is not deeply analyzed.",
+        "evidence": "Appendix B discusses higher perplexity post-unlearning but only hypothesizes about uniform token distributions."
       },
       {
-        "point": "Limited exploration of the impact of unlearning on internal model representations and downstream tasks beyond the selected benchmarks.",
-        "evidence": "Appendix B discusses perplexity increases post-unlearning and suggests further work is needed to understand representation changes."
+        "point": "The method's generalizability beyond GPT-Neo and OPT models pretrained on the Pile dataset is not explored, limiting confidence in broader applicability.",
+        "evidence": "Experiments focus exclusively on GPT-Neo and OPT models with Pile data (Section 4.1)."
+      },
+      {
+        "point": "The paper lacks detailed description of the unlikelihood training implementation, such as how gradients are reversed or combined with original objectives if at all.",
+        "evidence": "Section 3.1 states negating the original objective but does not clarify optimization details or stability considerations."
+      },
+      {
+        "point": "No discussion on potential negative side effects of unlearning, such as unintended forgetting of related knowledge or catastrophic forgetting beyond target sequences.",
+        "evidence": "Section 4.3 hints at varying difficulty of forgetting but does not analyze collateral damage to LM knowledge."
+      },
+      {
+        "point": "The evaluation does not report variance or confidence intervals for the main results, only averages over 5 runs, limiting assessment of statistical significance.",
+        "evidence": "Section 4.1 states averages over 5 runs are reported but standard deviations are relegated to Appendix A."
+      },
+      {
+        "point": "The extraction attack examples are limited and qualitative; more systematic adversarial attack evaluations would strengthen claims of privacy protection.",
+        "evidence": "Section 4.3 and Table 3 provide a single example of extraction attack before and after unlearning."
+      },
+      {
+        "point": "The paper does not clarify how the method scales to very large models beyond 2.7B parameters or to continual unlearning over time with multiple requests.",
+        "evidence": "Section 4.2 discusses larger models up to 2.7B but no experiments on larger scales or repeated unlearning cycles."
       }
     ],
     "questions": [
       {
-        "question": "How does knowledge unlearning perform against stronger or adaptive extraction attacks beyond greedy decoding?",
-        "motivation": "Understanding robustness against more sophisticated adversaries is crucial for assessing real-world privacy guarantees."
+        "question": "How sensitive is the Forgetting Threshold to the choice of validation corpus D', and how would it generalize to other datasets or real-world privacy standards?",
+        "motivation": "Understanding threshold robustness is critical for practical deployment and reliable privacy guarantees."
       },
       {
-        "question": "Can the authors clarify how the forgetting threshold generalizes across different datasets and privacy standards?",
-        "motivation": "Since the threshold depends on validation data, it is important to know its applicability to diverse scenarios and individual privacy requirements."
+        "question": "Can the authors clarify the exact optimization procedure for unlikelihood training during unlearning, including gradient reversal and stability measures?",
+        "motivation": "Detailed methodology is necessary for reproducibility and to understand potential training instabilities."
       },
       {
-        "question": "Is it possible to combine knowledge unlearning with differential privacy or other privacy-preserving training methods to achieve stronger guarantees?",
-        "motivation": "Hybrid approaches might leverage the strengths of both methods for improved privacy without sacrificing performance."
+        "question": "Have the authors considered or tested the method against more sophisticated extraction attacks beyond greedy decoding and fixed n-gram overlap?",
+        "motivation": "Stronger adversarial evaluations would better validate the privacy guarantees claimed."
       },
       {
-        "question": "What are the implications of knowledge unlearning on downstream fine-tuning tasks or transfer learning?",
-        "motivation": "Since unlearning modifies model parameters, it is important to understand its impact on subsequent model usage."
+        "question": "How does knowledge unlearning affect related knowledge or generalization in the LM beyond the target sequences? Is there evidence of unintended forgetting?",
+        "motivation": "Assessing collateral damage is important to ensure unlearning does not degrade useful model capabilities."
+      },
+      {
+        "question": "Could the authors provide more ablation studies on hyperparameters such as learning rate, batch size s, and number of epochs to guide practical application?",
+        "motivation": "Hyperparameter sensitivity impacts effectiveness and stability of unlearning in different settings."
+      },
+      {
+        "question": "Is knowledge unlearning applicable to other LM architectures or training datasets beyond GPT-Neo and the Pile corpus?",
+        "motivation": "Demonstrating generalizability would increase the method's impact and adoption."
+      },
+      {
+        "question": "How would the method handle scenarios where private data is not known explicitly or is unstructured, limiting the ability to specify target sequences for unlearning?",
+        "motivation": "Real-world privacy requests often lack precise data identification, challenging the method's applicability."
+      },
+      {
+        "question": "Do the authors have plans to compare knowledge unlearning with differential privacy methods once DP-pretrained LMs become available?",
+        "motivation": "Such comparisons would clarify the relative merits and trade-offs of these privacy approaches."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited comparison with differential privacy methods due to lack of open-source DP pretrained models. (Section H (Limitations) acknowledges the inability to directly compare with DP approaches, which are a major alternative for privacy protection.)",
-    "point_002": "Forgetting threshold depends on the choice of validation data and may not generalize to all privacy scenarios. (Section 3.2 and Limitations note that the empirical forgetting threshold is dependent on the validation corpus D' and may not cover all real-world extraction attacks.)",
-    "point_003": "Unlearning effectiveness varies significantly by domain and data structure, with some domains harder to forget. (Section 4.3 and Table 4 show that structured data (e.g., Enron emails) are easier to forget with less performance degradation than unstructured data (e.g., PubMed), indicating domain dependence.)",
-    "point_004": "Potential degradation of language model performance when unlearning large batches of data at once. (Section 4.2 and Figure 2a demonstrate that batch unlearning with large sample sizes (e.g., s=128) causes substantial performance degradation, requiring sequential unlearning to mitigate.)",
-    "point_005": "The method relies on greedy decoding for evaluation, which may not fully capture extraction risks under stronger adversaries. (Section 4.1 mentions using naive greedy decoding to compute EL and MA, which may underestimate extraction likelihood compared to more sophisticated attacks.)",
-    "point_006": "Lack of theoretical privacy guarantees; the approach provides empirical but not formal privacy assurances. (Throughout the paper, privacy guarantees are empirical and based on metrics like EL and MA, with no formal proofs or differential privacy bounds.)",
-    "point_007": "Limited exploration of the impact of unlearning on internal model representations and downstream tasks beyond the selected benchmarks. (Appendix B discusses perplexity increases post-unlearning and suggests further work is needed to understand representation changes.)",
-    "point_008": "How does knowledge unlearning perform against stronger or adaptive extraction attacks beyond greedy decoding? (Understanding robustness against more sophisticated adversaries is crucial for assessing real-world privacy guarantees.)",
-    "point_009": "Can the authors clarify how the forgetting threshold generalizes across different datasets and privacy standards? (Since the threshold depends on validation data, it is important to know its applicability to diverse scenarios and individual privacy requirements.)",
-    "point_010": "Is it possible to combine knowledge unlearning with differential privacy or other privacy-preserving training methods to achieve stronger guarantees? (Hybrid approaches might leverage the strengths of both methods for improved privacy without sacrificing performance.)",
-    "point_011": "What are the implications of knowledge unlearning on downstream fine-tuning tasks or transfer learning? (Since unlearning modifies model parameters, it is important to understand its impact on subsequent model usage.)"
+    "point_001": "The Forgetting Threshold depends heavily on the choice of validation corpus D' and may not generalize well to other datasets or real-world privacy standards.. Section 3.2 and Limitations in Appendix H acknowledge dependence on D' and empirical nature of threshold",
+    "point_002": "The evaluation metric EL uses a fixed n-gram length (n=10) and greedy decoding, which may not capture more sophisticated or adaptive extraction attacks.. Section 3.2 defines EL with n=10 and greedy decoding; Appendix H notes that real-world attacks may be more complex",
+    "point_003": "Comparison with differential privacy (DP) methods is missing due to lack of open-source DP-pretrained LMs, limiting understanding of relative privacy guarantees.. Appendix H states inability to compare with DP methods and leaves it for future work",
+    "point_004": "The method assumes that target sequences to be forgotten are known a priori, which may not hold in many practical privacy scenarios where private data is unknown or unstructured.. Abstract and Section 1 emphasize knowledge unlearning effectiveness when data vulnerable to extraction attacks are known",
+    "point_005": "The paper does not provide ablation studies on key hyperparameters such as learning rate, batch size (s), or number of unlearning epochs beyond limited discussion.. Section 4.1 and Appendix D briefly discuss learning rate effects but lack systematic ablations",
+    "point_006": "The impact of unlearning on perplexity is contradictory: perplexity increases after unlearning despite stable or improved benchmark performance, but this is not deeply analyzed.. Appendix B discusses higher perplexity post-unlearning but only hypothesizes about uniform token distributions",
+    "point_007": "The method's generalizability beyond GPT-Neo and OPT models pretrained on the Pile dataset is not explored, limiting confidence in broader applicability.. Experiments focus exclusively on GPT-Neo and OPT models with Pile data (Section 4.1)",
+    "point_008": "The paper lacks detailed description of the unlikelihood training implementation, such as how gradients are reversed or combined with original objectives if at all.. Section 3.1 states negating the original objective but does not clarify optimization details or stability considerations",
+    "point_009": "No discussion on potential negative side effects of unlearning, such as unintended forgetting of related knowledge or catastrophic forgetting beyond target sequences.. Section 4.3 hints at varying difficulty of forgetting but does not analyze collateral damage to LM knowledge",
+    "point_010": "The evaluation does not report variance or confidence intervals for the main results, only averages over 5 runs, limiting assessment of statistical significance.. Section 4.1 states averages over 5 runs are reported but standard deviations are relegated to Appendix A",
+    "point_011": "The extraction attack examples are limited and qualitative; more systematic adversarial attack evaluations would strengthen claims of privacy protection.. Section 4.3 and Table 3 provide a single example of extraction attack before and after unlearning",
+    "point_012": "The paper does not clarify how the method scales to very large models beyond 2.7B parameters or to continual unlearning over time with multiple requests.. Section 4.2 discusses larger models up to 2.7B but no experiments on larger scales or repeated unlearning cycles"
   }
 }

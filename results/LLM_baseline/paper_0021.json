@@ -1,91 +1,128 @@
 {
   "paper_id": "paper_0021",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 23.338,
+  "latency_seconds": 25.64,
   "token_usage": {
-    "input": 9340,
-    "output": 1126
+    "input": 9451,
+    "output": 1699
   },
   "structured": {
-    "summary": "This paper introduces Contrastive Novelty Learning (CNL), a method leveraging large language models to generate novel out-of-distribution (OOD) examples for open-set selective classification (OSSC) in text classification. CNL uses a two-step process of novelty prompting to generate novel class labels and examples, followed by training classifiers with a contrastive confidence loss to reduce overconfidence on generated OOD examples, improving OOD detection and selective prediction without harming in-distribution accuracy.",
+    "summary": "The paper proposes Contrastive Novelty Learning (CNL), a method to improve open-set selective classification (OSSC) in text classification by generating novel out-of-distribution (OOD) examples using large language models (LLMs) and training classifiers with a contrastive confidence loss to reduce overconfidence on these generated OOD examples. Experiments on four NLP datasets show improved OOD detection and selective prediction without sacrificing in-distribution accuracy.",
     "strengths": [
       {
-        "point": "Novel use of large language models for generating semantically novel and plausible OOD examples.",
-        "evidence": "Section 3.1 describes Novelty Prompting, which generates novel labels and examples conditioned on task-specific prompts, leveraging LLMs like GPT-3 and GPT-J."
+        "point": "Novelty Prompting effectively generates plausible and semantically novel OOD examples using a two-step LLM prompting approach (label generation followed by example generation).",
+        "evidence": "Section 3.1 and Figure 1 describe the Novelty Prompting method; Section 5.3 and Appendix A.4 provide analysis showing 41% of generated examples are novel classes, outperforming few-shot baselines."
       },
       {
-        "point": "Introduction of a contrastive confidence loss (CCL) that encourages lower confidence on OOD examples relative to in-distribution examples without enforcing uniform predictions.",
-        "evidence": "Section 3.2 details CCL, which penalizes OOD examples only if their confidence exceeds that of any in-distribution example, maintaining ID accuracy."
+        "point": "Contrastive Confidence Loss (CCL) provides a more flexible training objective than Outlier Exposure, maintaining in-distribution accuracy while improving OOD detection.",
+        "evidence": "Section 3.2 introduces CCL; Section 5.1 and Appendix A.2 show CCL maintains accuracy whereas OE training decreases accuracy on multiple datasets."
       },
       {
-        "point": "Comprehensive empirical evaluation across multiple datasets and baselines showing consistent improvements in OSSC and OOD detection metrics.",
-        "evidence": "Section 5 reports improvements of 2.3% AUAC and 5.5% AUROC over prior methods on 4 NLP datasets, with no loss in in-distribution accuracy."
+        "point": "Comprehensive evaluation across multiple datasets and splits, including AGNews, TREC-10, TACRED, and Emotion, demonstrating consistent improvements in AUAC and AUROC metrics.",
+        "evidence": "Sections 4 and 5 present results over 14 splits of 4 datasets, with Table 1 and Table 2 showing consistent gains over strong baselines."
       },
       {
-        "point": "Analysis of generation budget, generator model size, and classifier architectures demonstrating robustness and generalizability of the approach.",
-        "evidence": "Section 5.3 explores effects of generator size, generation quota, and classifier models (BERT, RoBERTa), showing consistent gains."
+        "point": "The method is modular and does not require changes to classifier architecture, enabling easy integration with existing models.",
+        "evidence": "Section 7 discusses modularity; Section 5.3 shows CNL improves performance on BERT-base, RoBERTa-base, and RoBERTa-large."
+      },
+      {
+        "point": "The paper provides detailed prompt formats, dataset processing, and code release plans to support reproducibility.",
+        "evidence": "Section 8 and Appendix A.1 provide prompt details; Appendix A.5 and A.6 describe dataset processing."
+      },
+      {
+        "point": "The analysis of generation budget and generator model size offers practical insights into the trade-offs between generation cost and performance gains.",
+        "evidence": "Section 5.3 and Figures 4 and 6 analyze generator sizes and number of generated examples needed."
       }
     ],
     "weaknesses": [
       {
-        "point": "Potential data leakage concerns due to LLM pretraining on datasets overlapping with novel classes.",
-        "evidence": "Section 3.1 acknowledges possible leakage and removes gold novel labels from generated sets but admits this may underestimate performance."
+        "point": "The paper does not compare against recent state-of-the-art OOD detection methods that use advanced confidence metrics or ensemble techniques beyond kFolden and contrastive baselines.",
+        "evidence": "Section 6.1 mentions alternative confidence metrics and ensembles but evaluation only includes kFolden and Contrastive methods."
       },
       {
-        "point": "High fraction of generated examples are not truly novel, introducing noise in training.",
-        "evidence": "Section 5.3 and Appendix A.4 report that only 41% of Novelty Prompting generations are novel class examples, with the rest being in-distribution or implausible."
+        "point": "The impact of synonym filtering on label generation is only briefly discussed and relegated to the appendix, lacking ablation on how it affects final performance.",
+        "evidence": "Section 3.1 and Appendix A.7 mention synonym filtering but no direct ablation study on its effect on OSSC metrics is presented."
       },
       {
-        "point": "Outlier Exposure training with generated data harms in-distribution accuracy, indicating sensitivity to noisy OOD supervision.",
-        "evidence": "Section 5.1 and Appendix A.2 show OE training decreases accuracy on several datasets, unlike CCL which maintains accuracy."
+        "point": "The method relies heavily on large LLMs for label and example generation, but the cost and feasibility of scaling this approach in practical settings is not deeply analyzed.",
+        "evidence": "Section 5.3 discusses generator sizes and generation budget but lacks detailed cost or latency analysis."
       },
       {
-        "point": "Limited exploration of the impact of the quality and diversity of generated novel labels on final performance.",
-        "evidence": "While label filtering is discussed in Appendix A.7, the paper does not deeply analyze how label generation quality affects downstream results."
+        "point": "The evaluation on TACRED shows poor OOD detection performance and the paper acknowledges this as a challenging dataset but does not propose or analyze solutions specific to such imbalanced or complex label spaces.",
+        "evidence": "Section 5.2 and Table 2 show below-random AUROC for most baselines on TACRED; discussion in Section 5.2 notes remaining headroom but no targeted method improvements."
       },
       {
-        "point": "Evaluation focuses on artificially constructed open-set splits; real-world applicability to naturally occurring novel classes is not demonstrated.",
-        "evidence": "Section 4.1 constructs splits by holding out known labels; no experiments on naturally occurring OOD data or real deployment scenarios."
+        "point": "The paper does not explore or discuss the potential negative impact of noisy or mislabeled generated examples on classifier calibration or robustness beyond noting that CCL is robust to noise.",
+        "evidence": "Section 5.3 and Appendix A.4 mention noise in generated examples but no quantitative analysis of noise impact or mitigation strategies is provided."
       },
       {
-        "point": "The approach relies on access to large LLMs for label and example generation, which may be computationally expensive and limit practical deployment.",
-        "evidence": "Section 4.2 mentions use of GPT-3 Davinci and GPT-J 6B models; Section 5.3 discusses generation cost but does not provide efficiency analysis."
+        "point": "The contrastive confidence loss uses a fixed \u03bb=1 weighting without ablation or justification of this hyperparameter choice.",
+        "evidence": "Section 3.2 states \u03bb=1 is chosen arbitrarily; no experiments vary \u03bb to assess sensitivity."
       },
       {
-        "point": "The method assumes that generated novel examples are representative of test-time novel classes, which may not hold in all domains.",
-        "evidence": "Section 3.1 discusses desiderata for novelty but does not provide guarantees or methods to verify representativeness of generated OOD examples."
+        "point": "The evaluation metrics focus on AUAC and AUROC but do not include other uncertainty or calibration metrics such as Expected Calibration Error (ECE) or F1 scores on OOD detection.",
+        "evidence": "Section 2.2 defines AUAC and AUROC as main metrics; no mention of calibration or other uncertainty metrics."
+      },
+      {
+        "point": "The paper does not clarify how the method would perform or be adapted for non-text modalities or multi-label classification tasks.",
+        "evidence": "Section 7 mentions generalizability but experiments and method focus exclusively on text classification with single-label settings."
+      },
+      {
+        "point": "The method assumes that novel classes can be meaningfully enumerated and generated by LLMs, which may not hold for highly specialized or low-resource domains.",
+        "evidence": "Section 3.1 discusses label generation via LLM prompting but does not address limitations in domain-specific or rare label scenarios."
+      },
+      {
+        "point": "The paper does not provide detailed error analysis or qualitative examples of failure cases where CNL does not improve or harms performance.",
+        "evidence": "Section 5.1 and 5.2 report aggregate metrics but lack detailed qualitative or failure mode analysis."
+      },
+      {
+        "point": "The selective prediction thresholding strategy and its sensitivity are not discussed, which is important for practical deployment.",
+        "evidence": "Section 2.1 defines threshold \u03b3 but no analysis or guidance on threshold selection or robustness is provided."
+      },
+      {
+        "point": "The paper briefly mentions partial knowledge distillation from LLMs but does not explore or compare with direct distillation or fine-tuning approaches using LLM outputs.",
+        "evidence": "Section 3 and 7 mention knowledge distillation analogy but no experiments or comparisons with distillation methods."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is CNL to the quality and diversity of generated novel labels and examples? Have you explored automatic metrics or human evaluation to assess generation quality?",
-        "motivation": "Understanding this sensitivity is important to assess robustness and guide improvements in novelty prompting."
+        "question": "How sensitive is the performance of CNL to the choice of the \u03bb hyperparameter in the contrastive confidence loss?",
+        "motivation": "Understanding this sensitivity is important to assess robustness and ease of tuning for different datasets."
       },
       {
-        "question": "Can the method be extended or adapted to handle naturally occurring OOD data without access to large LLMs for generation?",
-        "motivation": "This would increase practical applicability in scenarios where LLM access or computational resources are limited."
+        "question": "Can the authors provide more detailed cost and latency analysis for the generation steps, especially for large-scale or real-time applications?",
+        "motivation": "This would clarify the practical feasibility and scalability of the method."
       },
       {
-        "question": "Have you considered integrating uncertainty calibration techniques with CNL to further improve selective prediction performance?",
-        "motivation": "Combining calibration with contrastive learning might reduce overconfidence more effectively."
+        "question": "Have the authors considered or tested the method on multi-label classification tasks or domains beyond text, and if so, how does CNL generalize?",
+        "motivation": "This would help understand the broader applicability of the approach."
       },
       {
-        "question": "How does CNL perform when the novel classes at test time are semantically very different or more fine-grained than those generated by the LLM?",
-        "motivation": "Evaluating generalization to diverse or unexpected novel classes is critical for real-world deployment."
+        "question": "Could the authors provide qualitative examples or analysis of failure cases where CNL does not improve or negatively impacts performance?",
+        "motivation": "Such analysis would help identify limitations and guide future improvements."
+      },
+      {
+        "question": "How does the synonym filtering step in label generation quantitatively affect the final OSSC performance?",
+        "motivation": "Clarifying this would justify the necessity and impact of this preprocessing step."
+      },
+      {
+        "question": "What strategies could be employed to improve OOD detection performance on challenging datasets like TACRED with highly imbalanced and complex label spaces?",
+        "motivation": "Addressing this would enhance the method's robustness in difficult real-world scenarios."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Potential data leakage concerns due to LLM pretraining on datasets overlapping with novel classes. (Section 3.1 acknowledges possible leakage and removes gold novel labels from generated sets but admits this may underestimate performance.)",
-    "point_002": "High fraction of generated examples are not truly novel, introducing noise in training. (Section 5.3 and Appendix A.4 report that only 41% of Novelty Prompting generations are novel class examples, with the rest being in-distribution or implausible.)",
-    "point_003": "Outlier Exposure training with generated data harms in-distribution accuracy, indicating sensitivity to noisy OOD supervision. (Section 5.1 and Appendix A.2 show OE training decreases accuracy on several datasets, unlike CCL which maintains accuracy.)",
-    "point_004": "Limited exploration of the impact of the quality and diversity of generated novel labels on final performance. (While label filtering is discussed in Appendix A.7, the paper does not deeply analyze how label generation quality affects downstream results.)",
-    "point_005": "Evaluation focuses on artificially constructed open-set splits; real-world applicability to naturally occurring novel classes is not demonstrated. (Section 4.1 constructs splits by holding out known labels; no experiments on naturally occurring OOD data or real deployment scenarios.)",
-    "point_006": "The approach relies on access to large LLMs for label and example generation, which may be computationally expensive and limit practical deployment. (Section 4.2 mentions use of GPT-3 Davinci and GPT-J 6B models; Section 5.3 discusses generation cost but does not provide efficiency analysis.)",
-    "point_007": "The method assumes that generated novel examples are representative of test-time novel classes, which may not hold in all domains. (Section 3.1 discusses desiderata for novelty but does not provide guarantees or methods to verify representativeness of generated OOD examples.)",
-    "point_008": "How sensitive is CNL to the quality and diversity of generated novel labels and examples? Have you explored automatic metrics or human evaluation to assess generation quality? (Understanding this sensitivity is important to assess robustness and guide improvements in novelty prompting.)",
-    "point_009": "Can the method be extended or adapted to handle naturally occurring OOD data without access to large LLMs for generation? (This would increase practical applicability in scenarios where LLM access or computational resources are limited.)",
-    "point_010": "Have you considered integrating uncertainty calibration techniques with CNL to further improve selective prediction performance? (Combining calibration with contrastive learning might reduce overconfidence more effectively.)",
-    "point_011": "How does CNL perform when the novel classes at test time are semantically very different or more fine-grained than those generated by the LLM? (Evaluating generalization to diverse or unexpected novel classes is critical for real-world deployment.)"
+    "point_001": "The paper does not compare against recent state-of-the-art OOD detection methods that use advanced confidence metrics or ensemble techniques beyond kFolden and contrastive baselines.. Section 6.1 mentions alternative confidence metrics and ensembles but evaluation only includes kFolden and Contrastive methods",
+    "point_002": "The impact of synonym filtering on label generation is only briefly discussed and relegated to the appendix, lacking ablation on how it affects final performance.. Section 3.1 and Appendix A.7 mention synonym filtering but no direct ablation study on its effect on OSSC metrics is presented",
+    "point_003": "The method relies heavily on large LLMs for label and example generation, but the cost and feasibility of scaling this approach in practical settings is not deeply analyzed.. Section 5.3 discusses generator sizes and generation budget but lacks detailed cost or latency analysis",
+    "point_004": "The evaluation on TACRED shows poor OOD detection performance and the paper acknowledges this as a challenging dataset but does not propose or analyze solutions specific to such imbalanced or complex label spaces.. Section 5.2 and Table 2 show below-random AUROC for most baselines on TACRED; discussion in Section 5.2 notes remaining headroom but no targeted method improvements",
+    "point_005": "The paper does not explore or discuss the potential negative impact of noisy or mislabeled generated examples on classifier calibration or robustness beyond noting that CCL is robust to noise.. Section 5.3 and Appendix A.4 mention noise in generated examples but no quantitative analysis of noise impact or mitigation strategies is provided",
+    "point_006": "The contrastive confidence loss uses a fixed \u03bb=1 weighting without ablation or justification of this hyperparameter choice.. Section 3.2 states \u03bb=1 is chosen arbitrarily; no experiments vary \u03bb to assess sensitivity",
+    "point_007": "The evaluation metrics focus on AUAC and AUROC but do not include other uncertainty or calibration metrics such as Expected Calibration Error (ECE) or F1 scores on OOD detection.. Section 2.2 defines AUAC and AUROC as main metrics; no mention of calibration or other uncertainty metrics",
+    "point_008": "The paper does not clarify how the method would perform or be adapted for non-text modalities or multi-label classification tasks.. Section 7 mentions generalizability but experiments and method focus exclusively on text classification with single-label settings",
+    "point_009": "The method assumes that novel classes can be meaningfully enumerated and generated by LLMs, which may not hold for highly specialized or low-resource domains.. Section 3.1 discusses label generation via LLM prompting but does not address limitations in domain-specific or rare label scenarios",
+    "point_010": "The paper does not provide detailed error analysis or qualitative examples of failure cases where CNL does not improve or harms performance.. Section 5.1 and 5.2 report aggregate metrics but lack detailed qualitative or failure mode analysis",
+    "point_011": "The selective prediction thresholding strategy and its sensitivity are not discussed, which is important for practical deployment.. Section 2.1 defines threshold \u03b3 but no analysis or guidance on threshold selection or robustness is provided",
+    "point_012": "The paper briefly mentions partial knowledge distillation from LLMs but does not explore or compare with direct distillation or fine-tuning approaches using LLM outputs.. Section 3 and 7 mention knowledge distillation analogy but no experiments or comparisons with distillation methods"
   }
 }

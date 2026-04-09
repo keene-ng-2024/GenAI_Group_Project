@@ -1,91 +1,132 @@
 {
   "paper_id": "paper_0080",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 15.19,
+  "latency_seconds": 25.915,
   "token_usage": {
-    "input": 9647,
-    "output": 1081
+    "input": 9758,
+    "output": 1533
   },
   "structured": {
-    "summary": "This paper proposes using document similarity methods to automatically create noisy parallel datasets for code translation, enabling supervised training of code translation models without relying on scarce manually curated parallel corpora. The authors empirically evaluate various similarity methods, analyze noise tolerance of models trained on such data, and demonstrate practical utility by creating datasets for multiple language pairs beyond prior work.",
+    "summary": "This paper proposes using document similarity methods to create noisy parallel datasets for supervised code translation models, demonstrating that models trained on such noisy data perform comparably to those trained on ground truth and enabling translation across a wider set of programming languages.",
     "strengths": [
       {
-        "point": "Addresses a critical bottleneck in code translation by proposing a method to create parallel datasets without manual curation.",
-        "evidence": "Section 1 Introduction and Section 3 Proposed Method describe the motivation and the algorithm for creating noisy parallel datasets using document similarity."
+        "point": "The paper addresses a critical bottleneck in code translation by proposing an automated method to create parallel datasets without manual curation.",
+        "evidence": "Section 1 Introduction and Section 3 Proposed Method describe the motivation and the algorithm for creating noisy parallel datasets."
       },
       {
-        "point": "Comprehensive empirical evaluation of multiple document similarity methods on several datasets.",
-        "evidence": "Section 5.1 presents experiments comparing TF-IDF, Okapi-BM25, LDA, LSI, and Word Movers Distance (WMD) across multiple datasets including Java\u2194C#, Java\u2194Python, and CodeNet."
+        "point": "Comprehensive evaluation of multiple document similarity methods (TF-IDF, Okapi-BM25, LDA, LSI, WMD) for dataset creation.",
+        "evidence": "Section 5.1 and Table 1 compare the match accuracy of different similarity methods across multiple datasets."
       },
       {
-        "point": "Demonstrates that code translation models trained on noisy datasets retain reasonable performance and show noise tolerance.",
-        "evidence": "Section 5.2 shows performance degradation curves with increasing noise levels and compares models trained on noisy datasets with ground truth and random baselines."
+        "point": "Demonstration of noise tolerance in code translation models trained on noisy datasets, showing gradual performance degradation with increasing noise.",
+        "evidence": "Section 5.2 and Figure 1 illustrate model performance across varying noise levels."
       },
       {
-        "point": "Extends code translation to a wider set of programming languages using the proposed method, showing practical utility.",
-        "evidence": "Section 5.3 details creation of parallel datasets for 10 language pairs from CodeNet and reports improved computational accuracy over random baselines."
+        "point": "Extension of the approach to 10 programming languages beyond prior work, showing practical utility and improved performance over random baselines.",
+        "evidence": "Section 5.3 and Figures 2 and 3 present results on CodeNet dataset language pairs."
+      },
+      {
+        "point": "Use of multiple evaluation metrics including BLEU, CodeBLEU, Exact Match, and Computational Accuracy @ k to assess translation quality.",
+        "evidence": "Section 4.4 Evaluation Metrics details the metrics used."
+      },
+      {
+        "point": "Provision of supplementary materials including source code and partial datasets to support reproducibility.",
+        "evidence": "Section 8 Reproducibility Statement mentions source code and dataset release plans."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited discussion on computational efficiency and scalability of document similarity methods, especially WMD.",
-        "evidence": "While WMD is shown to be effective, the paper does not provide runtime or scalability analysis, which is important given the large size of code corpora like CodeNet."
+        "point": "Lack of comparison with recent large-scale pretrained models like Codex or GPT-3 for code translation tasks.",
+        "evidence": "Section 2 Related Work mentions Codex but does not include it as a baseline or comparative model in experiments."
       },
       {
-        "point": "The noise in automatically created datasets is inherent but the paper does not explore methods to reduce or mitigate noise beyond thresholding.",
-        "evidence": "Section 3 and 5 mention noise and thresholding but do not investigate advanced denoising or filtering techniques to improve dataset quality."
+        "point": "The choice and tuning of the similarity threshold \u03b4 in Algorithm 1 is not justified or analyzed for its impact on dataset quality.",
+        "evidence": "Section 3 Proposed Method and Section 5.3 mention using \u03b4=3.0 but do not discuss how this value was selected or its sensitivity."
       },
       {
-        "point": "Evaluation metrics such as BLEU and CodeBLEU have known limitations for code; reliance on these metrics without human evaluation limits assessment of translation quality.",
-        "evidence": "Section 4.4 acknowledges BLEU limitations but no human or functional correctness evaluation is reported."
+        "point": "No ablation study on the effect of dataset size or the number of matched pairs on model performance.",
+        "evidence": "Section 5.2 and 5.3 report results but do not analyze how dataset scale influences translation quality."
       },
       {
-        "point": "The paper does not compare the proposed method against unsupervised code translation approaches quantitatively.",
-        "evidence": "Related work mentions unsupervised methods (Roziere et al., 2020) but no direct experimental comparison is presented."
+        "point": "The evaluation on CodeNet dataset uses pseudo-match accuracy based on problem set membership, which may not fully reflect true parallelism or semantic equivalence.",
+        "evidence": "Section 5.1 discusses pseudo-match accuracy in Table 2 but acknowledges lack of ground truth."
       },
       {
-        "point": "The method assumes availability of large monolingual corpora with overlapping problem sets, which may not hold for all language pairs or domains.",
-        "evidence": "Section 5.3 uses CodeNet with problem sets to create pseudo-parallel data; applicability to other datasets without such structure is unclear."
+        "point": "Limited discussion on the computational cost and scalability of the Word Movers Distance (WMD) metric for large-scale dataset creation.",
+        "evidence": "Section 4.1 describes WMD but no runtime or efficiency analysis is provided."
       },
       {
-        "point": "Limited analysis on the impact of code complexity or domain differences on similarity matching and translation performance.",
-        "evidence": "Experiments focus on competitive programming datasets; real-world legacy or application code characteristics are not explored."
+        "point": "The paper does not explore or discuss potential biases introduced by noisy parallel datasets on downstream translation model behavior.",
+        "evidence": "Section 6 Discussion & Conclusion mentions noise tolerance but lacks analysis of bias or error patterns."
       },
       {
-        "point": "The paper does not discuss potential biases introduced by the similarity methods or dataset construction on downstream model behavior.",
-        "evidence": "No analysis on whether certain code constructs or language features are over- or under-represented in the created datasets."
+        "point": "Details about hyperparameter settings, training epochs, and fine-tuning procedures for the models are sparse, limiting reproducibility.",
+        "evidence": "Section 4.3 Models and Section 5 mention fine-tuning but do not provide detailed training configurations."
+      },
+      {
+        "point": "The method assumes availability of large monolingual corpora per language but does not discuss scenarios with highly imbalanced or low-resource languages.",
+        "evidence": "Section 1 Introduction and Section 5.3 do not address limitations in data availability or domain mismatch."
+      },
+      {
+        "point": "The paper does not clarify how code samples with different lengths or complexity are handled during similarity computation or model training.",
+        "evidence": "Section 5.3 mentions filtering samples longer than 512 tokens but no further discussion on length or complexity effects."
+      },
+      {
+        "point": "Figures and tables referenced (e.g., Figures 2, 3, 4; Tables 1, 2, 3, 4, 5, 6) are not fully described or included in the text, reducing clarity.",
+        "evidence": "Throughout Sections 5 and Appendix B, figures and tables are cited but their content or visualization is not detailed."
+      },
+      {
+        "point": "The paper does not discuss how the similarity score could be integrated into training (e.g., weighting samples) beyond mentioning it as future work.",
+        "evidence": "Section 6 Conclusion mentions incorporating similarity scores to weight samples but no experiments or analysis are provided."
+      },
+      {
+        "point": "No human evaluation or qualitative analysis of translation outputs is presented to complement automatic metrics.",
+        "evidence": "Section 5.3 and Appendix B.4 show some generated code samples but no human judgment or error analysis is reported."
       }
     ],
     "questions": [
       {
-        "question": "Have you considered or experimented with more computationally efficient approximations of WMD or other embedding-based similarity methods to scale to larger corpora?",
-        "motivation": "WMD is computationally expensive, and scalability is critical for practical dataset creation on large codebases."
+        "question": "How sensitive is the dataset quality and downstream model performance to the choice of similarity threshold \u03b4 in Algorithm 1?",
+        "motivation": "Understanding threshold sensitivity is important to tune the method for different language pairs or datasets."
       },
       {
-        "question": "Can you provide insights or preliminary results on how the noise in the dataset affects functional correctness of translated code beyond n-gram based metrics?",
-        "motivation": "Code translation quality should ideally be measured by correctness or executability, which is more meaningful than BLEU or CodeBLEU alone."
+        "question": "Can the authors provide more details on the training hyperparameters and fine-tuning procedures used for CodeBERT, GraphCodeBERT, and PLBART?",
+        "motivation": "Detailed training settings are essential for reproducibility and fair comparison."
       },
       {
-        "question": "How does your method perform compared to state-of-the-art unsupervised code translation models on the same language pairs?",
-        "motivation": "A direct comparison would clarify the benefits and trade-offs of your supervised approach using noisy parallel data."
+        "question": "Have the authors considered integrating the similarity scores as sample weights during model training, and if so, what impact does this have?",
+        "motivation": "Weighting samples by similarity could improve noise robustness and translation quality."
       },
       {
-        "question": "Could your approach be adapted to incorporate semantic or structural code representations (e.g., ASTs) in the similarity computation to improve matching accuracy?",
-        "motivation": "Code structure is important and may help reduce noise and improve dataset quality."
+        "question": "What are the computational costs and scalability considerations when using WMD for large-scale dataset creation?",
+        "motivation": "WMD is known to be computationally expensive; practical deployment requires understanding efficiency."
+      },
+      {
+        "question": "How does the method perform when applied to low-resource or domain-specific programming languages with limited monolingual data?",
+        "motivation": "Assessing generalizability beyond popular languages is important for broader applicability."
+      },
+      {
+        "question": "Could the authors clarify how code samples of varying length and complexity are handled during similarity computation and model training?",
+        "motivation": "Length and complexity can affect similarity measures and model capacity, impacting results."
+      },
+      {
+        "question": "Is there any qualitative or human evaluation of the translated code outputs to assess correctness beyond automatic metrics?",
+        "motivation": "Human judgment can reveal semantic correctness and practical usability not captured by metrics."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited discussion on computational efficiency and scalability of document similarity methods, especially WMD. (While WMD is shown to be effective, the paper does not provide runtime or scalability analysis, which is important given the large size of code corpora like CodeNet.)",
-    "point_002": "The noise in automatically created datasets is inherent but the paper does not explore methods to reduce or mitigate noise beyond thresholding. (Section 3 and 5 mention noise and thresholding but do not investigate advanced denoising or filtering techniques to improve dataset quality.)",
-    "point_003": "Evaluation metrics such as BLEU and CodeBLEU have known limitations for code; reliance on these metrics without human evaluation limits assessment of translation quality. (Section 4.4 acknowledges BLEU limitations but no human or functional correctness evaluation is reported.)",
-    "point_004": "The paper does not compare the proposed method against unsupervised code translation approaches quantitatively. (Related work mentions unsupervised methods (Roziere et al., 2020) but no direct experimental comparison is presented.)",
-    "point_005": "The method assumes availability of large monolingual corpora with overlapping problem sets, which may not hold for all language pairs or domains. (Section 5.3 uses CodeNet with problem sets to create pseudo-parallel data; applicability to other datasets without such structure is unclear.)",
-    "point_006": "Limited analysis on the impact of code complexity or domain differences on similarity matching and translation performance. (Experiments focus on competitive programming datasets; real-world legacy or application code characteristics are not explored.)",
-    "point_007": "The paper does not discuss potential biases introduced by the similarity methods or dataset construction on downstream model behavior. (No analysis on whether certain code constructs or language features are over- or under-represented in the created datasets.)",
-    "point_008": "Have you considered or experimented with more computationally efficient approximations of WMD or other embedding-based similarity methods to scale to larger corpora? (WMD is computationally expensive, and scalability is critical for practical dataset creation on large codebases.)",
-    "point_009": "Can you provide insights or preliminary results on how the noise in the dataset affects functional correctness of translated code beyond n-gram based metrics? (Code translation quality should ideally be measured by correctness or executability, which is more meaningful than BLEU or CodeBLEU alone.)",
-    "point_010": "How does your method perform compared to state-of-the-art unsupervised code translation models on the same language pairs? (A direct comparison would clarify the benefits and trade-offs of your supervised approach using noisy parallel data.)",
-    "point_011": "Could your approach be adapted to incorporate semantic or structural code representations (e.g., ASTs) in the similarity computation to improve matching accuracy? (Code structure is important and may help reduce noise and improve dataset quality.)"
+    "point_001": "Lack of comparison with recent large-scale pretrained models like Codex or GPT-3 for code translation tasks.. Section 2 Related Work mentions Codex but does not include it as a baseline or comparative model in experiments",
+    "point_002": "The choice and tuning of the similarity threshold \u03b4 in Algorithm 1 is not justified or analyzed for its impact on dataset quality.. Section 3 Proposed Method and Section 5.3 mention using \u03b4=3.0 but do not discuss how this value was selected or its sensitivity",
+    "point_003": "No ablation study on the effect of dataset size or the number of matched pairs on model performance.. Section 5.2 and 5.3 report results but do not analyze how dataset scale influences translation quality",
+    "point_004": "The evaluation on CodeNet dataset uses pseudo-match accuracy based on problem set membership, which may not fully reflect true parallelism or semantic equivalence.. Section 5.1 discusses pseudo-match accuracy in Table 2 but acknowledges lack of ground truth",
+    "point_005": "Limited discussion on the computational cost and scalability of the Word Movers Distance (WMD) metric for large-scale dataset creation.. Section 4.1 describes WMD but no runtime or efficiency analysis is provided",
+    "point_006": "The paper does not explore or discuss potential biases introduced by noisy parallel datasets on downstream translation model behavior.. Section 6 Discussion & Conclusion mentions noise tolerance but lacks analysis of bias or error patterns",
+    "point_007": "Details about hyperparameter settings, training epochs, and fine-tuning procedures for the models are sparse, limiting reproducibility.. Section 4.3 Models and Section 5 mention fine-tuning but do not provide detailed training configurations",
+    "point_008": "The method assumes availability of large monolingual corpora per language but does not discuss scenarios with highly imbalanced or low-resource languages.. Section 1 Introduction and Section 5.3 do not address limitations in data availability or domain mismatch",
+    "point_009": "The paper does not clarify how code samples with different lengths or complexity are handled during similarity computation or model training.. Section 5.3 mentions filtering samples longer than 512 tokens but no further discussion on length or complexity effects",
+    "point_010": "Figures and tables referenced (e.g., Figures 2, 3, 4; Tables 1, 2, 3, 4, 5, 6) are not fully described or included in the text, reducing clarity.. Throughout Sections 5 and Appendix B, figures and tables are cited but their content or visualization is not detailed",
+    "point_011": "The paper does not discuss how the similarity score could be integrated into training (e.g., weighting samples) beyond mentioning it as future work.. Section 6 Conclusion mentions incorporating similarity scores to weight samples but no experiments or analysis are provided",
+    "point_012": "No human evaluation or qualitative analysis of translation outputs is presented to complement automatic metrics.. Section 5.3 and Appendix B.4 show some generated code samples but no human judgment or error analysis is reported"
   }
 }

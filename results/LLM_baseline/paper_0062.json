@@ -1,91 +1,131 @@
 {
   "paper_id": "paper_0062",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 21.746,
+  "latency_seconds": 26.365,
   "token_usage": {
-    "input": 8187,
-    "output": 1003
+    "input": 8298,
+    "output": 1613
   },
   "structured": {
-    "summary": "This paper proposes Automatic Prompt Engineer (APE), a method that uses large language models (LLMs) to automatically generate and select natural language instructions (prompts) to steer LLM behavior. APE formulates prompt engineering as a black-box optimization problem and demonstrates human-level or better performance on 24 NLP tasks, improving zero-shot and few-shot learning as well as truthfulness and informativeness in LLM outputs.",
+    "summary": "This paper proposes Automatic Prompt Engineer (APE), a method that uses large language models (LLMs) to automatically generate and select natural language instructions (prompts) to steer LLM behavior. APE formulates prompt engineering as a black-box optimization problem and demonstrates human-level or better performance on 24 NLP tasks, including zero-shot, few-shot, and truthfulness-focused benchmarks.",
     "strengths": [
       {
-        "point": "Novel formulation of prompt engineering as natural language program synthesis and black-box optimization.",
-        "evidence": "Section 3 introduces framing instruction generation as program synthesis and black-box optimization guided by LLMs."
+        "point": "Novel framing of prompt engineering as natural language program synthesis and black-box optimization guided by LLMs.",
+        "evidence": "Section 3 introduces the formulation of instruction generation as program synthesis and black-box optimization."
       },
       {
-        "point": "Strong empirical results showing APE outperforms prior model-generated prompts and matches or exceeds human prompt engineers on 21/24 tasks.",
-        "evidence": "Section 4.1 presents zero-shot and few-shot results on 24 NLP tasks, with figures showing APE surpassing human and greedy baselines."
+        "point": "Demonstrated strong empirical results showing APE-generated prompts outperform prior LLM baselines and match or exceed human-engineered prompts on 21/24 tasks.",
+        "evidence": "Section 4.1 and Figure 3 show zero-shot performance comparisons on 24 tasks."
       },
       {
-        "point": "Demonstrated ability to steer LLMs toward desired behaviors such as truthfulness and informativeness.",
-        "evidence": "Section 4.2 applies APE to TruthfulQA, showing improved truthfulness and a trade-off with informativeness compared to human prompts."
+        "point": "Use of a single LLM both for generating candidate instructions and scoring them, simplifying the pipeline compared to prior multi-model approaches.",
+        "evidence": "Section 2 and 3 discuss leveraging a single LLM for proposal and scoring."
       },
       {
-        "point": "Comprehensive qualitative and quantitative analyses exploring proposal distributions, scoring functions, and iterative search.",
-        "evidence": "Section 5 analyzes effects of model size, scoring metrics, and iterative Monte Carlo search on prompt quality."
+        "point": "Comprehensive evaluation including zero-shot, few-shot, and truthfulness/informativeness trade-offs on TruthfulQA.",
+        "evidence": "Sections 4.1 and 4.2 detail experiments on instruction induction and TruthfulQA."
+      },
+      {
+        "point": "Efficient multi-stage filtering strategy for scoring candidate prompts to reduce computational cost.",
+        "evidence": "Section 3.2 describes the adaptive filtering scheme for score estimation."
+      },
+      {
+        "point": "Qualitative analysis of failure cases and adversarial prompts, e.g., trivial rhymes in Rhymes task.",
+        "evidence": "Section 4.1 Few-shot Qualitative Analysis and Appendix C."
+      },
+      {
+        "point": "Investigation of the effect of model size on proposal quality and the benefit of iterative Monte Carlo search.",
+        "evidence": "Section 5.1 and 5.2 analyze model size impact and iterative search benefits."
       }
     ],
     "weaknesses": [
       {
-        "point": "Dependence on large, instruction-tuned LLMs for generating high-quality prompt candidates.",
-        "evidence": "Section 5.1 shows smaller models produce lower quality proposals, requiring large models like InstructGPT (175B) for best results."
+        "point": "Limited discussion and comparison to recent automatic prompt generation methods beyond Honovich et al. (2022), e.g., prompt tuning or discrete prompt search literature.",
+        "evidence": "Related work in Section 2 mentions prompt tuning but lacks detailed comparison or experiments against these methods."
       },
       {
-        "point": "Limited exploration of generalization beyond the 24 NLP tasks and TruthfulQA dataset.",
-        "evidence": "Experiments focus on a fixed set of tasks from Honovich et al. (2022) and TruthfulQA; broader applicability to other domains or modalities is not evaluated."
+        "point": "The iterative Monte Carlo search variant is only marginally better than the simpler approach, yet the paper does not explore more advanced search or optimization techniques that could improve results.",
+        "evidence": "Section 3.3 and 5.2 show iterative search yields marginal gains but no further exploration is presented."
       },
       {
-        "point": "Iterative Monte Carlo search provides only marginal improvements over the simpler initial proposal method.",
-        "evidence": "Section 5.2 and Figure 7 indicate iterative search yields diminishing returns and is not always necessary."
+        "point": "The evaluation relies heavily on InstructGPT (175B) as the target model, limiting understanding of generalizability to other LLMs or smaller models.",
+        "evidence": "Section 4 and experiments primarily use InstructGPT (175B) for evaluation."
       },
       {
-        "point": "Potential overfitting to training demonstrations in instruction induction, limiting true zero-shot generalization.",
-        "evidence": "Section 4.2 notes that optimizing instructions on a small training subset of TruthfulQA questions means results are not strictly zero-shot."
+        "point": "The TruthfulQA experiments optimize instructions on a subset of questions, violating the zero-shot premise and limiting the validity of comparisons to original benchmarks.",
+        "evidence": "Section 4.2 explicitly states that results are not compatible with original zero-shot benchmarks."
       },
       {
-        "point": "Some tasks show performance degradation when combining APE instructions with in-context examples.",
-        "evidence": "Section 4.1 discusses adversarial cases like Rhymes and Second Letters where adding context harms accuracy."
+        "point": "Lack of ablation studies on key design choices such as the number of candidate prompts sampled, the size of demonstration subsets, or the impact of different scoring functions beyond execution accuracy and log probability.",
+        "evidence": "Section 5.1 discusses some metrics but does not provide detailed ablations on sampling or demonstration size."
       },
       {
-        "point": "Limited discussion on computational cost and efficiency of the APE search process.",
-        "evidence": "While Section 3.2 mentions adaptive filtering to reduce computation, the overall resource requirements for large-scale prompt search are not detailed."
+        "point": "Insufficient details on prompt templates and exact prompting strategies for proposal and scoring, which may hinder reproducibility.",
+        "evidence": "Appendix B provides some templates but the main text lacks comprehensive implementation details."
       },
       {
-        "point": "Lack of human evaluation for truthfulness and informativeness metrics in TruthfulQA experiments.",
-        "evidence": "Section 4.2 relies on automated GPT-judge metrics without human validation of generated answers."
+        "point": "The method assumes access to an LLM capable of both generating and scoring prompts, which may not be feasible for closed API models without log probability access.",
+        "evidence": "Section 3.2 discusses scoring via log probabilities, which may not be available in all APIs."
+      },
+      {
+        "point": "The approach may be sensitive to the choice of demonstrations used for prompt generation, as noted in failure cases, but no systematic method for demonstration selection is proposed.",
+        "evidence": "Section 4.1 and Appendix C discuss variance in instruction quality depending on demonstration subsets."
+      },
+      {
+        "point": "The paper does not address how well APE performs on tasks beyond NLP or with models that have different modalities or interfaces.",
+        "evidence": "Section A mentions potential applicability to other models but no experiments or concrete evaluations are provided."
+      },
+      {
+        "point": "The evaluation metrics focus on accuracy and truthfulness but do not consider other important aspects such as prompt length, interpretability, or robustness to adversarial inputs.",
+        "evidence": "Throughout the evaluation sections, metrics are limited to accuracy, truthfulness, and informativeness."
+      },
+      {
+        "point": "The paper does not discuss potential ethical considerations or risks of automating prompt engineering, such as misuse or generation of harmful instructions.",
+        "evidence": "No mention of ethical implications or risks in the main text or appendices."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is APE to the choice and number of demonstrations used for initial prompt generation?",
-        "motivation": "Section 4.1 notes variance in instruction quality depending on demonstration subsets; understanding this sensitivity is important for practical deployment."
+        "question": "How sensitive is APE to the choice and number of demonstrations used for prompt generation, and can you propose methods to select or optimize these demonstrations?",
+        "motivation": "Demonstration choice appears to significantly affect instruction quality (Section 4.1, Appendix C), so understanding and improving this could enhance robustness."
       },
       {
-        "question": "Can APE be extended or adapted to multimodal models or tasks beyond NLP, such as image generation?",
-        "motivation": "The paper mentions potential applicability to other models with natural language interfaces but does not empirically explore this."
+        "question": "Can APE be effectively applied to other LLMs beyond InstructGPT (175B), especially smaller or open-source models, and what are the performance trade-offs?",
+        "motivation": "Generalizability to other models is crucial for broader applicability but is not fully explored."
       },
       {
-        "question": "What are the computational costs and latency associated with running APE in practice, especially for large models?",
-        "motivation": "Understanding resource requirements is critical for assessing feasibility and scalability of the approach."
+        "question": "Have you considered integrating more advanced search or optimization algorithms beyond iterative Monte Carlo, such as reinforcement learning or evolutionary strategies, to improve prompt search?",
+        "motivation": "Iterative search yields marginal gains (Section 5.2), so exploring stronger optimization could yield better instructions."
       },
       {
-        "question": "Have the authors considered combining APE with human-in-the-loop prompt refinement to leverage complementary strengths?",
-        "motivation": "Human expertise might help guide or validate the search, potentially improving efficiency and robustness."
+        "question": "What are the practical limitations of requiring log probability access for scoring, and can APE be adapted to black-box models without such access?",
+        "motivation": "Many commercial APIs do not provide log probabilities, limiting applicability of the scoring method."
+      },
+      {
+        "question": "Could you provide more detailed prompt templates and hyperparameters used in the proposal and scoring steps to facilitate reproducibility?",
+        "motivation": "Reproducibility is hindered by limited implementation details (Appendix B is brief)."
+      },
+      {
+        "question": "How does APE handle or mitigate the risk of generating trivial or adversarial instructions, such as the echoing rhymes example?",
+        "motivation": "Adversarial instructions can mislead evaluation and model behavior (Section 4.1), so mitigation strategies are important."
+      },
+      {
+        "question": "Have you evaluated the interpretability or human understandability of the generated instructions compared to human-engineered prompts?",
+        "motivation": "Understanding whether generated prompts are comprehensible to humans affects usability and trust."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Dependence on large, instruction-tuned LLMs for generating high-quality prompt candidates. (Section 5.1 shows smaller models produce lower quality proposals, requiring large models like InstructGPT (175B) for best results.)",
-    "point_002": "Limited exploration of generalization beyond the 24 NLP tasks and TruthfulQA dataset. (Experiments focus on a fixed set of tasks from Honovich et al. (2022) and TruthfulQA; broader applicability to other domains or modalities is not evaluated.)",
-    "point_003": "Iterative Monte Carlo search provides only marginal improvements over the simpler initial proposal method. (Section 5.2 and Figure 7 indicate iterative search yields diminishing returns and is not always necessary.)",
-    "point_004": "Potential overfitting to training demonstrations in instruction induction, limiting true zero-shot generalization. (Section 4.2 notes that optimizing instructions on a small training subset of TruthfulQA questions means results are not strictly zero-shot.)",
-    "point_005": "Some tasks show performance degradation when combining APE instructions with in-context examples. (Section 4.1 discusses adversarial cases like Rhymes and Second Letters where adding context harms accuracy.)",
-    "point_006": "Limited discussion on computational cost and efficiency of the APE search process. (While Section 3.2 mentions adaptive filtering to reduce computation, the overall resource requirements for large-scale prompt search are not detailed.)",
-    "point_007": "Lack of human evaluation for truthfulness and informativeness metrics in TruthfulQA experiments. (Section 4.2 relies on automated GPT-judge metrics without human validation of generated answers.)",
-    "point_008": "How sensitive is APE to the choice and number of demonstrations used for initial prompt generation? (Section 4.1 notes variance in instruction quality depending on demonstration subsets; understanding this sensitivity is important for practical deployment.)",
-    "point_009": "Can APE be extended or adapted to multimodal models or tasks beyond NLP, such as image generation? (The paper mentions potential applicability to other models with natural language interfaces but does not empirically explore this.)",
-    "point_010": "What are the computational costs and latency associated with running APE in practice, especially for large models? (Understanding resource requirements is critical for assessing feasibility and scalability of the approach.)",
-    "point_011": "Have the authors considered combining APE with human-in-the-loop prompt refinement to leverage complementary strengths? (Human expertise might help guide or validate the search, potentially improving efficiency and robustness.)"
+    "point_001": "Limited discussion and comparison to recent automatic prompt generation methods beyond Honovich et al. (2022), e.g., prompt tuning or discrete prompt search literature.. Related work in Section 2 mentions prompt tuning but lacks detailed comparison or experiments against these methods",
+    "point_002": "The iterative Monte Carlo search variant is only marginally better than the simpler approach, yet the paper does not explore more advanced search or optimization techniques that could improve results.. Section 3.3 and 5.2 show iterative search yields marginal gains but no further exploration is presented",
+    "point_003": "The evaluation relies heavily on InstructGPT (175B) as the target model, limiting understanding of generalizability to other LLMs or smaller models.. Section 4 and experiments primarily use InstructGPT (175B) for evaluation",
+    "point_004": "The TruthfulQA experiments optimize instructions on a subset of questions, violating the zero-shot premise and limiting the validity of comparisons to original benchmarks.. Section 4.2 explicitly states that results are not compatible with original zero-shot benchmarks",
+    "point_005": "Lack of ablation studies on key design choices such as the number of candidate prompts sampled, the size of demonstration subsets, or the impact of different scoring functions beyond execution accuracy and log probability.. Section 5.1 discusses some metrics but does not provide detailed ablations on sampling or demonstration size",
+    "point_006": "Insufficient details on prompt templates and exact prompting strategies for proposal and scoring, which may hinder reproducibility.. Appendix B provides some templates but the main text lacks comprehensive implementation details",
+    "point_007": "The method assumes access to an LLM capable of both generating and scoring prompts, which may not be feasible for closed API models without log probability access.. Section 3.2 discusses scoring via log probabilities, which may not be available in all APIs",
+    "point_008": "The approach may be sensitive to the choice of demonstrations used for prompt generation, as noted in failure cases, but no systematic method for demonstration selection is proposed.. Section 4.1 and Appendix C discuss variance in instruction quality depending on demonstration subsets",
+    "point_009": "The paper does not address how well APE performs on tasks beyond NLP or with models that have different modalities or interfaces.. Section A mentions potential applicability to other models but no experiments or concrete evaluations are provided",
+    "point_010": "The evaluation metrics focus on accuracy and truthfulness but do not consider other important aspects such as prompt length, interpretability, or robustness to adversarial inputs.. Throughout the evaluation sections, metrics are limited to accuracy, truthfulness, and informativeness",
+    "point_011": "The paper does not discuss potential ethical considerations or risks of automating prompt engineering, such as misuse or generation of harmful instructions.. No mention of ethical implications or risks in the main text or appendices"
   }
 }

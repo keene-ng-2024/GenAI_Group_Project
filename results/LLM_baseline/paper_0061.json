@@ -1,91 +1,123 @@
 {
   "paper_id": "paper_0061",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 15.163,
+  "latency_seconds": 41.997,
   "token_usage": {
-    "input": 6810,
-    "output": 1014
+    "input": 6921,
+    "output": 1548
   },
   "structured": {
-    "summary": "This paper proposes IAPEK, an instance-level adaptive method to selectively augment large pre-trained language models with external knowledge only when necessary, using a novel metric called Thrust to estimate the need for external knowledge. Extensive experiments on a diverse benchmark demonstrate that Thrust improves cost-efficiency and performance in knowledge-enhanced NLP tasks.",
+    "summary": "The paper proposes IAPEK, an instance-level adaptive method to selectively augment large pre-trained language models with external knowledge, using a novel metric called Thrust to score the necessity of knowledge injection per instance. Experiments on a diverse benchmark show that Thrust improves cost-efficiency and performance by identifying when external knowledge is beneficial.",
     "strengths": [
       {
-        "point": "Addresses the inefficiency and noise issues in external knowledge retrieval by adaptively deciding when to use external knowledge.",
-        "evidence": "Section 1 Introduction and Section 2 Method describe the motivation and design of IAPEK and Thrust to selectively apply external knowledge."
+        "point": "The paper addresses a practical and important problem of selectively using external knowledge to reduce noise and computational cost in knowledge-augmented language models.",
+        "evidence": "Introduction and Section 2.1 describe the motivation and formulation of instance-level adaptive propulsion of knowledge (IAPEK)."
       },
       {
-        "point": "Proposes a novel, lightweight metric (Thrust) based on instance distribution estimation without requiring additional fine-tuning or labels at test time.",
-        "evidence": "Section 2.2 details the design of Thrust using clustering of instance representations and distance-based scoring."
+        "point": "The proposed Thrust metric is novel and lightweight, leveraging clustering of training instance representations to estimate knowledge necessity without requiring test labels or additional fine-tuning.",
+        "evidence": "Section 2.2 details the design of Thrust, including vectorized and binary variants, and emphasizes no need for test labels or model updates."
       },
       {
-        "point": "Comprehensive experimental evaluation across multiple models, task types (MC classification and open-domain QA), and knowledge sources.",
-        "evidence": "Section 3 describes experiments on T5, GPT-J, OPT, UnifiedQA models over 12 datasets with different knowledge formats."
+        "point": "The experimental evaluation covers a broad and diverse benchmark with multiple task types (multiple-choice classification and open-domain QA) and knowledge sources, demonstrating general applicability.",
+        "evidence": "Section 3.2 describes the benchmark with 12 datasets of different formats and knowledge types; Section 3.3 and 3.4 show results across these."
       },
       {
-        "point": "Demonstrates significant improvements in cost-efficiency and performance by selectively applying external knowledge to only a subset of instances.",
-        "evidence": "Section 3.4 and 4.1 show that Thrust achieves up to 26% average performance improvement and outperforms full knowledge usage in many cases."
+        "point": "The paper shows that Thrust can improve performance compared to indiscriminate knowledge injection, achieving higher accuracy/F1 with fewer knowledge-augmented instances, thus improving cost-efficiency.",
+        "evidence": "Section 4.1 and Table 4 compare adaptive Thrust-based knowledge usage versus full knowledge injection, showing gains with fewer augmented instances."
+      },
+      {
+        "point": "The analysis of Thrust score distributions across tasks provides insights into which tasks benefit more from external knowledge and the nature of knowledge necessity.",
+        "evidence": "Section 4.2 and Figure 3 analyze Thrust score distributions for selected tasks, showing meaningful patterns."
+      },
+      {
+        "point": "The ablation study on which model layer to use for instance representation shows robustness of Thrust to this design choice.",
+        "evidence": "Section 4.3 and Figure 4 demonstrate performance stability across different layers' hidden states."
       }
     ],
     "weaknesses": [
       {
-        "point": "The method relies on the assumption that external knowledge is beneficial, which may not hold for all tasks or datasets.",
-        "evidence": "Section 4.1 and 3.4 discuss failure cases such as ARC-C where external knowledge is less useful or noisy."
+        "point": "The paper lacks comparison with other confidence or uncertainty estimation methods that could also be used to decide when to inject external knowledge.",
+        "evidence": "Related work in Section 5 mentions calibration and hardness estimation methods but no empirical comparison or discussion of why Thrust is superior or complementary."
       },
       {
-        "point": "Thrust depends on clustering and representation quality, which may vary across models and tasks, potentially limiting generalizability.",
-        "evidence": "Section 4.3 shows some variation in performance depending on which model layer is used for representations."
+        "point": "The clustering hyperparameters for Thrust (e.g., number of clusters) and their sensitivity are not discussed or ablated.",
+        "evidence": "Section 2.2 describes K-means clustering but does not specify cluster counts or analyze impact on performance."
       },
       {
-        "point": "The paper lacks detailed analysis on the computational overhead of computing Thrust scores and clustering in large-scale or real-time settings.",
-        "evidence": "While claiming efficiency, the paper does not provide explicit runtime or scalability analysis in Section 3 or 4."
+        "point": "The method assumes access to training data to estimate instance distributions, which may not always be available or representative of test distributions.",
+        "evidence": "Section 2.2 states training data is used for clustering; no discussion on domain shift or applicability when training data is unavailable."
       },
       {
-        "point": "Limited discussion on how the method would perform with other types of external knowledge beyond text passages, such as structured knowledge graphs or multimodal data.",
-        "evidence": "Section 5 Related Work mentions knowledge graphs but experiments focus mainly on text-based knowledge."
+        "point": "The evaluation focuses mainly on Uni\ufb01edQA models for Thrust experiments, limiting understanding of generalizability to other architectures or zero-shot settings.",
+        "evidence": "Section 3.4 and Table 3 show Thrust results primarily on Uni\ufb01edQA; zero-shot models are evaluated for knowledge usage but not for Thrust."
       },
       {
-        "point": "The threshold selection for deciding which instances receive external knowledge appears heuristic and may require tuning per dataset.",
-        "evidence": "Section 2.1 mentions setting threshold t as a percentile of scores without detailed ablation or automated selection."
+        "point": "The paper does not provide details on the computational overhead of computing Thrust scores at inference time, which affects practical deployment.",
+        "evidence": "Section 2.2 mentions efficiency but no quantitative runtime or resource cost analysis is presented."
       },
       {
-        "point": "The evaluation primarily focuses on accuracy and F1 improvements but does not assess the impact on model calibration or uncertainty estimation.",
-        "evidence": "Section 3 and 4 report accuracy and F1 but do not analyze confidence calibration or error types."
+        "point": "The failure cases on ARC-C dataset are acknowledged but not deeply analyzed or addressed, limiting understanding of method limitations.",
+        "evidence": "Section 3.4 discusses consistent failure on ARC-C but only provides a qualitative example without proposing solutions."
       },
       {
-        "point": "The paper could benefit from clearer presentation and more concise writing, as some sections are dense and occasionally repetitive.",
-        "evidence": "The full text contains some verbose explanations and formatting issues that may hinder readability."
+        "point": "The paper does not clarify how the threshold t for selecting instances based on Thrust is chosen or tuned, nor the impact of different thresholds.",
+        "evidence": "Section 2.1 mentions setting t as a percentile (e.g., top 25%) but no ablation or sensitivity analysis is shown."
+      },
+      {
+        "point": "The external knowledge retrieval methods and their quality vary widely across datasets, but the impact of knowledge noise on Thrust's effectiveness is not quantitatively studied.",
+        "evidence": "Section 3.2 describes knowledge sources ranging from human annotations to DPR retrieval, but no controlled experiments on noise levels."
+      },
+      {
+        "point": "The paper does not provide sufficient implementation details such as model checkpoints used, hyperparameters for fine-tuning, or exact prompt templates, hindering reproducibility.",
+        "evidence": "Section 3.1 and 3.3 describe models and settings at a high level but lack detailed training or inference configurations."
+      },
+      {
+        "point": "The explanation of the Thrust metric formulas (t_v and t_b) is somewhat dense and could be clarified with more intuitive descriptions or examples.",
+        "evidence": "Section 2.2 contains mathematical expressions that are not accompanied by illustrative examples or pseudocode."
+      },
+      {
+        "point": "The paper does not discuss potential ethical considerations or risks of selectively using external knowledge, such as bias amplification or fairness issues.",
+        "evidence": "No mention of ethical implications or limitations related to knowledge selection in the entire paper."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is the performance of Thrust to the choice of clustering algorithm and the number of clusters?",
-        "motivation": "Understanding this would clarify the robustness and practical applicability of the method across different datasets and models."
+        "question": "How sensitive is Thrust's performance to the choice of the number of clusters in the K-means step, and how was this hyperparameter selected?",
+        "motivation": "Understanding this is important for applying Thrust robustly across different datasets and models."
       },
       {
-        "question": "Can Thrust be extended or adapted to handle other forms of external knowledge, such as knowledge graphs or multimodal information?",
-        "motivation": "This would broaden the impact and applicability of the approach beyond text-based knowledge retrieval."
+        "question": "Can Thrust be effectively applied in zero-shot or few-shot settings where training data for clustering is limited or unavailable?",
+        "motivation": "This affects the generalizability of the method to real-world scenarios with limited labeled data."
       },
       {
-        "question": "What is the computational overhead of computing Thrust scores and clustering compared to the cost of external knowledge retrieval?",
-        "motivation": "Quantifying this is important to validate the claimed efficiency gains in real-world scenarios."
+        "question": "What is the computational overhead of computing Thrust scores during inference, and how does it compare to the cost of knowledge retrieval?",
+        "motivation": "This impacts the practical cost-efficiency claims and deployment feasibility."
       },
       {
-        "question": "Have the authors considered integrating Thrust with uncertainty estimation or confidence calibration methods to further improve instance selection?",
-        "motivation": "Combining these approaches might enhance the reliability of adaptive knowledge augmentation."
+        "question": "Have the authors considered or experimented with combining Thrust with existing uncertainty or confidence estimation methods for knowledge selection?",
+        "motivation": "This could improve or complement Thrust and situate it better within related work."
+      },
+      {
+        "question": "How does Thrust perform when the external knowledge is of varying quality or contains different noise levels?",
+        "motivation": "Understanding robustness to knowledge noise is critical for practical applications."
+      },
+      {
+        "question": "Could the authors provide more details on the prompt templates and fine-tuning procedures used for the Uni\ufb01edQA models?",
+        "motivation": "This is necessary for reproducibility and fair comparison."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The method relies on the assumption that external knowledge is beneficial, which may not hold for all tasks or datasets. (Section 4.1 and 3.4 discuss failure cases such as ARC-C where external knowledge is less useful or noisy.)",
-    "point_002": "Thrust depends on clustering and representation quality, which may vary across models and tasks, potentially limiting generalizability. (Section 4.3 shows some variation in performance depending on which model layer is used for representations.)",
-    "point_003": "The paper lacks detailed analysis on the computational overhead of computing Thrust scores and clustering in large-scale or real-time settings. (While claiming efficiency, the paper does not provide explicit runtime or scalability analysis in Section 3 or 4.)",
-    "point_004": "Limited discussion on how the method would perform with other types of external knowledge beyond text passages, such as structured knowledge graphs or multimodal data. (Section 5 Related Work mentions knowledge graphs but experiments focus mainly on text-based knowledge.)",
-    "point_005": "The threshold selection for deciding which instances receive external knowledge appears heuristic and may require tuning per dataset. (Section 2.1 mentions setting threshold t as a percentile of scores without detailed ablation or automated selection.)",
-    "point_006": "The evaluation primarily focuses on accuracy and F1 improvements but does not assess the impact on model calibration or uncertainty estimation. (Section 3 and 4 report accuracy and F1 but do not analyze confidence calibration or error types.)",
-    "point_007": "The paper could benefit from clearer presentation and more concise writing, as some sections are dense and occasionally repetitive. (The full text contains some verbose explanations and formatting issues that may hinder readability.)",
-    "point_008": "How sensitive is the performance of Thrust to the choice of clustering algorithm and the number of clusters? (Understanding this would clarify the robustness and practical applicability of the method across different datasets and models.)",
-    "point_009": "Can Thrust be extended or adapted to handle other forms of external knowledge, such as knowledge graphs or multimodal information? (This would broaden the impact and applicability of the approach beyond text-based knowledge retrieval.)",
-    "point_010": "What is the computational overhead of computing Thrust scores and clustering compared to the cost of external knowledge retrieval? (Quantifying this is important to validate the claimed efficiency gains in real-world scenarios.)",
-    "point_011": "Have the authors considered integrating Thrust with uncertainty estimation or confidence calibration methods to further improve instance selection? (Combining these approaches might enhance the reliability of adaptive knowledge augmentation.)"
+    "point_001": "The paper lacks comparison with other confidence or uncertainty estimation methods that could also be used to decide when to inject external knowledge.. Related work in Section 5 mentions calibration and hardness estimation methods but no empirical comparison or discussion of why Thrust is superior or complementary",
+    "point_002": "The clustering hyperparameters for Thrust (e.g., number of clusters) and their sensitivity are not discussed or ablated.. Section 2.2 describes K-means clustering but does not specify cluster counts or analyze impact on performance",
+    "point_003": "The method assumes access to training data to estimate instance distributions, which may not always be available or representative of test distributions.. Section 2.2 states training data is used for clustering; no discussion on domain shift or applicability when training data is unavailable",
+    "point_004": "The evaluation focuses mainly on Uni\ufb01edQA models for Thrust experiments, limiting understanding of generalizability to other architectures or zero-shot settings.. Section 3.4 and Table 3 show Thrust results primarily on Uni\ufb01edQA; zero-shot models are evaluated for knowledge usage but not for Thrust",
+    "point_005": "The paper does not provide details on the computational overhead of computing Thrust scores at inference time, which affects practical deployment.. Section 2.2 mentions efficiency but no quantitative runtime or resource cost analysis is presented",
+    "point_006": "The failure cases on ARC-C dataset are acknowledged but not deeply analyzed or addressed, limiting understanding of method limitations.. Section 3.4 discusses consistent failure on ARC-C but only provides a qualitative example without proposing solutions",
+    "point_007": "The paper does not clarify how the threshold t for selecting instances based on Thrust is chosen or tuned, nor the impact of different thresholds.. Section 2.1 mentions setting t as a percentile (e.g., top 25%) but no ablation or sensitivity analysis is shown",
+    "point_008": "The external knowledge retrieval methods and their quality vary widely across datasets, but the impact of knowledge noise on Thrust's effectiveness is not quantitatively studied.. Section 3.2 describes knowledge sources ranging from human annotations to DPR retrieval, but no controlled experiments on noise levels",
+    "point_009": "The paper does not provide sufficient implementation details such as model checkpoints used, hyperparameters for fine-tuning, or exact prompt templates, hindering reproducibility.. Section 3.1 and 3.3 describe models and settings at a high level but lack detailed training or inference configurations",
+    "point_010": "The explanation of the Thrust metric formulas (t_v and t_b) is somewhat dense and could be clarified with more intuitive descriptions or examples.. Section 2.2 contains mathematical expressions that are not accompanied by illustrative examples or pseudocode",
+    "point_011": "The paper does not discuss potential ethical considerations or risks of selectively using external knowledge, such as bias amplification or fairness issues.. No mention of ethical implications or limitations related to knowledge selection in the entire paper"
   }
 }

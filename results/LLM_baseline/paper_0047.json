@@ -1,91 +1,122 @@
 {
   "paper_id": "paper_0047",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 16.433,
+  "latency_seconds": 29.966,
   "token_usage": {
-    "input": 8571,
-    "output": 929
+    "input": 8682,
+    "output": 1539
   },
   "structured": {
-    "summary": "The paper proposes SPANDROP, a simple data augmentation technique that randomly removes spans from long input sequences to create counterfactual examples, helping models identify sparse supervision signals. A beta-Bernoulli variant is introduced to reduce distribution drift, and experiments on synthetic and real NLP tasks demonstrate improved data efficiency and generalization.",
+    "summary": "The paper proposes SPANDROP, a simple data augmentation technique that randomly ablates spans in long sequences to generate counterfactual examples, helping models identify sparse supervision signals. A beta-Bernoulli variant is introduced to reduce distribution drift, and experiments on synthetic and NLP tasks demonstrate improved sample efficiency and generalization.",
     "strengths": [
       {
-        "point": "Novel and simple data augmentation method tailored for long sequences with sparse supervision.",
-        "evidence": "Section 2 introduces SPANDROP, which randomly ablates spans without replacement, preserving relative order and avoiding position bias."
+        "point": "The paper introduces a novel and simple augmentation method that directly removes spans rather than masking or substituting, which helps mitigate position bias in long sequence tasks.",
+        "evidence": "Section 2.2 and 3.2, where SPANDROP is contrasted with masking and substitution methods, and Figure 2(f) shows reduced position bias."
       },
       {
-        "point": "Theoretical analysis supporting the method and its beta-Bernoulli variant.",
-        "evidence": "Section 2.2 and 2.3 provide formal definitions and theoretical properties, including probability bounds and entropy analysis."
+        "point": "The theoretical analysis rigorously characterizes the properties of SPANDROP and its beta-Bernoulli variant, including preservation probabilities of supporting facts and sequence length distributions.",
+        "evidence": "Section 2.2 and 2.3, including Remark 1 and Remark 2, and Figure 1 illustrating length distributions."
       },
       {
-        "point": "Comprehensive empirical evaluation on both synthetic and multiple real-world NLP datasets.",
-        "evidence": "Section 3 presents synthetic FINDCATS experiments; Section 4 shows results on SQuAD, MultiRC, HotpotQA, and DocRED."
+        "point": "The synthetic FINDCATS task is well-designed to isolate and study the effects of SPANDROP, allowing control over sequence length, supporting fact size, and position bias.",
+        "evidence": "Section 3.1 and 3.2, with detailed setup and analyses on data efficiency, noise, and position bias."
       },
       {
-        "point": "Demonstrated improvements in sample efficiency and generalization, especially in low-data regimes.",
-        "evidence": "Figure 2(a) and Figure 3 (left) show significant gains in data efficiency and performance with limited training data."
+        "point": "The beta-Bernoulli variant effectively addresses the distribution drift problem of SPANDROP, maintaining sequence length diversity and improving performance consistency.",
+        "evidence": "Section 2.3 and experimental results in Section 3.2 (Figures 2(c), 2(d)) and Section 4 (Figure 3 middle)."
+      },
+      {
+        "point": "SPANDROP improves performance on multiple real-world NLP tasks (SQuAD, MultiRC, HotpotQA, DocRED) across different sequence granularities and task types.",
+        "evidence": "Section 4, Table 1, and Figure 3 showing gains in exact match and F1 metrics."
+      },
+      {
+        "point": "The method is model-agnostic and does not require architectural changes, making it broadly applicable.",
+        "evidence": "Section 2.2 and 2.3 emphasize that SPANDROP operates on inputs without modifying models."
+      },
+      {
+        "point": "The paper provides analysis on hyperparameters such as drop ratio and span size, giving practical insights into their effects on performance.",
+        "evidence": "Section 4, Figure 3 (middle and right) and related discussion."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited discussion on how to optimally select span granularity for different tasks.",
-        "evidence": "Section 4 notes that larger span sizes degrade performance but leaves optimal span choice to future work."
+        "point": "The paper does not compare SPANDROP against recent advanced long-sequence modeling methods that focus on architectural improvements or compression techniques.",
+        "evidence": "Related work in Section 5 mentions such methods but no empirical comparison is provided."
       },
       {
-        "point": "The performance gains on real-world datasets are modest compared to synthetic tasks.",
-        "evidence": "Section 4 acknowledges that improvements on natural language data are less significant due to span dependencies."
+        "point": "The assumption that the number of supporting spans m is known or can be estimated is strong and not addressed in practice, limiting applicability.",
+        "evidence": "Section 2.1 and 2.2 rely on m for theoretical guarantees but no method to estimate m is discussed."
       },
       {
-        "point": "The method assumes knowledge or estimation of supporting facts size (m), which may not be available in practice.",
-        "evidence": "Section 2.1 and 2.2 rely on the assumption that m is known or can be estimated to set drop probabilities."
+        "point": "The evaluation on natural language tasks lacks ablation studies isolating the impact of SPANDROP from other training factors such as learning rate or model size.",
+        "evidence": "Section 4 reports improvements but does not include ablations or sensitivity analyses beyond drop ratio and span size."
       },
       {
-        "point": "No ablation or comparison with other advanced augmentation or regularization techniques beyond masking.",
-        "evidence": "Experiments mainly compare SPANDROP variants with baseline and masking; other augmentation methods are not evaluated."
+        "point": "The synthetic FINDCATS task uses uniformly random positions for supporting spans, which may not reflect realistic positional dependencies in natural data.",
+        "evidence": "Section 3.1 describes uniform random placement; real-world data often has positional or contextual dependencies."
       },
       {
-        "point": "Potential computational overhead or impact on training time is not discussed.",
-        "evidence": "The paper does not report training efficiency or runtime implications of applying SPANDROP."
+        "point": "The method may struggle when supporting spans are contiguous or highly dependent, as dropping spans could remove critical context, but this limitation is not discussed.",
+        "evidence": "Section 4 notes that gains are less significant on real data where spans are not independent, but no explicit limitation or mitigation is presented."
       },
       {
-        "point": "Limited analysis of failure cases or scenarios where SPANDROP might hurt performance.",
-        "evidence": "While some deterioration with large drop ratios is noted, detailed failure analysis is lacking."
+        "point": "Implementation details such as how spans are defined in natural language datasets (e.g., sentence boundaries, tokenization) and hyperparameter tuning procedures are insufficiently described for reproducibility.",
+        "evidence": "Section 4 mentions span definitions and training details deferred to appendix, but the main text lacks clarity."
       },
       {
-        "point": "The method is evaluated only on Transformer-based models; generality to other architectures is not shown.",
-        "evidence": "All experiments use Transformer variants (ELECTRA, HuggingFace Transformers) without exploring other model types."
+        "point": "The rejection sampling variant that removes examples not preserving supporting facts is only briefly mentioned and not evaluated on real datasets.",
+        "evidence": "Section 3.2 discusses rejection sampling benefits in synthetic data but no follow-up in Section 4."
+      },
+      {
+        "point": "The paper does not discuss computational overhead or training time impact of SPANDROP augmentation, which could be significant for very long sequences.",
+        "evidence": "No mention of efficiency or runtime costs in methodology or experiments sections."
+      },
+      {
+        "point": "The choice of hyperparameter \u03b1=1 for Beta-SPANDROP is justified empirically but lacks theoretical or practical guidelines for tuning in different scenarios.",
+        "evidence": "Section 2.3 and Figure 1(c) show entropy analysis but no systematic tuning or sensitivity study."
+      },
+      {
+        "point": "The method\u2019s applicability to non-textual long sequences (e.g., time series, protein sequences) is claimed but not experimentally validated.",
+        "evidence": "Introduction and related work mention such domains but experiments focus solely on NLP and synthetic text."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is SPANDROP to the choice of span size in domains other than NLP, such as time series or protein sequences?",
-        "motivation": "Understanding span granularity effects is important for applying the method beyond text."
+        "question": "How can the number or identity of supporting spans (m and S_sup) be estimated or approximated in real-world tasks where this information is unknown?",
+        "motivation": "The theoretical guarantees and noise control rely on knowledge of supporting facts, which is rarely available."
       },
       {
-        "question": "Can the authors provide guidance or heuristics for estimating the number of supporting facts (m) in real-world tasks where it is unknown?",
-        "motivation": "Setting the drop probability p depends on m; practical applicability requires ways to estimate or adapt to unknown m."
+        "question": "Have the authors considered combining SPANDROP with architectural long-sequence models or compression techniques, and if so, how do these approaches interact?",
+        "motivation": "Understanding complementarity could improve performance beyond augmentation alone."
       },
       {
-        "question": "Have the authors considered combining SPANDROP with other regularization or augmentation techniques, and if so, what are the interactions?",
-        "motivation": "Exploring complementarity with existing methods could enhance overall performance."
+        "question": "What is the computational overhead introduced by SPANDROP and Beta-SPANDROP during training, especially on very long sequences?",
+        "motivation": "Practical adoption depends on efficiency and scalability."
       },
       {
-        "question": "What is the computational impact of applying SPANDROP during training in terms of runtime and memory?",
-        "motivation": "Practical deployment requires understanding any overhead introduced by the augmentation."
+        "question": "Could the authors clarify the procedure for defining spans in natural language datasets and how sensitive the method is to span granularity?",
+        "motivation": "Span definition affects augmentation diversity and model performance, as hinted in Section 4."
+      },
+      {
+        "question": "Is rejection sampling to remove noisy augmented examples feasible and beneficial on real datasets, and if so, how is it implemented without ground-truth supporting facts?",
+        "motivation": "This technique improved synthetic task results but its applicability to real data is unclear."
+      },
+      {
+        "question": "How does SPANDROP perform when supporting spans are contiguous or highly context-dependent, as opposed to independent spans?",
+        "motivation": "Real-world data often contains such dependencies, which may affect augmentation effectiveness."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited discussion on how to optimally select span granularity for different tasks. (Section 4 notes that larger span sizes degrade performance but leaves optimal span choice to future work.)",
-    "point_002": "The performance gains on real-world datasets are modest compared to synthetic tasks. (Section 4 acknowledges that improvements on natural language data are less significant due to span dependencies.)",
-    "point_003": "The method assumes knowledge or estimation of supporting facts size (m), which may not be available in practice. (Section 2.1 and 2.2 rely on the assumption that m is known or can be estimated to set drop probabilities.)",
-    "point_004": "No ablation or comparison with other advanced augmentation or regularization techniques beyond masking. (Experiments mainly compare SPANDROP variants with baseline and masking; other augmentation methods are not evaluated.)",
-    "point_005": "Potential computational overhead or impact on training time is not discussed. (The paper does not report training efficiency or runtime implications of applying SPANDROP.)",
-    "point_006": "Limited analysis of failure cases or scenarios where SPANDROP might hurt performance. (While some deterioration with large drop ratios is noted, detailed failure analysis is lacking.)",
-    "point_007": "The method is evaluated only on Transformer-based models; generality to other architectures is not shown. (All experiments use Transformer variants (ELECTRA, HuggingFace Transformers) without exploring other model types.)",
-    "point_008": "How sensitive is SPANDROP to the choice of span size in domains other than NLP, such as time series or protein sequences? (Understanding span granularity effects is important for applying the method beyond text.)",
-    "point_009": "Can the authors provide guidance or heuristics for estimating the number of supporting facts (m) in real-world tasks where it is unknown? (Setting the drop probability p depends on m; practical applicability requires ways to estimate or adapt to unknown m.)",
-    "point_010": "Have the authors considered combining SPANDROP with other regularization or augmentation techniques, and if so, what are the interactions? (Exploring complementarity with existing methods could enhance overall performance.)",
-    "point_011": "What is the computational impact of applying SPANDROP during training in terms of runtime and memory? (Practical deployment requires understanding any overhead introduced by the augmentation.)"
+    "point_001": "The paper does not compare SPANDROP against recent advanced long-sequence modeling methods that focus on architectural improvements or compression techniques.. Related work in Section 5 mentions such methods but no empirical comparison is provided",
+    "point_002": "The assumption that the number of supporting spans m is known or can be estimated is strong and not addressed in practice, limiting applicability.. Section 2.1 and 2.2 rely on m for theoretical guarantees but no method to estimate m is discussed",
+    "point_003": "The evaluation on natural language tasks lacks ablation studies isolating the impact of SPANDROP from other training factors such as learning rate or model size.. Section 4 reports improvements but does not include ablations or sensitivity analyses beyond drop ratio and span size",
+    "point_004": "The synthetic FINDCATS task uses uniformly random positions for supporting spans, which may not reflect realistic positional dependencies in natural data.. Section 3.1 describes uniform random placement; real-world data often has positional or contextual dependencies",
+    "point_005": "The method may struggle when supporting spans are contiguous or highly dependent, as dropping spans could remove critical context, but this limitation is not discussed.. Section 4 notes that gains are less significant on real data where spans are not independent, but no explicit limitation or mitigation is presented",
+    "point_006": "Implementation details such as how spans are defined in natural language datasets (e.g., sentence boundaries, tokenization) and hyperparameter tuning procedures are insufficiently described for reproducibility.. Section 4 mentions span definitions and training details deferred to appendix, but the main text lacks clarity",
+    "point_007": "The rejection sampling variant that removes examples not preserving supporting facts is only briefly mentioned and not evaluated on real datasets.. Section 3.2 discusses rejection sampling benefits in synthetic data but no follow-up in Section 4",
+    "point_008": "The paper does not discuss computational overhead or training time impact of SPANDROP augmentation, which could be significant for very long sequences.. No mention of efficiency or runtime costs in methodology or experiments sections",
+    "point_009": "The choice of hyperparameter \u03b1=1 for Beta-SPANDROP is justified empirically but lacks theoretical or practical guidelines for tuning in different scenarios.. Section 2.3 and Figure 1(c) show entropy analysis but no systematic tuning or sensitivity study",
+    "point_010": "The method\u2019s applicability to non-textual long sequences (e.g., time series, protein sequences) is claimed but not experimentally validated.. Introduction and related work mention such domains but experiments focus solely on NLP and synthetic text"
   }
 }

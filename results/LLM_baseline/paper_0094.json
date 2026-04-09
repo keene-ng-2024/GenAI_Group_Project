@@ -1,96 +1,122 @@
 {
   "paper_id": "paper_0094",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 15.041,
+  "latency_seconds": 25.674,
   "token_usage": {
-    "input": 8118,
-    "output": 1136
+    "input": 8229,
+    "output": 1634
   },
   "structured": {
-    "summary": "This paper addresses the tradeoff between in-distribution (ID) and out-of-distribution (OOD) performance in finetuning pretrained language models for natural language generation. It proposes two methods\u2014ensembling full and lightweight finetuned models, and cocktail finetuning via distillation from a lightweight model to a full finetuned model\u2014to achieve strong performance both ID and OOD, supported by empirical results and theoretical analysis.",
+    "summary": "This paper addresses the tradeoff between in-distribution (ID) and out-of-distribution (OOD) performance in finetuning pretrained language models for natural language generation. It proposes two methods\u2014ensembling full and lightweight finetuned models, and cocktail finetuning via distillation from a lightweight to a full finetuned model\u2014to achieve strong ID and OOD performance simultaneously, supported by empirical results and theoretical analysis.",
     "strengths": [
       {
-        "point": "Identifies and addresses a significant tradeoff in finetuning pretrained language models between ID and OOD performance.",
-        "evidence": "Section 1 Introduction and Section 5 Results of Full and Lightweight Finetuning describe the tradeoff and quantify it across multiple datasets."
+        "point": "The paper identifies and empirically validates the tradeoff between full and lightweight finetuning in natural language generation tasks, quantifying ID and OOD performance differences.",
+        "evidence": "Section 5 and Table 2 show that full finetuning achieves 100% ID performance but only 84% OOD, while lightweight finetuning achieves 100% OOD but only 81% ID."
       },
       {
-        "point": "Proposes simple yet effective methods\u2014ensembling and cocktail finetuning\u2014that achieve the best of both ID and OOD performance.",
-        "evidence": "Section 6 Combining Models with a Weighted Ensemble and Section 7 Cocktail Finetuning present the methods and show empirical improvements in Table 2."
+        "point": "Proposes a simple yet effective ensemble method that combines full and lightweight finetuned models to achieve the best of both ID and OOD performance without requiring OOD data for tuning.",
+        "evidence": "Section 6 describes the weighted ensemble approach, with results in Table 2 demonstrating improved performance over individual methods."
       },
       {
-        "point": "Provides a theoretical explanation for why distillation on ID data can transfer OOD behavior in a multiclass logistic regression setting with large output spaces.",
-        "evidence": "Section 9 Why Does Distillation on ID Data Improve OOD? includes propositions and proofs explaining the phenomenon."
+        "point": "Introduces cocktail finetuning, a novel distillation-based approach that approximates the ensemble with a single model, reducing inference cost while maintaining strong ID and OOD performance.",
+        "evidence": "Section 7 details cocktail finetuning, and Table 2 shows it matches or slightly outperforms full finetuning ID performance and approaches lightweight finetuning OOD performance."
       },
       {
-        "point": "Evaluates methods on multiple natural language generation tasks and datasets, including summarization, table-to-text, and open-domain QA.",
-        "evidence": "Section 4 Experiments Setup details datasets and tasks; results are reported in Section 6 and 7."
+        "point": "Provides a theoretical analysis in a multiclass logistic regression setting explaining how distillation on ID data can transfer OOD behavior from teacher to student models.",
+        "evidence": "Section 9 presents propositions and proofs showing that distillation can transfer OOD behavior even when only ID data is used."
+      },
+      {
+        "point": "Evaluates the methods across multiple natural language generation tasks (summarization, table-to-text, open-domain QA) and two lightweight finetuning methods (adapters and prefix-tuning), demonstrating broad applicability.",
+        "evidence": "Sections 4.1 and 5 describe datasets and results across three tasks and two lightweight finetuning methods."
+      },
+      {
+        "point": "Carefully chooses mixture weights \u03bb based only on ID validation data, avoiding reliance on unavailable OOD data for model selection.",
+        "evidence": "Section 6.1 explains the selection of \u03bb using only in-distribution validation data."
+      },
+      {
+        "point": "Includes ablation studies showing that distilling from full finetuning to full finetuning does not improve performance, supporting the claim that distillation from lightweight to full finetuning is key.",
+        "evidence": "Section 8 describes ablation experiments and Figure 4 shows no improvement when distilling full to full finetuning."
       }
     ],
     "weaknesses": [
       {
-        "point": "The ensemble method, while effective, doubles inference time and memory usage, which may limit practical deployment.",
-        "evidence": "Section 6.3 Runtime and Memory discusses the increased computational cost of ensembling."
+        "point": "The evaluation lacks comparison to other recent robustness or domain adaptation methods beyond full and lightweight finetuning, such as domain-adaptive pretraining or data augmentation.",
+        "evidence": "Related work (Section 2) mentions robust self-training and domain adaptation but no empirical comparison is provided."
       },
       {
-        "point": "Cocktail finetuning shows slightly worse OOD performance compared to ensembling, indicating imperfect transfer of OOD behavior.",
-        "evidence": "Section 7.2 Results notes a slight decay in OOD performance relative to ensembles."
+        "point": "The hyperparameter tuning for open-domain QA uses OOD validation data, which is unrealistic in practice and may bias results.",
+        "evidence": "Section 4.2 notes that a small amount of OOD hyperparameter tuning was performed for open-domain QA."
       },
       {
-        "point": "The approach requires tuning the mixture weight \u03bb on in-distribution validation data, which may not always correlate perfectly with OOD performance.",
-        "evidence": "Section 6.1 Choosing the Mixture Weight \u03bb explains selection based on ID validation data without OOD data."
+        "point": "The paper does not report inference speed or memory usage comparisons quantitatively for cocktail finetuning versus ensemble and individual models.",
+        "evidence": "Section 6.3 discusses runtime and memory qualitatively but no quantitative benchmarks are provided."
       },
       {
-        "point": "Limited exploration of lightweight finetuning methods beyond adapters and prefix-tuning; other methods might behave differently.",
-        "evidence": "Section 1 and 4 focus on adapters and prefix-tuning as representative lightweight finetuning methods."
+        "point": "The theoretical analysis is limited to a simplified multiclass logistic regression model and may not fully capture complexities of large pretrained language models.",
+        "evidence": "Section 9 explicitly studies a logistic regression setting with large output space, which is a strong simplification."
       },
       {
-        "point": "The theoretical analysis is limited to a simplified multiclass logistic regression setting, which may not fully capture complexities of large pretrained language models.",
-        "evidence": "Section 9 provides theory in a logistic regression framework, which abstracts away from deep model architectures."
+        "point": "The cocktail finetuning method requires training a lightweight finetuned model first, which doubles training cost compared to single finetuning.",
+        "evidence": "Section 7.1 describes training the lightweight model first before distillation."
       },
       {
-        "point": "Some hyperparameter tuning for open-domain QA used OOD validation data, which is not realistic in practice.",
-        "evidence": "Section 4.2 notes use of OOD data for limited hyperparameter tuning in open-domain QA experiments."
+        "point": "The paper does not explore or discuss the impact of different choices of lightweight finetuning methods beyond adapters and prefix-tuning, such as BitFit or LoRA.",
+        "evidence": "Section 2 and experiments focus only on adapters and prefix-tuning."
       },
       {
-        "point": "The paper does not explore or report on the impact of these methods on generation quality metrics beyond ROUGE and exact match, such as human evaluation or diversity.",
-        "evidence": "Section 4.1 and results focus on ROUGE-2 and exact match metrics without mention of human or qualitative evaluation."
+        "point": "The method\u2019s generalizability to languages other than English or to other generation tasks (e.g., dialogue, machine translation) is not evaluated or discussed.",
+        "evidence": "All experiments (Section 4.1) are on English summarization, table-to-text, and QA datasets."
       },
       {
-        "point": "The paper lacks discussion on potential limitations or failure cases of the proposed methods.",
-        "evidence": "No explicit section or discussion on limitations or scenarios where the methods may not work well."
+        "point": "The paper does not provide detailed implementation details such as training time, hardware used, or exact hyperparameter values for reproducibility.",
+        "evidence": "Section A.1 mentions hyperparameters but only in appendix; main text lacks these details."
+      },
+      {
+        "point": "The explanation of the cocktail finetuning loss mixing parameter \u03bb and its effect on ID/OOD tradeoff could be clearer, especially for readers unfamiliar with distillation.",
+        "evidence": "Section 7.1 and 8 discuss \u03bb but the intuition and practical guidance could be expanded."
+      },
+      {
+        "point": "The ensemble method requires running two models at inference, which may be prohibitive in some deployment scenarios, but alternatives to reduce this cost beyond cocktail finetuning are not explored.",
+        "evidence": "Section 6.3 notes the cost but no other solutions besides cocktail finetuning are proposed."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive are the ensemble and cocktail finetuning methods to the choice of the mixture weight \u03bb, especially when ID validation data is limited or not fully representative?",
-        "motivation": "Understanding robustness to \u03bb selection is important for practical deployment where validation data may be scarce or not perfectly representative."
+        "question": "Have you considered or tested your methods with other lightweight finetuning approaches such as BitFit or LoRA, and if so, how do results compare?",
+        "motivation": "To understand the generality of the proposed methods across different lightweight finetuning techniques."
       },
       {
-        "question": "Can the cocktail finetuning approach be extended or adapted to incorporate unlabeled OOD data to further improve OOD performance?",
-        "motivation": "Incorporating unlabeled OOD data could potentially enhance robustness and address the slight OOD performance gap compared to ensembling."
+        "question": "Can you provide quantitative runtime and memory benchmarks for cocktail finetuning compared to ensemble and individual models during inference?",
+        "motivation": "To assess the practical efficiency gains of cocktail finetuning in deployment."
       },
       {
-        "question": "Have the authors considered or tested the applicability of their methods to other lightweight finetuning approaches such as BitFit or LoRA?",
-        "motivation": "Evaluating broader applicability would strengthen claims about the generality of the proposed methods."
+        "question": "How sensitive is the cocktail finetuning performance to the choice of the mixture weight \u03bb, and can this parameter be reliably selected without any OOD data in real-world scenarios?",
+        "motivation": "To evaluate robustness of model selection and applicability in practice."
       },
       {
-        "question": "Could the authors provide insights or hypotheses on why distillation from a lightweight finetuned model transfers OOD behavior effectively despite training only on ID data?",
-        "motivation": "A deeper understanding of this phenomenon could guide future method development and theoretical work."
+        "question": "Does cocktail finetuning maintain its benefits when applied to languages other than English or to other generation tasks such as dialogue or machine translation?",
+        "motivation": "To understand the method\u2019s generalizability beyond the tested settings."
+      },
+      {
+        "question": "Given that cocktail finetuning requires training a lightweight model first, how does the total training cost compare to full finetuning alone, and is this cost justified by the performance gains?",
+        "motivation": "To evaluate the tradeoff between training efficiency and improved robustness."
+      },
+      {
+        "question": "Could you clarify the intuition behind why distillation on ID data transfers OOD behavior, especially for readers less familiar with the theoretical analysis?",
+        "motivation": "To improve clarity and understanding of the key mechanism enabling cocktail finetuning."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The ensemble method, while effective, doubles inference time and memory usage, which may limit practical deployment. (Section 6.3 Runtime and Memory discusses the increased computational cost of ensembling.)",
-    "point_002": "Cocktail finetuning shows slightly worse OOD performance compared to ensembling, indicating imperfect transfer of OOD behavior. (Section 7.2 Results notes a slight decay in OOD performance relative to ensembles.)",
-    "point_003": "The approach requires tuning the mixture weight \u03bb on in-distribution validation data, which may not always correlate perfectly with OOD performance. (Section 6.1 Choosing the Mixture Weight \u03bb explains selection based on ID validation data without OOD data.)",
-    "point_004": "Limited exploration of lightweight finetuning methods beyond adapters and prefix-tuning; other methods might behave differently. (Section 1 and 4 focus on adapters and prefix-tuning as representative lightweight finetuning methods.)",
-    "point_005": "The theoretical analysis is limited to a simplified multiclass logistic regression setting, which may not fully capture complexities of large pretrained language models. (Section 9 provides theory in a logistic regression framework, which abstracts away from deep model architectures.)",
-    "point_006": "Some hyperparameter tuning for open-domain QA used OOD validation data, which is not realistic in practice. (Section 4.2 notes use of OOD data for limited hyperparameter tuning in open-domain QA experiments.)",
-    "point_007": "The paper does not explore or report on the impact of these methods on generation quality metrics beyond ROUGE and exact match, such as human evaluation or diversity. (Section 4.1 and results focus on ROUGE-2 and exact match metrics without mention of human or qualitative evaluation.)",
-    "point_008": "The paper lacks discussion on potential limitations or failure cases of the proposed methods. (No explicit section or discussion on limitations or scenarios where the methods may not work well.)",
-    "point_009": "How sensitive are the ensemble and cocktail finetuning methods to the choice of the mixture weight \u03bb, especially when ID validation data is limited or not fully representative? (Understanding robustness to \u03bb selection is important for practical deployment where validation data may be scarce or not perfectly representative.)",
-    "point_010": "Can the cocktail finetuning approach be extended or adapted to incorporate unlabeled OOD data to further improve OOD performance? (Incorporating unlabeled OOD data could potentially enhance robustness and address the slight OOD performance gap compared to ensembling.)",
-    "point_011": "Have the authors considered or tested the applicability of their methods to other lightweight finetuning approaches such as BitFit or LoRA? (Evaluating broader applicability would strengthen claims about the generality of the proposed methods.)",
-    "point_012": "Could the authors provide insights or hypotheses on why distillation from a lightweight finetuned model transfers OOD behavior effectively despite training only on ID data? (A deeper understanding of this phenomenon could guide future method development and theoretical work.)"
+    "point_001": "The evaluation lacks comparison to other recent robustness or domain adaptation methods beyond full and lightweight finetuning, such as domain-adaptive pretraining or data augmentation.. Related work (Section 2) mentions robust self-training and domain adaptation but no empirical comparison is provided",
+    "point_002": "The hyperparameter tuning for open-domain QA uses OOD validation data, which is unrealistic in practice and may bias results.. Section 4.2 notes that a small amount of OOD hyperparameter tuning was performed for open-domain QA",
+    "point_003": "The paper does not report inference speed or memory usage comparisons quantitatively for cocktail finetuning versus ensemble and individual models.. Section 6.3 discusses runtime and memory qualitatively but no quantitative benchmarks are provided",
+    "point_004": "The theoretical analysis is limited to a simplified multiclass logistic regression model and may not fully capture complexities of large pretrained language models.. Section 9 explicitly studies a logistic regression setting with large output space, which is a strong simplification",
+    "point_005": "The cocktail finetuning method requires training a lightweight finetuned model first, which doubles training cost compared to single finetuning.. Section 7.1 describes training the lightweight model first before distillation",
+    "point_006": "The paper does not explore or discuss the impact of different choices of lightweight finetuning methods beyond adapters and prefix-tuning, such as BitFit or LoRA.. Section 2 and experiments focus only on adapters and prefix-tuning",
+    "point_007": "The method\u2019s generalizability to languages other than English or to other generation tasks (e.g., dialogue, machine translation) is not evaluated or discussed.. All experiments (Section 4.1) are on English summarization, table-to-text, and QA datasets",
+    "point_008": "The paper does not provide detailed implementation details such as training time, hardware used, or exact hyperparameter values for reproducibility.. Section A.1 mentions hyperparameters but only in appendix; main text lacks these details",
+    "point_009": "The explanation of the cocktail finetuning loss mixing parameter \u03bb and its effect on ID/OOD tradeoff could be clearer, especially for readers unfamiliar with distillation.. Section 7.1 and 8 discuss \u03bb but the intuition and practical guidance could be expanded",
+    "point_010": "The ensemble method requires running two models at inference, which may be prohibitive in some deployment scenarios, but alternatives to reduce this cost beyond cocktail finetuning are not explored.. Section 6.3 notes the cost but no other solutions besides cocktail finetuning are proposed"
   }
 }

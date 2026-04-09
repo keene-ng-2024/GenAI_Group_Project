@@ -1,91 +1,110 @@
 {
   "paper_id": "paper_0038",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 16.576,
+  "latency_seconds": 29.176,
   "token_usage": {
-    "input": 6748,
-    "output": 1058
+    "input": 6859,
+    "output": 1300
   },
   "structured": {
-    "summary": "This paper proposes SAGE, a sensitivity-guided adaptive learning rate schedule that adjusts each parameter's learning rate based on its sensitivity and temporal variation to reduce redundancy and improve generalization in large Transformer models. Extensive experiments on NLP, machine translation, and vision tasks demonstrate consistent performance gains and better parameter utilization.",
+    "summary": "This paper proposes SAGE, a sensitivity-guided adaptive learning rate schedule that adjusts each parameter's learning rate based on its sensitivity and local temporal variation to reduce redundancy and improve generalization in large Transformer models. The method is evaluated on NLP, NMT, and vision tasks, showing consistent improvements over baselines and complementarity with existing optimizers and regularization techniques.",
     "strengths": [
       {
-        "point": "Novel adaptive learning rate strategy that leverages parameter sensitivity and its temporal variation to balance training across parameters.",
-        "evidence": "Section 3 Method details the design of SAGE, combining sensitivity and local temporal variation to adapt learning rates per parameter."
+        "point": "Novel adaptive learning rate schedule that leverages parameter sensitivity and its temporal variation to balance underfitting and overfitting.",
+        "evidence": "Section 3 Method; Eq. (4) and Algorithm 1 describe the novel learning rate adjustment based on sensitivity and local temporal variation."
       },
       {
-        "point": "Comprehensive empirical evaluation across diverse tasks and model architectures, including BERT, RoBERTa, Transformer NMT, and Vision Transformers.",
-        "evidence": "Section 4 Experiments shows improvements on GLUE benchmark, IWSLT and WMT translation datasets, and ImageNet classification."
+        "point": "Comprehensive evaluation across diverse tasks including natural language understanding, neural machine translation, and image classification.",
+        "evidence": "Section 4 Experiments; Tables 2-5 show improvements on GLUE benchmark, IWSLT\u201914 De-En, WMT\u201916 En-De, CIFAR100, and ImageNet."
       },
       {
-        "point": "Demonstrated complementary nature of SAGE with existing optimizers and regularization methods, enhancing generalization without conflicting with adaptive gradient methods.",
-        "evidence": "Section 5.3 shows SAGE combined with SMART adversarial regularization improves performance; Section 6 discusses compatibility with Adam and AdaGrad."
+        "point": "Demonstrated complementarity of SAGE with various optimizers (Adam, Adamax, SGD) and state-of-the-art regularization methods like SMART.",
+        "evidence": "Section 4.1 Implementation Details and Section 5.3; Table 6 shows improvements when combined with SMART."
       },
       {
-        "point": "Thorough analysis verifying that SAGE leads to more balanced parameter sensitivity distributions, more reliable sensitivity measures, and better generalization.",
-        "evidence": "Section 5.1 and 5.2 provide sensitivity distribution plots, pruning experiments, learning curves, and decision boundary visualizations."
+        "point": "Analysis showing that SAGE leads to more balanced sensitivity distribution and better generalization, supported by pruning experiments and decision boundary visualization.",
+        "evidence": "Section 5.1 and 5.2; Figures 2, 3, and 5 illustrate sensitivity concentration, pruning performance, and smoother decision boundaries."
+      },
+      {
+        "point": "Low computational and memory overhead by only requiring element-wise multiplication and storing an exponential moving average of sensitivity.",
+        "evidence": "Section 3 Method, Computation and memory usage paragraph."
       }
     ],
     "weaknesses": [
       {
-        "point": "The computational overhead and memory cost of maintaining sensitivity and temporal variation statistics are only briefly discussed and not quantitatively evaluated.",
-        "evidence": "Section 3 mentions marginal cost but lacks detailed runtime or memory benchmarks."
+        "point": "Lack of comparison with other adaptive learning rate methods that also aim to improve generalization, such as Lookahead or SWA.",
+        "evidence": "Section 2.2 discusses adaptive learning rate methods but does not include comparisons or experiments with recent generalization-focused optimizers."
       },
       {
-        "point": "The method relies on sensitivity computed from mini-batches, which can be noisy; although temporal smoothing is applied, the robustness under different batch sizes or data regimes is not fully explored.",
-        "evidence": "Section 3 discusses uncertainty in sensitivity but experiments do not analyze sensitivity stability across batch sizes."
+        "point": "The choice and sensitivity of the hyperparameter \u03b2\u2080 controlling the exponential moving average is not thoroughly justified or ablated.",
+        "evidence": "Section 4.1 and 4.2 mention selecting \u03b2\u2080 from ranges but no detailed ablation or sensitivity analysis is presented."
       },
       {
-        "point": "The hyperparameter \u03b2\u2080 controlling the exponential moving average is introduced but its sensitivity and impact on performance are not deeply analyzed.",
-        "evidence": "Section 4 and Appendix mention \u03b2\u2080 selection but no ablation or sensitivity analysis is presented."
+        "point": "The method assumes that low sensitivity parameters are under-trained rather than truly redundant, but this assumption is not rigorously validated.",
+        "evidence": "Introduction and Section 5.1 discuss this hypothesis but do not provide direct evidence disentangling under-training from inherent redundancy."
       },
       {
-        "point": "While improvements on small datasets are highlighted, the gains on large datasets and larger models (e.g., RoBERTa-large) are relatively modest.",
-        "evidence": "Section 4.1 reports 0.6 average score improvement on RoBERTa-large, which is smaller compared to gains on smaller datasets."
+        "point": "Limited discussion on potential negative effects of increasing learning rates for low sensitivity parameters, such as instability or divergence risks.",
+        "evidence": "Section 3 Method and Algorithm 1 do not address safeguards or failure modes when boosting learning rates."
       },
       {
-        "point": "The paper does not compare SAGE against other recent adaptive learning rate or parameter-wise optimization methods that also aim to improve generalization.",
-        "evidence": "Related work and baselines focus on classical adaptive optimizers but lack comparison to recent parameter-specific learning rate methods."
+        "point": "Experiments focus on Transformer-based models and Vision Transformers; generalization to other architectures like CNNs or RNNs is not explored.",
+        "evidence": "Section 4 only reports results on Transformers and ViT models."
       },
       {
-        "point": "The pruning experiments show that parameters with low sensitivity in SAGE-trained models still contribute, but it is unclear if this translates to practical model compression benefits.",
-        "evidence": "Section 5.1 discusses pruning results but does not explore implications for model size reduction or inference efficiency."
+        "point": "Reproducibility could be improved by providing more detailed hyperparameter settings, especially for \u03b2\u2080 and learning rate schedules across tasks.",
+        "evidence": "Section 4 references Appendix for details but main text lacks explicit values and tuning protocols."
       },
       {
-        "point": "The theoretical justification for why increasing learning rates for low-sensitivity parameters improves their utility is intuitive but not rigorously analyzed.",
-        "evidence": "Section 1 and 3 provide motivation but no formal theoretical analysis or convergence guarantees."
+        "point": "The method requires computing element-wise products of parameters and gradients at every iteration, which might be costly for extremely large models, but this is not quantified.",
+        "evidence": "Section 3 mentions marginal cost but no empirical runtime or memory overhead measurements are provided."
+      },
+      {
+        "point": "The pruning experiments exclude embedding weights, which may bias the interpretation of redundancy and sensitivity distributions.",
+        "evidence": "Section 5.1 notes embeddings are excluded but does not discuss implications."
+      },
+      {
+        "point": "The paper does not discuss how SAGE interacts with learning rate warmup or other common training heuristics used in large Transformer training.",
+        "evidence": "Section 4 and 6 do not mention warmup or other schedules."
+      },
+      {
+        "point": "Clarity suffers in some sections due to dense notation and missing intuitive explanations, e.g., the definition and role of local temporal variation could be better motivated.",
+        "evidence": "Section 3 Method introduces local temporal variation with limited intuitive discussion."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is SAGE's performance to the choice of the moving average coefficient \u03b2\u2080, and is there a recommended default value?",
-        "motivation": "Understanding hyperparameter robustness is important for practical adoption and tuning effort."
+        "question": "How sensitive is SAGE's performance to the choice of \u03b2\u2080 and the learning rate scaling factor \u03b5, and can you provide guidelines for tuning these hyperparameters?",
+        "motivation": "Understanding hyperparameter sensitivity is crucial for practical adoption and reproducibility."
       },
       {
-        "question": "Can you provide quantitative measurements of the computational and memory overhead introduced by SAGE compared to standard optimizers?",
-        "motivation": "Assessing efficiency trade-offs is critical for large-scale training scenarios."
+        "question": "Have you evaluated SAGE on architectures beyond Transformers and Vision Transformers, such as CNNs or RNNs, to assess generalizability?",
+        "motivation": "Demonstrating broader applicability would strengthen claims of generality."
       },
       {
-        "question": "Have you evaluated SAGE's effectiveness when combined with learning rate schedulers other than linear decay or inverse square root, such as cosine annealing or warm restarts?",
-        "motivation": "Compatibility with diverse learning rate schedules would demonstrate broader applicability."
+        "question": "Can you provide empirical measurements of the computational and memory overhead introduced by SAGE on large-scale models?",
+        "motivation": "Quantifying overhead is important for assessing feasibility in resource-constrained settings."
       },
       {
-        "question": "Could you clarify whether SAGE can be effectively applied during pre-training of large language models, or is it mainly beneficial during fine-tuning?",
-        "motivation": "Extending benefits to pre-training would increase the impact of the method."
+        "question": "How does SAGE interact with common training heuristics like learning rate warmup, gradient clipping, or mixed precision training?",
+        "motivation": "These are standard practices in large model training and may affect SAGE's effectiveness."
+      },
+      {
+        "question": "Is there a risk that increasing learning rates for low sensitivity parameters could destabilize training, and if so, how is this mitigated?",
+        "motivation": "Understanding failure modes is important for safe deployment."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The computational overhead and memory cost of maintaining sensitivity and temporal variation statistics are only briefly discussed and not quantitatively evaluated. (Section 3 mentions marginal cost but lacks detailed runtime or memory benchmarks.)",
-    "point_002": "The method relies on sensitivity computed from mini-batches, which can be noisy; although temporal smoothing is applied, the robustness under different batch sizes or data regimes is not fully explored. (Section 3 discusses uncertainty in sensitivity but experiments do not analyze sensitivity stability across batch sizes.)",
-    "point_003": "The hyperparameter \u03b2\u2080 controlling the exponential moving average is introduced but its sensitivity and impact on performance are not deeply analyzed. (Section 4 and Appendix mention \u03b2\u2080 selection but no ablation or sensitivity analysis is presented.)",
-    "point_004": "While improvements on small datasets are highlighted, the gains on large datasets and larger models (e.g., RoBERTa-large) are relatively modest. (Section 4.1 reports 0.6 average score improvement on RoBERTa-large, which is smaller compared to gains on smaller datasets.)",
-    "point_005": "The paper does not compare SAGE against other recent adaptive learning rate or parameter-wise optimization methods that also aim to improve generalization. (Related work and baselines focus on classical adaptive optimizers but lack comparison to recent parameter-specific learning rate methods.)",
-    "point_006": "The pruning experiments show that parameters with low sensitivity in SAGE-trained models still contribute, but it is unclear if this translates to practical model compression benefits. (Section 5.1 discusses pruning results but does not explore implications for model size reduction or inference efficiency.)",
-    "point_007": "The theoretical justification for why increasing learning rates for low-sensitivity parameters improves their utility is intuitive but not rigorously analyzed. (Section 1 and 3 provide motivation but no formal theoretical analysis or convergence guarantees.)",
-    "point_008": "How sensitive is SAGE's performance to the choice of the moving average coefficient \u03b2\u2080, and is there a recommended default value? (Understanding hyperparameter robustness is important for practical adoption and tuning effort.)",
-    "point_009": "Can you provide quantitative measurements of the computational and memory overhead introduced by SAGE compared to standard optimizers? (Assessing efficiency trade-offs is critical for large-scale training scenarios.)",
-    "point_010": "Have you evaluated SAGE's effectiveness when combined with learning rate schedulers other than linear decay or inverse square root, such as cosine annealing or warm restarts? (Compatibility with diverse learning rate schedules would demonstrate broader applicability.)",
-    "point_011": "Could you clarify whether SAGE can be effectively applied during pre-training of large language models, or is it mainly beneficial during fine-tuning? (Extending benefits to pre-training would increase the impact of the method.)"
+    "point_001": "Lack of comparison with other adaptive learning rate methods that also aim to improve generalization, such as Lookahead or SWA.. Section 2.2 discusses adaptive learning rate methods but does not include comparisons or experiments with recent generalization-focused optimizers",
+    "point_002": "The choice and sensitivity of the hyperparameter \u03b2\u2080 controlling the exponential moving average is not thoroughly justified or ablated.. Section 4.1 and 4.2 mention selecting \u03b2\u2080 from ranges but no detailed ablation or sensitivity analysis is presented",
+    "point_003": "The method assumes that low sensitivity parameters are under-trained rather than truly redundant, but this assumption is not rigorously validated.. Introduction and Section 5.1 discuss this hypothesis but do not provide direct evidence disentangling under-training from inherent redundancy",
+    "point_004": "Limited discussion on potential negative effects of increasing learning rates for low sensitivity parameters, such as instability or divergence risks.. Section 3 Method and Algorithm 1 do not address safeguards or failure modes when boosting learning rates",
+    "point_005": "Experiments focus on Transformer-based models and Vision Transformers; generalization to other architectures like CNNs or RNNs is not explored.. Section 4 only reports results on Transformers and ViT models",
+    "point_006": "Reproducibility could be improved by providing more detailed hyperparameter settings, especially for \u03b2\u2080 and learning rate schedules across tasks.. Section 4 references Appendix for details but main text lacks explicit values and tuning protocols",
+    "point_007": "The method requires computing element-wise products of parameters and gradients at every iteration, which might be costly for extremely large models, but this is not quantified.. Section 3 mentions marginal cost but no empirical runtime or memory overhead measurements are provided",
+    "point_008": "The pruning experiments exclude embedding weights, which may bias the interpretation of redundancy and sensitivity distributions.. Section 5.1 notes embeddings are excluded but does not discuss implications",
+    "point_009": "The paper does not discuss how SAGE interacts with learning rate warmup or other common training heuristics used in large Transformer training.. Section 4 and 6 do not mention warmup or other schedules",
+    "point_010": "Clarity suffers in some sections due to dense notation and missing intuitive explanations, e.g., the definition and role of local temporal variation could be better motivated.. Section 3 Method introduces local temporal variation with limited intuitive discussion"
   }
 }

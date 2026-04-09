@@ -1,91 +1,136 @@
 {
   "paper_id": "paper_0092",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 15.413,
+  "latency_seconds": 31.257,
   "token_usage": {
-    "input": 8233,
-    "output": 1087
+    "input": 8344,
+    "output": 1678
   },
   "structured": {
-    "summary": "This paper proposes Memorizing Transformers, which augment standard transformer models with a large, non-differentiable external memory accessed via approximate k-nearest-neighbor (kNN) search, enabling the model to attend over extremely long contexts and immediately incorporate new information without retraining. The approach is evaluated on diverse long-document language modeling tasks, showing consistent perplexity improvements with increasing memory size and demonstrating practical utility in domains such as formal theorem proving and source code modeling.",
+    "summary": "This paper introduces Memorizing Transformers, which augment decoder-only transformers with a non-differentiable external memory accessed via approximate k-nearest-neighbor (kNN) search to extend the effective attention context to very long sequences. The method is evaluated on diverse long-document language modeling tasks including math papers, source code, formal proofs, and books, showing consistent perplexity improvements with increasing memory size.",
     "strengths": [
       {
-        "point": "Novel use of a non-differentiable external memory with approximate kNN retrieval to extend transformer context length significantly.",
-        "evidence": "Section 3 describes the architecture and use of approximate kNN search into a large external memory, enabling scaling to sequence lengths up to 131k or 262k tokens."
+        "point": "The paper proposes a simple yet effective mechanism to extend transformer context length using approximate kNN retrieval from a large external memory without backpropagation through the memory.",
+        "evidence": "Section 3 describes the kNN-augmented retrieval layer combining local dense attention with kNN lookup, and Section 5 concludes on the scalability and effectiveness of this approach."
       },
       {
-        "point": "Comprehensive empirical evaluation across diverse datasets including books, web text, math papers, source code, and formal proofs.",
-        "evidence": "Section 4 presents experiments on PG-19, C4, arXiv math papers, Github code, and Isabelle formal theorems, showing consistent perplexity improvements."
+        "point": "Comprehensive evaluation across a diverse set of long-document datasets including arXiv math papers, Github code, Isabelle formal proofs, PG-19 books, and C4 web text.",
+        "evidence": "Section 4 presents experiments on five datasets, demonstrating consistent perplexity improvements with increasing memory size."
       },
       {
-        "point": "Demonstration that models trained with smaller memory sizes can generalize to larger memory sizes at inference without retraining.",
-        "evidence": "Section 4.2 and 4.3 show that models trained with memory size 8192 benefit from larger memories (e.g., 32k) at test time, improving perplexity."
+        "point": "Demonstration that models trained with smaller memory sizes can generalize to larger memory sizes at inference time without retraining.",
+        "evidence": "Section 4.2 and 4.3 show that models pretrained with memory size 8192 improve perplexity when tested with larger memories like 32k, even before fine-tuning."
       },
       {
-        "point": "Insightful qualitative analysis showing the model retrieves relevant long-range information such as function definitions, citations, and theorem statements.",
-        "evidence": "Section 4.2, 4.3, and 4.4 include case studies and examples where the model retrieves definitions and references from distant parts of documents."
+        "point": "Qualitative analysis showing that the model retrieves meaningful long-range context such as function definitions, theorem statements, and citations.",
+        "evidence": "Section 4.2 and 4.4 provide case studies and examples (Tables 5 and 10) illustrating retrieval of relevant tokens like lemma definitions and function names."
+      },
+      {
+        "point": "Use of a non-differentiable external memory enables efficient scaling to very large memory sizes (up to 262k tokens) on a single device.",
+        "evidence": "Section 3.1 and 4 discuss the scalability benefits of non-differentiable memory and approximate kNN search."
+      },
+      {
+        "point": "The architecture design of applying kNN-augmented attention only in the second-to-last layer balances efficiency and effectiveness.",
+        "evidence": "Section 3.1 and 4.1 describe using a single kNN layer near the top of the transformer stack, with experiments on adding a second kNN layer."
       }
     ],
     "weaknesses": [
       {
-        "point": "Non-differentiable memory prevents end-to-end learning of keys and values, potentially limiting optimal memory content.",
-        "evidence": "Section 1 and 3 discuss that gradients are not backpropagated into the external memory, so the model cannot learn what to store."
+        "point": "Lack of comparison to recent state-of-the-art long-range attention mechanisms on the same datasets.",
+        "evidence": "Section 2 discusses related work but the experiments do not include baselines such as Big Bird, Longformer, or Performer for direct perplexity comparison."
       },
       {
-        "point": "Training instability observed when training from scratch with large memory sizes, requiring pretraining and finetuning.",
-        "evidence": "Section 3.2 and 4.1 mention distributional shift and training instability, leading to a two-stage training procedure."
+        "point": "The paper does not ablate the choice of k (number of nearest neighbors) or analyze sensitivity to this hyperparameter.",
+        "evidence": "Section 4.1 fixes k=128 without justification or exploration of alternative values."
       },
       {
-        "point": "Diminishing returns on perplexity improvements beyond certain memory sizes, varying by dataset.",
-        "evidence": "Section 4.2 and 4.3 note that improvements plateau beyond 32k or 131k tokens depending on dataset, possibly due to dataset length distributions."
+        "point": "Potential impact of distributional shift and stale keys/values in the external memory is acknowledged but not deeply analyzed or mitigated.",
+        "evidence": "Section 3.2 discusses staleness and training instability but no systematic experiments or solutions are presented."
       },
       {
-        "point": "Limited exploration of alternative memory integration strategies or differentiable memory mechanisms.",
-        "evidence": "Related work section contrasts with differentiable memory approaches but the paper does not experimentally compare these alternatives."
+        "point": "No evaluation of retrieval latency or computational overhead introduced by approximate kNN search, limiting understanding of practical efficiency.",
+        "evidence": "Section 3.3 mentions efficiency benefits but no runtime or throughput metrics are reported."
       },
       {
-        "point": "Lack of detailed ablation studies on hyperparameters such as k in kNN, memory update policies, or position bias effects.",
-        "evidence": "Section 4.1 states no hyperparameter search was conducted; position bias is only applied locally, but impact is not deeply analyzed."
+        "point": "The method relies on approximate kNN with about 90% recall, but the impact of approximation quality on model performance is not studied.",
+        "evidence": "Section 3.3 states the recall but does not analyze how recall variations affect perplexity or retrieval quality."
       },
       {
-        "point": "The approach may have scalability challenges when applied to extremely large corpora or real-time updating scenarios.",
-        "evidence": "Section 3 mentions approximate kNN implementations but does not provide detailed runtime or memory overhead analysis at very large scales."
+        "point": "The external memory is cleared at document boundaries, which may limit applicability to tasks requiring cross-document knowledge integration.",
+        "evidence": "Section 3.1 and Ethics mention clearing memory per document but no discussion on multi-document or continual learning scenarios."
       },
       {
-        "point": "The paper does not discuss potential privacy or ethical implications in detail despite the ability to memorize large external data.",
-        "evidence": "Ethics section briefly mentions risks but lacks in-depth analysis or mitigation strategies."
+        "point": "Limited discussion on how the approach would scale or perform on truly massive corpora beyond the tested memory sizes or on non-language modalities.",
+        "evidence": "Section 5 mentions potential for scaling but no experiments or analysis beyond 262k tokens or other data types."
+      },
+      {
+        "point": "Reproducibility is limited by missing details such as exact approximate kNN algorithm used, indexing structures, and hardware configurations.",
+        "evidence": "Section 4.1 provides some hyperparameters but does not specify kNN implementation details or environment specifics."
+      },
+      {
+        "point": "The choice to only augment one or two transformer layers with kNN attention is not fully justified or explored in depth.",
+        "evidence": "Section 4.2 briefly compares one vs two kNN layers but lacks ablation on other configurations or layer positions."
+      },
+      {
+        "point": "The paper does not report standard language modeling metrics beyond perplexity, such as accuracy on downstream tasks or qualitative generation examples.",
+        "evidence": "Section 4 focuses solely on perplexity improvements without additional evaluation metrics."
+      },
+      {
+        "point": "The impact of the non-differentiable memory on end-to-end training dynamics and convergence speed is not thoroughly analyzed.",
+        "evidence": "Section 3.2 mentions training instability but no detailed training curves or convergence comparisons are provided."
+      },
+      {
+        "point": "The paper does not discuss privacy or security implications of memorizing large external memories beyond a brief ethics statement.",
+        "evidence": "Ethics section briefly mentions potential risks but lacks detailed analysis or mitigation strategies."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is the model's performance to the choice of k in the kNN retrieval, and have you experimented with varying k?",
-        "motivation": "Understanding the impact of k is important for balancing retrieval quality and computational cost."
+        "question": "How sensitive is model performance to the choice of k in the kNN retrieval, and have you experimented with varying k?",
+        "motivation": "Understanding the effect of k is important for tuning retrieval quality and computational cost."
       },
       {
-        "question": "Could you elaborate on how the external memory is managed when documents are very long or when multiple documents are processed in parallel?",
-        "motivation": "Clarification on memory management policies is crucial for practical deployment and scaling."
+        "question": "Can you provide more details on the approximate kNN algorithm and indexing structures used, and how they impact retrieval speed and recall?",
+        "motivation": "These details are critical for reproducibility and assessing practical deployment feasibility."
       },
       {
-        "question": "Have you considered or experimented with hybrid approaches that combine differentiable and non-differentiable memory to mitigate the limitations of each?",
-        "motivation": "Such approaches might improve learning of memory content while retaining scalability."
+        "question": "Have you considered or tested mechanisms to mitigate the staleness of keys and values in the external memory during training?",
+        "motivation": "Addressing distributional shift could improve training stability and final model performance."
       },
       {
-        "question": "Can you provide more details on the computational overhead and latency introduced by the approximate kNN search during training and inference?",
-        "motivation": "Understanding efficiency trade-offs is important for assessing real-world applicability."
+        "question": "How does the method perform compared to other long-range attention models like Big Bird or Longformer on the same datasets?",
+        "motivation": "Direct comparisons would clarify the relative advantages and limitations of memorizing transformers."
+      },
+      {
+        "question": "Is it possible to maintain external memory across document boundaries to enable cross-document retrieval, and what challenges would that entail?",
+        "motivation": "Many real-world applications require knowledge integration beyond single documents."
+      },
+      {
+        "question": "Have you evaluated the impact of approximate kNN recall on downstream perplexity or retrieval quality?",
+        "motivation": "Understanding this relationship could guide trade-offs between retrieval accuracy and efficiency."
+      },
+      {
+        "question": "Could you clarify why the kNN-augmented attention is applied only in the second-to-last layer, and whether other configurations were explored?",
+        "motivation": "Layer placement may affect how well the model integrates local and long-range context."
+      },
+      {
+        "question": "Do you have any insights or preliminary results on applying this approach to modalities beyond text, such as images or audio?",
+        "motivation": "Generalizability to other data types would broaden the impact of the method."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Non-differentiable memory prevents end-to-end learning of keys and values, potentially limiting optimal memory content. (Section 1 and 3 discuss that gradients are not backpropagated into the external memory, so the model cannot learn what to store.)",
-    "point_002": "Training instability observed when training from scratch with large memory sizes, requiring pretraining and finetuning. (Section 3.2 and 4.1 mention distributional shift and training instability, leading to a two-stage training procedure.)",
-    "point_003": "Diminishing returns on perplexity improvements beyond certain memory sizes, varying by dataset. (Section 4.2 and 4.3 note that improvements plateau beyond 32k or 131k tokens depending on dataset, possibly due to dataset length distributions.)",
-    "point_004": "Limited exploration of alternative memory integration strategies or differentiable memory mechanisms. (Related work section contrasts with differentiable memory approaches but the paper does not experimentally compare these alternatives.)",
-    "point_005": "Lack of detailed ablation studies on hyperparameters such as k in kNN, memory update policies, or position bias effects. (Section 4.1 states no hyperparameter search was conducted; position bias is only applied locally, but impact is not deeply analyzed.)",
-    "point_006": "The approach may have scalability challenges when applied to extremely large corpora or real-time updating scenarios. (Section 3 mentions approximate kNN implementations but does not provide detailed runtime or memory overhead analysis at very large scales.)",
-    "point_007": "The paper does not discuss potential privacy or ethical implications in detail despite the ability to memorize large external data. (Ethics section briefly mentions risks but lacks in-depth analysis or mitigation strategies.)",
-    "point_008": "How sensitive is the model's performance to the choice of k in the kNN retrieval, and have you experimented with varying k? (Understanding the impact of k is important for balancing retrieval quality and computational cost.)",
-    "point_009": "Could you elaborate on how the external memory is managed when documents are very long or when multiple documents are processed in parallel? (Clarification on memory management policies is crucial for practical deployment and scaling.)",
-    "point_010": "Have you considered or experimented with hybrid approaches that combine differentiable and non-differentiable memory to mitigate the limitations of each? (Such approaches might improve learning of memory content while retaining scalability.)",
-    "point_011": "Can you provide more details on the computational overhead and latency introduced by the approximate kNN search during training and inference? (Understanding efficiency trade-offs is important for assessing real-world applicability.)"
+    "point_001": "Lack of comparison to recent state-of-the-art long-range attention mechanisms on the same datasets.. Section 2 discusses related work but the experiments do not include baselines such as Big Bird, Longformer, or Performer for direct perplexity comparison",
+    "point_002": "The paper does not ablate the choice of k (number of nearest neighbors) or analyze sensitivity to this hyperparameter.. Section 4.1 fixes k=128 without justification or exploration of alternative values",
+    "point_003": "Potential impact of distributional shift and stale keys/values in the external memory is acknowledged but not deeply analyzed or mitigated.. Section 3.2 discusses staleness and training instability but no systematic experiments or solutions are presented",
+    "point_004": "No evaluation of retrieval latency or computational overhead introduced by approximate kNN search, limiting understanding of practical efficiency.. Section 3.3 mentions efficiency benefits but no runtime or throughput metrics are reported",
+    "point_005": "The method relies on approximate kNN with about 90% recall, but the impact of approximation quality on model performance is not studied.. Section 3.3 states the recall but does not analyze how recall variations affect perplexity or retrieval quality",
+    "point_006": "The external memory is cleared at document boundaries, which may limit applicability to tasks requiring cross-document knowledge integration.. Section 3.1 and Ethics mention clearing memory per document but no discussion on multi-document or continual learning scenarios",
+    "point_007": "Limited discussion on how the approach would scale or perform on truly massive corpora beyond the tested memory sizes or on non-language modalities.. Section 5 mentions potential for scaling but no experiments or analysis beyond 262k tokens or other data types",
+    "point_008": "Reproducibility is limited by missing details such as exact approximate kNN algorithm used, indexing structures, and hardware configurations.. Section 4.1 provides some hyperparameters but does not specify kNN implementation details or environment specifics",
+    "point_009": "The choice to only augment one or two transformer layers with kNN attention is not fully justified or explored in depth.. Section 4.2 briefly compares one vs two kNN layers but lacks ablation on other configurations or layer positions",
+    "point_010": "The paper does not report standard language modeling metrics beyond perplexity, such as accuracy on downstream tasks or qualitative generation examples.. Section 4 focuses solely on perplexity improvements without additional evaluation metrics",
+    "point_011": "The impact of the non-differentiable memory on end-to-end training dynamics and convergence speed is not thoroughly analyzed.. Section 3.2 mentions training instability but no detailed training curves or convergence comparisons are provided",
+    "point_012": "The paper does not discuss privacy or security implications of memorizing large external memories beyond a brief ethics statement.. Ethics section briefly mentions potential risks but lacks detailed analysis or mitigation strategies"
   }
 }

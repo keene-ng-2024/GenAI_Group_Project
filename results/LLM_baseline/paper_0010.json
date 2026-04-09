@@ -1,96 +1,132 @@
 {
   "paper_id": "paper_0010",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 14.724,
+  "latency_seconds": 25.831,
   "token_usage": {
-    "input": 8740,
-    "output": 1039
+    "input": 8851,
+    "output": 1595
   },
   "structured": {
-    "summary": "The paper presents UniDoc, a unified pretraining framework for document understanding that integrates multimodal inputs (textual and visual) using a hierarchical transformer with gated cross-attention. UniDoc employs three self-supervised pretraining tasks to learn joint representations and demonstrates improved performance on multiple downstream document understanding tasks.",
+    "summary": "UniDoc proposes a unified pretraining framework for document understanding that jointly models textual and visual features from semantic regions using a gated cross-attention transformer and three self-supervised pretraining tasks, demonstrating improved performance on multiple downstream document tasks.",
     "strengths": [
       {
-        "point": "Unified multimodal pretraining framework that jointly learns visual and textual features end-to-end.",
-        "evidence": "Section 3.1 describes the architecture combining visual feature extraction, sentence encoding, and gated cross-attention transformer; Section 4.3 shows improved downstream task performance."
+        "point": "The model effectively integrates multimodal inputs by jointly training visual and textual encoders with a gated cross-attention mechanism.",
+        "evidence": "Section 3.1 describes the multi-layer gated cross-attention encoder and the gating mechanism that dynamically weights visual and textual features."
       },
       {
-        "point": "Introduction of novel pretraining tasks: Masked Sentence Modeling, Visual Contrastive Learning, and Vision-Language Alignment.",
-        "evidence": "Section 3.2 details these three complementary self-supervised objectives designed to learn contextual and aligned multimodal representations."
+        "point": "UniDoc introduces novel pretraining objectives tailored for documents: Masked Sentence Modeling, Visual Contrastive Learning, and Vision-Language Alignment.",
+        "evidence": "Section 3.2 details the three pretraining tasks designed to capture sentence-level semantics, visual feature representations, and cross-modal alignment."
       },
       {
-        "point": "Extensive empirical evaluation on diverse downstream tasks including form understanding, receipt understanding, document classification, and document object detection.",
-        "evidence": "Section 4.2 and 4.3 present results on FUNSD, CORD, RVL-CDIP, and PubLayNet datasets, demonstrating consistent improvements over baselines and prior state-of-the-art."
+        "point": "The hierarchical sentence-level encoding reduces computational complexity and addresses input length constraints common in document understanding.",
+        "evidence": "Section 1 and 3.1 explain the hierarchical transformer encoder that models words to sentences and sentences to documents, enabling longer inputs."
       },
       {
-        "point": "Hierarchical modeling of documents at the sentence and region level to overcome input length limitations and capture document structure.",
-        "evidence": "Section 1 and 3.1 discuss the hierarchical transformer encoder that models words forming sentences and sentences forming documents, enabling efficient and semantically meaningful input representation."
+        "point": "Extensive empirical evaluation on diverse downstream tasks (form understanding, receipt understanding, document classification, and object detection) shows consistent performance gains.",
+        "evidence": "Section 4.3 and Tables 2-4 report improvements over baselines and state-of-the-art models across multiple benchmarks."
+      },
+      {
+        "point": "The visual backbone pretrained by UniDoc improves document object detection performance compared to ImageNet-pretrained backbones.",
+        "evidence": "Section 4.3 and Table 4 demonstrate that the UniDoc pretrained ResNet-50 backbone outperforms the ImageNet baseline on PubLayNet."
+      },
+      {
+        "point": "The paper provides a thorough ablation study analyzing the impact of different pretraining tasks and modalities.",
+        "evidence": "Section 4.3 and Table 2 show ablations on MSM, VCL, VLA, and modality combinations (vision only, language only, vision+language)."
+      },
+      {
+        "point": "The authors discuss limitations and future directions candidly, including privacy concerns and the need for fully end-to-end training.",
+        "evidence": "Section 5 outlines limitations such as freezing the sentence encoder and potential privacy leakage, and suggests future work."
       }
     ],
     "weaknesses": [
       {
-        "point": "The sentence encoder is frozen during pretraining and fine-tuning, potentially limiting full end-to-end learning.",
-        "evidence": "Section 4.1 and 5 mention freezing the pretrained sentence encoder due to computational constraints."
+        "point": "The paper does not provide code or detailed instructions to reproduce the main experimental results.",
+        "evidence": "Checklist item 3(a) indicates code and data for reproduction are not included."
       },
       {
-        "point": "The pretraining corpus is limited to 1M images sampled from IIT-CDIP, smaller than datasets used by some competing methods.",
-        "evidence": "Section 4.1 notes using 1M images for pretraining, while LayoutLM and LayoutLMv2 use 11M images."
+        "point": "The choice to freeze the sentence encoder during pretraining and fine-tuning is not fully justified, and its impact on performance is not empirically analyzed.",
+        "evidence": "Section 4.1 mentions freezing f_SentEnc due to computational constraints, but no ablation or discussion on this design choice is provided."
       },
       {
-        "point": "No error bars or multiple runs reported, limiting assessment of result robustness.",
-        "evidence": "Checklist section indicates no error bars reported; no mention of multiple random seeds or runs."
+        "point": "The evaluation lacks error bars or multiple runs to assess statistical significance of reported improvements.",
+        "evidence": "Checklist item 3(c) confirms no error bars or multiple seeds were reported."
       },
       {
-        "point": "The model relies on OCR quality, and EasyOCR is used which is weaker than commercial OCR engines, potentially limiting performance on some tasks.",
-        "evidence": "Section 4.3 discusses OCR impact on document classification and compares EasyOCR with Tesseract."
+        "point": "The comparison with prior work is limited by differences in OCR engines used, which may confound performance gains attributed to the model.",
+        "evidence": "Section 4.3 notes that LayoutLMv2 and TILT use Microsoft OCR while UniDoc uses EasyOCR, affecting document classification results."
       },
       {
-        "point": "The paper does not provide code or data release, hindering reproducibility.",
-        "evidence": "Checklist section indicates code and data are not provided."
+        "point": "The paper does not clarify how the maximum number of regions (N=64) affects performance or scalability to longer documents or multipage inputs.",
+        "evidence": "Section 4.1 sets N=64 but does not discuss sensitivity or limitations related to this choice."
       },
       {
-        "point": "Limited discussion on handling multi-page or multilingual documents.",
-        "evidence": "Section 5 mentions these as future directions but no experiments or methods addressing them."
+        "point": "The Vision-Language Alignment task aligns image and text at the region level but does not consider finer-grained alignment such as word-to-pixel or token-to-patch, which may limit modeling of complex layouts.",
+        "evidence": "Section 3.2 Task #3 describes alignment at the sentence and region level only."
       },
       {
-        "point": "The gating mechanism for cross-attention is described but lacks ablation or detailed analysis of its contribution.",
-        "evidence": "Section 3.1 describes gated cross-attention but no ablation study isolating its effect is presented."
+        "point": "The gating mechanism for cross-attention is described mathematically but lacks intuitive explanation or ablation to demonstrate its necessity or effectiveness.",
+        "evidence": "Section 3.1 introduces the gating but no ablation or qualitative analysis is provided."
       },
       {
-        "point": "The impact of the visual backbone architecture choice beyond ResNet-50 is not explored.",
-        "evidence": "Section 4.3 briefly mentions the backbone but experiments only use ResNet-50."
+        "point": "The pretraining corpus is a filtered subset (1M images) of IIT-CDIP, but the paper does not analyze how corpus size or diversity affects downstream performance.",
+        "evidence": "Section 4.1 mentions sampling 1M images but no experiments vary pretraining data size."
+      },
+      {
+        "point": "The paper does not discuss how the model handles noisy or erroneous OCR outputs, which are common in real-world document images.",
+        "evidence": "Section 4.1 mentions EasyOCR extraction but no robustness analysis or mitigation strategies are presented."
+      },
+      {
+        "point": "The method is evaluated only on English documents; generalization to multilingual or non-Latin scripts is not addressed.",
+        "evidence": "Section 5 mentions multilingual pretraining as future work, indicating current limitation."
+      },
+      {
+        "point": "The paper does not provide qualitative examples or visualizations of learned multimodal representations or attention maps to aid interpretability.",
+        "evidence": "No figures or sections present qualitative analyses of model behavior."
+      },
+      {
+        "point": "The impact of the quantization module on training stability and final performance is not ablated or discussed in detail.",
+        "evidence": "Section 3.1 describes vector quantization but no experiments isolate its contribution."
       }
     ],
     "questions": [
       {
-        "question": "Have you considered jointly fine-tuning the sentence encoder along with the visual backbone and cross-attention encoder to potentially improve performance?",
-        "motivation": "Joint end-to-end training could enable better multimodal feature alignment and representation learning."
+        "question": "Have you considered jointly fine-tuning the sentence encoder along with the visual and cross-attention modules, and if so, what are the observed effects on downstream tasks?",
+        "motivation": "Understanding the impact of freezing the sentence encoder is important to assess whether end-to-end training could further improve performance."
       },
       {
-        "question": "Can you provide more detailed ablation studies on the gating mechanism in the cross-attention module to quantify its contribution?",
-        "motivation": "Understanding the gating mechanism's impact would clarify its importance and guide future improvements."
+        "question": "Can you provide more details or ablations on the gating mechanism in the cross-attention encoder, such as its effect on performance compared to simple concatenation or averaging?",
+        "motivation": "Clarifying the necessity and benefits of the gating mechanism would strengthen the methodological contribution."
       },
       {
-        "question": "How does UniDoc handle documents with multiple pages or multilingual content, and what are the challenges in extending to these scenarios?",
-        "motivation": "Many real-world documents are multipage and multilingual; addressing these would increase practical applicability."
+        "question": "How does UniDoc handle noisy or imperfect OCR outputs, and have you evaluated its robustness to OCR errors?",
+        "motivation": "Real-world document images often have OCR errors; robustness is critical for practical deployment."
       },
       {
-        "question": "Do you have plans to release the code and pretrained models to facilitate reproducibility and further research?",
-        "motivation": "Open sourcing would benefit the community and validate the reported results."
+        "question": "Could you comment on the scalability of UniDoc to longer or multipage documents, especially given the fixed maximum number of regions (N=64)?",
+        "motivation": "Many documents exceed 64 semantic regions; understanding scalability is important for general applicability."
+      },
+      {
+        "question": "Do you have plans to release code and pretrained models to facilitate reproducibility and further research?",
+        "motivation": "Availability of code and models is essential for the community to validate and build upon your work."
+      },
+      {
+        "question": "Have you explored or do you plan to explore multilingual pretraining to extend UniDoc beyond English documents?",
+        "motivation": "Multilingual capability is important for broad applicability in global document understanding."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The sentence encoder is frozen during pretraining and fine-tuning, potentially limiting full end-to-end learning. (Section 4.1 and 5 mention freezing the pretrained sentence encoder due to computational constraints.)",
-    "point_002": "The pretraining corpus is limited to 1M images sampled from IIT-CDIP, smaller than datasets used by some competing methods. (Section 4.1 notes using 1M images for pretraining, while LayoutLM and LayoutLMv2 use 11M images.)",
-    "point_003": "No error bars or multiple runs reported, limiting assessment of result robustness. (Checklist section indicates no error bars reported; no mention of multiple random seeds or runs.)",
-    "point_004": "The model relies on OCR quality, and EasyOCR is used which is weaker than commercial OCR engines, potentially limiting performance on some tasks. (Section 4.3 discusses OCR impact on document classification and compares EasyOCR with Tesseract.)",
-    "point_005": "The paper does not provide code or data release, hindering reproducibility. (Checklist section indicates code and data are not provided.)",
-    "point_006": "Limited discussion on handling multi-page or multilingual documents. (Section 5 mentions these as future directions but no experiments or methods addressing them.)",
-    "point_007": "The gating mechanism for cross-attention is described but lacks ablation or detailed analysis of its contribution. (Section 3.1 describes gated cross-attention but no ablation study isolating its effect is presented.)",
-    "point_008": "The impact of the visual backbone architecture choice beyond ResNet-50 is not explored. (Section 4.3 briefly mentions the backbone but experiments only use ResNet-50.)",
-    "point_009": "Have you considered jointly fine-tuning the sentence encoder along with the visual backbone and cross-attention encoder to potentially improve performance? (Joint end-to-end training could enable better multimodal feature alignment and representation learning.)",
-    "point_010": "Can you provide more detailed ablation studies on the gating mechanism in the cross-attention module to quantify its contribution? (Understanding the gating mechanism's impact would clarify its importance and guide future improvements.)",
-    "point_011": "How does UniDoc handle documents with multiple pages or multilingual content, and what are the challenges in extending to these scenarios? (Many real-world documents are multipage and multilingual; addressing these would increase practical applicability.)",
-    "point_012": "Do you have plans to release the code and pretrained models to facilitate reproducibility and further research? (Open sourcing would benefit the community and validate the reported results.)"
+    "point_001": "The paper does not provide code or detailed instructions to reproduce the main experimental results.. Checklist item 3(a) indicates code and data for reproduction are not included",
+    "point_002": "The choice to freeze the sentence encoder during pretraining and fine-tuning is not fully justified, and its impact on performance is not empirically analyzed.. Section 4.1 mentions freezing f_SentEnc due to computational constraints, but no ablation or discussion on this design choice is provided",
+    "point_003": "The evaluation lacks error bars or multiple runs to assess statistical significance of reported improvements.. Checklist item 3(c) confirms no error bars or multiple seeds were reported",
+    "point_004": "The comparison with prior work is limited by differences in OCR engines used, which may confound performance gains attributed to the model.. Section 4.3 notes that LayoutLMv2 and TILT use Microsoft OCR while UniDoc uses EasyOCR, affecting document classification results",
+    "point_005": "The paper does not clarify how the maximum number of regions (N=64) affects performance or scalability to longer documents or multipage inputs.. Section 4.1 sets N=64 but does not discuss sensitivity or limitations related to this choice",
+    "point_006": "The Vision-Language Alignment task aligns image and text at the region level but does not consider finer-grained alignment such as word-to-pixel or token-to-patch, which may limit modeling of complex layouts.. Section 3.2 Task #3 describes alignment at the sentence and region level only",
+    "point_007": "The gating mechanism for cross-attention is described mathematically but lacks intuitive explanation or ablation to demonstrate its necessity or effectiveness.. Section 3.1 introduces the gating but no ablation or qualitative analysis is provided",
+    "point_008": "The pretraining corpus is a filtered subset (1M images) of IIT-CDIP, but the paper does not analyze how corpus size or diversity affects downstream performance.. Section 4.1 mentions sampling 1M images but no experiments vary pretraining data size",
+    "point_009": "The paper does not discuss how the model handles noisy or erroneous OCR outputs, which are common in real-world document images.. Section 4.1 mentions EasyOCR extraction but no robustness analysis or mitigation strategies are presented",
+    "point_010": "The method is evaluated only on English documents; generalization to multilingual or non-Latin scripts is not addressed.. Section 5 mentions multilingual pretraining as future work, indicating current limitation",
+    "point_011": "The paper does not provide qualitative examples or visualizations of learned multimodal representations or attention maps to aid interpretability.. No figures or sections present qualitative analyses of model behavior",
+    "point_012": "The impact of the quantization module on training stability and final performance is not ablated or discussed in detail.. Section 3.1 describes vector quantization but no experiments isolate its contribution"
   }
 }

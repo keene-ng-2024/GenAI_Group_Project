@@ -1,91 +1,132 @@
 {
   "paper_id": "paper_0037",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 21.265,
+  "latency_seconds": 22.094,
   "token_usage": {
-    "input": 7302,
-    "output": 1088
+    "input": 7413,
+    "output": 1532
   },
   "structured": {
-    "summary": "This paper proposes Data-Efficient FineTuning (DEFT), a method that leverages a small number of unlabeled target task instances to retrieve relevant cross-task nearest neighbors from a large multitask dataset, enabling training of task-specific models that outperform large multitask models like T0-3B using significantly less data. The approach is evaluated on diverse NLP tasks, showing improvements in zero-shot and few-shot settings and demonstrating reduced negative interference.",
+    "summary": "The paper proposes Data-Efficient FineTuning (DEFT), a method that uses unlabeled target task instances to retrieve relevant cross-task nearest neighbors from a large multitask dataset, training task-specific models on these smaller subsets. This approach outperforms large multitask models like T0-3B in zero-shot and few-shot settings while using significantly less data.",
     "strengths": [
       {
-        "point": "Novel approach to data-efficient multitask finetuning by retrieving cross-task nearest neighbors using unlabeled target data.",
-        "evidence": "Section 3 describes the DEFT method that retrieves relevant subsets of multitask data based on similarity to unlabeled target task instances."
+        "point": "Demonstrates that training on carefully selected subsets of multitask data can outperform training on the entire dataset, showing significant improvements over T0-3B with only 0.01-0.1% of data.",
+        "evidence": "Section 4.2, Table 1"
       },
       {
-        "point": "Empirical results show DEFT models outperform large multitask models like T0-3B on 11 out of 12 datasets using only 0.01-0.1% of the original training data.",
-        "evidence": "Section 4.2 and Table 1 report median relative improvements of 13% over T0-3B zero-shot performance."
+        "point": "Introduces a simple yet effective retrieval method based on pretrained encoder representations without requiring multitask-trained models or labels for retrieval.",
+        "evidence": "Section 3, Section 2 Related Work"
       },
       {
-        "point": "DEFT models provide better initialization for few-shot finetuning, yielding 3-23% relative improvements over T0-3B with IA3 parameter-efficient tuning.",
-        "evidence": "Section 4.3 and Table 2 show consistent gains in few-shot settings across multiple datasets."
+        "point": "Shows that DEFT models provide better initialization for few-shot finetuning, outperforming T0-3B with IA3 finetuning by 3-23% on multiple datasets.",
+        "evidence": "Section 4.3, Table 2"
       },
       {
-        "point": "Comprehensive evaluation on a diverse set of tasks including natural language understanding, commonsense reasoning, legal, scientific, and math QA tasks.",
-        "evidence": "Section 4.1 details evaluation on 12 datasets spanning multiple domains, including ANLI, CaseHold, DROP, and QasperEvidence."
+        "point": "Provides analysis showing that only a small fraction of the multitask pool is relevant per target task, supporting the hypothesis of negative interference in massive multitask training.",
+        "evidence": "Section 5.1, Figure 2"
+      },
+      {
+        "point": "Evaluates on a diverse set of tasks including natural language understanding, commonsense reasoning, legal, scientific, and math QA datasets, demonstrating broad applicability.",
+        "evidence": "Section 4.1, Section 4.2"
+      },
+      {
+        "point": "Discusses practical benefits of assuming access to unlabeled data, showing cost-efficiency in expert-labeled domains like QasperEvidence.",
+        "evidence": "Section 5.2, Table 3"
       }
     ],
     "weaknesses": [
       {
-        "point": "The method assumes access to a small number of unlabeled target task instances, which may not always be available or easy to collect.",
-        "evidence": "Section 5.2 discusses the practicality of assuming access to unlabeled data but does not address scenarios where such data is scarce."
+        "point": "Lacks comparison with other retrieval-based or instance selection methods that use multitask-trained models or re-rankers, such as Lin et al. (2022), limiting novelty claims.",
+        "evidence": "Section 2 Related Work mentions Lin et al. (2022) but no direct empirical comparison is provided."
       },
       {
-        "point": "The retrieval relies on pretrained model embeddings which may bias the selection towards tasks similar in representation space, potentially missing relevant but differently represented data.",
-        "evidence": "Section 3 and 5.1 describe retrieval based on T5 encoder embeddings without exploring alternative or complementary retrieval methods."
+        "point": "The choice of k (number of neighbors) and query size for retrieval is only partially explored; no ablation on how sensitive DEFT is to these hyperparameters across all datasets.",
+        "evidence": "Section 5.1 discusses sweeps on RTE and CaseHold only."
       },
       {
-        "point": "Limited analysis on the sensitivity of hyperparameters such as number of neighbors and query size, and their impact on downstream performance.",
-        "evidence": "Section 5.1 provides some analysis but does not deeply explore robustness or provide guidelines for hyperparameter selection."
+        "point": "The method assumes access to 250-1000 unlabeled target task instances, which may not always be available or cheap, but the paper does not explore performance with fewer or noisier unlabeled data.",
+        "evidence": "Section 3 and 5.2 mention this assumption but no experiments with fewer than 32 unlabeled examples."
       },
       {
-        "point": "The approach is evaluated primarily on T5 models and P3 dataset; generalization to other model architectures or multitask pools is not demonstrated.",
-        "evidence": "Experiments in Section 4 focus on T5 and P3; no experiments on other architectures or data pools are reported."
+        "point": "Evaluation metrics rely mainly on accuracy and F1 for classification and QA tasks; no analysis of calibration, robustness, or other performance aspects.",
+        "evidence": "Section 4.1 Evaluation Datasets and Metrics"
       },
       {
-        "point": "Negative interference is hypothesized but not deeply analyzed or quantified beyond performance improvements.",
-        "evidence": "Section 1 and 5 mention negative interference but lack detailed ablation or causal analysis to confirm its role."
+        "point": "The paper does not provide detailed implementation details such as exact retrieval indexing parameters, hardware used, or training compute, which may hinder reproducibility.",
+        "evidence": "Section 4.1 mentions FAISS and PQ but lacks full hyperparameter details and training infrastructure."
       },
       {
-        "point": "The method may not perform well on tasks with very small evaluation sets, as noted for WSC dataset.",
-        "evidence": "Section 4.2 notes that DEFT underperforms T0-3B on WSC, possibly due to small evaluation size."
+        "point": "No experiments or discussion on how DEFT performs on tasks very different from those in P3 or on non-English datasets, limiting claims on generalizability.",
+        "evidence": "Section 4.1 and 4.2 datasets are all English and mostly from P3-related domains."
       },
       {
-        "point": "The paper does not discuss computational costs or efficiency of retrieval and training compared to baseline multitask training.",
-        "evidence": "No explicit discussion on runtime, memory, or compute resource comparisons is present."
+        "point": "The negative interference hypothesis is supported but not deeply analyzed; no experiments explicitly isolating interference effects or comparing with multitask training with task weighting.",
+        "evidence": "Section 1 Introduction and Section 5.1 Analysis"
+      },
+      {
+        "point": "The method retrieves neighbors based on encoder similarity but does not consider label or output space similarity, which could improve retrieval relevance.",
+        "evidence": "Section 3 Retrieval method description"
+      },
+      {
+        "point": "The approach is limited to tasks that can be represented in a prompted text-to-text format, which may not generalize to other task types or modalities.",
+        "evidence": "Section 3 and 4.1 mention prompted text-to-text format exclusively."
+      },
+      {
+        "point": "The paper does not discuss potential privacy or data leakage risks when retrieving cross-task neighbors from large datasets.",
+        "evidence": "No mention of privacy or data leakage considerations."
+      },
+      {
+        "point": "The few-shot finetuning experiments use IA3 only; no comparison with other parameter-efficient finetuning methods or full finetuning baselines.",
+        "evidence": "Section 4.3 and related work mention IA3 exclusively."
+      },
+      {
+        "point": "The paper does not provide error analysis or qualitative examples illustrating when DEFT succeeds or fails compared to baselines.",
+        "evidence": "No qualitative analysis or case studies beyond aggregate metrics."
       }
     ],
     "questions": [
       {
-        "question": "How does DEFT perform when the number of unlabeled target task instances is extremely limited (e.g., fewer than 32)?",
-        "motivation": "Understanding performance in low-resource unlabeled data scenarios is important for practical applicability."
+        "question": "How sensitive is DEFT to the quality and size of the unlabeled target task data used for retrieval, especially when fewer than 32 examples are available?",
+        "motivation": "Understanding this would clarify applicability in low-resource scenarios where unlabeled data is scarce."
       },
       {
-        "question": "Have the authors considered or experimented with alternative retrieval methods, such as using task metadata or label space mappings, to complement embedding-based retrieval?",
-        "motivation": "Alternative retrieval strategies might improve relevance and robustness of selected training subsets."
+        "question": "Have the authors considered combining label or output space information with representation similarity to improve retrieval relevance?",
+        "motivation": "Incorporating label information might reduce noise in retrieved neighbors and improve downstream performance."
       },
       {
-        "question": "Can the authors provide more detailed analysis or ablation to quantify the extent and impact of negative interference in multitask training?",
-        "motivation": "Better understanding of negative interference could guide future multitask training strategies."
+        "question": "Can DEFT be extended or adapted to tasks beyond text-to-text formats or to multimodal tasks?",
+        "motivation": "This would test the generalizability of the approach to a wider range of applications."
       },
       {
-        "question": "What are the computational trade-offs of DEFT compared to training large multitask models on all data, including retrieval overhead?",
-        "motivation": "Practical deployment requires understanding efficiency and resource requirements."
+        "question": "What are the computational costs and latency implications of building and querying the FAISS index for large-scale multitask datasets?",
+        "motivation": "Practical deployment requires understanding resource requirements and scalability."
+      },
+      {
+        "question": "Have the authors evaluated DEFT on non-English or multilingual datasets to assess cross-lingual generalization?",
+        "motivation": "This would demonstrate the method's robustness across languages and domains."
+      },
+      {
+        "question": "Is there any observed impact of negative interference when training DEFT models on retrieved subsets compared to multitask training with task weighting or curriculum learning?",
+        "motivation": "This could clarify whether DEFT's gains come mainly from data selection or also from mitigating interference."
+      },
+      {
+        "question": "Could the authors provide more detailed hyperparameter settings and training infrastructure details to facilitate reproducibility?",
+        "motivation": "Complete details are essential for others to replicate and build upon this work."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The method assumes access to a small number of unlabeled target task instances, which may not always be available or easy to collect. (Section 5.2 discusses the practicality of assuming access to unlabeled data but does not address scenarios where such data is scarce.)",
-    "point_002": "The retrieval relies on pretrained model embeddings which may bias the selection towards tasks similar in representation space, potentially missing relevant but differently represented data. (Section 3 and 5.1 describe retrieval based on T5 encoder embeddings without exploring alternative or complementary retrieval methods.)",
-    "point_003": "Limited analysis on the sensitivity of hyperparameters such as number of neighbors and query size, and their impact on downstream performance. (Section 5.1 provides some analysis but does not deeply explore robustness or provide guidelines for hyperparameter selection.)",
-    "point_004": "The approach is evaluated primarily on T5 models and P3 dataset; generalization to other model architectures or multitask pools is not demonstrated. (Experiments in Section 4 focus on T5 and P3; no experiments on other architectures or data pools are reported.)",
-    "point_005": "Negative interference is hypothesized but not deeply analyzed or quantified beyond performance improvements. (Section 1 and 5 mention negative interference but lack detailed ablation or causal analysis to confirm its role.)",
-    "point_006": "The method may not perform well on tasks with very small evaluation sets, as noted for WSC dataset. (Section 4.2 notes that DEFT underperforms T0-3B on WSC, possibly due to small evaluation size.)",
-    "point_007": "The paper does not discuss computational costs or efficiency of retrieval and training compared to baseline multitask training. (No explicit discussion on runtime, memory, or compute resource comparisons is present.)",
-    "point_008": "How does DEFT perform when the number of unlabeled target task instances is extremely limited (e.g., fewer than 32)? (Understanding performance in low-resource unlabeled data scenarios is important for practical applicability.)",
-    "point_009": "Have the authors considered or experimented with alternative retrieval methods, such as using task metadata or label space mappings, to complement embedding-based retrieval? (Alternative retrieval strategies might improve relevance and robustness of selected training subsets.)",
-    "point_010": "Can the authors provide more detailed analysis or ablation to quantify the extent and impact of negative interference in multitask training? (Better understanding of negative interference could guide future multitask training strategies.)",
-    "point_011": "What are the computational trade-offs of DEFT compared to training large multitask models on all data, including retrieval overhead? (Practical deployment requires understanding efficiency and resource requirements.)"
+    "point_001": "Lacks comparison with other retrieval-based or instance selection methods that use multitask-trained models or re-rankers, such as Lin et al. (2022), limiting novelty claims.. Section 2 Related Work mentions Lin et al. (2022) but no direct empirical comparison is provided",
+    "point_002": "The choice of k (number of neighbors) and query size for retrieval is only partially explored; no ablation on how sensitive DEFT is to these hyperparameters across all datasets.. Section 5.1 discusses sweeps on RTE and CaseHold only",
+    "point_003": "The method assumes access to 250-1000 unlabeled target task instances, which may not always be available or cheap, but the paper does not explore performance with fewer or noisier unlabeled data.. Section 3 and 5.2 mention this assumption but no experiments with fewer than 32 unlabeled examples",
+    "point_004": "Evaluation metrics rely mainly on accuracy and F1 for classification and QA tasks; no analysis of calibration, robustness, or other performance aspects.. Section 4.1 Evaluation Datasets and Metrics",
+    "point_005": "The paper does not provide detailed implementation details such as exact retrieval indexing parameters, hardware used, or training compute, which may hinder reproducibility.. Section 4.1 mentions FAISS and PQ but lacks full hyperparameter details and training infrastructure",
+    "point_006": "No experiments or discussion on how DEFT performs on tasks very different from those in P3 or on non-English datasets, limiting claims on generalizability.. Section 4.1 and 4.2 datasets are all English and mostly from P3-related domains",
+    "point_007": "The negative interference hypothesis is supported but not deeply analyzed; no experiments explicitly isolating interference effects or comparing with multitask training with task weighting.. Section 1 Introduction and Section 5.1 Analysis",
+    "point_008": "The method retrieves neighbors based on encoder similarity but does not consider label or output space similarity, which could improve retrieval relevance.. Section 3 Retrieval method description",
+    "point_009": "The approach is limited to tasks that can be represented in a prompted text-to-text format, which may not generalize to other task types or modalities.. Section 3 and 4.1 mention prompted text-to-text format exclusively",
+    "point_010": "The paper does not discuss potential privacy or data leakage risks when retrieving cross-task neighbors from large datasets.. No mention of privacy or data leakage considerations",
+    "point_011": "The few-shot finetuning experiments use IA3 only; no comparison with other parameter-efficient finetuning methods or full finetuning baselines.. Section 4.3 and related work mention IA3 exclusively",
+    "point_012": "The paper does not provide error analysis or qualitative examples illustrating when DEFT succeeds or fails compared to baselines.. No qualitative analysis or case studies beyond aggregate metrics"
   }
 }

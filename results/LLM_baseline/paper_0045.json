@@ -1,86 +1,128 @@
 {
   "paper_id": "paper_0045",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 22.285,
+  "latency_seconds": 27.724,
   "token_usage": {
-    "input": 9817,
-    "output": 1030
+    "input": 9928,
+    "output": 1602
   },
   "structured": {
-    "summary": "This paper proposes a method for Large Language Models (LLMs) to self-improve their reasoning abilities by fine-tuning on self-generated high-confidence Chain-of-Thought (CoT) reasoning paths from unlabeled data, demonstrating significant performance gains across multiple reasoning benchmarks without using ground truth labels.",
+    "summary": "This paper proposes a method for Large Language Models (LLMs) to self-improve their reasoning abilities by fine-tuning on their own high-confidence Chain-of-Thought (CoT) reasoning paths generated from unlabeled datasets, achieving state-of-the-art results on multiple reasoning benchmarks without using ground truth labels.",
     "strengths": [
       {
-        "point": "Innovative self-improvement framework enabling LLMs to improve without supervised labels by leveraging self-consistency and CoT prompting.",
-        "evidence": "Section 3 describes the method of generating multiple reasoning paths, filtering by majority voting, and fine-tuning on these self-generated labels."
+        "point": "Demonstrates that LLMs can self-improve using only unlabeled data by leveraging CoT prompting and self-consistency, achieving significant performance gains across multiple reasoning tasks.",
+        "evidence": "Abstract and Section 5.1 report improvements on GSM8K, DROP, OpenBookQA, and ANLI-A3 without ground truth labels."
       },
       {
-        "point": "Strong empirical results showing substantial improvements on multiple in-domain and out-of-domain reasoning tasks, achieving or surpassing state-of-the-art performance.",
-        "evidence": "Section 5.1 and Tables 3 and 4 report improvements on GSM8K, DROP, OpenBookQA, ANLI, ARC, and OOD tasks such as AQUA and StrategyQA."
+        "point": "Introduces a mixed-format training approach combining CoT and direct answer formats to prevent overfitting and improve robustness.",
+        "evidence": "Section 3.2 and Table 2 describe the four mixed training formats and Section 5.1 (Table 5) shows ablation on the importance of CoT formats."
       },
       {
-        "point": "Comprehensive ablation studies and analysis of key design choices such as training formats, sampling temperature, and number of reasoning paths.",
-        "evidence": "Sections 5.1 and 5.4 detail ablations on mixed training formats and decoding temperature, showing their impact on performance."
+        "point": "Extensive empirical evaluation including in-domain and out-of-domain tasks, showing generalization of self-improvement.",
+        "evidence": "Section 5.1 and Table 4 present results on multiple in-domain datasets and six out-of-domain tasks."
       },
       {
-        "point": "Exploration of reducing human effort by self-generating training questions and few-shot CoT prompts, achieving strong zero-shot performance.",
-        "evidence": "Section 5.2 demonstrates that self-generated questions and prompts can still improve performance, with zero-shot GSM8K accuracy reaching 74.2%."
+        "point": "Explores self-generation of training questions and few-shot CoT prompts to reduce human supervision further.",
+        "evidence": "Section 3.3 and Section 5.2 discuss and evaluate self-generated questions and prompts, achieving strong zero-shot performance."
+      },
+      {
+        "point": "Shows that knowledge distilled from the large self-improved model can boost smaller models beyond their pretrained baselines.",
+        "evidence": "Section 5.3 and Table 7 report distillation results to 62B and 8B parameter models."
+      },
+      {
+        "point": "Provides detailed ablation studies on sampling temperature and number of reasoning paths, guiding practical deployment.",
+        "evidence": "Section 5.4 and Figure 4 analyze the effect of temperature and number of sampled paths."
       }
     ],
     "weaknesses": [
       {
-        "point": "The approach relies heavily on the quality and confidence of self-generated reasoning paths, which may propagate errors if the model is overconfident in incorrect answers.",
-        "evidence": "Section 3.1 discusses that incorrect majority answers could introduce noise, though confident answers tend to be correct."
+        "point": "Lacks comparison to other recent self-training or pseudo-labeling methods that also leverage unlabeled data for LLMs, limiting novelty assessment.",
+        "evidence": "Related work (Section 2) mentions self-training but does not compare experimentally to recent contemporaneous methods."
       },
       {
-        "point": "Experiments are conducted on a very large 540B parameter model, raising questions about the method's applicability and efficiency on smaller or more resource-constrained models.",
-        "evidence": "Section 5.3 shows some distillation results but does not fully explore self-improvement on smaller models directly."
+        "point": "The method assumes that majority-voted answers from multiple CoT paths are mostly correct, but does not quantify the impact of noisy or incorrect pseudo-labels on fine-tuning.",
+        "evidence": "Section 3.1 discusses confidence but no explicit analysis on error propagation or robustness to noisy self-labels."
       },
       {
-        "point": "Limited discussion on the computational cost and scalability of generating multiple reasoning paths and fine-tuning on large augmented datasets.",
-        "evidence": "While Section 4 mentions sampling 32 paths per question and augmenting data by 4 formats, the paper lacks detailed analysis of training time or resource requirements."
+        "point": "The choice of hyperparameters such as number of sampled paths (m=32), temperature values, and fine-tuning steps are not fully justified or explored for sensitivity beyond limited ablations.",
+        "evidence": "Section 4 and 5.4 provide some ablations but lack systematic hyperparameter tuning or guidelines."
       },
       {
-        "point": "The method assumes availability of unlabeled questions from multiple datasets, which may not always be feasible or representative of target domains.",
-        "evidence": "Section 3 and 5 rely on existing datasets' questions; the question generation approach is preliminary and less effective than real questions (Section 5.2)."
+        "point": "The evaluation focuses on reasoning benchmarks with relatively well-structured questions; it is unclear how the method performs on more diverse or open-ended NLP tasks.",
+        "evidence": "Section 4 lists only arithmetic, commonsense reasoning, and NLI tasks; no experiments on generation, summarization, or other NLP domains."
       },
       {
-        "point": "The paper does not clearly address potential biases or failure modes introduced by self-training on model-generated labels.",
-        "evidence": "No explicit analysis or discussion on error types or bias amplification is presented."
+        "point": "Details about the fine-tuning procedure such as optimizer, number of epochs, hardware used, and training time are missing, hindering reproducibility.",
+        "evidence": "Section 4 mentions learning rate and batch size but omits optimizer type, exact training duration, and computational resources."
       },
       {
-        "point": "The approach focuses on reasoning tasks; its generalization to other NLP tasks or modalities is not explored.",
-        "evidence": "Experiments are limited to arithmetic, commonsense reasoning, and natural language inference datasets."
+        "point": "The paper does not discuss potential limitations such as scalability to even larger models, or whether self-improvement plateaus after some iterations.",
+        "evidence": "No mention of iterative self-training or diminishing returns in the experiments or conclusion."
+      },
+      {
+        "point": "The method relies on few-shot CoT examples as prompts; the impact of prompt quality or domain mismatch on self-improvement is not deeply analyzed.",
+        "evidence": "Section 3.3 and 5.2 explore self-generated prompts but do not systematically study prompt quality effects."
+      },
+      {
+        "point": "The paper does not provide qualitative examples of failure cases or errors introduced by self-training, which would help understand limitations.",
+        "evidence": "No error analysis or qualitative discussion beyond a few CoT examples in Section 3.1."
+      },
+      {
+        "point": "The ablation on training with only direct answers vs. CoT formats (Table 5) shows large performance drops, but the reasons behind this are not deeply discussed.",
+        "evidence": "Section 5.1 mentions the importance of CoT but lacks detailed analysis of why direct answer training is insufficient."
+      },
+      {
+        "point": "The paper does not clarify whether the self-improvement method can be applied repeatedly (multi-round self-training) or only once.",
+        "evidence": "No experiments or discussion on iterative self-improvement cycles."
+      },
+      {
+        "point": "The method's reliance on majority voting for answer selection may bias towards frequent but incorrect answers in ambiguous cases; alternative filtering strategies are not explored.",
+        "evidence": "Section 3.1 uses majority voting exclusively without comparing other confidence or verification methods."
+      },
+      {
+        "point": "The out-of-domain evaluation datasets have different prompt templates, but the paper does not clarify how prompt engineering was handled for these tasks.",
+        "evidence": "Section 5.1 and Table 4 mention OOD tasks with their own few-shot prompts but lack details on prompt design."
       }
     ],
     "questions": [
       {
-        "question": "How does the self-improvement method perform when applied iteratively multiple times? Does repeated self-training lead to further gains or degradation?",
-        "motivation": "Understanding the stability and limits of self-improvement is important for practical deployment."
+        "question": "Have you considered iterative or multi-round self-improvement where the model is repeatedly fine-tuned on its own outputs?",
+        "motivation": "Understanding whether repeated self-training can lead to further gains or causes degradation is important for practical deployment."
       },
       {
-        "question": "Can the authors provide more detailed analysis on the computational costs and efficiency trade-offs of their approach compared to supervised fine-tuning?",
-        "motivation": "Resource requirements are critical for assessing the feasibility of the method in real-world settings."
+        "question": "How sensitive is the self-improvement performance to the quality and domain relevance of the initial few-shot CoT prompts?",
+        "motivation": "Since prompts guide the generation of training data, prompt quality could critically affect results, especially in low-resource domains."
       },
       {
-        "question": "Have the authors evaluated the robustness of the self-improved model to adversarial or out-of-distribution inputs beyond the tested OOD datasets?",
-        "motivation": "Robustness is important to ensure that self-training does not overfit to certain data distributions."
+        "question": "Can you provide more details on the fine-tuning setup such as optimizer, number of epochs, and computational resources used?",
+        "motivation": "These details are essential for reproducibility and assessing the practicality of the method."
       },
       {
-        "question": "Could the authors clarify how they handle cases where the majority-voted answer is incorrect during self-training? Are there mechanisms to mitigate error propagation?",
-        "motivation": "Mitigating noise in pseudo-labels is a key challenge in self-training approaches."
+        "question": "Did you observe any cases where the majority-voted answer was incorrect but still used for fine-tuning, and how did this affect model performance?",
+        "motivation": "Understanding the impact of noisy pseudo-labels is crucial to evaluate robustness and potential failure modes."
+      },
+      {
+        "question": "Have you tested the method on more diverse NLP tasks beyond reasoning benchmarks, such as summarization or dialogue?",
+        "motivation": "Evaluating generalizability beyond reasoning tasks would strengthen claims about broad applicability."
+      },
+      {
+        "question": "Is it possible to combine your self-improvement method with supervised fine-tuning, and if so, does it lead to further improvements?",
+        "motivation": "Combining self-generated data with human-labeled data could be a practical scenario worth exploring."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The approach relies heavily on the quality and confidence of self-generated reasoning paths, which may propagate errors if the model is overconfident in incorrect answers. (Section 3.1 discusses that incorrect majority answers could introduce noise, though confident answers tend to be correct.)",
-    "point_002": "Experiments are conducted on a very large 540B parameter model, raising questions about the method's applicability and efficiency on smaller or more resource-constrained models. (Section 5.3 shows some distillation results but does not fully explore self-improvement on smaller models directly.)",
-    "point_003": "Limited discussion on the computational cost and scalability of generating multiple reasoning paths and fine-tuning on large augmented datasets. (While Section 4 mentions sampling 32 paths per question and augmenting data by 4 formats, the paper lacks detailed analysis of training time or resource requirements.)",
-    "point_004": "The method assumes availability of unlabeled questions from multiple datasets, which may not always be feasible or representative of target domains. (Section 3 and 5 rely on existing datasets' questions; the question generation approach is preliminary and less effective than real questions (Section 5.2).)",
-    "point_005": "The paper does not clearly address potential biases or failure modes introduced by self-training on model-generated labels. (No explicit analysis or discussion on error types or bias amplification is presented.)",
-    "point_006": "The approach focuses on reasoning tasks; its generalization to other NLP tasks or modalities is not explored. (Experiments are limited to arithmetic, commonsense reasoning, and natural language inference datasets.)",
-    "point_007": "How does the self-improvement method perform when applied iteratively multiple times? Does repeated self-training lead to further gains or degradation? (Understanding the stability and limits of self-improvement is important for practical deployment.)",
-    "point_008": "Can the authors provide more detailed analysis on the computational costs and efficiency trade-offs of their approach compared to supervised fine-tuning? (Resource requirements are critical for assessing the feasibility of the method in real-world settings.)",
-    "point_009": "Have the authors evaluated the robustness of the self-improved model to adversarial or out-of-distribution inputs beyond the tested OOD datasets? (Robustness is important to ensure that self-training does not overfit to certain data distributions.)",
-    "point_010": "Could the authors clarify how they handle cases where the majority-voted answer is incorrect during self-training? Are there mechanisms to mitigate error propagation? (Mitigating noise in pseudo-labels is a key challenge in self-training approaches.)"
+    "point_001": "Lacks comparison to other recent self-training or pseudo-labeling methods that also leverage unlabeled data for LLMs, limiting novelty assessment.. Related work (Section 2) mentions self-training but does not compare experimentally to recent contemporaneous methods",
+    "point_002": "The method assumes that majority-voted answers from multiple CoT paths are mostly correct, but does not quantify the impact of noisy or incorrect pseudo-labels on fine-tuning.. Section 3.1 discusses confidence but no explicit analysis on error propagation or robustness to noisy self-labels",
+    "point_003": "The choice of hyperparameters such as number of sampled paths (m=32), temperature values, and fine-tuning steps are not fully justified or explored for sensitivity beyond limited ablations.. Section 4 and 5.4 provide some ablations but lack systematic hyperparameter tuning or guidelines",
+    "point_004": "The evaluation focuses on reasoning benchmarks with relatively well-structured questions; it is unclear how the method performs on more diverse or open-ended NLP tasks.. Section 4 lists only arithmetic, commonsense reasoning, and NLI tasks; no experiments on generation, summarization, or other NLP domains",
+    "point_005": "Details about the fine-tuning procedure such as optimizer, number of epochs, hardware used, and training time are missing, hindering reproducibility.. Section 4 mentions learning rate and batch size but omits optimizer type, exact training duration, and computational resources",
+    "point_006": "The paper does not discuss potential limitations such as scalability to even larger models, or whether self-improvement plateaus after some iterations.. No mention of iterative self-training or diminishing returns in the experiments or conclusion",
+    "point_007": "The method relies on few-shot CoT examples as prompts; the impact of prompt quality or domain mismatch on self-improvement is not deeply analyzed.. Section 3.3 and 5.2 explore self-generated prompts but do not systematically study prompt quality effects",
+    "point_008": "The paper does not provide qualitative examples of failure cases or errors introduced by self-training, which would help understand limitations.. No error analysis or qualitative discussion beyond a few CoT examples in Section 3.1",
+    "point_009": "The ablation on training with only direct answers vs. CoT formats (Table 5) shows large performance drops, but the reasons behind this are not deeply discussed.. Section 5.1 mentions the importance of CoT but lacks detailed analysis of why direct answer training is insufficient",
+    "point_010": "The paper does not clarify whether the self-improvement method can be applied repeatedly (multi-round self-training) or only once.. No experiments or discussion on iterative self-improvement cycles",
+    "point_011": "The method's reliance on majority voting for answer selection may bias towards frequent but incorrect answers in ambiguous cases; alternative filtering strategies are not explored.. Section 3.1 uses majority voting exclusively without comparing other confidence or verification methods",
+    "point_012": "The out-of-domain evaluation datasets have different prompt templates, but the paper does not clarify how prompt engineering was handled for these tasks.. Section 5.1 and Table 4 mention OOD tasks with their own few-shot prompts but lack details on prompt design"
   }
 }

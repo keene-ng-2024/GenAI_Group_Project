@@ -18,7 +18,7 @@ are workflow structure, input format, and model (Vertex AI only).
 
 | Platform | Workflow file(s) | Loop type | Model | Input |
 |----------|-----------------|-----------|-------|-------|
-| Baseline | `src/baseline/baseline_critique.py` | None | GPT-4.1-mini | JSONL body_text |
+| Baseline | `src/baseline/baseline_critique.py` | None (single call) | GPT-4.1-mini | JSONL body_text (raw) |
 | n8n (no loop) | `src/platforms/n8n_workflow_noloop.json` | None | GPT-4.1-mini | JSONL body_text |
 | n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
 | Dify (no loop) | Dify workflow (`single_critic`) | None | GPT-4.1-mini | Raw PDF |
@@ -234,8 +234,8 @@ prompts, isolating loop structure as the sole variable:
 | `loop_mode: fixed` | Reader → Critic → Auditor × N → Summariser | Fixed rounds, no early exit |
 | `loop_mode: dynamic` | Reader → Critic ↔ Auditor → Summariser | Conditional early exit |
 
-Results stored in `results/langgraph_none/`, `results/langgraph_fixed/`,
-`results/langgraph_dynamic/`.
+Results stored in `results/langgraph/no_loop/`, `results/langgraph/fixed_1round/`,
+`results/langgraph/dynamic/`.
 
 ---
 
@@ -259,7 +259,7 @@ paper-critique-agent-study/
 │   │   ├── parse_reviews.py        # extract text from raw human reviews
 │   │   └── build_critique_dict.py  # LLM call to distil reviews → unique points
 │   ├── baseline/
-│   │   └── baseline_critique.py    # single LLM call to critique a paper
+│   │   └── baseline_critique.py    # single LLM call (Reader+Critic+Summariser in one), parallel workers supported
 │   ├── agents/
 │   │   ├── vertex_orchestrator.py  # Vertex AI pipeline (Gemini 2.5 Flash)
 │   │   ├── vertex_client.py        # Google GenAI SDK wrapper
@@ -271,14 +271,15 @@ paper-critique-agent-study/
 │       └── metrics.py              # precision/recall, plots, summary tables
 │
 ├── results/
-│   ├── baseline/
+│   ├── LLM_baseline/
 │   ├── agents/
 │   ├── n8n/
 │   ├── n8n_noloop/
 │   ├── dify/
-│   ├── langgraph_none/
-│   ├── langgraph_fixed/
-│   ├── langgraph_dynamic/
+│   ├── langgraph/
+│   │   ├── no_loop/
+│   │   ├── fixed_1round/
+│   │   └── dynamic/
 │   ├── crewai_none/
 │   ├── crewai_fixed/
 │   └── crewai_dynamic/
@@ -370,6 +371,14 @@ Before running, confirm all LLM nodes in both workflows are set to **temperature
 - Open **Model parameters** and confirm `temperature: 0.2`
 - The DSL files in this repo already have these values set correctly
 
+#### LangGraph
+
+No external services required — runs locally via Python. Just ensure `OPENAI_API_KEY` is set in `.env`.
+
+#### CrewAI
+
+No external services required — runs locally via Python. Just ensure `OPENAI_API_KEY` is set in `.env`.
+
 ### 5. Run the pipeline
 
 ```bash
@@ -379,8 +388,9 @@ python -m src.data_processing.parse_reviews
 # Build ground-truth critique dicts
 python -m src.data_processing.build_critique_dict
 
-# Run baseline (single LLM call per paper)
-python -m src.baseline.baseline_critique
+# Run baseline (single LLM call per paper, supports parallel workers)
+python -m src.baseline.baseline_critique        # default 5 workers
+python -m src.baseline.baseline_critique 10     # 10 parallel workers
 
 # Run n8n workflows (requires n8n running — see step 4)
 python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
@@ -389,6 +399,17 @@ python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor 
 # Run Dify workflows (requires DIFY_API_KEY_SINGLE and DIFY_API_KEY_DUAL in .env)
 python -m src.dify.run_dify single_critic     # Reader → Critic → Summariser
 python -m src.dify.run_dify dual_critic       # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+
+# Run LangGraph workflows
+python -m src.platforms.langgraph_critique --mode none     # Reader → Critic → Summariser
+python -m src.platforms.langgraph_critique --mode fixed    # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+python -m src.platforms.langgraph_critique --mode dynamic  # Critic ↔ Auditor loop (conditional)
+python -m src.platforms.langgraph_critique --mode all      # run all three modes
+
+# Run CrewAI workflows
+python -m src.platforms.crewai_critique none     # Reader → Critic → Summariser
+python -m src.platforms.crewai_critique fixed    # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+python -m src.platforms.crewai_critique dynamic  # Critic ↔ Auditor loop (conditional)
 
 # Score all systems
 python -m src.evaluation.scorer baseline

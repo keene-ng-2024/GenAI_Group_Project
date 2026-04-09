@@ -1,91 +1,126 @@
 {
   "paper_id": "paper_0033",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 21.007,
+  "latency_seconds": 90.493,
   "token_usage": {
-    "input": 8810,
-    "output": 932
+    "input": 8921,
+    "output": 1568
   },
   "structured": {
-    "summary": "This paper addresses the problem of adversarial robustness in fine-tuning pre-trained language models, identifying catastrophic forgetting as a key challenge. It proposes Robust Informative Fine-Tuning (RIFT), an information-theoretic method that encourages the fine-tuned model to retain features from the pre-trained model via maximizing conditional mutual information, and demonstrates its effectiveness on sentiment analysis and natural language inference tasks.",
+    "summary": "This paper proposes Robust Informative Fine-Tuning (RIFT), an adversarial fine-tuning method for pre-trained language models that addresses catastrophic forgetting by maximizing conditional mutual information between the fine-tuned and pre-trained model outputs. Experiments on sentiment analysis and natural language inference tasks demonstrate improved robustness against adversarial word substitution attacks compared to state-of-the-art baselines.",
     "strengths": [
       {
-        "point": "Novel perspective on catastrophic forgetting in adversarial fine-tuning",
-        "evidence": "Section 2.2 discusses how adversarial fine-tuning intensifies catastrophic forgetting, a phenomenon not previously well-studied in this context."
+        "point": "Novel framing of catastrophic forgetting in adversarial fine-tuning of pre-trained language models using an information-theoretical perspective.",
+        "evidence": "Section 1 and 2.2 discuss the intensified forgetting problem in adversarial fine-tuning and motivate the use of mutual information."
       },
       {
-        "point": "Innovative use of conditional mutual information to retain pre-trained features",
-        "evidence": "Section 2.3 and 2.4 introduce the information-theoretic objective maximizing I(S;T|Y) to better align with downstream tasks."
+        "point": "Introduction of a novel objective combining task performance and conditional mutual information to retain pre-trained features during fine-tuning.",
+        "evidence": "Section 2.3 and 2.5 detail the decomposition of the objective into I(S;Y) and I(S;T|Y) and the formulation of RIFT."
       },
       {
-        "point": "Strong empirical results demonstrating improved robustness",
-        "evidence": "Section 4.3 shows RIFT consistently outperforms state-of-the-art methods on IMDB and SNLI datasets under multiple adversarial attacks."
+        "point": "Empirical validation that maximizing conditional mutual information I(S;T|Y) better fits downstream tasks than maximizing I(S;T).",
+        "evidence": "Section 4.4 and Table 3 show consistent robustness improvements when using conditional mutual information."
       },
       {
-        "point": "Comprehensive experimental evaluation with ablation studies",
-        "evidence": "Section 4.5 provides ablation on the hyperparameter \u03b1 and shows trade-offs between robustness and accuracy."
+        "point": "Comprehensive evaluation on two popular NLP tasks (IMDB sentiment analysis and SNLI natural language inference) with multiple pre-trained models and attack methods.",
+        "evidence": "Section 4.1 and 4.3 describe datasets, models, attacks, and report robustness improvements in Tables 1 and 2."
+      },
+      {
+        "point": "Ablation study on the hyperparameter \u03b1 demonstrates the trade-off between retaining pre-trained information and downstream task adaptation.",
+        "evidence": "Section 4.5 and Table 4 show how varying \u03b1 affects both vanilla and robust accuracy."
+      },
+      {
+        "point": "Clear explanation and motivation of why conditional mutual information is preferable to unconditional mutual information in this context.",
+        "evidence": "Section 2.4 provides both theoretical intuition and empirical support."
+      },
+      {
+        "point": "The method is compatible with existing adversarial training baselines and improves upon them consistently.",
+        "evidence": "Section 4.3 compares RIFT with adversarial fine-tuning baseline, Adv-PTWD, and Adv-Mixout."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited scope of tasks and datasets",
-        "evidence": "Experiments are conducted only on two NLP tasks (sentiment analysis and natural language inference) and two datasets (IMDB and SNLI), which may limit generalizability."
+        "point": "Limited evaluation to only two NLP tasks (sentiment analysis and natural language inference), both classification tasks, which may limit generalizability.",
+        "evidence": "Section 4.1 describes only IMDB and SNLI datasets; no experiments on generation or other NLP tasks."
       },
       {
-        "point": "Computational complexity of contrastive loss",
-        "evidence": "Section 4.5 notes that the contrastive loss complexity grows quadratically with batch size, which may hinder scalability."
+        "point": "The paper does not report or discuss the computational overhead or training time increase caused by the additional mutual information objective and adversarial example generation.",
+        "evidence": "Section 4.1 and Appendix A.3 mention runtime analysis but details are not included in the main text."
       },
       {
-        "point": "Lack of detailed analysis on failure cases or limitations",
-        "evidence": "While limitations are briefly mentioned in Section 4.5, there is no in-depth discussion of scenarios where RIFT might underperform."
+        "point": "No error bars or statistical significance tests are reported for the ablation studies and conditional mutual information comparisons, limiting confidence in the robustness of these findings.",
+        "evidence": "Section 4.4 and 4.5 present results without error bars or variance measures."
       },
       {
-        "point": "Potential sensitivity to hyperparameter \u03b1",
-        "evidence": "Section 4.5 shows performance depends on \u03b1, but guidance on choosing \u03b1 or robustness to its variation is limited."
+        "point": "The choice of hyperparameters such as \u03b1 and \u03c4 is only briefly justified and tuned per dataset, raising questions about sensitivity and general applicability.",
+        "evidence": "Section 4.5 discusses \u03b1 tuning but does not provide systematic sensitivity analysis or guidelines."
       },
       {
-        "point": "No evaluation on other types of adversarial attacks beyond word substitutions",
-        "evidence": "Section 4.1 focuses exclusively on synonym-based word substitution attacks, leaving robustness to other attack types unexplored."
+        "point": "The method relies on the assumption that the pre-trained model's features are robust and generalizable, but no analysis is provided on how the quality or domain of pre-training affects RIFT's effectiveness.",
+        "evidence": "Section 2.2 and 2.3 assume pre-trained features are beneficial but no experiments vary pre-training corpora or models beyond BERT and RoBERTa."
       },
       {
-        "point": "No runtime or efficiency comparison with baselines",
-        "evidence": "Although Appendix A.3 is mentioned for runtime analysis, the main text lacks discussion on computational overhead introduced by RIFT."
+        "point": "The adversarial example generation uses a self-supervised KL divergence objective to avoid label leaking, but the impact of this choice compared to label-dependent attacks is not explored.",
+        "evidence": "Section 2.5 describes adversarial example generation but lacks ablation or comparison with other attack generation methods."
       },
       {
-        "point": "Theoretical assumptions and proofs are deferred to appendix",
-        "evidence": "Key theoretical results such as Lemma 1 are only proved in Appendix A.1, which may limit accessibility."
+        "point": "The paper does not discuss potential limitations or failure cases of RIFT, such as scenarios where retaining pre-trained features might hinder adaptation to new domains or tasks.",
+        "evidence": "Section 5 mentions limitations only briefly and does not analyze failure modes."
+      },
+      {
+        "point": "The contrastive loss used to approximate conditional mutual information scales quadratically with batch size, but no practical solutions or scalability analyses are provided.",
+        "evidence": "Section 4.5 notes this issue but leaves dictionary-based improvements to future work."
+      },
+      {
+        "point": "The paper lacks clarity in some methodological details, such as the exact architecture and parameterization of the score functions f_y used in the contrastive loss.",
+        "evidence": "Section 2.3 and 2.5 mention MLPs for g_1^y and g_2^y but do not specify architecture or hyperparameters."
+      },
+      {
+        "point": "No qualitative analysis or visualization of the learned features or robustness behavior is provided to better understand how RIFT improves robustness.",
+        "evidence": "Figures 1-4 are mostly schematic or quantitative; no feature space visualizations or case studies."
       }
     ],
     "questions": [
       {
-        "question": "How does RIFT perform on other NLP tasks beyond classification, such as sequence labeling or generation?",
-        "motivation": "Demonstrating generality across diverse NLP tasks would strengthen the impact and applicability of the method."
+        "question": "How sensitive is RIFT to the choice of hyperparameters \u03b1 and \u03c4 across different datasets and model sizes?",
+        "motivation": "Understanding hyperparameter robustness is critical for practical adoption and generalization."
       },
       {
-        "question": "Can the authors provide more insights or guidelines on selecting the hyperparameter \u03b1 in practice?",
-        "motivation": "Since \u03b1 controls the trade-off between retaining pre-trained features and fitting downstream data, practical guidance would aid adoption."
+        "question": "Can RIFT be effectively applied to other NLP tasks beyond classification, such as sequence labeling or generation?",
+        "motivation": "Demonstrating broader applicability would strengthen claims of generalizability."
       },
       {
-        "question": "What is the computational overhead of RIFT compared to standard adversarial fine-tuning, and how does it scale with dataset size?",
-        "motivation": "Understanding efficiency is important for real-world deployment, especially given the quadratic complexity of the contrastive loss."
+        "question": "What is the computational overhead of RIFT compared to standard adversarial fine-tuning, and how does it scale with model size and batch size?",
+        "motivation": "Efficiency considerations are important for real-world deployment."
       },
       {
-        "question": "Have the authors considered combining RIFT with other robustness techniques, such as data augmentation or certified defenses?",
-        "motivation": "Exploring complementary methods could further improve robustness and provide a more comprehensive defense strategy."
+        "question": "Have the authors considered or tested the impact of different pre-trained models or pre-training corpora on RIFT's effectiveness?",
+        "motivation": "The assumption that pre-trained features are robust may not hold universally."
+      },
+      {
+        "question": "Could the authors provide more details on the architecture and training of the score functions f_y used in the contrastive loss?",
+        "motivation": "Reproducibility and understanding of the method require these implementation details."
+      },
+      {
+        "question": "Is there any observed trade-off or degradation in clean accuracy when applying RIFT, especially with larger \u03b1 values?",
+        "motivation": "Balancing robustness and accuracy is a key concern in adversarial training."
+      },
+      {
+        "question": "Have the authors explored or can they comment on the potential of RIFT to mitigate forgetting in continual learning or domain adaptation scenarios?",
+        "motivation": "Extending the method to related problems could increase its impact."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited scope of tasks and datasets (Experiments are conducted only on two NLP tasks (sentiment analysis and natural language inference) and two datasets (IMDB and SNLI), which may limit generalizability.)",
-    "point_002": "Computational complexity of contrastive loss (Section 4.5 notes that the contrastive loss complexity grows quadratically with batch size, which may hinder scalability.)",
-    "point_003": "Lack of detailed analysis on failure cases or limitations (While limitations are briefly mentioned in Section 4.5, there is no in-depth discussion of scenarios where RIFT might underperform.)",
-    "point_004": "Potential sensitivity to hyperparameter \u03b1 (Section 4.5 shows performance depends on \u03b1, but guidance on choosing \u03b1 or robustness to its variation is limited.)",
-    "point_005": "No evaluation on other types of adversarial attacks beyond word substitutions (Section 4.1 focuses exclusively on synonym-based word substitution attacks, leaving robustness to other attack types unexplored.)",
-    "point_006": "No runtime or efficiency comparison with baselines (Although Appendix A.3 is mentioned for runtime analysis, the main text lacks discussion on computational overhead introduced by RIFT.)",
-    "point_007": "Theoretical assumptions and proofs are deferred to appendix (Key theoretical results such as Lemma 1 are only proved in Appendix A.1, which may limit accessibility.)",
-    "point_008": "How does RIFT perform on other NLP tasks beyond classification, such as sequence labeling or generation? (Demonstrating generality across diverse NLP tasks would strengthen the impact and applicability of the method.)",
-    "point_009": "Can the authors provide more insights or guidelines on selecting the hyperparameter \u03b1 in practice? (Since \u03b1 controls the trade-off between retaining pre-trained features and fitting downstream data, practical guidance would aid adoption.)",
-    "point_010": "What is the computational overhead of RIFT compared to standard adversarial fine-tuning, and how does it scale with dataset size? (Understanding efficiency is important for real-world deployment, especially given the quadratic complexity of the contrastive loss.)",
-    "point_011": "Have the authors considered combining RIFT with other robustness techniques, such as data augmentation or certified defenses? (Exploring complementary methods could further improve robustness and provide a more comprehensive defense strategy.)"
+    "point_001": "Limited evaluation to only two NLP tasks (sentiment analysis and natural language inference), both classification tasks, which may limit generalizability.. Section 4.1 describes only IMDB and SNLI datasets; no experiments on generation or other NLP tasks",
+    "point_002": "The paper does not report or discuss the computational overhead or training time increase caused by the additional mutual information objective and adversarial example generation.. Section 4.1 and Appendix A.3 mention runtime analysis but details are not included in the main text",
+    "point_003": "No error bars or statistical significance tests are reported for the ablation studies and conditional mutual information comparisons, limiting confidence in the robustness of these findings.. Section 4.4 and 4.5 present results without error bars or variance measures",
+    "point_004": "The choice of hyperparameters such as \u03b1 and \u03c4 is only briefly justified and tuned per dataset, raising questions about sensitivity and general applicability.. Section 4.5 discusses \u03b1 tuning but does not provide systematic sensitivity analysis or guidelines",
+    "point_005": "The method relies on the assumption that the pre-trained model's features are robust and generalizable, but no analysis is provided on how the quality or domain of pre-training affects RIFT's effectiveness.. Section 2.2 and 2.3 assume pre-trained features are beneficial but no experiments vary pre-training corpora or models beyond BERT and RoBERTa",
+    "point_006": "The adversarial example generation uses a self-supervised KL divergence objective to avoid label leaking, but the impact of this choice compared to label-dependent attacks is not explored.. Section 2.5 describes adversarial example generation but lacks ablation or comparison with other attack generation methods",
+    "point_007": "The paper does not discuss potential limitations or failure cases of RIFT, such as scenarios where retaining pre-trained features might hinder adaptation to new domains or tasks.. Section 5 mentions limitations only briefly and does not analyze failure modes",
+    "point_008": "The contrastive loss used to approximate conditional mutual information scales quadratically with batch size, but no practical solutions or scalability analyses are provided.. Section 4.5 notes this issue but leaves dictionary-based improvements to future work",
+    "point_009": "The paper lacks clarity in some methodological details, such as the exact architecture and parameterization of the score functions f_y used in the contrastive loss.. Section 2.3 and 2.5 mention MLPs for g_1^y and g_2^y but do not specify architecture or hyperparameters",
+    "point_010": "No qualitative analysis or visualization of the learned features or robustness behavior is provided to better understand how RIFT improves robustness.. Figures 1-4 are mostly schematic or quantitative; no feature space visualizations or case studies"
   }
 }

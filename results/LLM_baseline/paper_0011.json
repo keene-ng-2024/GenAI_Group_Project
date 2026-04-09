@@ -1,91 +1,114 @@
 {
   "paper_id": "paper_0011",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 16.86,
+  "latency_seconds": 58.526,
   "token_usage": {
-    "input": 9189,
-    "output": 1122
+    "input": 9300,
+    "output": 1426
   },
   "structured": {
-    "summary": "This paper investigates the challenge of true few-shot learning with language models, focusing on the difficulty of model selection when no held-out validation examples are available. It evaluates cross-validation and minimum description length criteria for prompt and hyperparameter selection, finding that these methods only marginally outperform random selection and underperform selection based on held-out data, highlighting a fundamental roadblock in true few-shot learning.",
+    "summary": "This paper investigates the challenge of model selection in true few-shot learning with language models, where no held-out validation data is available. It empirically evaluates cross-validation and minimum description length criteria for prompt and hyperparameter selection across multiple models and tasks, finding that these methods only marginally outperform random selection and underperform tuned few-shot approaches relying on large validation sets.",
     "strengths": [
       {
-        "point": "Clear disambiguation of few-shot learning settings into multi-distribution, tuned, and true few-shot learning.",
-        "evidence": "Section 2 provides a formal categorization and discussion of these settings, clarifying assumptions and evaluation protocols."
+        "point": "Clear formalization and disambiguation of few-shot learning settings into multi-distribution, tuned, and true few-shot learning.",
+        "evidence": "Section 2, especially lines 45-85, where the authors define and distinguish these settings."
       },
       {
-        "point": "Comprehensive empirical evaluation across multiple language models, tasks, and model sizes.",
-        "evidence": "Section 3 evaluates prompt selection on 9 LMs ranging over 3 orders of magnitude on LAMA benchmark tasks; Section 4 evaluates hyperparameter selection on ADAPET over 8 SuperGLUE tasks."
+        "point": "Comprehensive empirical evaluation of model selection methods (CV and MDL) across a wide range of language models and tasks.",
+        "evidence": "Section 3 evaluates 9 LMs ranging over 3 orders of magnitude on LAMA benchmark; Section 4 evaluates hyperparameter selection on ADAPET across 8 SuperGLUE tasks."
       },
       {
-        "point": "Use of principled model selection criteria (cross-validation and minimum description length) and thorough analysis of their limitations in the true few-shot setting.",
-        "evidence": "Sections 2.1, 2.2, and 3 detail the methods and show that both CV and MDL only marginally outperform random selection and often select worse models."
+        "point": "Demonstration that commonly used model selection methods in few-shot learning fail to reliably select good prompts or hyperparameters in the true few-shot setting.",
+        "evidence": "Results in Figures 1, 2, 3, and Table 1 show CV/MDL only marginally outperform random selection and sometimes select worse-than-average models."
       },
       {
-        "point": "Insightful analysis of variance and reliability of model selection methods, including attempts to incorporate variance into selection.",
-        "evidence": "Section 3.3 and 3.4 show high variance in prompt selection performance and that conservative criteria do not substantially improve reliability."
+        "point": "Investigation of the impact of number of labeled examples and computational budget on prompt selection performance.",
+        "evidence": "Sections 3.5 and 3.6 explore varying number of examples (5 to 40) and number of forward passes, showing limited improvements."
+      },
+      {
+        "point": "Provision of practical recommendations for future few-shot learning research to ensure fair and meaningful evaluation.",
+        "evidence": "Section 5 outlines strict protocols for reporting hyperparameters, validation usage, and test evaluation."
+      },
+      {
+        "point": "Open sourcing of code and detailed experimental setup to facilitate reproducibility.",
+        "evidence": "Section 3.1 and Checklist confirm code availability and detailed training/evaluation procedures."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited exploration of alternative or more advanced model selection methods beyond CV and MDL.",
-        "evidence": "Section 2.4 mentions other criteria but focuses mainly on CV and MDL; Appendix C tests some other criteria but no extensive exploration of meta-learning or unsupervised model selection."
+        "point": "Limited exploration of alternative or more advanced model selection criteria beyond CV and MDL.",
+        "evidence": "Section 2.4 mentions other criteria (AIC, WAIC) but dismisses them due to assumptions or approximations; Appendix C briefly tests others but no detailed results or novel criteria are proposed."
       },
       {
-        "point": "Experiments on hyperparameter selection are limited to ADAPET and a small set of hyperparameters.",
-        "evidence": "Section 4 evaluates only early stopping and masking fraction for ADAPET; broader hyperparameter spaces or other few-shot methods are not explored."
+        "point": "The evaluation focuses primarily on classification and knowledge retrieval tasks; generalizability to other NLP tasks or modalities is not demonstrated.",
+        "evidence": "Experiments are on LAMA (fact retrieval) and SuperGLUE (NLP classification tasks), with no experiments on generation, structured prediction, or non-text domains."
       },
       {
-        "point": "The study uses a relatively small number of examples (mostly 5-shot) due to computational constraints, which may limit generalizability to slightly larger few-shot regimes.",
-        "evidence": "Section 3.5 explores up to 40 examples but notes no consistent improvement; however, larger datasets or more examples might yield different results."
+        "point": "The assumption that marginalizing over all permutations of training example order is feasible limits the number of examples to 5, which may not reflect practical few-shot scenarios with more examples.",
+        "evidence": "Section 3.1 and 3.5 discuss marginalizing over N! permutations for N=5 examples; for larger N, only sampled permutations are used."
       },
       {
-        "point": "The paper does not provide new methods or solutions to overcome the identified model selection challenges.",
-        "evidence": "The conclusion and discussion focus on highlighting the problem and suggesting future directions rather than proposing novel approaches."
+        "point": "The paper does not analyze or discuss the potential impact of prompt design quality or diversity on the difficulty of model selection.",
+        "evidence": "Section 3.1 describes prompt sources but does not investigate how prompt quality or semantic similarity affects selection difficulty."
       },
       {
-        "point": "The computational cost of exhaustive permutation evaluation for CV and MDL limits scalability to larger datasets or more examples.",
-        "evidence": "Section 3.1 discusses marginalizing over all permutations for 5 examples; for larger N, sampling is used, which may affect accuracy of estimates."
+        "point": "The hyperparameter selection experiments with ADAPET are limited to only two hyperparameters and a small discrete set of values.",
+        "evidence": "Section 4 chooses early stopping checkpoint and masking fraction from 16 combinations; other hyperparameters or continuous ranges are not explored."
       },
       {
-        "point": "Some claims about prior work overestimating few-shot abilities rely on the assumption that prior tuning used many held-out examples, which may not always be explicit.",
-        "evidence": "Introduction and Section 2 argue that prior work uses large validation sets for tuning, but some prior methods claim no validation; this is discussed but not fully resolved."
+        "point": "The paper does not provide ablation or analysis on the effect of random seeds or initialization variance on model selection reliability.",
+        "evidence": "While variance is discussed conceptually in Section 2.3 and results show variance in selection outcomes, no explicit experiments vary random seeds or initializations."
       },
       {
-        "point": "The paper's negative results might discourage research in true few-shot learning without sufficiently exploring promising alternative assumptions or methods.",
-        "evidence": "Section 6 acknowledges this limitation but the paper mainly focuses on the difficulty rather than constructive pathways."
+        "point": "The discussion on the limitations and broader impact (Section 6) acknowledges potential discouragement of LM deployment but does not propose concrete mitigation strategies.",
+        "evidence": "Section 6 highlights risks but stops short of suggesting how to overcome or address these challenges."
+      },
+      {
+        "point": "The paper does not clarify how the computational cost of MDL and CV scales with model size and dataset size in practice, which is important for applicability.",
+        "evidence": "Section 3.1 notes MDL is more efficient than CV, but no detailed runtime or cost analysis is provided."
+      },
+      {
+        "point": "The evaluation metrics focus mainly on accuracy and negative log-likelihood; other metrics such as calibration, robustness, or downstream utility are not considered.",
+        "evidence": "Throughout Sections 3 and 4, accuracy and NLL are used exclusively."
+      },
+      {
+        "point": "The paper does not explore or discuss the potential of unsupervised or self-supervised model selection methods that do not require labeled validation data.",
+        "evidence": "Section 5 mentions unsupervised model selection briefly but does not experimentally evaluate or propose such methods."
       }
     ],
     "questions": [
       {
-        "question": "Have the authors considered meta-learning or transfer learning approaches that leverage data from related tasks to improve model selection in the true few-shot setting?",
-        "motivation": "Such approaches might alleviate the model selection problem by providing additional information beyond the few examples."
+        "question": "Have the authors considered or experimented with meta-learning or transfer learning approaches to improve model selection in the true few-shot setting?",
+        "motivation": "Since the paper suggests that additional assumptions or data are needed for effective model selection, exploring meta-learning could provide practical solutions."
       },
       {
-        "question": "Could unsupervised or self-supervised model selection criteria be effective in the true few-shot setting, and have the authors experimented with such methods?",
-        "motivation": "These methods do not require labeled validation data and might offer a path forward for model selection without held-out examples."
+        "question": "Can the authors provide more details on the computational cost and scalability of CV and MDL for larger models and datasets?",
+        "motivation": "Understanding the practical feasibility of these selection methods is important for their adoption."
       },
       {
-        "question": "How sensitive are the results to the choice of tasks and datasets? Would tasks with different characteristics (e.g., simpler or more structured) show different model selection behavior?",
-        "motivation": "Understanding task dependency could guide where true few-shot learning is more feasible."
+        "question": "How sensitive are the results to the choice and diversity of candidate prompts? Would a smaller or more curated prompt set improve selection reliability?",
+        "motivation": "Prompt quality and diversity may impact the difficulty of selection; clarifying this could guide prompt engineering."
       },
       {
-        "question": "Is there a practical threshold for the number of examples beyond which model selection becomes reliable, and how does this scale with model size?",
-        "motivation": "This would help practitioners understand when true few-shot learning is realistic."
+        "question": "Did the authors analyze the effect of random initialization or training stochasticity on the variance of model selection outcomes?",
+        "motivation": "Quantifying this variance could inform the robustness of selection methods."
+      },
+      {
+        "question": "Are there any preliminary insights or hypotheses on why larger models exhibit worse reliability in prompt selection despite better generalization?",
+        "motivation": "Understanding this counterintuitive trend could inform future model design or selection strategies."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited exploration of alternative or more advanced model selection methods beyond CV and MDL. (Section 2.4 mentions other criteria but focuses mainly on CV and MDL; Appendix C tests some other criteria but no extensive exploration of meta-learning or unsupervised model selection.)",
-    "point_002": "Experiments on hyperparameter selection are limited to ADAPET and a small set of hyperparameters. (Section 4 evaluates only early stopping and masking fraction for ADAPET; broader hyperparameter spaces or other few-shot methods are not explored.)",
-    "point_003": "The study uses a relatively small number of examples (mostly 5-shot) due to computational constraints, which may limit generalizability to slightly larger few-shot regimes. (Section 3.5 explores up to 40 examples but notes no consistent improvement; however, larger datasets or more examples might yield different results.)",
-    "point_004": "The paper does not provide new methods or solutions to overcome the identified model selection challenges. (The conclusion and discussion focus on highlighting the problem and suggesting future directions rather than proposing novel approaches.)",
-    "point_005": "The computational cost of exhaustive permutation evaluation for CV and MDL limits scalability to larger datasets or more examples. (Section 3.1 discusses marginalizing over all permutations for 5 examples; for larger N, sampling is used, which may affect accuracy of estimates.)",
-    "point_006": "Some claims about prior work overestimating few-shot abilities rely on the assumption that prior tuning used many held-out examples, which may not always be explicit. (Introduction and Section 2 argue that prior work uses large validation sets for tuning, but some prior methods claim no validation; this is discussed but not fully resolved.)",
-    "point_007": "The paper's negative results might discourage research in true few-shot learning without sufficiently exploring promising alternative assumptions or methods. (Section 6 acknowledges this limitation but the paper mainly focuses on the difficulty rather than constructive pathways.)",
-    "point_008": "Have the authors considered meta-learning or transfer learning approaches that leverage data from related tasks to improve model selection in the true few-shot setting? (Such approaches might alleviate the model selection problem by providing additional information beyond the few examples.)",
-    "point_009": "Could unsupervised or self-supervised model selection criteria be effective in the true few-shot setting, and have the authors experimented with such methods? (These methods do not require labeled validation data and might offer a path forward for model selection without held-out examples.)",
-    "point_010": "How sensitive are the results to the choice of tasks and datasets? Would tasks with different characteristics (e.g., simpler or more structured) show different model selection behavior? (Understanding task dependency could guide where true few-shot learning is more feasible.)",
-    "point_011": "Is there a practical threshold for the number of examples beyond which model selection becomes reliable, and how does this scale with model size? (This would help practitioners understand when true few-shot learning is realistic.)"
+    "point_001": "Limited exploration of alternative or more advanced model selection criteria beyond CV and MDL.. Section 2.4 mentions other criteria (AIC, WAIC) but dismisses them due to assumptions or approximations; Appendix C briefly tests others but no detailed results or novel criteria are proposed",
+    "point_002": "The evaluation focuses primarily on classification and knowledge retrieval tasks; generalizability to other NLP tasks or modalities is not demonstrated.. Experiments are on LAMA (fact retrieval) and SuperGLUE (NLP classification tasks), with no experiments on generation, structured prediction, or non-text domains",
+    "point_003": "The assumption that marginalizing over all permutations of training example order is feasible limits the number of examples to 5, which may not reflect practical few-shot scenarios with more examples.. Section 3.1 and 3.5 discuss marginalizing over N! permutations for N=5 examples; for larger N, only sampled permutations are used",
+    "point_004": "The paper does not analyze or discuss the potential impact of prompt design quality or diversity on the difficulty of model selection.. Section 3.1 describes prompt sources but does not investigate how prompt quality or semantic similarity affects selection difficulty",
+    "point_005": "The hyperparameter selection experiments with ADAPET are limited to only two hyperparameters and a small discrete set of values.. Section 4 chooses early stopping checkpoint and masking fraction from 16 combinations; other hyperparameters or continuous ranges are not explored",
+    "point_006": "The paper does not provide ablation or analysis on the effect of random seeds or initialization variance on model selection reliability.. While variance is discussed conceptually in Section 2.3 and results show variance in selection outcomes, no explicit experiments vary random seeds or initializations",
+    "point_007": "The discussion on the limitations and broader impact (Section 6) acknowledges potential discouragement of LM deployment but does not propose concrete mitigation strategies.. Section 6 highlights risks but stops short of suggesting how to overcome or address these challenges",
+    "point_008": "The paper does not clarify how the computational cost of MDL and CV scales with model size and dataset size in practice, which is important for applicability.. Section 3.1 notes MDL is more efficient than CV, but no detailed runtime or cost analysis is provided",
+    "point_009": "The evaluation metrics focus mainly on accuracy and negative log-likelihood; other metrics such as calibration, robustness, or downstream utility are not considered.. Throughout Sections 3 and 4, accuracy and NLL are used exclusively",
+    "point_010": "The paper does not explore or discuss the potential of unsupervised or self-supervised model selection methods that do not require labeled validation data.. Section 5 mentions unsupervised model selection briefly but does not experimentally evaluate or propose such methods"
   }
 }

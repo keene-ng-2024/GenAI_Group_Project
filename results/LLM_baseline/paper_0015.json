@@ -1,91 +1,136 @@
 {
   "paper_id": "paper_0015",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 13.791,
+  "latency_seconds": 38.591,
   "token_usage": {
-    "input": 9659,
-    "output": 951
+    "input": 9770,
+    "output": 1768
   },
   "structured": {
-    "summary": "This paper introduces DocPrompting, a retrieval-augmented natural language to code generation approach that leverages relevant code documentation to improve generation of code snippets, especially for unseen functions and libraries. The method is evaluated on two benchmarks (Python and Bash) and shows consistent improvements over strong baselines.",
+    "summary": "The paper proposes DocPrompting, a retrieval-augmented approach for natural language to code generation that explicitly retrieves relevant code documentation to improve generation of unseen functions and libraries. The method is evaluated on a new Bash dataset (tldr) and a re-split Python benchmark (CoNaLa), showing consistent improvements over strong baselines including CodeT5 and Codex.",
     "strengths": [
       {
-        "point": "Novel approach to leverage code documentation explicitly for code generation.",
-        "evidence": "Section 2 and 3 describe the retrieve-then-generate paradigm applied to documentation, which is novel compared to prior work that mostly retrieves code examples."
+        "point": "Introduction of a novel retrieval-augmented approach that leverages code documentation rather than code examples for NL-to-code generation, addressing generalization to unseen libraries and functions.",
+        "evidence": "Section 1 Introduction and Section 2 describe the motivation and formulation of DocPrompting."
       },
       {
-        "point": "Demonstrated consistent improvements across multiple programming languages, datasets, and base models.",
-        "evidence": "Section 5 shows improvements on the new Bash tldr dataset and the re-split Python CoNaLa dataset using models like CodeT5, GPT-Neo, and Codex."
+        "point": "Creation and release of a new Bash NL-to-code benchmark (tldr) with disjoint command splits and a re-split of CoNaLa to focus on unseen function generalization, enabling evaluation of retrieval-based methods.",
+        "evidence": "Section 4.1 and 4.2 detail the datasets and splits; Appendix A and B provide further dataset statistics."
       },
       {
-        "point": "Introduced new benchmarks and data splits to evaluate generalization to unseen functions.",
-        "evidence": "Section 4 details the new tldr Bash benchmark and the re-split CoNaLa dataset ensuring test examples contain unseen functions."
+        "point": "Comprehensive evaluation across multiple base models (CodeT5, GPT-Neo, Codex) and retriever types (BM25, dense retrievers), demonstrating consistent gains from DocPrompting.",
+        "evidence": "Section 5 presents results on tldr and CoNaLa with various models and retrievers; Table 1, 3, and Figure 3 show quantitative improvements."
       },
       {
-        "point": "Comprehensive experimental analysis including ablations on retriever types and oracle studies.",
-        "evidence": "Section 6 provides detailed analysis on retriever performance, impact of retrieved docs, and case studies illustrating benefits and failure modes."
+        "point": "Use of execution-based evaluation (pass@k) on CoNaLa with manually annotated unit tests to measure functional correctness, strengthening the evaluation beyond surface metrics.",
+        "evidence": "Section 4.2 and 5.2 describe the pass@k evaluation and results in Figure 3."
+      },
+      {
+        "point": "Detailed ablation studies on retriever types, training supervision, and number of retrieved documents provide insights into the components contributing to DocPrompting\u2019s effectiveness.",
+        "evidence": "Section 6.2 and Table 4 analyze retriever performance and training strategies."
+      },
+      {
+        "point": "Qualitative case studies illustrate how DocPrompting helps generate correct unseen function calls by grounding generation in retrieved documentation.",
+        "evidence": "Section 6.3 and Table 5 show examples comparing baseline and DocPrompting outputs."
+      },
+      {
+        "point": "The approach is general and agnostic to programming language and base model, demonstrated on both Python and Bash with multiple architectures.",
+        "evidence": "Section 1 and 3 discuss generality; experiments cover Python and Bash datasets with diverse models."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited discussion on the computational cost and latency of retrieval plus generation pipeline.",
-        "evidence": "The paper does not provide runtime or efficiency analysis of DocPrompting compared to baseline models."
+        "point": "The paper does not compare against retrieval of NL-code examples (ExPrompting) in the Python setting, limiting understanding of whether documentation retrieval is superior across languages.",
+        "evidence": "Section 5.1 compares DocPrompting to ExPrompting only on tldr (Table 2), but no analogous comparison is presented for CoNaLa."
       },
       {
-        "point": "Potential cascading errors from retrieval mistakes are acknowledged but not deeply addressed.",
-        "evidence": "Section 6.3 mentions errors due to incorrect retrieved docs but no mitigation strategies or joint training approaches are explored."
+        "point": "The retriever and generator are trained separately, and no experiments explore joint training or end-to-end optimization to potentially reduce cascading errors.",
+        "evidence": "Section 8 Conclusion mentions joint training as future work; no ablation or experiments on this are presented."
       },
       {
-        "point": "The approach relies heavily on the quality and coverage of the documentation pool, which may vary across languages and domains.",
-        "evidence": "Section 4 notes that the documentation pool is not comprehensive for all Python libraries, and tldr is limited to Bash commands."
+        "point": "The method relies on the availability and quality of documentation pools, but the paper does not analyze the impact of incomplete or noisy documentation coverage on performance.",
+        "evidence": "Section 4 describes documentation pools but lacks discussion or experiments on robustness to missing or low-quality docs."
       },
       {
-        "point": "The gains with very large models like Codex are limited, possibly due to data leakage or retriever limitations.",
-        "evidence": "Section 5.2 and Appendix H discuss minor improvements with Codex and hypothesize data leakage and retriever strength as reasons."
+        "point": "The oracle retriever experiments show large gains, indicating retriever quality is a bottleneck, but the paper does not explore stronger retriever architectures or retrieval augmentation techniques in depth.",
+        "evidence": "Section 5.2 and 6.2 show large performance gaps between oracle and learned retrievers (Table 4), but retriever improvements are limited to BM25 and standard dense models."
       },
       {
-        "point": "The retrieval is done independently from generation; no end-to-end training to optimize retrieval for generation.",
-        "evidence": "Section 8 mentions future work on joint training but current experiments use separate retriever and generator training."
+        "point": "The evaluation metrics focus mainly on exact match, BLEU, and pass@k, but do not include human evaluation or error analysis quantifying types of generation errors beyond the two case studies.",
+        "evidence": "Section 5 and 6.3 provide quantitative metrics and two qualitative examples, but no broader human assessment or error categorization."
       },
       {
-        "point": "Evaluation metrics focus on exact match and BLEU but could benefit from more functional correctness metrics beyond the 100 manually annotated tests.",
-        "evidence": "Section 4.2 and 5.2 use pass@k on a limited subset; broader automated functional evaluation is not reported."
+        "point": "The paper does not discuss or evaluate the computational overhead and latency introduced by retrieval and fusion-in-decoder architectures, which are important for practical deployment.",
+        "evidence": "Section 3.2 describes FiD and retrieval but no runtime or efficiency analysis is provided."
       },
       {
-        "point": "The approach may struggle with very long or complex documentation exceeding model input limits.",
-        "evidence": "Section 3.2 discusses input length limitations and uses Fusion-in-Decoder to mitigate but does not fully solve this challenge."
+        "point": "The re-splitting of CoNaLa to ensure unseen functions in test is a valuable contribution, but the paper does not release or detail the exact split creation process sufficiently for reproducibility.",
+        "evidence": "Section 4.2 and Appendix B mention the re-split but provide limited procedural details or code pointers."
+      },
+      {
+        "point": "The paper does not explore or discuss how DocPrompting handles ambiguous or underspecified NL intents where multiple functions or libraries could be relevant.",
+        "evidence": "No analysis or examples address ambiguity or multi-function retrieval scenarios."
+      },
+      {
+        "point": "The approach assumes that retrieved documentation is relevant and accurate, but the paper does not analyze failure modes when irrelevant or misleading documents are retrieved.",
+        "evidence": "Section 6.3 mentions a case where irrelevant docs cause argument confusion, but no systematic study of such errors is provided."
+      },
+      {
+        "point": "The paper does not compare to recent large-scale pretrained models like GPT-4 or other state-of-the-art code generation models beyond Codex, limiting understanding of competitiveness.",
+        "evidence": "Section 5 uses Codex and GPT-Neo but no comparison to newer models is included."
+      },
+      {
+        "point": "The retrieval is limited to textual documentation paragraphs; the paper does not consider structured or semi-structured documentation formats (e.g., API schemas) that might improve retrieval and generation.",
+        "evidence": "Section 2 and 3 describe retrieval of text paragraphs only; no experiments with structured docs."
+      },
+      {
+        "point": "The paper does not address how DocPrompting scales to very large documentation pools or multiple programming languages simultaneously.",
+        "evidence": "Experiments focus on single-language pools; scalability and multilinguality are not discussed."
       }
     ],
     "questions": [
       {
-        "question": "Have you considered or experimented with joint training of the retriever and generator to reduce cascading errors?",
-        "motivation": "Joint training could improve retrieval relevance tailored to generation needs and mitigate error propagation."
+        "question": "Have you considered or experimented with joint training of the retriever and generator to reduce cascading errors and improve end-to-end performance?",
+        "motivation": "Joint training could potentially improve retrieval relevance and generation quality, as hinted in Section 8."
       },
       {
-        "question": "How does DocPrompting perform in low-resource or domain-specific programming languages where documentation may be sparse or inconsistent?",
-        "motivation": "Understanding applicability beyond well-documented languages is important for generalization."
+        "question": "Can you provide more details or release the exact procedure and code for the CoNaLa re-split to facilitate reproducibility?",
+        "motivation": "The re-split is a valuable contribution but limited details are given (Section 4.2, Appendix B)."
       },
       {
-        "question": "Can you provide more details or analysis on the computational overhead introduced by retrieval at inference time?",
-        "motivation": "Practical deployment requires understanding latency and resource trade-offs."
+        "question": "How does DocPrompting perform when the documentation pool is incomplete or contains noisy or outdated entries?",
+        "motivation": "Understanding robustness to imperfect documentation is important for real-world deployment."
       },
       {
-        "question": "Did you explore alternative ways to encode or summarize retrieved documentation to better handle very long documents?",
-        "motivation": "Better encoding strategies might improve generation quality and scalability."
+        "question": "Have you evaluated the latency and computational cost of retrieval and fusion-in-decoder compared to baseline generation without retrieval?",
+        "motivation": "Practical applicability depends on efficiency, which is not discussed."
+      },
+      {
+        "question": "Do you have plans to extend DocPrompting to handle ambiguous NL intents or multi-function retrieval scenarios?",
+        "motivation": "Handling ambiguity is common in real programming tasks and could challenge retrieval."
+      },
+      {
+        "question": "Could you comment on how your approach might integrate or compare with structured API knowledge bases or schema-aware retrieval?",
+        "motivation": "Structured knowledge could complement textual docs and improve generation."
+      },
+      {
+        "question": "Have you considered human evaluation or more extensive error analysis to better characterize the types of errors your model makes?",
+        "motivation": "Quantitative metrics alone may not capture all quality aspects."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited discussion on the computational cost and latency of retrieval plus generation pipeline. (The paper does not provide runtime or efficiency analysis of DocPrompting compared to baseline models.)",
-    "point_002": "Potential cascading errors from retrieval mistakes are acknowledged but not deeply addressed. (Section 6.3 mentions errors due to incorrect retrieved docs but no mitigation strategies or joint training approaches are explored.)",
-    "point_003": "The approach relies heavily on the quality and coverage of the documentation pool, which may vary across languages and domains. (Section 4 notes that the documentation pool is not comprehensive for all Python libraries, and tldr is limited to Bash commands.)",
-    "point_004": "The gains with very large models like Codex are limited, possibly due to data leakage or retriever limitations. (Section 5.2 and Appendix H discuss minor improvements with Codex and hypothesize data leakage and retriever strength as reasons.)",
-    "point_005": "The retrieval is done independently from generation; no end-to-end training to optimize retrieval for generation. (Section 8 mentions future work on joint training but current experiments use separate retriever and generator training.)",
-    "point_006": "Evaluation metrics focus on exact match and BLEU but could benefit from more functional correctness metrics beyond the 100 manually annotated tests. (Section 4.2 and 5.2 use pass@k on a limited subset; broader automated functional evaluation is not reported.)",
-    "point_007": "The approach may struggle with very long or complex documentation exceeding model input limits. (Section 3.2 discusses input length limitations and uses Fusion-in-Decoder to mitigate but does not fully solve this challenge.)",
-    "point_008": "Have you considered or experimented with joint training of the retriever and generator to reduce cascading errors? (Joint training could improve retrieval relevance tailored to generation needs and mitigate error propagation.)",
-    "point_009": "How does DocPrompting perform in low-resource or domain-specific programming languages where documentation may be sparse or inconsistent? (Understanding applicability beyond well-documented languages is important for generalization.)",
-    "point_010": "Can you provide more details or analysis on the computational overhead introduced by retrieval at inference time? (Practical deployment requires understanding latency and resource trade-offs.)",
-    "point_011": "Did you explore alternative ways to encode or summarize retrieved documentation to better handle very long documents? (Better encoding strategies might improve generation quality and scalability.)"
+    "point_001": "The paper does not compare against retrieval of NL-code examples (ExPrompting) in the Python setting, limiting understanding of whether documentation retrieval is superior across languages.. Section 5.1 compares DocPrompting to ExPrompting only on tldr (Table 2), but no analogous comparison is presented for CoNaLa",
+    "point_002": "The retriever and generator are trained separately, and no experiments explore joint training or end-to-end optimization to potentially reduce cascading errors.. Section 8 Conclusion mentions joint training as future work; no ablation or experiments on this are presented",
+    "point_003": "The method relies on the availability and quality of documentation pools, but the paper does not analyze the impact of incomplete or noisy documentation coverage on performance.. Section 4 describes documentation pools but lacks discussion or experiments on robustness to missing or low-quality docs",
+    "point_004": "The oracle retriever experiments show large gains, indicating retriever quality is a bottleneck, but the paper does not explore stronger retriever architectures or retrieval augmentation techniques in depth.. Section 5.2 and 6.2 show large performance gaps between oracle and learned retrievers (Table 4), but retriever improvements are limited to BM25 and standard dense models",
+    "point_005": "The evaluation metrics focus mainly on exact match, BLEU, and pass@k, but do not include human evaluation or error analysis quantifying types of generation errors beyond the two case studies.. Section 5 and 6.3 provide quantitative metrics and two qualitative examples, but no broader human assessment or error categorization",
+    "point_006": "The paper does not discuss or evaluate the computational overhead and latency introduced by retrieval and fusion-in-decoder architectures, which are important for practical deployment.. Section 3.2 describes FiD and retrieval but no runtime or efficiency analysis is provided",
+    "point_007": "The re-splitting of CoNaLa to ensure unseen functions in test is a valuable contribution, but the paper does not release or detail the exact split creation process sufficiently for reproducibility.. Section 4.2 and Appendix B mention the re-split but provide limited procedural details or code pointers",
+    "point_008": "The paper does not explore or discuss how DocPrompting handles ambiguous or underspecified NL intents where multiple functions or libraries could be relevant.. No analysis or examples address ambiguity or multi-function retrieval scenarios",
+    "point_009": "The approach assumes that retrieved documentation is relevant and accurate, but the paper does not analyze failure modes when irrelevant or misleading documents are retrieved.. Section 6.3 mentions a case where irrelevant docs cause argument confusion, but no systematic study of such errors is provided",
+    "point_010": "The paper does not compare to recent large-scale pretrained models like GPT-4 or other state-of-the-art code generation models beyond Codex, limiting understanding of competitiveness.. Section 5 uses Codex and GPT-Neo but no comparison to newer models is included",
+    "point_011": "The retrieval is limited to textual documentation paragraphs; the paper does not consider structured or semi-structured documentation formats (e.g., API schemas) that might improve retrieval and generation.. Section 2 and 3 describe retrieval of text paragraphs only; no experiments with structured docs",
+    "point_012": "The paper does not address how DocPrompting scales to very large documentation pools or multiple programming languages simultaneously.. Experiments focus on single-language pools; scalability and multilinguality are not discussed"
   }
 }

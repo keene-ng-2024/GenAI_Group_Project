@@ -1,91 +1,144 @@
 {
   "paper_id": "paper_0009",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 13.598,
+  "latency_seconds": 50.013,
   "token_usage": {
-    "input": 10148,
-    "output": 1037
+    "input": 10259,
+    "output": 1820
   },
   "structured": {
-    "summary": "This paper presents a comprehensive empirical study of scaling laws for encoder-decoder Transformer models in neural machine translation (NMT). It proposes a bivariate scaling law that separately models encoder and decoder sizes, investigates the impact of dataset composition bias on scaling behavior, and analyzes the relationship between model size, cross-entropy loss, and generation quality.",
+    "summary": "This paper presents an empirical study of scaling laws for encoder-decoder Transformer models in neural machine translation (NMT). It proposes a bivariate scaling law capturing cross-entropy loss as a function of encoder and decoder sizes separately, analyzes the impact of dataset composition bias, and investigates the relationship between model size, loss, and generation quality across multiple language pairs and domains.",
     "strengths": [
       {
-        "point": "Novel bivariate scaling law capturing encoder-decoder parameter allocation",
-        "evidence": "Section 2.2 and 2.3 introduce and validate a new scaling law that models cross-entropy loss as a function of encoder and decoder parameters separately, showing superior fit (R^2 > 99%) compared to univariate laws."
+        "point": "Proposes a novel bivariate scaling law that separately models encoder and decoder parameter contributions, improving over univariate total-parameter scaling laws.",
+        "evidence": "Section 2.2 and Figure 2 show the proposed scaling law fitting with R^2 > 99%, outperforming traditional univariate laws."
       },
       {
-        "point": "Extensive large-scale experiments across multiple language pairs and domains",
-        "evidence": "Section 2.1 and Appendix C detail experiments on English-German and English-Chinese pairs with billions of sentence pairs and multiple test domains, ensuring robustness of findings."
+        "point": "Extensive empirical evaluation across multiple language pairs (En-De, De-En, En-Zh, Zh-En) and diverse test domains (web, news, Wikipedia, patents).",
+        "evidence": "Section 2.1 and Figure 5 demonstrate consistent scaling law fits across different language pairs and domains."
       },
       {
-        "point": "Insightful analysis of dataset composition bias (source-original vs target-original) on scaling",
-        "evidence": "Section 3 discusses how naturalness and translationese in training and test data affect scaling exponents and model performance, highlighting important practical considerations."
+        "point": "Detailed analysis of the impact of dataset composition bias (source-original vs target-original) on scaling behavior and generation quality.",
+        "evidence": "Section 3 and Section 4 discuss how composition bias affects scaling exponents and BLEU score trends."
       },
       {
-        "point": "Investigation of the relationship between cross-entropy loss and generation quality metrics",
-        "evidence": "Section 4 shows differing correlations between loss and BLEU depending on test set composition, with additional validation using BLEURT scores in Appendix J."
+        "point": "Investigation of the relationship between cross-entropy loss improvements and generation quality (BLEU and BLEURT), revealing different behaviors depending on test set origin.",
+        "evidence": "Section 4 and Appendix I show BLEU and BLEURT trends diverging on source-original data but correlated on target-original data."
+      },
+      {
+        "point": "Large-scale experimental setup with 200 models ranging from 80M to 4B parameters, trained to near convergence with consistent hyperparameters.",
+        "evidence": "Section 2.1 details the model sizes, training steps, and fixed hyperparameters used."
+      },
+      {
+        "point": "Release of generated text from all models used, supporting transparency and potential reproducibility.",
+        "evidence": "Abstract mentions releasing generated text from all models."
+      },
+      {
+        "point": "Analysis of optimal parameter allocation between encoder and decoder based on fitted scaling exponents, providing practical guidance.",
+        "evidence": "Section 2.3 and Proposition 1 derive optimal encoder/decoder size ratios."
+      },
+      {
+        "point": "Robustness checks including random seed variation and out-of-sample prediction on symmetrically scaled and randomly sampled models.",
+        "evidence": "Appendix D and Section 2.2 discuss random seed experiments and out-of-sample validation."
+      },
+      {
+        "point": "Consideration of different scaling approaches (depth, width, uniform) and their limited impact on scaling behavior for large models.",
+        "evidence": "Appendix G shows that scaling approach affects small models more but large models follow similar scaling laws."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited exploration of scaling dimensions beyond depth",
-        "evidence": "Section 2.1 and Appendix G focus primarily on depth scaling, with only brief mention of other scaling approaches; the impact of width or uniform scaling on the proposed laws is not deeply analyzed."
+        "point": "Lack of comparison to prior work on NMT scaling laws, especially the contemporaneous Gordon et al. (2021) study mentioned only briefly.",
+        "evidence": "Footnote 1 in Section 1 mentions Gordon et al. (2021) but no detailed comparison or discussion is provided."
       },
       {
-        "point": "Lack of theoretical justification for the proposed bivariate scaling law",
-        "evidence": "The paper provides empirical fits and observations but does not offer theoretical foundations or derivations explaining why the encoder and decoder scale differently."
+        "point": "The study focuses exclusively on depth scaling for the main results, with other scaling approaches relegated to appendix and limited analysis.",
+        "evidence": "Section 2.1 states depth scaling is the main focus; Appendix G shows other scaling approaches but with less detail."
       },
       {
-        "point": "Potential confounding effects of beam search hyperparameters on generation quality results",
-        "evidence": "Section 4 states that beam search parameters were fixed based on the baseline model without tuning for larger models, which might affect BLEU score comparisons."
+        "point": "The proposed scaling law parameters (\u03b1, p_e, p_d, L_\u221e) are fitted per test set, raising questions about generalizability and transferability across datasets.",
+        "evidence": "Section 2.2 fits parameters separately for each test set without exploring parameter stability or universality."
       },
       {
-        "point": "Limited discussion on practical implications for model deployment and latency",
-        "evidence": "While the paper notes that decoder scaling is more effective for loss reduction, it does not address how this interacts with latency or inference cost considerations common in NMT systems."
+        "point": "The analysis of training data composition bias is limited to synthetic back-translation datasets for En-De only, lacking broader language or domain coverage.",
+        "evidence": "Section 3 discusses training data composition effects only on two En-De datasets generated via back-translation."
       },
       {
-        "point": "Unclear generalization of findings to other conditional generation tasks",
-        "evidence": "The conclusion notes uncertainty whether the scaling laws are intrinsic to encoder-decoder architectures or specific to NMT, but no experiments on other tasks are provided."
+        "point": "The relationship between cross-entropy loss and generation quality is measured only with BLEU and BLEURT, without considering other metrics or human evaluation.",
+        "evidence": "Section 4 and Appendix I rely on BLEU and BLEURT; no mention of other metrics or qualitative assessment."
       },
       {
-        "point": "Overfitting observed in models trained on back-translated data is noted but not deeply investigated",
-        "evidence": "Section 3 mentions overfitting beyond certain model sizes when training on target-original back-translated data but leaves detailed analysis for future work."
+        "point": "No ablation or analysis on the effect of hyperparameters such as model dimension, feed-forward size, or attention heads, which are fixed across experiments.",
+        "evidence": "Section 2.1 states fixed internal hyperparameters; Appendix G briefly mentions other scaling but no detailed ablation."
       },
       {
-        "point": "No ablation or sensitivity analysis on the impact of hyperparameters like dropout or label smoothing on scaling laws",
-        "evidence": "Section 2.1 describes fixed hyperparameters but does not explore their influence on scaling behavior."
+        "point": "Limited discussion on the implications of the findings for practical NMT system design, such as latency trade-offs or inference efficiency.",
+        "evidence": "Section 2.3 notes that decoder scaling is more effective but contrasts with latency-driven practices without further exploration."
+      },
+      {
+        "point": "Reproducibility is hindered by missing details on data preprocessing, exact training schedules, and code availability beyond generated text release.",
+        "evidence": "Section 2.1 and Appendix B provide some hyperparameters but lack full training pipeline details and no code release is mentioned."
+      },
+      {
+        "point": "The paper does not address how the scaling laws might extend to other conditional generation tasks beyond NMT or to non-Transformer architectures.",
+        "evidence": "Section 5 acknowledges the need for further study but no experiments or discussion on generalization beyond tested settings."
+      },
+      {
+        "point": "The proposed scaling law assumes independence between encoder and decoder scaling exponents but does not explore potential interactions or nonlinearities.",
+        "evidence": "Equation (1) models loss as a product of power laws in encoder and decoder parameters without interaction terms."
+      },
+      {
+        "point": "The effect of beam search hyperparameters on generation quality scaling is not studied, potentially confounding BLEU trends.",
+        "evidence": "Section 4 states beam search parameters are fixed from baseline model without tuning for larger models."
+      },
+      {
+        "point": "The paper does not clarify how embedding and softmax parameters, excluded from parameter counts, might affect scaling behavior or model capacity.",
+        "evidence": "Section 2.1 excludes embedding and softmax parameters from counts but does not discuss their potential impact."
       }
     ],
     "questions": [
       {
-        "question": "Can the authors provide theoretical insights or hypotheses explaining why decoder scaling yields larger scaling exponents than encoder scaling?",
-        "motivation": "Understanding the underlying reasons could guide architecture design and scaling strategies beyond empirical observations."
+        "question": "How stable are the fitted scaling law parameters (\u03b1, p_e, p_d, L_\u221e) across different datasets and languages? Can a universal set of parameters be learned?",
+        "motivation": "Understanding parameter stability would clarify the generalizability and practical utility of the proposed scaling law."
       },
       {
-        "question": "How sensitive are the scaling laws and optimal parameter allocations to different architectural choices, such as varying model width or attention head counts?",
-        "motivation": "This would clarify the robustness of the proposed scaling law beyond the depth scaling regime studied."
+        "question": "Have you considered evaluating generation quality with human judgments or additional metrics beyond BLEU and BLEURT to validate your findings?",
+        "motivation": "Automatic metrics have known limitations; human evaluation could confirm the observed divergence between loss and quality."
       },
       {
-        "question": "Have the authors considered tuning beam search parameters for larger models, and if so, does the relationship between cross-entropy loss and BLEU change?",
-        "motivation": "Fixed decoding parameters might bias generation quality results, so this could affect conclusions about scaling effects on BLEU."
+        "question": "Can you provide more details on the data preprocessing, training schedules, and whether the code or model checkpoints will be publicly released?",
+        "motivation": "These details are critical for reproducibility and for the community to build upon your work."
       },
       {
-        "question": "Could the authors comment on the implications of their findings for latency-sensitive NMT applications, especially given the recommendation to scale decoders more?",
-        "motivation": "Practical deployment often requires balancing quality and inference speed, so guidance on this trade-off would be valuable."
+        "question": "How do you expect your scaling laws to extend to other conditional generation tasks or architectures beyond encoder-decoder Transformers?",
+        "motivation": "This would help assess the broader impact and applicability of your findings."
+      },
+      {
+        "question": "Did you observe any interaction effects between encoder and decoder scaling beyond the multiplicative power law form? Could more complex models improve fit?",
+        "motivation": "Exploring interactions might yield more accurate or insightful scaling laws."
+      },
+      {
+        "question": "Given that decoder scaling improves loss more than encoder scaling but encoder scaling yields better BLEU at similar loss, how should practitioners balance these trade-offs?",
+        "motivation": "Clarifying practical recommendations would increase the paper's impact for NMT system design."
+      },
+      {
+        "question": "How sensitive are your results to the fixed beam search parameters? Could tuning decoding hyperparameters for larger models change the observed BLEU trends?",
+        "motivation": "Decoding strategies can significantly affect generation quality and might influence scaling conclusions."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited exploration of scaling dimensions beyond depth (Section 2.1 and Appendix G focus primarily on depth scaling, with only brief mention of other scaling approaches; the impact of width or uniform scaling on the proposed laws is not deeply analyzed.)",
-    "point_002": "Lack of theoretical justification for the proposed bivariate scaling law (The paper provides empirical fits and observations but does not offer theoretical foundations or derivations explaining why the encoder and decoder scale differently.)",
-    "point_003": "Potential confounding effects of beam search hyperparameters on generation quality results (Section 4 states that beam search parameters were fixed based on the baseline model without tuning for larger models, which might affect BLEU score comparisons.)",
-    "point_004": "Limited discussion on practical implications for model deployment and latency (While the paper notes that decoder scaling is more effective for loss reduction, it does not address how this interacts with latency or inference cost considerations common in NMT systems.)",
-    "point_005": "Unclear generalization of findings to other conditional generation tasks (The conclusion notes uncertainty whether the scaling laws are intrinsic to encoder-decoder architectures or specific to NMT, but no experiments on other tasks are provided.)",
-    "point_006": "Overfitting observed in models trained on back-translated data is noted but not deeply investigated (Section 3 mentions overfitting beyond certain model sizes when training on target-original back-translated data but leaves detailed analysis for future work.)",
-    "point_007": "No ablation or sensitivity analysis on the impact of hyperparameters like dropout or label smoothing on scaling laws (Section 2.1 describes fixed hyperparameters but does not explore their influence on scaling behavior.)",
-    "point_008": "Can the authors provide theoretical insights or hypotheses explaining why decoder scaling yields larger scaling exponents than encoder scaling? (Understanding the underlying reasons could guide architecture design and scaling strategies beyond empirical observations.)",
-    "point_009": "How sensitive are the scaling laws and optimal parameter allocations to different architectural choices, such as varying model width or attention head counts? (This would clarify the robustness of the proposed scaling law beyond the depth scaling regime studied.)",
-    "point_010": "Have the authors considered tuning beam search parameters for larger models, and if so, does the relationship between cross-entropy loss and BLEU change? (Fixed decoding parameters might bias generation quality results, so this could affect conclusions about scaling effects on BLEU.)",
-    "point_011": "Could the authors comment on the implications of their findings for latency-sensitive NMT applications, especially given the recommendation to scale decoders more? (Practical deployment often requires balancing quality and inference speed, so guidance on this trade-off would be valuable.)"
+    "point_001": "Lack of comparison to prior work on NMT scaling laws, especially the contemporaneous Gordon et al. (2021) study mentioned only briefly.. Footnote 1 in Section 1 mentions Gordon et al. (2021) but no detailed comparison or discussion is provided",
+    "point_002": "The study focuses exclusively on depth scaling for the main results, with other scaling approaches relegated to appendix and limited analysis.. Section 2.1 states depth scaling is the main focus; Appendix G shows other scaling approaches but with less detail",
+    "point_003": "The proposed scaling law parameters (\u03b1, p_e, p_d, L_\u221e) are fitted per test set, raising questions about generalizability and transferability across datasets.. Section 2.2 fits parameters separately for each test set without exploring parameter stability or universality",
+    "point_004": "The analysis of training data composition bias is limited to synthetic back-translation datasets for En-De only, lacking broader language or domain coverage.. Section 3 discusses training data composition effects only on two En-De datasets generated via back-translation",
+    "point_005": "The relationship between cross-entropy loss and generation quality is measured only with BLEU and BLEURT, without considering other metrics or human evaluation.. Section 4 and Appendix I rely on BLEU and BLEURT; no mention of other metrics or qualitative assessment",
+    "point_006": "No ablation or analysis on the effect of hyperparameters such as model dimension, feed-forward size, or attention heads, which are fixed across experiments.. Section 2.1 states fixed internal hyperparameters; Appendix G briefly mentions other scaling but no detailed ablation",
+    "point_007": "Limited discussion on the implications of the findings for practical NMT system design, such as latency trade-offs or inference efficiency.. Section 2.3 notes that decoder scaling is more effective but contrasts with latency-driven practices without further exploration",
+    "point_008": "Reproducibility is hindered by missing details on data preprocessing, exact training schedules, and code availability beyond generated text release.. Section 2.1 and Appendix B provide some hyperparameters but lack full training pipeline details and no code release is mentioned",
+    "point_009": "The paper does not address how the scaling laws might extend to other conditional generation tasks beyond NMT or to non-Transformer architectures.. Section 5 acknowledges the need for further study but no experiments or discussion on generalization beyond tested settings",
+    "point_010": "The proposed scaling law assumes independence between encoder and decoder scaling exponents but does not explore potential interactions or nonlinearities.. Equation (1) models loss as a product of power laws in encoder and decoder parameters without interaction terms",
+    "point_011": "The effect of beam search hyperparameters on generation quality scaling is not studied, potentially confounding BLEU trends.. Section 4 states beam search parameters are fixed from baseline model without tuning for larger models",
+    "point_012": "The paper does not clarify how embedding and softmax parameters, excluded from parameter counts, might affect scaling behavior or model capacity.. Section 2.1 excludes embedding and softmax parameters from counts but does not discuss their potential impact"
   }
 }

@@ -1,91 +1,136 @@
 {
   "paper_id": "paper_0081",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 18.44,
+  "latency_seconds": 28.278,
   "token_usage": {
-    "input": 12659,
-    "output": 1061
+    "input": 12770,
+    "output": 1614
   },
   "structured": {
-    "summary": "This paper proposes a method to augment large-scale language models (LLMs) with up-to-date factual information by conditioning them on web search results via few-shot prompting, without fine-tuning. Using Google Search as a retrieval source, the approach improves open-domain question answering performance across multiple datasets and model sizes, and further benefits from inference-time compute increases through answer reranking.",
+    "summary": "The paper proposes a method to augment large-scale language models (LLMs) for open-domain question answering by conditioning them on retrieved web evidence via few-shot prompting, using Google Search as a retrieval source without fine-tuning. The approach improves factual grounding and performance across multiple datasets and model sizes, and explores inference-time compute scaling through answer reranking.",
     "strengths": [
       {
-        "point": "Novel use of few-shot prompting to condition LMs on external web evidence without fine-tuning or additional parameters.",
-        "evidence": "Section 3 describes the approach of using few-shot prompting with retrieved Google Search results to condition LMs, emphasizing no fine-tuning is needed."
+        "point": "Innovative use of few-shot prompting to condition LLMs on external web evidence without fine-tuning or additional parameters.",
+        "evidence": "Section 3.2 describes the few-shot prompting approach, and the abstract highlights no fine-tuning is needed."
       },
       {
-        "point": "Demonstrated performance gains over closed-book models across multiple datasets and model sizes, including smaller models outperforming larger closed-book counterparts.",
-        "evidence": "Section 5.1 and 5.3 show that open-book models conditioned on Google Search outperform closed-book models, with smaller open-book models sometimes surpassing much larger closed-book models."
+        "point": "Demonstrates that conditioning on Google Search results improves performance over closed-book models across multiple QA datasets.",
+        "evidence": "Section 5.1 and Table 1 show consistent gains on NQ, HotpotQA, StrategyQA, and FEVER datasets."
       },
       {
-        "point": "Effective use of inference-time compute by generating multiple answers from retrieved passages and reranking them using LM-derived scoring functions.",
-        "evidence": "Section 3.3 and 5.4 detail the reranking approach and show performance improvements from sampling multiple answers and reranking with various scoring functions."
+        "point": "Shows that smaller open-book models can outperform larger closed-book models by leveraging retrieved evidence.",
+        "evidence": "Section 5.3 and Figure 2 illustrate smaller models with retrieval surpassing bigger closed-book models."
       },
       {
-        "point": "Comprehensive evaluation on diverse datasets including single-hop, multi-hop, generation, and classification tasks.",
-        "evidence": "Section 4 and 5 present experiments on NQ, HotpotQA, StrategyQA, and FEVER datasets covering a range of question answering challenges."
+        "point": "Introduces inference-time compute scaling via sampling multiple answers and reranking, improving performance and mitigating smaller model weaknesses.",
+        "evidence": "Section 3.3 and Section 5.4 discuss reranking methods and show gains in Figure 3."
+      },
+      {
+        "point": "Uses a broad and constantly updated knowledge source (the whole web via Google Search) rather than static corpora like Wikipedia.",
+        "evidence": "Section 3.1 motivates using Google Search and Section 6 discusses benefits and challenges."
+      },
+      {
+        "point": "Provides extensive ablations on scoring functions for reranking and analysis of retrieval performance.",
+        "evidence": "Section 5.2 and Appendix A.2 detail scoring function comparisons and retrieval recall."
+      },
+      {
+        "point": "Includes experiments on keeping QA models up-to-date with post-training data using SituatedQA dataset.",
+        "evidence": "Section 5.5 evaluates performance on questions about events after the model's training cutoff."
+      },
+      {
+        "point": "Reproducibility efforts include experiments with publicly available OPT-6B model and Wikipedia-based DPR retrieval.",
+        "evidence": "Section 5.6 and Appendices A.4 and A.5 provide these results."
       }
     ],
     "weaknesses": [
       {
-        "point": "Reliance on a commercial search engine (Google Search) limits reproducibility and control over retrieval results.",
-        "evidence": "Section 6 discusses reproducibility concerns due to lack of control over Google Search and potential changes over time."
+        "point": "Limited discussion and evaluation of safety and misinformation risks when using uncurated web data via Google Search.",
+        "evidence": "Section 6 mentions safety concerns but does not empirically evaluate or mitigate these risks."
       },
       {
-        "point": "Performance on complex multi-hop and reasoning tasks remains limited, with smaller models showing minimal gains.",
-        "evidence": "Section 5.1 and 5.3 note smaller improvements on multi-hop datasets like StrategyQA and FEVER, and that retrieval benefits reasoning mainly for the largest models."
+        "point": "Retrieval relies on verbatim question queries to Google Search without exploring query reformulation or more sophisticated retrieval strategies.",
+        "evidence": "Section 3.1 states questions are used verbatim as queries; Section 5.1 notes retrieval performance drops on complex multi-hop questions."
       },
       {
-        "point": "Potential safety and misinformation risks from using uncurated web content as knowledge source are acknowledged but not addressed.",
-        "evidence": "Section 6 mentions safety issues arising from using the whole web, including misinformation and harmful content, without proposing mitigation strategies."
+        "point": "The approach assumes access to a commercial search engine API, which may limit reproducibility and introduces variability over time.",
+        "evidence": "Section 3.1 and Section 6 acknowledge reproducibility challenges due to dynamic search engine results."
       },
       {
-        "point": "The approach depends heavily on the quality of retrieval; errors in retrieval limit overall QA performance.",
-        "evidence": "Section 5.1 and 5.2 highlight retrieval recall variability, especially on multi-hop questions, and that oracle retrieval yields significantly better results."
+        "point": "The paper does not compare against recent fine-tuned retrieval-augmented models on the same datasets in a fully controlled manner.",
+        "evidence": "Section 5.1 mentions specialist models outperform few-shot prompting but lacks direct head-to-head comparisons with fine-tuned baselines."
       },
       {
-        "point": "The method does not close the gap with specialized fine-tuned models on in-domain datasets.",
-        "evidence": "Section 5.2 and 6 acknowledge that few-shot prompting with retrieval still lags behind fine-tuned specialist models."
+        "point": "The few-shot prompt construction uses fixed 15-shot examples without ablation on number or selection strategy of in-context examples.",
+        "evidence": "Section 3.2 and Section 4 mention k=15 shots but do not explore impact of prompt design or example selection."
       },
       {
-        "point": "Limited exploration of prompt engineering and example selection strategies that could further improve few-shot conditioning.",
-        "evidence": "Section 3.2 and 5.2 suggest that better prompt optimization and in-context example selection could boost results but are not explored in depth."
+        "point": "The reranking scoring functions rely on smaller LMs for some probabilities, but the impact of this approximation is not deeply analyzed.",
+        "evidence": "Section 5.2 notes smaller 7B models are used for some scores but does not quantify how this affects reranking quality."
       },
       {
-        "point": "Evaluation metrics like exact match may underestimate performance due to annotation errors and answer variability.",
-        "evidence": "Section 5.8 error analysis notes annotation errors and multiple valid answers affect measured accuracy."
+        "point": "Evaluation metrics focus on exact match and accuracy but do not assess answer factuality or hallucination rates directly.",
+        "evidence": "Section 4 describes metrics but no human evaluation or factuality-specific metrics are reported."
+      },
+      {
+        "point": "The method's generalizability beyond open-domain QA to other tasks or languages is not explored.",
+        "evidence": "Experiments are limited to English QA datasets; no discussion on other tasks or multilingual settings."
+      },
+      {
+        "point": "The paper does not analyze latency or computational cost implications of increased inference-time compute due to multiple retrievals and reranking.",
+        "evidence": "Section 5.4 discusses FLOPs but practical latency or cost trade-offs are not reported."
+      },
+      {
+        "point": "Error analysis is limited to a few datasets and does not systematically categorize failure modes or retrieval errors.",
+        "evidence": "Section 5.1 and Appendix A.8 provide some manual error analysis but lack quantitative breakdowns."
+      },
+      {
+        "point": "The approach may be less effective for multi-hop reasoning questions due to retrieval errors, but no methods to improve multi-hop retrieval are proposed.",
+        "evidence": "Section 5.1 and 5.2 note lower gains on HotpotQA and StrategyQA due to retrieval challenges."
+      },
+      {
+        "point": "The paper does not clarify how the approach handles contradictory or noisy retrieved evidence from the web.",
+        "evidence": "Section 6 mentions challenges with noisy and unsafe text but no mechanism to detect or filter contradictory information is described."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is the approach to the choice and quality of retrieved passages, and have you considered integrating retrieval reranking or query reformulation to improve retrieval?",
-        "motivation": "Improving retrieval quality could directly enhance QA performance, especially on multi-hop and reasoning tasks."
+        "question": "Have the authors considered or experimented with query reformulation or retrieval augmentation techniques to improve retrieval recall, especially for multi-hop questions?",
+        "motivation": "Improving retrieval quality could significantly enhance downstream QA performance, particularly on complex questions where verbatim queries underperform."
       },
       {
-        "question": "Can you elaborate on potential methods to mitigate safety risks and misinformation when using uncurated web content as evidence?",
-        "motivation": "Addressing safety concerns is critical for deploying such systems in real-world applications."
+        "question": "Can the authors provide more details on the computational cost and latency implications of the inference-time compute scaling via multiple answer sampling and reranking?",
+        "motivation": "Understanding practical deployment costs is important for assessing the feasibility of the proposed approach in real-world applications."
       },
       {
-        "question": "Have you experimented with adaptive or dynamic prompt construction, such as selecting in-context examples based on question similarity, to further improve few-shot conditioning?",
-        "motivation": "Dynamic prompt selection could enhance model grounding and answer accuracy."
+        "question": "How robust is the approach to noisy or contradictory evidence retrieved from the web, and are there mechanisms to detect or mitigate hallucinations arising from such evidence?",
+        "motivation": "Since the web is uncurated, ensuring answer factuality and safety is critical for trustworthy QA systems."
       },
       {
-        "question": "Given the reliance on Google Search, how do you envision maintaining reproducibility and stability of results over time as search results evolve?",
-        "motivation": "Ensuring consistent evaluation is important for benchmarking and future research."
+        "question": "Could the authors elaborate on the selection and construction of the 15-shot in-context examples used for prompting? Have alternative selection strategies been explored?",
+        "motivation": "Prompt design can greatly impact few-shot performance; understanding this could help reproduce and improve results."
+      },
+      {
+        "question": "Is the approach applicable to languages other than English or to other NLP tasks beyond open-domain QA?",
+        "motivation": "Assessing generalizability would clarify the broader impact and limitations of the method."
+      },
+      {
+        "question": "Have the authors considered integrating their approach with fine-tuned retrieval-augmented models to combine benefits of both paradigms?",
+        "motivation": "Such hybrid approaches might yield further performance improvements and better grounding."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Reliance on a commercial search engine (Google Search) limits reproducibility and control over retrieval results. (Section 6 discusses reproducibility concerns due to lack of control over Google Search and potential changes over time.)",
-    "point_002": "Performance on complex multi-hop and reasoning tasks remains limited, with smaller models showing minimal gains. (Section 5.1 and 5.3 note smaller improvements on multi-hop datasets like StrategyQA and FEVER, and that retrieval benefits reasoning mainly for the largest models.)",
-    "point_003": "Potential safety and misinformation risks from using uncurated web content as knowledge source are acknowledged but not addressed. (Section 6 mentions safety issues arising from using the whole web, including misinformation and harmful content, without proposing mitigation strategies.)",
-    "point_004": "The approach depends heavily on the quality of retrieval; errors in retrieval limit overall QA performance. (Section 5.1 and 5.2 highlight retrieval recall variability, especially on multi-hop questions, and that oracle retrieval yields significantly better results.)",
-    "point_005": "The method does not close the gap with specialized fine-tuned models on in-domain datasets. (Section 5.2 and 6 acknowledge that few-shot prompting with retrieval still lags behind fine-tuned specialist models.)",
-    "point_006": "Limited exploration of prompt engineering and example selection strategies that could further improve few-shot conditioning. (Section 3.2 and 5.2 suggest that better prompt optimization and in-context example selection could boost results but are not explored in depth.)",
-    "point_007": "Evaluation metrics like exact match may underestimate performance due to annotation errors and answer variability. (Section 5.8 error analysis notes annotation errors and multiple valid answers affect measured accuracy.)",
-    "point_008": "How sensitive is the approach to the choice and quality of retrieved passages, and have you considered integrating retrieval reranking or query reformulation to improve retrieval? (Improving retrieval quality could directly enhance QA performance, especially on multi-hop and reasoning tasks.)",
-    "point_009": "Can you elaborate on potential methods to mitigate safety risks and misinformation when using uncurated web content as evidence? (Addressing safety concerns is critical for deploying such systems in real-world applications.)",
-    "point_010": "Have you experimented with adaptive or dynamic prompt construction, such as selecting in-context examples based on question similarity, to further improve few-shot conditioning? (Dynamic prompt selection could enhance model grounding and answer accuracy.)",
-    "point_011": "Given the reliance on Google Search, how do you envision maintaining reproducibility and stability of results over time as search results evolve? (Ensuring consistent evaluation is important for benchmarking and future research.)"
+    "point_001": "Limited discussion and evaluation of safety and misinformation risks when using uncurated web data via Google Search.. Section 6 mentions safety concerns but does not empirically evaluate or mitigate these risks",
+    "point_002": "Retrieval relies on verbatim question queries to Google Search without exploring query reformulation or more sophisticated retrieval strategies.. Section 3.1 states questions are used verbatim as queries; Section 5.1 notes retrieval performance drops on complex multi-hop questions",
+    "point_003": "The approach assumes access to a commercial search engine API, which may limit reproducibility and introduces variability over time.. Section 3.1 and Section 6 acknowledge reproducibility challenges due to dynamic search engine results",
+    "point_004": "The paper does not compare against recent fine-tuned retrieval-augmented models on the same datasets in a fully controlled manner.. Section 5.1 mentions specialist models outperform few-shot prompting but lacks direct head-to-head comparisons with fine-tuned baselines",
+    "point_005": "The few-shot prompt construction uses fixed 15-shot examples without ablation on number or selection strategy of in-context examples.. Section 3.2 and Section 4 mention k=15 shots but do not explore impact of prompt design or example selection",
+    "point_006": "The reranking scoring functions rely on smaller LMs for some probabilities, but the impact of this approximation is not deeply analyzed.. Section 5.2 notes smaller 7B models are used for some scores but does not quantify how this affects reranking quality",
+    "point_007": "Evaluation metrics focus on exact match and accuracy but do not assess answer factuality or hallucination rates directly.. Section 4 describes metrics but no human evaluation or factuality-specific metrics are reported",
+    "point_008": "The method's generalizability beyond open-domain QA to other tasks or languages is not explored.. Experiments are limited to English QA datasets; no discussion on other tasks or multilingual settings",
+    "point_009": "The paper does not analyze latency or computational cost implications of increased inference-time compute due to multiple retrievals and reranking.. Section 5.4 discusses FLOPs but practical latency or cost trade-offs are not reported",
+    "point_010": "Error analysis is limited to a few datasets and does not systematically categorize failure modes or retrieval errors.. Section 5.1 and Appendix A.8 provide some manual error analysis but lack quantitative breakdowns",
+    "point_011": "The approach may be less effective for multi-hop reasoning questions due to retrieval errors, but no methods to improve multi-hop retrieval are proposed.. Section 5.1 and 5.2 note lower gains on HotpotQA and StrategyQA due to retrieval challenges",
+    "point_012": "The paper does not clarify how the approach handles contradictory or noisy retrieved evidence from the web.. Section 6 mentions challenges with noisy and unsafe text but no mechanism to detect or filter contradictory information is described"
   }
 }
