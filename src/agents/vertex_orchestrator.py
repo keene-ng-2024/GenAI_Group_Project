@@ -184,6 +184,8 @@ class VertexAgent:
             prompt=user_message,
             system_instruction=self.system_prompt,
             model_name=self.model,
+            temperature=self.config.get("temperature", 0.2),
+            max_tokens=self.config.get("max_tokens", 4096),
         )
 
         text = response.get("text", "")
