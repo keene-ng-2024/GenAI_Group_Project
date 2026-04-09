@@ -1,0 +1,97 @@
+{
+  "paper_id": "paper_0018",
+  "title": "WebBrain: Learning to Generate Factually Correct Articles for Queries by Grounding on Large Web Corpus",
+  "platform": "langgraph",
+  "loop_mode": "none",
+  "model": "gpt-4.1-mini",
+  "rounds": 0,
+  "latency_seconds": 39.66,
+  "token_usage": {
+    "input": 13561,
+    "output": 2638
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\n- **Problem:** Automatically generating short, factually correct articles (e.g., Wikipedia-style) for factual queries that are not covered in Wikipedia, by mining supporting evidence from a large web corpus.\n- **Motivation:** \n  - Wikipedia articles are trusted sources but require manual editing, limiting coverage.\n  - The Web contains vast scattered information that evolves quickly, making it hard for users to find reliable, comprehensive answers.\n  - Automating Wikipedia article generation can help cover new or unseen topics, assist intelligent writing, and improve knowledge-intensive QA.\n  - Existing generative models often hallucinate facts due to reliance on implicit knowledge stored in model parameters.\n  - Retrieval-augmented generation grounded on explicit evidence from the Web can improve factual correctness.\n\n---\n\n### Proposed Method\n\n- **Task Definition (WEBBRAIN):** Given a factual query, generate a short, fluent, informative, and factually correct article grounded on supporting evidence retrieved from a large web corpus.\n- **Dataset Construction:**\n  - Created **WebBrain-Raw**, a large-scale dataset by extracting all English Wikipedia articles and their crawlable references.\n  - WebBrain-Raw is about 10\u00d7 larger than previous datasets like WikiSum.\n  - Data cleaning and reference passage selection applied to ensure quality and fit model input constraints.\n  - Derived two datasets for training: WebBrain-R (retriever) and WebBrain-G (generator).\n- **Framework: ReGen**\n  - **Retriever:** Uses SPLADE, a parametric sparse lexical model, enhanced with:\n    - Asymmetric sparsity regularization to balance query and document encoding.\n    - Topic consistency and diversity filtering to avoid irrelevant or redundant evidence.\n  - **Generator:** Fusion-in-Decoder (FiD) architecture with BART backbone.\n    - Inputs query plus multiple retrieved references.\n    - Generates article with citation marks indicating source references.\n    - Includes a warm-up pre-training stage with sentence-reference matching to improve factual grounding and ease learning.\n  - **Reference Mark-Enhanced Decoding (RED):** Post-processing strategy to improve accuracy of citation marks in generated text.\n\n---\n\n### Results\n\n- **Automatic Evaluation:**\n  - ReGen outperforms baselines (BART, GPT-2, FiD without enhancements) on BLEU, METEOR, ROUGE, CIDEr, and factuality metrics (QAGS, Triple Score).\n  - Larger models improve language quality but factual correctness depends more on external evidence.\n  - SPLADE retriever outperforms BM25 and DPR in retrieval quality and downstream generation factuality.\n  - Increasing number of references improves informativeness but may introduce noise; optimal number around 4 references.\n- **Human Evaluation:**\n  - ReGen rated better than baselines in fluency, informativeness, and faithfulness.\n- **Comparison with GPT-3:**\n  - ReGen surpasses GPT-3 zero-shot generation on all automatic metrics and human evaluation.\n  - Shows explicit retrieval from web corpus is more effective than relying solely on large-scale pre-trained model parameters.\n- **Ablation and Analysis:**\n  - Warm-up pre-training stage improves performance, especially for larger models.\n  - Retrieval quality critically affects generation factuality.\n  - Reference mark correction strategy improves citation accuracy and readability.\n\n---\n\n### Claimed Contributions\n\n1. **New Task Introduction:** Defined WEBBRAIN, a novel NLP task for generating short factual articles grounded on retrieved web evidence.\n2. **Large-Scale Dataset:** Constructed WebBrain-Raw, the largest dataset of Wikipedia articles paired with crawlable references, enabling research on WEBBRAIN.\n3. **Novel Framework (ReGen):** Proposed a retrieval-augmented generation framework with:\n   - Improved evidence retrieval via SPLADE with topic-aware filtering.\n   - Citation-aware generation with warm-up pre-training.\n   - Reference mark-enhanced decoding for better factual grounding.\n4. **Empirical Analysis:** Demonstrated current state-of-the-art models struggle with factual correctness on WEBBRAIN.\n5. **Strong Performance:** Showed ReGen outperforms baselines and GPT-3 on both automatic and human evaluations, highlighting the importance of grounding generation in explicit web evidence.\n\n---\n\n### Additional Notes\n\n- The paper discusses limitations and future work, including improving retriever quality, better reference mark modeling, and extending generation to longer articles.\n- A demonstration system was built to showcase the approach.\n- The dataset and code are planned for release upon paper acceptance."
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "1. **Novelty - Prior Work on Retrieval Models:**  \nThe paper uses SPLADE as the retriever with asymmetric sparsity and topic filtering but does not compare against recent dense retrieval models beyond DPR (e.g., ColBERT, ANCE, or Contriever). Given the importance of retrieval quality (Section \"Results\" and ablations), the omission of stronger or more recent retrievers limits the novelty and understanding of retrieval impact.\n\n2. **Methodology - Justification of SPLADE Enhancements:**  \nThe asymmetric sparsity regularization and topic consistency/diversity filtering are introduced as key improvements for retrieval (Section \"Proposed Method\"). However, the paper lacks a detailed ablation isolating the effect of each component separately, making it unclear which contributes most to retrieval and generation gains.\n\n3. **Methodology - Warm-up Pre-training Details:**  \nThe warm-up pre-training stage for the generator is claimed to improve factual grounding (Section \"Proposed Method\" and \"Results\"). However, the exact pre-training task formulation, dataset size, and training schedule are not sufficiently detailed, hindering reproducibility and understanding of its contribution.\n\n4. **Evaluation - Baseline Selection and Fairness:**  \nThe paper compares ReGen to GPT-3 zero-shot generation but does not include few-shot GPT-3 or other large language models with retrieval augmentation (e.g., RAG or WebGPT). This limits the strength of the claim that ReGen outperforms GPT-3, as few-shot or retrieval-augmented GPT-3 variants might perform better.\n\n5. **Evaluation - Metrics for Factuality:**  \nFactuality is evaluated using QAGS and Triple Score, but these metrics have known limitations in capturing nuanced factual correctness. The paper does not complement these with human fact-checking or more recent factuality metrics, which could provide a more robust evaluation.\n\n6. **Evaluation - Number of Retrieved References:**  \nThe paper finds an optimal number of references around 4 (Section \"Results\"). However, it does not explore adaptive retrieval sizes per query or analyze failure cases when more references introduce noise, which could inform more dynamic retrieval strategies.\n\n7. **Reproducibility - Dataset Cleaning and Filtering:**  \nWebBrain-Raw is described as cleaned and filtered for quality and input constraints, but the paper does not provide detailed criteria or scripts for cleaning and reference passage selection. This omission may hinder exact dataset reconstruction.\n\n8. **Reproducibility - Model Hyperparameters and Training Details:**  \nKey training hyperparameters for both retriever and generator (learning rates, batch sizes, number of epochs, hardware used) are not fully specified, which affects reproducibility and fair comparison.\n\n9. **Clarity - Citation Mark-Enhanced Decoding (RED):**  \nThe RED strategy is introduced as a post-processing step to improve citation accuracy, but the paper provides limited explanation or examples of how RED operates, making it difficult to understand or reproduce.\n\n10. **Limitations - Handling of Noisy or Contradictory Evidence:**  \nWhile the paper discusses topic consistency and diversity filtering, it does not explicitly address how the model handles contradictory or outdated web evidence, which is a common challenge in web-grounded generation.\n\n11. **Limitations - Article Length and Complexity:**  \nThe task focuses on short articles, but the paper acknowledges future work on longer articles. It does not analyze how the current method scales with article length or complexity, limiting understanding of generalizability.\n\n12. **Generalisability - Domain and Language Scope:**  \nThe dataset and experiments are limited to English Wikipedia and English web corpus. The paper does not discuss applicability to other languages or domains, which is important for broader impact.\n\n13. **Methodology - Fusion-in-Decoder Choice Justification:**  \nThe generator uses FiD with BART backbone, but the paper does not compare FiD to other architectures (e.g., encoder-decoder with cross-attention or retrieval-augmented transformers) to justify this choice.\n\n14. **Evaluation - Human Evaluation Protocol Details:**  \nHuman evaluation results are reported favorably for ReGen, but the paper lacks details on annotator instructions, number of annotators, inter-annotator agreement, or statistical significance testing.\n\n15. **Clarity - Definition of WEBBRAIN Task:**  \nThe task definition is somewhat broad (\"short, fluent, informative, and factually correct article\"), but the paper does not specify length constraints, style guidelines, or factuality thresholds, which could lead to ambiguity in task scope and evaluation."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper introduces WEBBRAIN, a novel task for generating short, factually grounded articles from web evidence, and proposes ReGen, a retrieval-augmented generation framework using SPLADE retriever enhancements and a Fusion-in-Decoder generator with citation-aware decoding. The authors construct a large-scale dataset, WebBrain-Raw, and demonstrate that ReGen outperforms baselines and GPT-3 zero-shot generation on multiple automatic and human evaluations, highlighting the importance of explicit retrieval for factual correctness.\",\n  \"strengths\": [\n    {\n      \"point\": \"Introduction of a novel task and large-scale dataset\",\n      \"evidence\": \"WEBBRAIN task defined for short factual article generation; WebBrain-Raw dataset is about 10\u00d7 larger than previous datasets like WikiSum.\"\n    },\n    {\n      \"point\": \"Effective retrieval-augmented generation framework\",\n      \"evidence\": \"ReGen combines SPLADE with asymmetric sparsity and topic filtering, FiD generator with warm-up pre-training, and Reference Mark-Enhanced Decoding to improve factual grounding and citation accuracy.\"\n    },\n    {\n      \"point\": \"Strong empirical results\",\n      \"evidence\": \"ReGen outperforms baselines and GPT-3 zero-shot on BLEU, METEOR, ROUGE, CIDEr, QAGS, Triple Score, and human evaluations in fluency, informativeness, and faithfulness.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Limited comparison with recent retrieval models\",\n      \"evidence\": \"Only DPR compared as dense retriever baseline; no evaluation against stronger or more recent models like ColBERT, ANCE, or Contriever.\"\n    },\n    {\n      \"point\": \"Insufficient ablation and methodological details\",\n      \"evidence\": \"No isolated ablation of asymmetric sparsity vs. topic filtering; warm-up pre-training details (task, dataset size, schedule) are vague, affecting reproducibility.\"\n    },\n    {\n      \"point\": \"Evaluation and reproducibility gaps\",\n      \"evidence\": \"Human evaluation protocol lacks annotator details and agreement metrics; factuality metrics used have known limitations without complementary human fact-checking; dataset cleaning criteria and training hyperparameters are under-specified.\"\n    },\n    {\n      \"point\": \"Limited baseline and scope coverage\",\n      \"evidence\": \"No comparison with few-shot or retrieval-augmented GPT-3 variants; task definition and dataset limited to English Wikipedia and web corpus; no analysis on longer articles or handling contradictory evidence.\"\n    },\n    {\n      \"point\": \"Clarity issues in key components\",\n      \"evidence\": \"Reference Mark-Enhanced Decoding (RED) is insufficiently explained with few examples; FiD choice not justified against alternative architectures.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How do the asymmetric sparsity regularization and topic filtering individually contribute to retrieval and generation performance?\",\n      \"motivation\": \"Understanding component contributions is crucial for targeted improvements and reproducibility.\"\n    },\n    {\n      \"question\": \"Can the approach generalize to other languages, domains, or longer, more complex articles?\",\n      \"motivation\": \"Broader applicability is important for real-world impact beyond English Wikipedia short articles.\"\n    },\n    {\n      \"question\": \"How does ReGen perform compared to retrieval-augmented large language models like RAG or few-shot GPT-3 variants?\",\n      \"motivation\": \"Stronger baselines are needed to validate claims of superiority over GPT-3.\"\n    },\n    {\n      \"question\": \"What are the exact procedures and criteria for dataset cleaning and reference passage selection?\",\n      \"motivation\": \"Detailed dataset construction is essential for reproducibility and fair comparison.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper introduces WEBBRAIN, a novel task for generating short, factually grounded articles from web evidence, and proposes ReGen, a retrieval-augmented generation framework using SPLADE retriever enhancements and a Fusion-in-Decoder generator with citation-aware decoding. The authors construct a large-scale dataset, WebBrain-Raw, and demonstrate that ReGen outperforms baselines and GPT-3 zero-shot generation on multiple automatic and human evaluations, highlighting the importance of explicit retrieval for factual correctness.",
+    "strengths": [
+      {
+        "point": "Introduction of a novel task and large-scale dataset",
+        "evidence": "WEBBRAIN task defined for short factual article generation; WebBrain-Raw dataset is about 10\u00d7 larger than previous datasets like WikiSum."
+      },
+      {
+        "point": "Effective retrieval-augmented generation framework",
+        "evidence": "ReGen combines SPLADE with asymmetric sparsity and topic filtering, FiD generator with warm-up pre-training, and Reference Mark-Enhanced Decoding to improve factual grounding and citation accuracy."
+      },
+      {
+        "point": "Strong empirical results",
+        "evidence": "ReGen outperforms baselines and GPT-3 zero-shot on BLEU, METEOR, ROUGE, CIDEr, QAGS, Triple Score, and human evaluations in fluency, informativeness, and faithfulness."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Limited comparison with recent retrieval models",
+        "evidence": "Only DPR compared as dense retriever baseline; no evaluation against stronger or more recent models like ColBERT, ANCE, or Contriever."
+      },
+      {
+        "point": "Insufficient ablation and methodological details",
+        "evidence": "No isolated ablation of asymmetric sparsity vs. topic filtering; warm-up pre-training details (task, dataset size, schedule) are vague, affecting reproducibility."
+      },
+      {
+        "point": "Evaluation and reproducibility gaps",
+        "evidence": "Human evaluation protocol lacks annotator details and agreement metrics; factuality metrics used have known limitations without complementary human fact-checking; dataset cleaning criteria and training hyperparameters are under-specified."
+      },
+      {
+        "point": "Limited baseline and scope coverage",
+        "evidence": "No comparison with few-shot or retrieval-augmented GPT-3 variants; task definition and dataset limited to English Wikipedia and web corpus; no analysis on longer articles or handling contradictory evidence."
+      },
+      {
+        "point": "Clarity issues in key components",
+        "evidence": "Reference Mark-Enhanced Decoding (RED) is insufficiently explained with few examples; FiD choice not justified against alternative architectures."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How do the asymmetric sparsity regularization and topic filtering individually contribute to retrieval and generation performance?",
+        "motivation": "Understanding component contributions is crucial for targeted improvements and reproducibility."
+      },
+      {
+        "question": "Can the approach generalize to other languages, domains, or longer, more complex articles?",
+        "motivation": "Broader applicability is important for real-world impact beyond English Wikipedia short articles."
+      },
+      {
+        "question": "How does ReGen perform compared to retrieval-augmented large language models like RAG or few-shot GPT-3 variants?",
+        "motivation": "Stronger baselines are needed to validate claims of superiority over GPT-3."
+      },
+      {
+        "question": "What are the exact procedures and criteria for dataset cleaning and reference passage selection?",
+        "motivation": "Detailed dataset construction is essential for reproducibility and fair comparison."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "borderline",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Limited comparison with recent retrieval models. Only DPR compared as dense retriever baseline; no evaluation against stronger or more recent models like ColBERT, ANCE, or Contriever",
+    "point_002": "Insufficient ablation and methodological details. No isolated ablation of asymmetric sparsity vs. topic filtering; warm-up pre-training details (task, dataset size, schedule) are vague, affecting reproducibility",
+    "point_003": "Evaluation and reproducibility gaps. Human evaluation protocol lacks annotator details and agreement metrics; factuality metrics used have known limitations without complementary human fact-checking; dataset cleaning criteria and training hyperparameters are under-specified",
+    "point_004": "Limited baseline and scope coverage. No comparison with few-shot or retrieval-augmented GPT-3 variants; task definition and dataset limited to English Wikipedia and web corpus; no analysis on longer articles or handling contradictory evidence",
+    "point_005": "Clarity issues in key components. Reference Mark-Enhanced Decoding (RED) is insufficiently explained with few examples; FiD choice not justified against alternative architectures"
+  }
+}
