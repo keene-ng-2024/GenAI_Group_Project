@@ -1,0 +1,140 @@
+{
+  "paper_id": "paper_0024",
+  "title": "Pre-trained Language Models can be Fully Zero-Shot Learners ",
+  "platform": "crewai_none",
+  "model": "gpt-4.1-mini",
+  "loop_mode": "none",
+  "rounds": 0,
+  "latency_seconds": 71.31,
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "**Structured Summary**\n\n---\n\n### Problem & Motivation\n\nPre-trained language models (PLMs) have demonstrated strong performance across various natural language understanding (NLU) tasks when fine-tuned on labeled datasets. However, fine-tuning requires labeled data, which is often scarce or unavailable for many tasks, and is computationally expensive. Additionally, fine-tuning results in separate models for each task, complicating deployment and maintenance.\n\nExisting few-shot and zero-shot methods leverage prompting techniques to adapt PLMs without extensive fine-tuning. These methods typically require either additional unlabeled data for training or manual construction of prompts and verbalizers (mappings from label words to class labels). Manual verbalizers are labor-intensive, biased, and do not generalize well to new or emerging categories.\n\nThe core problem addressed in this paper is: **How to extend a pre-trained language model to many language understanding tasks in a fully zero-shot manner, without any labeled data, additional unlabeled data, or human-designed verbalizers?**\n\n---\n\n### Proposed Method\n\nThe authors propose **NPPrompt (Non-Parametric Prompting PLM)**, a novel fully zero-shot learning method that:\n\n- Uses only the pre-trained language model with frozen parameters (no fine-tuning).\n- Automatically constructs verbalizers by leveraging the PLM\u2019s own initial word embeddings.\n- Does not require any labeled data, additional raw corpus, or human effort to design verbalizers.\n- Generalizes easily to new categories as long as the category names are semantically meaningful.\n\n**Key components of NPPrompt:**\n\n1. **k-Nearest-Neighbor Verbalizer Construction:**\n\n   - For each class label (e.g., \"SPORTS\"), search the entire PLM vocabulary for the top-k words closest to the label name in the embedding space using cosine similarity.\n   - These nearest neighbors form the verbalizer\u2019s label words for that class (e.g., \"basketball\", \"NBA\" for \"SPORTS\").\n   - This step exploits the semantic knowledge embedded in the PLM\u2019s token embeddings.\n\n2. **Nonparametric Aggregation of Prompted Predictions:**\n\n   - Given an input text, construct a prompt with a [MASK] token (e.g., \"A [MASK] news: The Warriors won the NBA championship 2022\").\n   - Use the PLM to predict logits for all vocabulary tokens at the [MASK] position.\n   - Aggregate the logits corresponding to the label words found in step 1 for each class, weighted by their similarity to the class label.\n   - The class with the highest aggregated score is selected as the prediction.\n\n3. **Handling Complex Labels:**\n\n   - For labels without clear semantic meaning or requiring multiple keywords (e.g., \"NATURAL PLACE\"), select the keyword with the maximum score among the label\u2019s keywords to represent the class.\n\nNPPrompt thus reformulates zero-shot classification as a masked token prediction problem aligned with the PLM\u2019s pre-training objective.\n\n---\n\n### Results\n\n- **Datasets:** Evaluated on diverse NLP tasks including text classification (IMDB, Amazon, AG News, DBPedia), natural language inference, paraphrase detection, and linguistic acceptability (GLUE benchmark).\n\n- **Baselines:** Compared against semantic retrieval, NSP-BERT, manual verbalizers, LOTClass (self-training with unlabeled data), GPT-3 with descriptions, KPT (knowledgeable prompt tuning with external knowledge bases), Null Prompt, and Multi-Null Prompt.\n\n- **Performance Highlights:**\n\n  - NPPrompt outperforms previous fully zero-shot methods by large margins:\n    - Absolute accuracy gains of 12.8% on text classification datasets.\n    - Absolute gains of 18.9% on the GLUE benchmark.\n  - Achieves over 85% accuracy on AG News and DBPedia, and over 90% on IMDB and Amazon.\n  - Slightly worse than KPT, which requires external knowledge and unlabeled data.\n  - Outperforms manual verbalizers, indicating more comprehensive and unbiased label word selection.\n  - Surpasses GPT-3 by about 4% in average accuracy despite GPT-3\u2019s much larger size (175B vs. 355M parameters).\n  - Robust across different neighborhood sizes (k) for label word selection.\n  - RoBERTa-large yields the best results among tested PLMs (BERT-base, BERT-large, RoBERTa-base).\n  - Cosine similarity is the most effective metric for nearest neighbor search in embedding space.\n\n- **Additional Findings:**\n\n  - Summing logits for label words performs better than summing probabilities at smaller k values.\n  - NPPrompt can handle dynamic and open classification scenarios where classes can be added or removed easily.\n  - The method generalizes beyond text classification to other NLU tasks in GLUE.\n\n---\n\n### Claimed Contributions\n\n1. **Novel Fully Zero-Shot Learning Method:**  \n   Development of NPPrompt, a non-parametric prompting approach that leverages PLM embeddings to automatically construct verbalizers without any labeled or unlabeled data or manual design.\n\n2. **Comprehensive Evaluation:**  \n   Extensive experiments on diverse NLP tasks (text classification, entailment, retrieval, paraphrasing) demonstrating significant improvements over existing zero-shot and few-shot methods.\n\n3. **Strong Empirical Performance:**  \n   NPPrompt achieves large absolute accuracy gains over prior zero-shot methods and performs competitively with methods requiring additional data or human effort.\n\n4. **Generalizability and Practicality:**  \n   The approach is easily extendable to new categories and tasks, making it suitable for real-world applications where labeled data is unavailable and categories evolve dynamically.\n\n5. **Insight into Verbalizer Construction:**  \n   Demonstrates that using PLM\u2019s initial embeddings to find semantically related label words is effective and unbiased compared to manual verbalizers.\n\n---\n\n**In summary,** this paper introduces NPPrompt, a simple yet powerful method for fully zero-shot language understanding that requires only a pre-trained language model and category names. It eliminates the need for labeled data, unlabeled corpora, or manual prompt engineering, achieving state-of-the-art zero-shot performance across multiple NLP tasks."
+    },
+    {
+      "role": "Critic",
+      "content": "1. **Novelty \u2013 Missing Comparison to Recent Prompting Methods Using Embedding-Based Verbalizers:**  \n   While the paper claims novelty in automatically constructing verbalizers from PLM embeddings, it does not compare against or discuss recent works that also leverage embedding similarity for verbalizer construction or label word expansion (e.g., methods that use label name expansion via lexical resources or embedding neighbors). This omission weakens the novelty claim since the idea of using embedding similarity for verbalizer construction is not entirely new.\n\n2. **Methodology \u2013 Lack of Ablation on the Choice of k in k-Nearest-Neighbor Verbalizer Construction:**  \n   Although the paper mentions robustness across different neighborhood sizes (k), it does not provide a detailed ablation study showing how varying k affects performance across different datasets and tasks. This is important because the choice of k directly impacts the verbalizer quality and model predictions.\n\n3. **Methodology \u2013 No Analysis of the Impact of Label Name Quality or Ambiguity:**  \n   The method relies heavily on the semantic meaningfulness of category names to find nearest neighbors. However, the paper does not analyze or discuss how ambiguous, polysemous, or poorly chosen label names affect verbalizer construction and downstream performance. This is a critical assumption that should be empirically validated.\n\n4. **Methodology \u2013 Unclear How Multi-Word or Complex Labels Are Handled Beyond Maximum Keyword Score:**  \n   The paper briefly mentions handling complex labels by selecting the keyword with the maximum score but does not provide detailed methodology or experiments on multi-word labels or hierarchical categories. This leaves unclear how well the method generalizes to such cases.\n\n5. **Evaluation \u2013 Baselines Not Fully Matched in Model Size or Training Data:**  \n   The paper compares NPPrompt (based on RoBERTa-large, 355M parameters) to GPT-3 (175B parameters) and other methods but does not clarify whether baseline models were fine-tuned or zero-shot, nor if they used comparable data or prompt engineering effort. This makes some comparisons potentially unfair or not apples-to-apples.\n\n6. **Evaluation \u2013 Lack of Statistical Significance Testing for Reported Gains:**  \n   The paper reports large absolute accuracy gains (e.g., 12.8% on text classification, 18.9% on GLUE) but does not provide confidence intervals or statistical significance tests. Without this, it is difficult to assess the robustness of the improvements.\n\n7. **Evaluation \u2013 Limited Metrics Focused Solely on Accuracy:**  \n   The evaluation primarily reports accuracy, which may not fully capture model performance, especially on imbalanced datasets or tasks with nuanced outputs. Metrics like F1, precision, recall, or calibration measures would provide a more comprehensive assessment.\n\n8. **Evaluation \u2013 No Analysis of Error Types or Qualitative Examples:**  \n   The paper lacks qualitative analysis or error breakdowns to understand where NPPrompt succeeds or fails compared to baselines. Such analysis would provide insights into the method\u2019s strengths and weaknesses.\n\n9. **Reproducibility \u2013 Missing Details on Prompt Templates and Mask Placement:**  \n   The paper mentions using prompts with a [MASK] token but does not provide exact prompt templates or how they were constructed for each task. Since prompt design can significantly affect performance, this omission hinders reproducibility.\n\n10. **Reproducibility \u2013 No Code or Hyperparameter Settings Provided:**  \n    There is no mention of releasing code or detailed hyperparameters such as the exact k values used, similarity thresholds, or aggregation weights. This lack of detail makes it difficult for others to replicate the results.\n\n11. **Clarity \u2013 Insufficient Explanation of Nonparametric Aggregation Weights:**  \n    The paper states that logits are aggregated weighted by similarity to the class label but does not clearly explain how these weights are computed or normalized. This ambiguity reduces clarity on a core component of the method.\n\n12. **Limitations \u2013 Does Not Address Potential Vocabulary Coverage Issues:**  \n    Since verbalizers are constructed from the PLM vocabulary, rare or domain-specific classes may not have meaningful nearest neighbors in the vocabulary. The paper does not discuss this limitation or potential remedies.\n\n13. **Limitations \u2013 No Discussion on Computational Efficiency or Scalability:**  \n    Searching the entire vocabulary for nearest neighbors and aggregating logits over multiple label words could be computationally expensive, especially for large vocabularies and many classes. The paper does not address runtime or scalability concerns.\n\n14. **Generalisability \u2013 Limited Evaluation Beyond English and Standard Benchmarks:**  \n    All experiments are conducted on English datasets and standard benchmarks. The paper does not evaluate or discuss applicability to other languages, low-resource settings, or domain-specific tasks, limiting claims of generalizability.\n\n15. **Generalisability \u2013 No Experiments on Truly Open-Set or Dynamic Class Scenarios:**  \n    Although the paper claims NPPrompt can handle dynamic and open classification scenarios, no experiments explicitly test adding or removing classes at inference time or handling unseen classes. Empirical validation of this claim is missing."
+    },
+    {
+      "role": "Summariser",
+      "content": "{\n  \"summary\": \"This paper proposes NPPrompt, a fully zero-shot learning method that automatically constructs verbalizers from pre-trained language model embeddings without requiring labeled or unlabeled data or manual prompt design. By leveraging k-nearest-neighbor search in embedding space and nonparametric aggregation of logits, NPPrompt achieves strong zero-shot performance across diverse NLP tasks, outperforming prior zero-shot methods and competing with approaches that use additional data or human effort.\",\n  \"strengths\": [\n    {\n      \"point\": \"Novel fully zero-shot method requiring no labeled or unlabeled data\",\n      \"evidence\": \"NPPrompt constructs verbalizers automatically from PLM embeddings without any human-designed prompts or additional data.\"\n    },\n    {\n      \"point\": \"Strong empirical performance across multiple NLP tasks\",\n      \"evidence\": \"NPPrompt achieves large absolute accuracy gains (e.g., 12.8% on text classification, 18.9% on GLUE) over prior zero-shot methods and outperforms GPT-3 despite much smaller model size.\"\n    },\n    {\n      \"point\": \"Generalizability and practicality for dynamic and open classification\",\n      \"evidence\": \"The method can easily add or remove classes at inference time and generalizes beyond text classification to other NLU tasks.\"\n    },\n    {\n      \"point\": \"Insightful use of PLM embeddings for unbiased verbalizer construction\",\n      \"evidence\": \"Using k-nearest neighbors in embedding space yields more comprehensive and unbiased label words compared to manual verbalizers.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Lack of comparison to recent embedding-based verbalizer construction methods\",\n      \"evidence\": \"The paper does not discuss or compare against recent works using embedding similarity or lexical resources for verbalizer construction, weakening novelty claims.\"\n    },\n    {\n      \"point\": \"Insufficient ablation on the choice of k in k-nearest-neighbor verbalizer construction\",\n      \"evidence\": \"No detailed study is provided on how varying k affects performance across datasets and tasks.\"\n    },\n    {\n      \"point\": \"No analysis of impact of label name quality or ambiguity\",\n      \"evidence\": \"The method assumes semantically meaningful category names but does not empirically validate effects of ambiguous or polysemous labels.\"\n    },\n    {\n      \"point\": \"Unclear handling of multi-word or complex labels\",\n      \"evidence\": \"The approach to multi-word labels is briefly mentioned but lacks detailed methodology or experiments.\"\n    },\n    {\n      \"point\": \"Evaluation baselines not fully matched in model size or training data\",\n      \"evidence\": \"Comparisons to GPT-3 and other baselines lack clarity on fine-tuning, data usage, and prompt engineering, making some comparisons potentially unfair.\"\n    },\n    {\n      \"point\": \"No statistical significance testing for reported gains\",\n      \"evidence\": \"Large accuracy improvements are reported without confidence intervals or significance tests.\"\n    },\n    {\n      \"point\": \"Limited evaluation metrics focused solely on accuracy\",\n      \"evidence\": \"Metrics like F1, precision, recall, or calibration are not reported, which could better capture performance nuances.\"\n    },\n    {\n      \"point\": \"Lack of qualitative error analysis\",\n      \"evidence\": \"No error breakdowns or qualitative examples are provided to understand strengths and failure modes.\"\n    },\n    {\n      \"point\": \"Reproducibility hindered by missing prompt templates and hyperparameter details\",\n      \"evidence\": \"Exact prompt templates, mask placements, code, and hyperparameters such as k values and similarity thresholds are not provided.\"\n    },\n    {\n      \"point\": \"Insufficient explanation of nonparametric aggregation weights\",\n      \"evidence\": \"The computation and normalization of similarity-based aggregation weights are unclear.\"\n    },\n    {\n      \"point\": \"No discussion of vocabulary coverage limitations\",\n      \"evidence\": \"Potential issues with rare or domain-specific classes lacking meaningful neighbors are not addressed.\"\n    },\n    {\n      \"point\": \"No analysis of computational efficiency or scalability\",\n      \"evidence\": \"The cost of searching large vocabularies and aggregating logits is not discussed.\"\n    },\n    {\n      \"point\": \"Limited generalizability evaluation beyond English and standard benchmarks\",\n      \"evidence\": \"No experiments on other languages, low-resource, or domain-specific tasks.\"\n    },\n    {\n      \"point\": \"No empirical validation of open-set or dynamic class claims\",\n      \"evidence\": \"Although claimed, no experiments explicitly test adding/removing classes or unseen class handling.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does the choice of k in k-nearest-neighbor verbalizer construction affect performance across different tasks and datasets?\",\n      \"motivation\": \"Understanding sensitivity to k is crucial for applying the method robustly and optimizing verbalizer quality.\"\n    },\n    {\n      \"question\": \"How robust is NPPrompt to ambiguous, polysemous, or poorly chosen label names?\",\n      \"motivation\": \"Since the method relies on semantic meaningfulness of category names, assessing this impact is important for practical deployment.\"\n    },\n    {\n      \"question\": \"Can the method be extended or adapted to handle multi-word or hierarchical labels more effectively?\",\n      \"motivation\": \"Many real-world classification tasks involve complex labels, so clarifying this would improve applicability.\"\n    },\n    {\n      \"question\": \"What are the computational costs and scalability considerations for large vocabularies and many classes?\",\n      \"motivation\": \"Efficiency is critical for real-world use, especially in dynamic or large-scale settings.\"\n    },\n    {\n      \"question\": \"How does NPPrompt perform on non-English languages, low-resource domains, or truly open-set classification scenarios?\",\n      \"motivation\": \"Evaluating generalizability beyond standard English benchmarks is necessary to validate broader claims.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"borderline\",\n    \"confidence\": 3\n  }\n}"
+    }
+  ],
+  "structured": {
+    "summary": "This paper proposes NPPrompt, a fully zero-shot learning method that automatically constructs verbalizers from pre-trained language model embeddings without requiring labeled or unlabeled data or manual prompt design. By leveraging k-nearest-neighbor search in embedding space and nonparametric aggregation of logits, NPPrompt achieves strong zero-shot performance across diverse NLP tasks, outperforming prior zero-shot methods and competing with approaches that use additional data or human effort.",
+    "strengths": [
+      {
+        "point": "Novel fully zero-shot method requiring no labeled or unlabeled data",
+        "evidence": "NPPrompt constructs verbalizers automatically from PLM embeddings without any human-designed prompts or additional data."
+      },
+      {
+        "point": "Strong empirical performance across multiple NLP tasks",
+        "evidence": "NPPrompt achieves large absolute accuracy gains (e.g., 12.8% on text classification, 18.9% on GLUE) over prior zero-shot methods and outperforms GPT-3 despite much smaller model size."
+      },
+      {
+        "point": "Generalizability and practicality for dynamic and open classification",
+        "evidence": "The method can easily add or remove classes at inference time and generalizes beyond text classification to other NLU tasks."
+      },
+      {
+        "point": "Insightful use of PLM embeddings for unbiased verbalizer construction",
+        "evidence": "Using k-nearest neighbors in embedding space yields more comprehensive and unbiased label words compared to manual verbalizers."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Lack of comparison to recent embedding-based verbalizer construction methods",
+        "evidence": "The paper does not discuss or compare against recent works using embedding similarity or lexical resources for verbalizer construction, weakening novelty claims."
+      },
+      {
+        "point": "Insufficient ablation on the choice of k in k-nearest-neighbor verbalizer construction",
+        "evidence": "No detailed study is provided on how varying k affects performance across datasets and tasks."
+      },
+      {
+        "point": "No analysis of impact of label name quality or ambiguity",
+        "evidence": "The method assumes semantically meaningful category names but does not empirically validate effects of ambiguous or polysemous labels."
+      },
+      {
+        "point": "Unclear handling of multi-word or complex labels",
+        "evidence": "The approach to multi-word labels is briefly mentioned but lacks detailed methodology or experiments."
+      },
+      {
+        "point": "Evaluation baselines not fully matched in model size or training data",
+        "evidence": "Comparisons to GPT-3 and other baselines lack clarity on fine-tuning, data usage, and prompt engineering, making some comparisons potentially unfair."
+      },
+      {
+        "point": "No statistical significance testing for reported gains",
+        "evidence": "Large accuracy improvements are reported without confidence intervals or significance tests."
+      },
+      {
+        "point": "Limited evaluation metrics focused solely on accuracy",
+        "evidence": "Metrics like F1, precision, recall, or calibration are not reported, which could better capture performance nuances."
+      },
+      {
+        "point": "Lack of qualitative error analysis",
+        "evidence": "No error breakdowns or qualitative examples are provided to understand strengths and failure modes."
+      },
+      {
+        "point": "Reproducibility hindered by missing prompt templates and hyperparameter details",
+        "evidence": "Exact prompt templates, mask placements, code, and hyperparameters such as k values and similarity thresholds are not provided."
+      },
+      {
+        "point": "Insufficient explanation of nonparametric aggregation weights",
+        "evidence": "The computation and normalization of similarity-based aggregation weights are unclear."
+      },
+      {
+        "point": "No discussion of vocabulary coverage limitations",
+        "evidence": "Potential issues with rare or domain-specific classes lacking meaningful neighbors are not addressed."
+      },
+      {
+        "point": "No analysis of computational efficiency or scalability",
+        "evidence": "The cost of searching large vocabularies and aggregating logits is not discussed."
+      },
+      {
+        "point": "Limited generalizability evaluation beyond English and standard benchmarks",
+        "evidence": "No experiments on other languages, low-resource, or domain-specific tasks."
+      },
+      {
+        "point": "No empirical validation of open-set or dynamic class claims",
+        "evidence": "Although claimed, no experiments explicitly test adding/removing classes or unseen class handling."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does the choice of k in k-nearest-neighbor verbalizer construction affect performance across different tasks and datasets?",
+        "motivation": "Understanding sensitivity to k is crucial for applying the method robustly and optimizing verbalizer quality."
+      },
+      {
+        "question": "How robust is NPPrompt to ambiguous, polysemous, or poorly chosen label names?",
+        "motivation": "Since the method relies on semantic meaningfulness of category names, assessing this impact is important for practical deployment."
+      },
+      {
+        "question": "Can the method be extended or adapted to handle multi-word or hierarchical labels more effectively?",
+        "motivation": "Many real-world classification tasks involve complex labels, so clarifying this would improve applicability."
+      },
+      {
+        "question": "What are the computational costs and scalability considerations for large vocabularies and many classes?",
+        "motivation": "Efficiency is critical for real-world use, especially in dynamic or large-scale settings."
+      },
+      {
+        "question": "How does NPPrompt perform on non-English languages, low-resource domains, or truly open-set classification scenarios?",
+        "motivation": "Evaluating generalizability beyond standard English benchmarks is necessary to validate broader claims."
+      }
+    ]
+  },
+  "critique_points": {
+    "point_001": "Lack of comparison to recent embedding-based verbalizer construction methods. The paper does not discuss or compare against recent works using embedding similarity or lexical resources for verbalizer construction, weakening novelty claims",
+    "point_002": "Insufficient ablation on the choice of k in k-nearest-neighbor verbalizer construction. No detailed study is provided on how varying k affects performance across datasets and tasks",
+    "point_003": "No analysis of impact of label name quality or ambiguity. The method assumes semantically meaningful category names but does not empirically validate effects of ambiguous or polysemous labels",
+    "point_004": "Unclear handling of multi-word or complex labels. The approach to multi-word labels is briefly mentioned but lacks detailed methodology or experiments",
+    "point_005": "Evaluation baselines not fully matched in model size or training data. Comparisons to GPT-3 and other baselines lack clarity on fine-tuning, data usage, and prompt engineering, making some comparisons potentially unfair",
+    "point_006": "No statistical significance testing for reported gains. Large accuracy improvements are reported without confidence intervals or significance tests",
+    "point_007": "Limited evaluation metrics focused solely on accuracy. Metrics like F1, precision, recall, or calibration are not reported, which could better capture performance nuances",
+    "point_008": "Lack of qualitative error analysis. No error breakdowns or qualitative examples are provided to understand strengths and failure modes",
+    "point_009": "Reproducibility hindered by missing prompt templates and hyperparameter details. Exact prompt templates, mask placements, code, and hyperparameters such as k values and similarity thresholds are not provided",
+    "point_010": "Insufficient explanation of nonparametric aggregation weights. The computation and normalization of similarity-based aggregation weights are unclear",
+    "point_011": "No discussion of vocabulary coverage limitations. Potential issues with rare or domain-specific classes lacking meaningful neighbors are not addressed",
+    "point_012": "No analysis of computational efficiency or scalability. The cost of searching large vocabularies and aggregating logits is not discussed",
+    "point_013": "Limited generalizability evaluation beyond English and standard benchmarks. No experiments on other languages, low-resource, or domain-specific tasks",
+    "point_014": "No empirical validation of open-set or dynamic class claims. Although claimed, no experiments explicitly test adding/removing classes or unseen class handling"
+  }
+}

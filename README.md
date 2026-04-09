@@ -27,6 +27,9 @@ are workflow structure, input format, and model (Vertex AI only).
 | LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | JSONL body_text |
 | LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
 | LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
+| CrewAI (none) | `src/platforms/crewai_critique.py` | None | GPT-4.1-mini | JSONL body_text |
+| CrewAI (fixed) | `src/platforms/crewai_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
+| CrewAI (dynamic) | `src/platforms/crewai_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
 
 *Vertex AI uses Gemini 2.5 Flash due to platform model lock-in.
 
@@ -364,6 +367,11 @@ python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor 
 
 # Run Dify workflows (requires DIFY_API_KEY in .env)
 python -m src.dify.run_dify                   # runs single_critic workflow by default
+
+# Run CrewAI workflows
+python -m src.platforms.crewai_critique none     # Reader → Critic → Summariser
+python -m src.platforms.crewai_critique fixed    # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+python -m src.platforms.crewai_critique dynamic  # Critic ↔ Auditor loop (conditional)
 
 # Score all systems
 python -m src.evaluation.scorer baseline
