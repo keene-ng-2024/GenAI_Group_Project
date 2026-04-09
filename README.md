@@ -208,15 +208,7 @@ Output in this exact JSON format:
   "questions": [
     {"question": "open question", "motivation": "why this matters"},
     {"question": "open question", "motivation": "why this matters"}
-<<<<<<< HEAD
   ],
-  "scores": {
-    "correctness": 3,
-    "novelty": 3,
-    "recommendation": "borderline",
-    "confidence": 3
-  }
->>>>>>> origin/main
 }
 ```
 
@@ -276,19 +268,18 @@ paper-critique-agent-study/
 │       ├── scorer.py               # compare output vs ground truth → scores
 │       └── metrics.py              # precision/recall, plots, summary tables
 │
-├── notebooks/
-│   ├── 01_data_exploration.ipynb
-│   ├── 02_build_critique_dicts.ipynb
-│   ├── 03_run_baseline.ipynb
-│   ├── 04_run_agents.ipynb
-│   └── 05_evaluation_results.ipynb
-│
 ├── results/
 │   ├── baseline/
-│   └── agents/
-│
-└── report/
-    └── final_report.pdf
+│   ├── agents/
+│   ├── n8n/
+│   ├── n8n_noloop/
+│   ├── dify/
+│   ├── langgraph_none/
+│   ├── langgraph_fixed/
+│   ├── langgraph_dynamic/
+│   ├── crewai_none/
+│   ├── crewai_fixed/
+│   └── crewai_dynamic/
 ```
 
 ---
@@ -379,12 +370,16 @@ python -m src.evaluation.scorer agents
 python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
 python -m src.evaluation.scorer dify
+python -m src.evaluation.scorer langgraph_none
+python -m src.evaluation.scorer langgraph_fixed
+python -m src.evaluation.scorer langgraph_dynamic
+python -m src.evaluation.scorer crewai_none
+python -m src.evaluation.scorer crewai_fixed
+python -m src.evaluation.scorer crewai_dynamic
 
 # Print comparison table + plots
 python -m src.evaluation.metrics
 ```
-
-Or run everything interactively via the notebooks in order (01 → 05).
 
 ---
 
