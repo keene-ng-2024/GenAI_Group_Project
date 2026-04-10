@@ -221,15 +221,8 @@ def _process_paper(paper_id: str, paper: dict, out_dir: Path, cfg: dict) -> None
 
 
 def run_baseline(reviews_path: str, output_dir: str, cfg: dict, workers: int = 5) -> None:
-    all_papers: dict = {}
     with open(reviews_path) as f:
-        for i, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line:
-                continue
-            row = json.loads(line)
-            paper_id = f"paper_{i:04d}"
-            all_papers[paper_id] = row
+        all_papers: dict = json.load(f)
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -250,7 +243,7 @@ if __name__ == "__main__":
     cfg = load_config()
     workers = int(sys.argv[1]) if len(sys.argv) > 1 else 5
     run_baseline(
-        reviews_path=cfg["data"]["jsonl_file"],
+        reviews_path=cfg["data"]["reviews_file"],
         output_dir=cfg["results"]["baseline_dir"],
         cfg=cfg,
         workers=workers,

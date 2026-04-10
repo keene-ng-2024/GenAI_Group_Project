@@ -192,13 +192,8 @@ def run_all_papers(mode: str, cfg: dict) -> None:
             "Set n8n.webhook_url (1round) or n8n.webhook_url_noloop (noloop)."
         )
 
-    full_path = cfg["data"].get("jsonl_file", "data/ReviewCritique.jsonl")
-    papers_to_run = {}
-    with open(full_path) as f:
-        for i, line in enumerate(f, start=1):
-            row = json.loads(line)
-            paper_id = f"paper_{i:04d}"
-            papers_to_run[paper_id] = row
+    with open(cfg["data"]["reviews_file"]) as f:
+        papers_to_run: dict = json.load(f)
     print(f"  [INFO] Running {len(papers_to_run)} papers (mode={mode})")
 
     out_dir = Path(output_dir)
