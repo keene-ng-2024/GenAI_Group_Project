@@ -413,6 +413,9 @@ python -m src.platforms.crewai_critique none     # Reader → Critic → Summari
 python -m src.platforms.crewai_critique fixed    # Reader → Critic 1 → Auditor → Critic 2 → Summariser
 python -m src.platforms.crewai_critique dynamic  # Critic ↔ Auditor loop (conditional)
 
+# Run Vertex AI workflow (requires GCP project + gcloud credentials — excluded from final evaluation)
+python -m src.vertex.vertex_orchestrator         # Critic ↔ Auditor loop (conditional, Gemini 2.5 Flash)
+
 # Score all systems
 python -m src.evaluation.scorer baseline
 python -m src.evaluation.scorer n8n
