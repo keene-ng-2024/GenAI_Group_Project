@@ -438,5 +438,5 @@ if __name__ == "__main__":
     run_all_papers(
         reviews_path=cfg["data"]["reviews_file"],
         output_dir=cfg["results"]["vertexai_dir"],
-        cfg=cfg,
+        config=cfg,
     )

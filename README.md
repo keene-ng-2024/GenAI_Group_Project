@@ -12,9 +12,11 @@ using semantic-similarity recall / precision.
 
 ## Platform Overview
 
-Six platforms implement the same 4-agent pipeline under controlled conditions.
+Five platforms implement the same 4-agent pipeline under controlled conditions.
 **Prompts are identical across all platforms.** The only dimensions that vary
-are workflow structure, input format, and model (Vertex AI only).
+are workflow structure and input format.
+
+> **Note:** Vertex AI was explored during development but is excluded from the final evaluation due to model lock-in (Gemini 2.5 Flash vs. GPT-4.1-mini on all other platforms), which confounds platform comparisons. The code is retained in `src/vertex/` for reference.
 
 | Platform | Workflow file(s) | Loop type | Model | Input |
 |----------|-----------------|-----------|-------|-------|
@@ -23,7 +25,7 @@ are workflow structure, input format, and model (Vertex AI only).
 | n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini | `reviews_parsed.json` full_text |
 | Dify (no loop) | Dify workflow (`single_critic`) | None | GPT-4.1-mini | Raw PDF |
 | Dify (1 round) | Dify workflow (`dual_critic`) | Fixed 1 round | GPT-4.1-mini | Raw PDF |
-| Vertex AI | `src/vertex/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | `reviews_parsed.json` full_text |
+| ~~Vertex AI~~ | `src/vertex/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | `reviews_parsed.json` full_text |
 | LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | `reviews_parsed.json` full_text |
 | LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | `reviews_parsed.json` full_text |
 | LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | `reviews_parsed.json` full_text |
