@@ -18,23 +18,23 @@ are workflow structure, input format, and model (Vertex AI only).
 
 | Platform | Workflow file(s) | Loop type | Model | Input |
 |----------|-----------------|-----------|-------|-------|
-| Baseline | `src/baseline/baseline_critique.py` | None (single call) | GPT-4.1-mini | JSONL body_text (raw) |
-| n8n (no loop) | `src/platforms/n8n_workflow_noloop.json` | None | GPT-4.1-mini | JSONL body_text |
-| n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
+| Baseline | `src/baseline/baseline_critique.py` | None (single call) | GPT-4.1-mini | `reviews_parsed.json` full_text |
+| n8n (no loop) | `src/platforms/n8n_workflow_noloop.json` | None | GPT-4.1-mini | `reviews_parsed.json` full_text |
+| n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini | `reviews_parsed.json` full_text |
 | Dify (no loop) | Dify workflow (`single_critic`) | None | GPT-4.1-mini | Raw PDF |
 | Dify (1 round) | Dify workflow (`dual_critic`) | Fixed 1 round | GPT-4.1-mini | Raw PDF |
-| Vertex AI | `src/vertex/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | JSONL body_text |
-| LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | JSONL body_text |
-| LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
-| LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
-| CrewAI (none) | `src/platforms/crewai_critique.py` | None | GPT-4.1-mini | JSONL body_text |
-| CrewAI (fixed) | `src/platforms/crewai_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
-| CrewAI (dynamic) | `src/platforms/crewai_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
+| Vertex AI | `src/vertex/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | `reviews_parsed.json` full_text |
+| LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | `reviews_parsed.json` full_text |
+| LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | `reviews_parsed.json` full_text |
+| LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | `reviews_parsed.json` full_text |
+| CrewAI (none) | `src/platforms/crewai_critique.py` | None | GPT-4.1-mini | `reviews_parsed.json` full_text |
+| CrewAI (fixed) | `src/platforms/crewai_critique.py` | Fixed 1 round | GPT-4.1-mini | `reviews_parsed.json` full_text |
+| CrewAI (dynamic) | `src/platforms/crewai_critique.py` | Dynamic conditional | GPT-4.1-mini | `reviews_parsed.json` full_text |
 
 *Vertex AI uses Gemini 2.5 Flash due to platform model lock-in.
 
 > **Input format note:** Dify ingests raw PDFs via its file upload API and handles parsing internally.
-> All other platforms receive `body_text` from the JSONL dataset via the Python adapters.
+> All other platforms load `full_text` from `data/processed/reviews_parsed.json` (pre-parsed from the raw JSONL by `parse_reviews.py`).
 > This difference is a platform constraint, not a controlled variable, and is noted as a limitation
 > when comparing Dify scores against other platforms.
 
@@ -417,6 +417,7 @@ python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
 python -m src.evaluation.scorer dify_single_critic
 python -m src.evaluation.scorer dify_dual_critic
+python -m src.evaluation.scorer vertexai
 python -m src.evaluation.scorer langgraph_none
 python -m src.evaluation.scorer langgraph_fixed
 python -m src.evaluation.scorer langgraph_dynamic
