@@ -453,7 +453,7 @@ Paper text
                                                     └─────────────┘
                                                             │
                                                             ▼
-                                                   JSON critique dict
+                                                   JSON critique points
 ```
 
 ---
