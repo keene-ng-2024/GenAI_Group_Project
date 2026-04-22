@@ -19,10 +19,11 @@ from typing import Any, Dict, List, Optional
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
 
-from agents.vertex_client import get_vertex_ai_client
-from agents.personas import AgentRole
-from agents.grounding_verifier import verify_all_grounding, should_stop_debate
+from vertex_client import get_vertex_ai_client
+from personas import AgentRole
+from grounding_verifier import verify_all_grounding, should_stop_debate
 
 
 # ── Config ─────────────────────────────────────────────────────────────────────
@@ -206,14 +207,19 @@ def run_pipeline(
     paper_id: str,
     paper_text: str,
     config: Optional[dict] = None,
+    mode: str = "dynamic",
 ) -> dict:
     """
-    Run the full Vertex AI multi-agent critique pipeline for one paper.
+    Run the Vertex AI multi-agent critique pipeline for one paper.
 
     Args:
         paper_id: Unique identifier for the paper
         paper_text: Full paper text (may be truncated)
         config: Config dict loaded from config.yaml
+        mode: Loop type — "noloop" | "fixed" | "dynamic"
+            noloop  — Reader → Critic → Summariser (no Auditor)
+            fixed   — Reader → Critic 1 → Auditor → Critic 2 → Summariser (exactly 1 round)
+            dynamic — Critic ↔ Auditor loop until satisfied or max_rounds (default)
 
     Returns:
         Critique result dict with structured output and metadata
@@ -299,56 +305,86 @@ def run_pipeline(
     critique = agents["critic"].chat(critic_round1_user)
     log("Critic (initial)", critique)
 
-    # ── Steps 3–4: Auditor ↔ Critic debate ────────────────────────────────────
+    # ── Steps 3–4: Auditor ↔ Critic debate (mode-controlled) ─────────────────
     rounds_done = 0
-    for round_num in range(1, max_rounds + 1):
-        print(f"\n  [ROUND {round_num}] Auditor auditing …")
-        auditor_user = (
-            f"Paper summary:\n{summary}\n\n"
-            f"Critic response:\n{critique}\n\n"
-            "For each critique point:\n"
-            "1. Is it specific enough or too generic? Push for concrete details.\n"
-            "2. Is it supported by evidence from the paper?\n"
-            "3. What important issues did the Critic completely miss?\n\n"
-            "Be aggressive — a weak vague point is worse than no point.\n"
-            "Explicitly list 3-5 issues the Critic missed.\n\n"
-            "Do NOT suggest ethical implications or bias points unless\n"
-            "the paper explicitly makes claims in these areas."
-        )
-        audit_feedback = agents["auditor"].chat(auditor_user)
-        log(f"Auditor (round {round_num})", audit_feedback)
-        rounds_done = round_num
 
-        # Use negation-aware early stopping from grounding_verifier
-        if should_stop_debate(audit_feedback, early_stop_phrases):
-            print(f"  [STOP] Auditor satisfied after round {round_num}.")
-            break
+    auditor_user_template = (
+        f"Paper summary:\n{summary}\n\n"
+        "Critic response:\n{critique}\n\n"
+        "For each critique point:\n"
+        "1. Is it specific enough or too generic? Push for concrete details.\n"
+        "2. Is it supported by evidence from the paper?\n"
+        "3. What important issues did the Critic completely miss?\n\n"
+        "Be aggressive — a weak vague point is worse than no point.\n"
+        "Explicitly list 3-5 issues the Critic missed.\n\n"
+        "Do NOT suggest ethical implications or bias points unless\n"
+        "the paper explicitly makes claims in these areas."
+    )
+
+    critic_revise_template = (
+        f"Original paper summary:\n{summary}\n\n"
+        "Your original critique:\n{critique}\n\n"
+        "Auditor feedback:\n{audit_feedback}\n\n"
+        "Now produce an improved critique that:\n"
+        "- Fixes all weak or vague points the Auditor flagged\n"
+        "- Adds the missing issues the Auditor identified\n"
+        "- Keeps all strong original points\n"
+        "- Generates 12-15 total points\n\n"
+        "For each point you MUST:\n"
+        "- Be concrete and specific, not generic\n"
+        "- Reference specific sections, tables, or claims from the paper\n"
+        "- Focus on ONE issue per point\n\n"
+        "Cover ALL of these dimensions:\n"
+        "- Novelty: what prior work is missing or inadequately compared?\n"
+        "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
+        "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
+        "- Reproducibility: what implementation details are missing?\n"
+        "- Clarity: what is confusing or poorly explained in the paper?\n"
+        "- Limitations: what does the method fail to address or acknowledge?\n"
+        "- Generalisability: does it work beyond the tested settings?"
+    )
+
+    if mode == "noloop":
+        # No Auditor — go straight to Summariser with initial critique
+        print(f"  [MODE] noloop — skipping Auditor/Critic debate")
+
+    elif mode == "fixed":
+        # Exactly 1 round, no early-stop check
+        print(f"  [MODE] fixed — running exactly 1 Auditor + Critic revision")
+        round_num = 1
+        print(f"\n  [ROUND {round_num}] Auditor auditing …")
+        audit_feedback = agents["auditor"].chat(
+            auditor_user_template.format(critique=critique)
+        )
+        log(f"Auditor (round {round_num})", audit_feedback)
+        rounds_done = 1
 
         print(f"  [ROUND {round_num}] Critic revising …")
-        critic_round2_user = (
-            f"Original paper summary:\n{summary}\n\n"
-            f"Your original critique:\n{critique}\n\n"
-            f"Auditor feedback:\n{audit_feedback}\n\n"
-            "Now produce an improved critique that:\n"
-            "- Fixes all weak or vague points the Auditor flagged\n"
-            "- Adds the missing issues the Auditor identified\n"
-            "- Keeps all strong original points\n"
-            "- Generates 12-15 total points\n\n"
-            "For each point you MUST:\n"
-            "- Be concrete and specific, not generic\n"
-            "- Reference specific sections, tables, or claims from the paper\n"
-            "- Focus on ONE issue per point\n\n"
-            "Cover ALL of these dimensions:\n"
-            "- Novelty: what prior work is missing or inadequately compared?\n"
-            "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
-            "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
-            "- Reproducibility: what implementation details are missing?\n"
-            "- Clarity: what is confusing or poorly explained in the paper?\n"
-            "- Limitations: what does the method fail to address or acknowledge?\n"
-            "- Generalisability: does it work beyond the tested settings?"
+        critique = agents["critic"].chat(
+            critic_revise_template.format(critique=critique, audit_feedback=audit_feedback)
         )
-        critique = agents["critic"].chat(critic_round2_user)
         log(f"Critic (round {round_num})", critique)
+
+    else:
+        # dynamic — Critic ↔ Auditor loop until satisfied or max_rounds
+        print(f"  [MODE] dynamic — up to {max_rounds} rounds with early stopping")
+        for round_num in range(1, max_rounds + 1):
+            print(f"\n  [ROUND {round_num}] Auditor auditing …")
+            audit_feedback = agents["auditor"].chat(
+                auditor_user_template.format(critique=critique)
+            )
+            log(f"Auditor (round {round_num})", audit_feedback)
+            rounds_done = round_num
+
+            if should_stop_debate(audit_feedback, early_stop_phrases):
+                print(f"  [STOP] Auditor satisfied after round {round_num}.")
+                break
+
+            print(f"  [ROUND {round_num}] Critic revising …")
+            critique = agents["critic"].chat(
+                critic_revise_template.format(critique=critique, audit_feedback=audit_feedback)
+            )
+            log(f"Critic (round {round_num})", critique)
 
     # ── Step 5: Summarizer consolidates ────────────────────────────────────────
     print(f"\n  [SUMMARISE] Consolidating debate …")
@@ -396,13 +432,23 @@ def run_pipeline(
     total_output = sum(a.total_output_tokens for a in agents.values())
 
     # Pass structured weaknesses directly to grounding verifier (not raw JSON text)
-    grounding_scores = verify_all_grounding(
-        structured.get("weaknesses", []), {"full_text": paper_text}, config
-    )
+    # Skip grounding for noloop/fixed to conserve quota — it's supplementary metadata
+    if mode == "dynamic":
+        grounding_scores = verify_all_grounding(
+            structured.get("weaknesses", []), {"full_text": paper_text}, config
+        )
+    else:
+        grounding_scores = {
+            "avg_confidence": None,
+            "grounding_rate": None,
+            "points_verified": 0,
+            "points_unsupported": 0,
+            "skipped": True,
+        }
 
     return {
         "paper_id": paper_id,
-        "platform": "vertexai",
+        "platform": f"vertexai_{mode}" if mode != "dynamic" else "vertexai",
         "model": vertex_config.get("critic_model", "gemini-2.5-flash"),
         "rounds": rounds_done,
         "latency_seconds": latency_seconds,
@@ -424,6 +470,7 @@ def run_all_papers(
     reviews_path: str,
     output_dir: str,
     config: Optional[dict] = None,
+    mode: str = "dynamic",
 ) -> None:
     """Run the Vertex AI critique pipeline for all papers."""
     if config is None:
@@ -448,6 +495,7 @@ def run_all_papers(
                 paper_id=paper_id,
                 paper_text=paper.get("full_text", ""),
                 config=config,
+                mode=mode,
             )
         except Exception as exc:
             print(f"\n  [ERROR] {paper_id} failed: {exc}")
@@ -461,6 +509,8 @@ def run_all_papers(
         print(f"  [COST]  {result['token_usage']['input']:,} in / "
               f"{result['token_usage']['output']:,} out tokens  "
               f"({result['latency_seconds']}s)")
+        # Pause between papers to let quota recover
+        time.sleep(15)
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────

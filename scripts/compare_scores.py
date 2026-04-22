@@ -2,18 +2,20 @@ import json, glob, os
 
 # Explicit mapping of display name -> scores.json path
 PLATFORMS = {
-    "baseline":          "results/baseline/scores.json",
-    "n8n (no loop)":     "results/n8n_noloop/scores.json",
-    "n8n (1 round)":     "results/n8n/scores.json",
-    "dify (no loop)":    "results/dify/single_critic/scores.json",
-    "dify (1 round)":    "results/dify/dual_critic/scores.json",
-    "langgraph_none":    "results/langgraph_none/scores.json",
-    "langgraph_fixed":   "results/langgraph_fixed/scores.json",
-    "langgraph_dynamic": "results/langgraph_dynamic/scores.json",
-    "crewai_none":       "results/crewai_none/scores.json",
-    "crewai_fixed":      "results/crewai_fixed/scores.json",
-    "crewai_dynamic":    "results/crewai_dynamic/scores.json",
-    "vertexai":          "results/vertexai/scores.json",
+    "baseline":             "results/baseline/scores.json",
+    "n8n (no loop)":        "results/n8n_noloop/scores.json",
+    "n8n (1 round)":        "results/n8n/scores.json",
+    "dify (no loop)":       "results/dify/single_critic/scores.json",
+    "dify (1 round)":       "results/dify/dual_critic/scores.json",
+    "langgraph_none":       "results/langgraph_none/scores.json",
+    "langgraph_fixed":      "results/langgraph_fixed/scores.json",
+    "langgraph_dynamic":    "results/langgraph_dynamic/scores.json",
+    "crewai_none":          "results/crewai_none/scores.json",
+    "crewai_fixed":         "results/crewai_fixed/scores.json",
+    "crewai_dynamic":       "results/crewai_dynamic/scores.json",
+    "vertexai (no loop)":   "results/vertexai_noloop/scores.json",
+    "vertexai (fixed)":     "results/vertexai_fixed/scores.json",
+    "vertexai (dynamic)":   "results/vertexai/scores.json",
 }
 
 rows = []

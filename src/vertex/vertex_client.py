@@ -140,8 +140,8 @@ class VertexAIClient:
         full_prompt = f"{system_instruction}\n\n{prompt}" if system_instruction else prompt
 
         # Retry with exponential backoff on 429 rate-limit errors
-        max_retries = 6
-        backoff = 30.0
+        max_retries = 5
+        backoff = 60.0  # start at 60s — Vertex quota windows are 60s
         for attempt in range(max_retries):
             try:
                 response = client.models.generate_content(
@@ -160,7 +160,7 @@ class VertexAIClient:
                 err_str = str(e)
                 if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
                     if attempt < max_retries - 1:
-                        wait = backoff * (2 ** attempt)
+                        wait = min(backoff * (2 ** attempt), 300.0)  # cap at 5 min
                         print(f"  [429] Rate limited. Waiting {wait:.0f}s before retry {attempt + 1}/{max_retries - 1}…")
                         time.sleep(wait)
                         continue

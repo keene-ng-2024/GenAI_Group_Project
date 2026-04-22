@@ -16,8 +16,7 @@ import yaml
 from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass
 
-from agents.vertex_client import get_vertex_ai_client
-from agents.tools import call_tool
+from vertex_client import get_vertex_ai_client
 
 
 def load_config(config_path: str = "config.yaml") -> dict:

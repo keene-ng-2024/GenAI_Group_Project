@@ -1,0 +1,150 @@
+{
+  "paper_id": "paper_0005",
+  "platform": "vertexai_noloop",
+  "model": "gemini-2.5-flash",
+  "rounds": 0,
+  "latency_seconds": 87.99,
+  "token_usage": {
+    "input": 22204,
+    "output": 3893
+  },
+  "transcript": [
+    {
+      "role": "Reader",
+      "content": "Here's a structured summary of the paper \"MVP: Multi-Task Supervised Pre-training for Natural Language Generation\":\n\n## Structured Summary of MVP: Multi-Task Supervised Pre-training for Natural Language Generation\n\n### Problem & Motivation\n\n*   **Problem:** While unsupervised pre-trained language models (PLMs) have been successful in Natural Language Generation (NLG), they can incorporate noise and learn knowledge slower. Supervised pre-training has shown superior performance in other domains (like computer vision) and some NLP tasks, but its application to NLG is less explored. Existing NLG systems inherently require supervision for input-output transformations.\n*   **Motivation:** To leverage the benefits of supervised pre-training for NLG, aiming to create more effective and generalizable models. The authors hypothesize that supervised pre-training is more aligned with the nature of NLG tasks, which require explicit learning of input-to-output mappings. They also aim to address the potential \"neutralization\" of task-specific abilities in multi-task learning.\n\n### Proposed Method\n\nThe proposed method, **MVP (Multi-task super V ised P re-training)**, involves a two-stage pre-training process for NLG models:\n\n1.  **Data Collection and Unification:**\n    *   A large-scale corpus, **MVPCorpus**, was collected from 77 datasets across 11 diverse NLG tasks (e.g., summarization, dialogue, data-to-text, question generation).\n    *   All tasks were unified into a general **text-to-text format** to enable multi-task pre-training.\n    *   The corpus was divided into pre-training (50 datasets, 7 tasks) and evaluation sets (27 datasets). Some tasks were reversed (e.g., QG/QA) to enrich the pre-training data.\n    *   A 25 GB supervised pre-training corpus with 32 million examples was created.\n\n2.  **Two-Stage Pre-training:**\n    *   **Stage 1: MVP Backbone Pre-training:**\n        *   A Transformer encoder-decoder model (similar to BART LARGE) is pre-trained using a mixture of labeled data from the collected MVPCorpus.\n        *   Human-written prompts (e.g., \"Summarize:\") are used to indicate each task during this stage.\n        *   The goal is to learn general text-to-text relationships and transferable semantic information.\n    *   **Stage 2: Task-Specific Soft Prompt Pre-training:**\n        *   The MVP backbone is frozen.\n        *   A set of **task-specific soft prompts** (continuous vectors) are pre-trained for each task. These prompts are inserted at each Transformer layer, following the prefix-tuning approach.\n        *   These prompts are trained using intra-task datasets and are not shared across tasks.\n        *   The purpose is to \"store\" specialized knowledge for each task, mitigating the \"blurring-out\" issue of multi-task learning.\n\n### Results\n\n*   **Effectiveness:**\n    *   MVP consistently outperforms its unsupervised pre-trained counterpart, BART LARGE, in both full tuning (+7.0% on average) and parameter-efficient tuning (+4.3% on average) settings.\n    *   MVP achieves **state-of-the-art (SOTA) performance on 13 out of 17 datasets**.\n    *   Multi-task pre-training (MVP) outperforms single-task pre-trained models by 2.7%, indicating the benefit of learning transferable semantic information across tasks.\n    *   Task-specific soft prompts (MVP+S) are shown to be effective, outperforming variants with randomly initialized or multi-task pre-trained prompts.\n    *   In parameter-efficient tuning, MVP+S can even outperform fully tuned BART on certain tasks like question generation and question answering.\n\n*   **Generalization Ability:**\n    *   **Unseen NLG Tasks:** MVP demonstrates strong generalization to unseen NLG tasks (paraphrase generation, text style transfer), achieving new SOTA results and outperforming BART by 2.2%.\n    *   **Unseen NLU Tasks:** MVP also shows improved performance on the GLUE benchmark for NLU tasks, outperforming BART on 9 out of 12 metrics, indicating improved overall semantic representations.\n    *   Experiments without fine-tuning show that while MVP outperforms T0 on seen tasks, fine-tuning is still crucial for NLG tasks, unlike some NLU tasks where zero-shot performance is more competitive.\n\n### Claimed Contributions\n\n1.  **First Supervised Multi-Task Pre-training for NLG:** Proposing and demonstrating the effectiveness of supervised multi-task pre-training specifically for Natural Language Generation tasks.\n2.  **MVPCorpus:** Collection and release of the **largest collection of labeled NLG datasets** to date, comprising 77 datasets across 11 diverse NLG tasks, unified into a text-to-text format.\n3.  **MVP Model and Framework:** Development of the MVP model, which combines multi-task supervised pre-training with task-specific soft prompts to achieve both effectiveness and generality in NLG.\n4.  **State-of-the-Art Performance:** Achieving state-of-the-art results on a significant number of NLG datasets (13 out of 17).\n5.  **Strong Generalization:** Demonstrating robust generalization capabilities of the supervised pre-trained model to unseen NLG and even NLU tasks.\n6.  **Resource Release:** Releasing the MVPCorpus, pre-trained models (MVP, task-specific prompts), and codes to facilitate future research.",
+      "timestamp": 1775746753.7605548,
+      "input_tokens": 18545,
+      "output_tokens": 1202
+    },
+    {
+      "role": "Critic (initial)",
+      "content": "Here are 15 specific critique points for the paper \"MVP: Multi-Task Supervised Pre-training for Natural Language Generation,\" based on the provided summary:\n\n1.  **Novelty - Comparison to existing supervised multi-task models:** The paper claims \"First Supervised Multi-Task Pre-training for NLG.\" However, the summary mentions T0 in the generalization section, implying it's a related work. It's unclear how MVP's core supervised multi-task pre-training approach fundamentally differs or improves upon models like T0 or FLAN (which also use supervised data and multi-task learning for text-to-text) as a primary baseline in the main effectiveness evaluation.\n\n2.  **Methodology - Justification for BART LARGE base:** The choice of \"a Transformer encoder-decoder model (similar to BART LARGE)\" as the backbone is stated. The summary does not provide a specific justification for selecting BART over other prominent encoder-decoder architectures like T5, which is also widely used for text-to-text tasks and could offer a different performance profile.\n\n3.  **Methodology - Ablation of two-stage pre-training:** The summary highlights the two-stage pre-training, with Stage 2 using task-specific soft prompts to mitigate \"blurring-out.\" However, it lacks an explicit ablation study comparing MVP's performance *without* Stage 2 (e.g., only Stage 1 followed by standard fine-tuning or shared prompts), which would strongly justify the necessity and benefit of this specific two-stage design.\n\n4.  **Methodology - Impact of \"reversed tasks\":** The MVPCorpus includes \"reversed tasks (e.g., QG/QA) to enrich the pre-training data.\" While this expands the dataset, the summary does not discuss the potential impact or specific benefits/drawbacks of including such reversed tasks on the learned representations or performance across different NLG tasks.\n\n5.  **Methodology - Specifics of \"human-written prompts\":** Stage 1 uses \"Human-written prompts (e.g., 'Summarize:')\" to indicate tasks. The summary does not elaborate on the design principles for these prompts, their variability, or whether an ablation was performed to compare them against automatically generated or learned prompts, or even no explicit prompts during Stage 1.\n\n6.  **Evaluation - Baselines for main effectiveness:** While MVP outperforms its \"unsupervised pre-trained counterpart, BART LARGE,\" the primary effectiveness results (e.g., SOTA on 13/17 datasets) would be stronger with direct fine-tuning comparisons against *other state-of-the-art supervised multi-task text-to-text models* (like T0 or FLAN) on the same NLG benchmarks, rather than only comparing to an unsupervised model.\n\n7.  **Evaluation - Granularity of performance metrics:** The summary states \"MVP consistently outperforms... (+7.0% on average)\" and \"SOTA on 13 out of 17 datasets.\" It does not specify the individual metrics used for each of the diverse NLG tasks (e.g., ROUGE, BLEU, F1, etc.), making it difficult to fully assess the nature and significance of the reported improvements across different task types.\n\n8.  **Evaluation - Apples-to-apples comparison for PEFT:** The claim that \"MVP+S can even outperform fully tuned BART on certain tasks like question generation and question answering\" is impressive for parameter-efficient tuning. However, it's not an apples-to-apples comparison of the *maximum potential* of MVP versus BART, as MVP+S is parameter-efficiently tuned while BART is fully tuned. A comparison of fully-tuned MVP vs. fully-tuned BART would provide a clearer picture of the backbone's full potential.\n\n9.  **",
+      "timestamp": 1775746785.7664516
+    },
+    {
+      "role": "Summarizer",
+      "content": "{\n  \"summary\": \"This paper introduces MVP, a novel two-stage multi-task supervised pre-training framework for Natural Language Generation (NLG) models, built upon a large-scale MVPCorpus. MVP leverages human-written prompts in Stage 1 and task-specific soft prompts in Stage 2 to learn general text-to-text relationships and specialized task knowledge. The model achieves state-of-the-art performance on numerous NLG datasets and demonstrates strong generalization capabilities to unseen tasks.\",\n  \"strengths\": [\n    {\n      \"point\": \"Achieves State-of-the-Art Performance\",\n      \"evidence\": \"MVP achieves state-of-the-art (SOTA) performance on 13 out of 17 datasets and consistently outperforms its unsupervised pre-trained counterpart, BART LARGE, in both full tuning (+7.0% on average) and parameter-efficient tuning (+4.3% on average) settings.\"\n    },\n    {\n      \"point\": \"Strong Generalization Ability\",\n      \"evidence\": \"MVP demonstrates strong generalization to unseen NLG tasks (paraphrase generation, text style transfer), achieving new SOTA results and outperforming BART by 2.2%. It also shows improved performance on the GLUE benchmark for NLU tasks.\"\n    },\n    {\n      \"point\": \"Creation and Release of MVPCorpus\",\n      \"evidence\": \"The paper introduces and releases MVPCorpus, the largest collection of labeled NLG datasets to date, comprising 77 datasets across 11 diverse NLG tasks, unified into a text-to-text format.\"\n    },\n    {\n      \"point\": \"Effective Two-Stage Pre-training with Soft Prompts\",\n      \"evidence\": \"The proposed two-stage pre-training, particularly Stage 2 with task-specific soft prompts, is shown to be effective in mitigating the 'blurring-out' issue of multi-task learning and outperforming variants with randomly initialized or multi-task pre-trained prompts.\"\n    },\n    {\n      \"point\": \"Resource Release for Future Research\",\n      \"evidence\": \"The authors commit to releasing the MVPCorpus, pre-trained models (MVP, task-specific prompts), and codes to facilitate future research in the field.\"\n    }\n  ],\n  \"weaknesses\": [\n    {\n      \"point\": \"Unclear Novelty Compared to Existing Supervised Multi-Task Models\",\n      \"evidence\": \"The claim 'First Supervised Multi-Task Pre-training for NLG' is made, but the summary mentions T0, implying related work. It's unclear how MVP fundamentally differs or improves upon models like T0 or FLAN as a primary baseline in effectiveness evaluation.\"\n    },\n    {\n      \"point\": \"Lack of Justification for BART LARGE Base\",\n      \"evidence\": \"The choice of 'a Transformer encoder-decoder model (similar to BART LARGE)' as the backbone is stated without specific justification for selecting BART over other prominent architectures like T5.\"\n    },\n    {\n      \"point\": \"Missing Ablation Study for Two-Stage Pre-training\",\n      \"evidence\": \"The summary highlights the two-stage pre-training but lacks an explicit ablation study comparing MVP's performance *without* Stage 2, which would strongly justify the necessity and benefit of this specific design.\"\n    },\n    {\n      \"point\": \"Undiscussed Impact of 'Reversed Tasks'\",\n      \"evidence\": \"The MVPCorpus includes 'reversed tasks (e.g., QG/QA) to enrich the pre-training data,' but the summary does not discuss their potential impact or specific benefits/drawbacks on learned representations or performance.\"\n    },\n    {\n      \"point\": \"Insufficient Detail on 'Human-written Prompts'\",\n      \"evidence\": \"Stage 1 uses 'Human-written prompts (e.g., 'Summarize:')' to indicate tasks, but the summary does not elaborate on their design principles, variability, or whether an ablation was performed against other prompt types.\"\n    },\n    {\n      \"point\": \"Inadequate Baselines for Main Effectiveness Evaluation\",\n      \"evidence\": \"While MVP outperforms BART LARGE, the primary effectiveness results would be stronger with direct fine-tuning comparisons against *other state-of-the-art supervised multi-task text-to-text models* (like T0 or FLAN) on the same NLG benchmarks.\"\n    },\n    {\n      \"point\": \"Lack of Granularity in Performance Metrics\",\n      \"evidence\": \"The summary states 'MVP consistently outperforms... (+7.0% on average)' and 'SOTA on 13 out of 17 datasets' but does not specify the individual metrics used for each diverse NLG task, making it difficult to fully assess the nature and significance of improvements.\"\n    },\n    {\n      \"point\": \"Non-Apples-to-Apples Comparison for PEFT\",\n      \"evidence\": \"The claim that 'MVP+S can even outperform fully tuned BART' is impressive for parameter-efficient tuning, but it's not an apples-to-apples comparison of *maximum potential* as MVP+S is PEFT while BART is fully tuned. A comparison of fully-tuned MVP vs. fully-tuned BART is missing.\"\n    }\n  ],\n  \"questions\": [\n    {\n      \"question\": \"How does MVP's core supervised multi-task pre-training approach fundamentally differ or improve upon models like T0 or FLAN, which also use supervised data and multi-task learning for text-to-text?\",\n      \"motivation\": \"This is crucial for establishing the true novelty and comparative advantage of MVP within the landscape of supervised multi-task pre-training for NLG.\"\n    },\n    {\n      \"question\": \"What was the specific justification for choosing BART LARGE as the backbone over other prominent encoder-decoder architectures like T5, and how might the choice of backbone influence the results?\",\n      \"motivation\": \"Understanding the architectural choice helps in assessing the generalizability of the findings and potential for further improvements with different base models.\"\n    },\n    {\n      \"question\": \"Was an explicit ablation study conducted to compare MVP's performance without Stage 2 (i.e., only Stage 1 followed by standard fine-tuning or shared prompts)?\",\n      \"motivation\": \"Such an ablation is essential to unequivocally justify the necessity and specific benefits of the two-stage design, particularly the task-specific soft prompts in Stage 2.\"\n    },\n    {\n      \"question\": \"What is the specific impact, benefits, or drawbacks of including 'reversed tasks' (e.g., QG/QA) in the MVPCorpus on the learned representations and overall performance across different NLG tasks?\",\n      \"motivation\": \"Understanding the effect of 'reversed tasks' would provide deeper insights into the data augmentation strategy and its contribution to the model's capabilities.\"\n    },\n    {\n      \"question\": \"What were the design principles for the 'human-written prompts' used in Stage 1, and were any ablations performed to compare them against automatically generated, learned prompts, or no explicit prompts during this stage?\",\n      \"motivation\": \"The design of prompts can significantly influence multi-task learning, and understanding their specifics and alternatives would strengthen the methodological rigor.\"\n    },\n    {\n      \"question\": \"Why were direct fine-tuning comparisons against other state-of-the-art supervised multi-task text-to-text models (like T0 or FLAN) not included in the primary effectiveness evaluation, especially given the novelty claim?\",\n      \"motivation\": \"Including these comparisons would provide a more comprehensive and robust evaluation of MVP's performance against the most relevant contemporary models.\"\n    },\n    {\n      \"question\": \"Could the paper provide more granular details on the individual performance metrics used for each of the diverse NLG tasks (e.g., ROUGE, BLEU, F1, etc.) to allow for a more precise assessment of the reported improvements?\",\n      \"motivation\": \"Specific metrics are crucial for understanding the nature and significance of performance gains across different task types, as 'average' improvements can sometimes mask varied performance.\"\n    },\n    {\n      \"question\": \"What would be the performance comparison of a fully-tuned MVP model against a fully-tuned BART model to provide a clearer picture of MVP's backbone's full potential, beyond the PEFT comparison?\",\n      \"motivation\": \"While the PEFT comparison is valuable, a full-tuning comparison would offer a more direct assessment of the underlying model's capabilities when not constrained by parameter efficiency.\"\n    }\n  ],\n  \"scores\": {\n    \"correctness\": 3,\n    \"novelty\": 3,\n    \"recommendation\": \"accept\",\n    \"confidence\": 3\n  }\n}",
+      "timestamp": 1775746811.2818193
+    }
+  ],
+  "structured": {
+    "summary": "This paper introduces MVP, a novel two-stage multi-task supervised pre-training framework for Natural Language Generation (NLG) models, built upon a large-scale MVPCorpus. MVP leverages human-written prompts in Stage 1 and task-specific soft prompts in Stage 2 to learn general text-to-text relationships and specialized task knowledge. The model achieves state-of-the-art performance on numerous NLG datasets and demonstrates strong generalization capabilities to unseen tasks.",
+    "strengths": [
+      {
+        "point": "Achieves State-of-the-Art Performance",
+        "evidence": "MVP achieves state-of-the-art (SOTA) performance on 13 out of 17 datasets and consistently outperforms its unsupervised pre-trained counterpart, BART LARGE, in both full tuning (+7.0% on average) and parameter-efficient tuning (+4.3% on average) settings."
+      },
+      {
+        "point": "Strong Generalization Ability",
+        "evidence": "MVP demonstrates strong generalization to unseen NLG tasks (paraphrase generation, text style transfer), achieving new SOTA results and outperforming BART by 2.2%. It also shows improved performance on the GLUE benchmark for NLU tasks."
+      },
+      {
+        "point": "Creation and Release of MVPCorpus",
+        "evidence": "The paper introduces and releases MVPCorpus, the largest collection of labeled NLG datasets to date, comprising 77 datasets across 11 diverse NLG tasks, unified into a text-to-text format."
+      },
+      {
+        "point": "Effective Two-Stage Pre-training with Soft Prompts",
+        "evidence": "The proposed two-stage pre-training, particularly Stage 2 with task-specific soft prompts, is shown to be effective in mitigating the 'blurring-out' issue of multi-task learning and outperforming variants with randomly initialized or multi-task pre-trained prompts."
+      },
+      {
+        "point": "Resource Release for Future Research",
+        "evidence": "The authors commit to releasing the MVPCorpus, pre-trained models (MVP, task-specific prompts), and codes to facilitate future research in the field."
+      }
+    ],
+    "weaknesses": [
+      {
+        "point": "Unclear Novelty Compared to Existing Supervised Multi-Task Models",
+        "evidence": "The claim 'First Supervised Multi-Task Pre-training for NLG' is made, but the summary mentions T0, implying related work. It's unclear how MVP fundamentally differs or improves upon models like T0 or FLAN as a primary baseline in effectiveness evaluation."
+      },
+      {
+        "point": "Lack of Justification for BART LARGE Base",
+        "evidence": "The choice of 'a Transformer encoder-decoder model (similar to BART LARGE)' as the backbone is stated without specific justification for selecting BART over other prominent architectures like T5."
+      },
+      {
+        "point": "Missing Ablation Study for Two-Stage Pre-training",
+        "evidence": "The summary highlights the two-stage pre-training but lacks an explicit ablation study comparing MVP's performance *without* Stage 2, which would strongly justify the necessity and benefit of this specific design."
+      },
+      {
+        "point": "Undiscussed Impact of 'Reversed Tasks'",
+        "evidence": "The MVPCorpus includes 'reversed tasks (e.g., QG/QA) to enrich the pre-training data,' but the summary does not discuss their potential impact or specific benefits/drawbacks on learned representations or performance."
+      },
+      {
+        "point": "Insufficient Detail on 'Human-written Prompts'",
+        "evidence": "Stage 1 uses 'Human-written prompts (e.g., 'Summarize:')' to indicate tasks, but the summary does not elaborate on their design principles, variability, or whether an ablation was performed against other prompt types."
+      },
+      {
+        "point": "Inadequate Baselines for Main Effectiveness Evaluation",
+        "evidence": "While MVP outperforms BART LARGE, the primary effectiveness results would be stronger with direct fine-tuning comparisons against *other state-of-the-art supervised multi-task text-to-text models* (like T0 or FLAN) on the same NLG benchmarks."
+      },
+      {
+        "point": "Lack of Granularity in Performance Metrics",
+        "evidence": "The summary states 'MVP consistently outperforms... (+7.0% on average)' and 'SOTA on 13 out of 17 datasets' but does not specify the individual metrics used for each diverse NLG task, making it difficult to fully assess the nature and significance of improvements."
+      },
+      {
+        "point": "Non-Apples-to-Apples Comparison for PEFT",
+        "evidence": "The claim that 'MVP+S can even outperform fully tuned BART' is impressive for parameter-efficient tuning, but it's not an apples-to-apples comparison of *maximum potential* as MVP+S is PEFT while BART is fully tuned. A comparison of fully-tuned MVP vs. fully-tuned BART is missing."
+      }
+    ],
+    "questions": [
+      {
+        "question": "How does MVP's core supervised multi-task pre-training approach fundamentally differ or improve upon models like T0 or FLAN, which also use supervised data and multi-task learning for text-to-text?",
+        "motivation": "This is crucial for establishing the true novelty and comparative advantage of MVP within the landscape of supervised multi-task pre-training for NLG."
+      },
+      {
+        "question": "What was the specific justification for choosing BART LARGE as the backbone over other prominent encoder-decoder architectures like T5, and how might the choice of backbone influence the results?",
+        "motivation": "Understanding the architectural choice helps in assessing the generalizability of the findings and potential for further improvements with different base models."
+      },
+      {
+        "question": "Was an explicit ablation study conducted to compare MVP's performance without Stage 2 (i.e., only Stage 1 followed by standard fine-tuning or shared prompts)?",
+        "motivation": "Such an ablation is essential to unequivocally justify the necessity and specific benefits of the two-stage design, particularly the task-specific soft prompts in Stage 2."
+      },
+      {
+        "question": "What is the specific impact, benefits, or drawbacks of including 'reversed tasks' (e.g., QG/QA) in the MVPCorpus on the learned representations and overall performance across different NLG tasks?",
+        "motivation": "Understanding the effect of 'reversed tasks' would provide deeper insights into the data augmentation strategy and its contribution to the model's capabilities."
+      },
+      {
+        "question": "What were the design principles for the 'human-written prompts' used in Stage 1, and were any ablations performed to compare them against automatically generated, learned prompts, or no explicit prompts during this stage?",
+        "motivation": "The design of prompts can significantly influence multi-task learning, and understanding their specifics and alternatives would strengthen the methodological rigor."
+      },
+      {
+        "question": "Why were direct fine-tuning comparisons against other state-of-the-art supervised multi-task text-to-text models (like T0 or FLAN) not included in the primary effectiveness evaluation, especially given the novelty claim?",
+        "motivation": "Including these comparisons would provide a more comprehensive and robust evaluation of MVP's performance against the most relevant contemporary models."
+      },
+      {
+        "question": "Could the paper provide more granular details on the individual performance metrics used for each of the diverse NLG tasks (e.g., ROUGE, BLEU, F1, etc.) to allow for a more precise assessment of the reported improvements?",
+        "motivation": "Specific metrics are crucial for understanding the nature and significance of performance gains across different task types, as 'average' improvements can sometimes mask varied performance."
+      },
+      {
+        "question": "What would be the performance comparison of a fully-tuned MVP model against a fully-tuned BART model to provide a clearer picture of MVP's backbone's full potential, beyond the PEFT comparison?",
+        "motivation": "While the PEFT comparison is valuable, a full-tuning comparison would offer a more direct assessment of the underlying model's capabilities when not constrained by parameter efficiency."
+      }
+    ],
+    "scores": {
+      "correctness": 3,
+      "novelty": 3,
+      "recommendation": "accept",
+      "confidence": 3
+    }
+  },
+  "critique_points": {
+    "point_001": "Unclear Novelty Compared to Existing Supervised Multi-Task Models. The claim 'First Supervised Multi-Task Pre-training for NLG' is made, but the summary mentions T0, implying related work. It's unclear how MVP fundamentally differs or improves upon models like T0 or FLAN as a primary baseline in effectiveness evaluation",
+    "point_002": "Lack of Justification for BART LARGE Base. The choice of 'a Transformer encoder-decoder model (similar to BART LARGE)' as the backbone is stated without specific justification for selecting BART over other prominent architectures like T5",
+    "point_003": "Missing Ablation Study for Two-Stage Pre-training. The summary highlights the two-stage pre-training but lacks an explicit ablation study comparing MVP's performance *without* Stage 2, which would strongly justify the necessity and benefit of this specific design",
+    "point_004": "Undiscussed Impact of 'Reversed Tasks'. The MVPCorpus includes 'reversed tasks (e.g., QG/QA) to enrich the pre-training data,' but the summary does not discuss their potential impact or specific benefits/drawbacks on learned representations or performance",
+    "point_005": "Insufficient Detail on 'Human-written Prompts'. Stage 1 uses 'Human-written prompts (e.g., 'Summarize:')' to indicate tasks, but the summary does not elaborate on their design principles, variability, or whether an ablation was performed against other prompt types",
+    "point_006": "Inadequate Baselines for Main Effectiveness Evaluation. While MVP outperforms BART LARGE, the primary effectiveness results would be stronger with direct fine-tuning comparisons against *other state-of-the-art supervised multi-task text-to-text models* (like T0 or FLAN) on the same NLG benchmarks",
+    "point_007": "Lack of Granularity in Performance Metrics. The summary states 'MVP consistently outperforms... (+7.0% on average)' and 'SOTA on 13 out of 17 datasets' but does not specify the individual metrics used for each diverse NLG task, making it difficult to fully assess the nature and significance of improvements",
+    "point_008": "Non-Apples-to-Apples Comparison for PEFT. The claim that 'MVP+S can even outperform fully tuned BART' is impressive for parameter-efficient tuning, but it's not an apples-to-apples comparison of *maximum potential* as MVP+S is PEFT while BART is fully tuned. A comparison of fully-tuned MVP vs. fully-tuned BART is missing"
+  },
+  "grounding_verifier_scores": {
+    "avg_confidence": null,
+    "grounding_rate": null,
+    "points_verified": 0,
+    "points_unsupported": 0,
+    "skipped": true
+  },
+  "run_metadata": {
+    "latency_ms": 87990.0,
+    "timestamp": 1775746811.283339
+  }
+}
