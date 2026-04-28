@@ -1,317 +1,171 @@
 # Paper Critique Agent Study
 
-Comparing **single-call LLM baselines** against **multi-agent agentic loops**
-for generating peer-review-style critiques of ML/AI papers, across six
-orchestration platforms.
+This project compares a single-call LLM baseline against multi-agent critique
+workflows for generating peer-review-style critiques of AI/ML papers.
 
-The ground truth is a deduplicated dictionary of critique points distilled
-from real human reviews.  We measure how well each system *covers* those points
-using semantic-similarity recall / precision.
+The evaluation target is a deduplicated dictionary of critique points distilled
+from real human reviews. Each system output is scored by semantic similarity
+against those human-review-derived points.
 
----
+## What Is Compared
 
-## Platform Overview
+The study keeps prompts, temperature, and evaluation logic aligned as much as
+possible, then varies the orchestration platform and loop structure.
 
-Six platforms implement the same 4-agent pipeline under controlled conditions.
-**Prompts are identical across all platforms.** The only dimensions that vary
-are workflow structure, input format, and model (Vertex AI only).
+| Implementation | Loop mode | Main code / workflow | Model(s) | Input used |
+| --- | --- | --- | --- | --- |
+| Baseline | none | `src/baseline/baseline_critique.py` | `gpt-4.1-mini` | Parsed paper text |
+| n8n | none | `src/platforms/n8n_workflow_noloop.json` | `gpt-4.1-mini` | Parsed paper text |
+| n8n | fixed 1 round | `src/platforms/n8n_workflow.json` | `gpt-4.1-mini` | Parsed paper text |
+| Dify | none | `src/dify/Paper CritiqueAgent(Single Critic).yml` | `gpt-4.1-mini` | Raw PDF upload |
+| Dify | fixed 1 round | `src/dify/Paper CritiqueAgent (Dual Critic).yml` | `gpt-4.1-mini` | Raw PDF upload |
+| LangGraph | none / fixed / dynamic | `src/platforms/langgraph_critique.py` | `gpt-4.1-mini` | Parsed paper text |
+| CrewAI | none / fixed / dynamic | `src/platforms/crewai_critique.py` | `gpt-4.1-mini` | Parsed paper text |
+| Vertex AI | none / fixed / dynamic | `src/vertex/vertex_orchestrator.py` | Gemini 2.5 Flash / Flash Lite | Parsed paper text |
 
-| Platform | Workflow file(s) | Loop type | Model | Input |
-|----------|-----------------|-----------|-------|-------|
-| Baseline | `src/baseline/baseline_critique.py` | None | GPT-4.1-mini | JSONL body_text |
-| n8n (no loop) | `src/platforms/n8n_workflow_noloop.json` | None | GPT-4.1-mini | JSONL body_text |
-| n8n (1 round) | `src/platforms/n8n_workflow.json` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
-| Dify (no loop) | Dify workflow (`single_critic`) | None | GPT-4.1-mini | Raw PDF |
-| Dify (1 round) | Dify workflow (`dual_critic`) | Fixed 1 round | GPT-4.1-mini | Raw PDF |
-| Vertex AI | `src/vertex/vertex_orchestrator.py` | Dynamic conditional | Gemini 2.5 Flash* | JSONL body_text |
-| LangGraph (none) | `src/platforms/langgraph_critique.py` | None | GPT-4.1-mini | JSONL body_text |
-| LangGraph (fixed) | `src/platforms/langgraph_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
-| LangGraph (dynamic) | `src/platforms/langgraph_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
-| CrewAI (none) | `src/platforms/crewai_critique.py` | None | GPT-4.1-mini | JSONL body_text |
-| CrewAI (fixed) | `src/platforms/crewai_critique.py` | Fixed 1 round | GPT-4.1-mini | JSONL body_text |
-| CrewAI (dynamic) | `src/platforms/crewai_critique.py` | Dynamic conditional | GPT-4.1-mini | JSONL body_text |
+Loop modes:
 
-*Vertex AI uses Gemini 2.5 Flash due to platform model lock-in.
+- `none`: Reader -> Critic -> Summariser.
+- `fixed`: Reader -> Critic -> Auditor -> Critic revision -> Summariser.
+- `dynamic`: Reader -> Critic <-> Auditor until the auditor is satisfied or
+  `agent.max_rounds` is reached.
 
-> **Input format note:** Dify ingests raw PDFs via its file upload API and handles parsing internally.
-> All other platforms receive `body_text` from the JSONL dataset via the Python adapters.
-> This difference is a platform constraint, not a controlled variable, and is noted as a limitation
-> when comparing Dify scores against other platforms.
+Important input note: Dify is the only implementation that uploads raw PDFs and
+lets Dify parse them internally. Other implementations use the parsed paper text
+from `data/processed/reviews_parsed.json`.
 
-**Loop types explained:**
-- **None** — Reader → Critic → Summariser. No debate, no Auditor.
-- **Fixed 1 round** — Reader → Critic 1 → Auditor → Critic 2 → Summariser. Auditor challenges Critic 1, Critic 2 revises based on feedback, Summariser consolidates. Hardcoded, no early exit. Used by platforms that cannot express conditional cycles (n8n, Dify).
-- **Dynamic conditional** — same agents but Critic ↔ Auditor loop repeats until Auditor is satisfied or max rounds reached. Native to LangGraph, implemented in Python for Vertex AI.
+## Repository Layout
 
-> **Note:** The fixed-round design requires an explicit Critic 2 node — a second Critic call that receives the Auditor's feedback and revises accordingly. Passing Auditor feedback directly to the Summariser (skipping Critic 2) is a weaker design as the critique points never get revised.
-
----
-
-## Fixed Constants
-
-The following are held constant across all platforms to isolate workflow
-structure as the independent variable.
-
-### Agent prompts
-
-All prompts are identical across every platform. Variables in `{curly braces}` are filled in at runtime.
-
----
-
-**Reader**
-
-*System:*
-```
-You are a Reader agent. Read the following paper and produce a structured summary. Cover:
-Problem & Motivation, Proposed Method, Results, Claimed Contributions.
-```
-
-*User:*
-```
-Paper:
-{paper_text}
-```
-
----
-
-**Critic — Round 1 (initial)**
-
-*System:*
-```
-You are a Critic agent reviewing an AI/ML research paper.
+```text
+GenAI_Group_Project/
+|-- config.yaml
+|-- requirements.txt
+|-- .env.example
+|-- data/
+|   |-- ReviewCritique.jsonl
+|   |-- checkpoint.json
+|   |-- paper_links.csv
+|   |-- direct_pdf_links.csv
+|   |-- papers/
+|   |-- processed/
+|   |   |-- reviews_parsed.json
+|   |   `-- critique_dicts/
+|   `-- README.md
+|-- scripts/
+|   |-- run_full_pipeline.py
+|   |-- score_vertexai.py
+|   |-- patch_vertexai_results.py
+|   `-- compare_scores.py
+|-- src/
+|   |-- baseline/
+|   |-- data_processing/
+|   |-- dify/
+|   |-- evaluation/
+|   |-- platforms/
+|   `-- vertex/
+|-- tests/
+`-- results/
+    |-- LLM_baseline/
+    |-- n8n/
+    |-- dify/
+    |-- langgraph/
+    |-- crewai/
+    |-- vertexai/
+    |-- vertexai_noloop/
+    `-- vertexai_fixed/
 ```
 
-*User:*
-```
-Paper summary:
-{summary}
+Most output paths are configured in `config.yaml` under `results`. Prefer
+changing paths there instead of hardcoding new paths in scripts.
 
-Generate 12-15 specific critique points.
+## Quick Start
 
-For each point you MUST:
-- Be concrete and specific, not generic
-- Reference specific sections, tables, or claims from the paper
-- Focus on ONE issue per point
+### 1. Create an environment
 
-Cover ALL of these dimensions:
-- Novelty: what prior work is missing or inadequately compared?
-- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?
-- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?
-- Reproducibility: what implementation details are missing?
-- Clarity: what is confusing or poorly explained in the paper?
-- Limitations: what does the method fail to address or acknowledge?
-- Generalisability: does it work beyond the tested settings?
+PowerShell:
 
-IMPORTANT: Only critique what is actually in the paper.
-Do NOT invent references, section numbers, or claims not explicitly stated.
-```
-
----
-
-**Auditor**
-
-*System:*
-```
-You are an Auditor agent. Your job is to make the Critic's review stronger.
-```
-
-*User:*
-```
-Paper summary:
-{summary}
-
-Critic response:
-{critique}
-
-For each critique point:
-1. Is it specific enough or too generic? Push for concrete details.
-2. Is it supported by evidence from the paper?
-3. What important issues did the Critic completely miss?
-
-Be aggressive — a weak vague point is worse than no point.
-Explicitly list 3-5 issues the Critic missed.
-
-Do NOT suggest ethical implications or bias points unless
-the paper explicitly makes claims in these areas.
-```
-
----
-
-**Critic — Round 2 (revision)**
-
-*System:*
-```
-You are the Critic agent revising your review based on Auditor feedback.
-```
-
-*User:*
-```
-Original paper summary:
-{summary}
-
-Your original critique:
-{critique}
-
-Auditor feedback:
-{audit_feedback}
-
-Now produce an improved critique that:
-- Fixes all weak or vague points the Auditor flagged
-- Adds the missing issues the Auditor identified
-- Keeps all strong original points
-- Generates 12-15 total points
-
-For each point you MUST:
-- Be concrete and specific, not generic
-- Reference specific sections, tables, or claims from the paper
-- Focus on ONE issue per point
-
-Cover ALL of these dimensions:
-- Novelty: what prior work is missing or inadequately compared?
-- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?
-- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?
-- Reproducibility: what implementation details are missing?
-- Clarity: what is confusing or poorly explained in the paper?
-- Limitations: what does the method fail to address or acknowledge?
-- Generalisability: does it work beyond the tested settings?
-```
-
----
-
-**Summariser**
-
-*System:*
-```
-You are a Summariser agent. Consolidate the critique into a final structured review.
-Output ONLY valid JSON, no other text, no markdown code fences.
-```
-
-*User:*
-```
-Critic2 output:
-{critic2_output}
-
-Reader summary:
-{summary}
-
-Output in this exact JSON format:
-{
-  "summary": "2-3 sentence paper summary",
-  "strengths": [
-    {"point": "strength point", "evidence": "evidence from paper"},
-    {"point": "strength point", "evidence": "evidence from paper"}
-  ],
-  "weaknesses": [
-    {"point": "weakness point", "evidence": "evidence from paper"},
-    {"point": "weakness point", "evidence": "evidence from paper"}
-  ],
-  "questions": [
-    {"question": "open question", "motivation": "why this matters"},
-    {"question": "open question", "motivation": "why this matters"}
-  ],
-}
-```
-
-### Model assignment
-
-All agents on all platforms use `gpt-4.1-mini` — best cost:performance ratio
-for language tasks, and keeps the controlled experiment clean (one model,
-one variable: workflow structure).
-
-> Vertex AI is the only exception due to platform model lock-in (Gemini 2.5 Flash).
-> This is treated as a platform constraint and noted as a limitation in the report.
-
----
-
-## LangGraph Ablation
-
-LangGraph additionally runs all three loop conditions with the same model and
-prompts, isolating loop structure as the sole variable:
-
-| Condition | Config | Description |
-|-----------|--------|-------------|
-| `loop_mode: none` | Reader → Critic → Summariser | No debate, single-pass |
-| `loop_mode: fixed` | Reader → Critic → Auditor × N → Summariser | Fixed rounds, no early exit |
-| `loop_mode: dynamic` | Reader → Critic ↔ Auditor → Summariser | Conditional early exit |
-
-Results stored in `results/langgraph_none/`, `results/langgraph_fixed/`,
-`results/langgraph_dynamic/`.
-
----
-
-## Repository layout
-
-```
-paper-critique-agent-study/
-├── config.yaml                  # model names, seeds, hyperparams
-├── requirements.txt
-├── .env.example                 # copy → .env and fill in API keys
-│
-├── data/
-│   ├── raw/                     # original human review files (PDFs / JSONs)
-│   ├── processed/
-│   │   ├── reviews_parsed.json  # parsed human reviews per paper
-│   │   └── critique_dicts/      # ground truth: one JSON per paper
-│   └── README.md                # how to obtain / place data
-│
-├── src/
-│   ├── data_processing/
-│   │   ├── parse_reviews.py        # extract text from raw human reviews
-│   │   └── build_critique_dict.py  # LLM call to distil reviews → unique points
-│   ├── baseline/
-│   │   └── baseline_critique.py    # single LLM call to critique a paper
-│   ├── agents/
-│   │   ├── vertex_orchestrator.py  # Vertex AI pipeline (Gemini 2.5 Flash)
-│   │   ├── vertex_client.py        # Google GenAI SDK wrapper
-│   │   ├── personas.py             # agent role definitions for Vertex AI
-│   │   ├── state.py                # state management for Vertex AI pipeline
-│   │   └── grounding_verifier.py   # verifies critique points against paper text
-│   └── evaluation/
-│       ├── scorer.py               # compare output vs ground truth → scores
-│       └── metrics.py              # precision/recall, plots, summary tables
-│
-├── results/
-│   ├── baseline/
-│   ├── agents/
-│   ├── n8n/
-│   ├── n8n_noloop/
-│   ├── dify/
-│   ├── langgraph_none/
-│   ├── langgraph_fixed/
-│   ├── langgraph_dynamic/
-│   ├── crewai_none/
-│   ├── crewai_fixed/
-│   └── crewai_dynamic/
-```
-
----
-
-## Quick start
-
-### 1. Install dependencies
-
-```bash
+```powershell
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 2. Set API keys
+Bash:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Optional dependencies:
+
+```bash
+pip install google-genai pytest
+```
+
+`google-genai` is needed for the Vertex AI runner. `pytest` is only needed for
+the local test suite.
+
+### 2. Configure API keys
+
+Copy `.env.example` to `.env` and fill in the required values.
+
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Bash:
 
 ```bash
 cp .env.example .env
-# Edit .env and add OPENAI_API_KEY, DIFY_API_KEY_SINGLE, DIFY_API_KEY_DUAL, and any other required keys
 ```
 
-### 3. Add data
+Required keys:
 
-See [data/README.md](data/README.md) for how to obtain and place review files.
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+DIFY_API_KEY_SINGLE=your_dify_single_critic_api_key_here
+DIFY_API_KEY_DUAL=your_dify_dual_critic_api_key_here
+```
 
-### 4. Platform setup
+Vertex AI also requires Google Cloud authentication for the project and location
+set in `config.yaml`.
 
-#### n8n
+### 3. Prepare the data
 
-**Start n8n locally via Docker:**
+Place the ReviewCritique dataset file at:
+
+```text
+data/ReviewCritique.jsonl
+```
+
+Then parse reviews and build the ground-truth critique dictionaries:
+
+```bash
+python -m src.data_processing.parse_reviews
+python -m src.data_processing.build_critique_dict
+```
+
+For Dify, make sure PDFs exist in `data/papers/`. If the PDFs are missing, run
+the helper scripts from the `data` directory:
+
+```bash
+cd data
+python fetch_pdf_links.py
+python download_papers.py
+cd ..
+```
+
+## Platform Setup
+
+### n8n
+
+Start n8n locally with Docker:
 
 ```bash
 docker run -it --rm \
@@ -320,80 +174,114 @@ docker run -it --rm \
   -e GENERIC_TIMEZONE="Asia/Singapore" \
   -e TZ="Asia/Singapore" \
   -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
-  -e N8n_RUNNERS_ENABLED=true \
+  -e N8N_RUNNERS_ENABLED=true \
   -e OPENAI_API_KEY=your_openai_api_key \
   -e N8N_BLOCK_ENV_ACCESS_IN_NODE=false \
   -v n8n_data:/home/node/.n8n \
   docker.n8n.io/n8nio/n8n
 ```
 
-**Import and activate workflows (do this once):**
+Import and activate both workflows:
 
-1. Open http://localhost:5678 in your browser
-2. Go to **Workflows → Add Workflow → Import from file**
-3. Import `src/platforms/n8n_workflow.json` (1-round debate)
-4. Import `src/platforms/n8n_workflow_noloop.json` (no loop)
-5. Open each workflow and click **Activate** (toggle top-right) to publish the webhook
+1. Open `http://localhost:5678`.
+2. Import `src/platforms/n8n_workflow_noloop.json`.
+3. Import `src/platforms/n8n_workflow.json`.
+4. Activate both workflows so the webhook URLs in `config.yaml` are live.
 
-#### Dify
+### Dify
 
-Dify is a cloud-hosted (or self-hosted) visual workflow builder. The two workflows are exported as DSL YAML files in `src/dify/` and must be imported into your Dify workspace before running.
+Import the DSL files into a Dify workspace:
 
-**Import workflows (do this once):**
+1. Create an app from `src/dify/Paper CritiqueAgent(Single Critic).yml`.
+2. Create an app from `src/dify/Paper CritiqueAgent (Dual Critic).yml`.
+3. Copy each workflow API key into `.env`.
+4. Confirm the Dify LLM nodes use temperature `0.2`.
 
-1. Log in to your Dify workspace (cloud or self-hosted)
-2. Go to **Studio → Create App → Import DSL file**
-3. Import `src/dify/Paper CritiqueAgent(Single Critic).yml` — this creates the **single-critic** workflow (Reader → Critic → Summariser)
-4. Import `src/dify/Paper CritiqueAgent (Dual Critic).yml` — this creates the **dual-critic** workflow (Reader → Critic 1 → Auditor → Critic 2 → Summariser)
+### Vertex AI
 
-**Retrieve API keys:**
+Set the project, location, models, and rate limits in `config.yaml` under
+`vertex_ai`. Authenticate with Google Cloud before running the Vertex scripts.
 
-Each imported workflow has its own API key:
+## Running Systems
 
-1. Open the workflow in Dify
-2. Click **API Access** (or the API icon, top-right of the workflow editor)
-3. Copy the API key shown
-4. Repeat for the other workflow
-
-Set both keys in your `.env`:
-
-```
-DIFY_API_KEY_SINGLE=your_single_critic_api_key_here
-DIFY_API_KEY_DUAL=your_dual_critic_api_key_here
-```
-
-**Verify temperature settings:**
-
-Before running, confirm all LLM nodes in both workflows are set to **temperature = 0.2** (matching the other platforms):
-
-- In the Dify workflow editor, click each LLM node (Reader, Critic1, Auditor, Critic2, Summariser)
-- Open **Model parameters** and confirm `temperature: 0.2`
-- The DSL files in this repo already have these values set correctly
-
-### 5. Run the pipeline
+Baseline:
 
 ```bash
-# Parse raw reviews
-python -m src.data_processing.parse_reviews
-
-# Build ground-truth critique dicts
-python -m src.data_processing.build_critique_dict
-
-# Run baseline (single LLM call per paper)
 python -m src.baseline.baseline_critique
+```
 
-# Run n8n workflows (requires n8n running — see step 4)
-python -m src.platforms.n8n_critique noloop   # Reader → Critic → Summariser
-python -m src.platforms.n8n_critique 1round   # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+n8n:
 
-# Run Dify workflows (requires DIFY_API_KEY_SINGLE and DIFY_API_KEY_DUAL in .env)
-python -m src.dify.run_dify single_critic     # Reader → Critic → Summariser
-python -m src.dify.run_dify dual_critic       # Reader → Critic 1 → Auditor → Critic 2 → Summariser
+```bash
+python -m src.platforms.n8n_critique noloop
+python -m src.platforms.n8n_critique 1round
+```
 
-# Score all systems
+Dify:
+
+```bash
+python -m src.dify.run_dify single_critic
+python -m src.dify.run_dify dual_critic
+```
+
+LangGraph:
+
+```bash
+python -m src.platforms.langgraph_critique --mode none
+python -m src.platforms.langgraph_critique --mode fixed --max-rounds 1
+python -m src.platforms.langgraph_critique --mode dynamic
+```
+
+CrewAI:
+
+```bash
+python -m src.platforms.crewai_critique none
+python -m src.platforms.crewai_critique fixed
+python -m src.platforms.crewai_critique dynamic
+```
+
+Vertex AI:
+
+```bash
+python scripts/run_full_pipeline.py --mode noloop
+python scripts/run_full_pipeline.py --mode fixed
+python scripts/run_full_pipeline.py --mode dynamic
+```
+
+All runners skip papers whose output JSON already exists. Remove or move the
+existing result file if you need to rerun a paper.
+
+## Result Directories
+
+| Score mode | Result directory |
+| --- | --- |
+| `baseline` | `results/LLM_baseline` |
+| `n8n_noloop` | `results/n8n/n8n_noloop` |
+| `n8n` | `results/n8n/n8n_1loop` |
+| `dify_single_critic` | `results/dify/single_critic` |
+| `dify_dual_critic` | `results/dify/dual_critic` |
+| `langgraph_none` | `results/langgraph/no_loop` |
+| `langgraph_fixed` | `results/langgraph/fixed_1round` |
+| `langgraph_dynamic` | `results/langgraph/dynamic` |
+| `crewai_none` | `results/crewai/crewai_none` |
+| `crewai_fixed` | `results/crewai/crewai_fixed` |
+| `crewai_dynamic` | `results/crewai/crewai_dynamic` |
+| `vertexai_noloop` | `results/vertexai_noloop` |
+| `vertexai_fixed` | `results/vertexai_fixed` |
+| `vertexai` | `results/vertexai` |
+
+For the scored variants above, the score mode is the `config.yaml` result key
+without the `_dir` suffix. Umbrella directories such as `results/langgraph/`
+are only containers for variant outputs.
+
+## Scoring and Plots
+
+Score any completed result directory:
+
+```bash
 python -m src.evaluation.scorer baseline
-python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer n8n_noloop
+python -m src.evaluation.scorer n8n
 python -m src.evaluation.scorer dify_single_critic
 python -m src.evaluation.scorer dify_dual_critic
 python -m src.evaluation.scorer langgraph_none
@@ -402,64 +290,64 @@ python -m src.evaluation.scorer langgraph_dynamic
 python -m src.evaluation.scorer crewai_none
 python -m src.evaluation.scorer crewai_fixed
 python -m src.evaluation.scorer crewai_dynamic
+python -m src.evaluation.scorer vertexai_noloop
+python -m src.evaluation.scorer vertexai_fixed
+python -m src.evaluation.scorer vertexai
+```
 
-# Print comparison table + plots
+Create comparison tables and plots from available `scores.json` files:
+
+```bash
 python -m src.evaluation.metrics
 ```
 
----
+This writes comparison figures under `results/`, including
+`results/comparison.png` and `results/latency_comparison.png`.
 
-## Agentic workflow
+## Evaluation Method
 
-```
-Paper text
-    │
-    ▼
-┌─────────┐    summary     ┌─────────┐
-│  Reader │ ─────────────► │  Critic │ ─── initial critique ──┐
-└─────────┘                └─────────┘                        │
-                                ▲  revised critique           │ audit feedback
-                                │                             ▼
-                                └────────────────────  ┌─────────┐
-                                                       │ Auditor │
-                                                       └─────────┘
-                                                            │
-                                                  (repeat up to N rounds)
-                                                            │
-                                                            ▼
-                                                    ┌─────────────┐
-                                                    │ Summariser  │
-                                                    └─────────────┘
-                                                            │
-                                                            ▼
-                                                   JSON critique dict
-```
+Each generated weakness point is embedded with the configured
+`sentence-transformers` model. A ground-truth critique point is considered
+covered when the maximum cosine similarity against generated points is at least
+`evaluation.similarity_threshold` from `config.yaml` (default `0.50`).
 
----
+| Metric | Meaning |
+| --- | --- |
+| Precision | Fraction of generated critique points that match a ground-truth point |
+| Recall | Fraction of ground-truth points covered by generated critique points |
+| F1 | Harmonic mean of precision and recall |
 
-## Evaluation
+## Key Configuration
 
-Each generated critique point is embedded with `sentence-transformers`.
-A ground-truth point is considered *covered* if at least one generated point
-has cosine similarity ≥ threshold (default **0.50**, set in `config.yaml`).
+Common settings in `config.yaml`:
 
-| Metric    | Definition                                      |
-|-----------|-------------------------------------------------|
-| Recall    | Fraction of GT points covered by the system     |
-| Precision | Fraction of generated points that match a GT pt |
-| F1        | Harmonic mean of precision and recall           |
-
----
-
-## Configuration
-
-Key settings in [config.yaml](config.yaml):
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `models.strong` | `gpt-4.1-mini` | Agent / dict-builder model |
-| `models.fast` | `gpt-4.1-mini` | Cheap sub-calls |
-| `agent.max_rounds` | `3` | Max Critic ↔ Auditor debate rounds |
-| `langgraph.loop_mode` | `dynamic` | `none` / `fixed` / `dynamic` |
-| `evaluation.similarity_threshold` | `0.50` | Cosine sim for "covered" |
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `models.strong` | `gpt-4.1-mini` | Main OpenAI model for agents and dict building |
+| `models.baseline` | `gpt-4.1-mini` | Single-call baseline model |
 | `temperature` | `0.2` | Generation temperature |
+| `agent.max_rounds` | `3` | Max debate rounds for dynamic loops |
+| `agent.truncate_body_chars` | `0` | `0` means use full parsed paper text |
+| `evaluation.similarity_threshold` | `0.50` | Cosine similarity threshold for coverage |
+| `evaluation.embedding_model` | `all-MiniLM-L6-v2` | Sentence embedding model |
+| `langgraph.loop_mode` | `dynamic` | Default LangGraph mode when no CLI mode is passed |
+
+## Tests
+
+Run the available test suite with:
+
+```bash
+pytest
+```
+
+The current tests focus on Vertex AI result parsing and patching helpers.
+
+## Notes and Limitations
+
+- Dify uses raw PDF input, while other implementations use parsed paper text.
+- Vertex AI uses Gemini model variants because that platform does not run the
+  OpenAI model used elsewhere.
+- Existing outputs are skipped by design so long runs can be resumed safely.
+- Some helper scripts in `scripts/` are operational utilities; the main scoring
+  path is `python -m src.evaluation.scorer <mode>` followed by
+  `python -m src.evaluation.metrics`.
