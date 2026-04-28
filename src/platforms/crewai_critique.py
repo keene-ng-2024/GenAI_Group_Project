@@ -509,17 +509,15 @@ def critique_paper(
 # ── Batch pipeline ─────────────────────────────────────────────────────────────
 
 def run_all_papers(loop_mode: str, cfg: dict) -> None:
-    """Run all papers in the eval JSONL through the specified CrewAI loop mode."""
+    """Run all papers in reviews_parsed.json through the specified CrewAI loop mode."""
     if loop_mode not in LOOP_MODES:
         raise ValueError(f"Unknown loop_mode '{loop_mode}'. Use: {', '.join(LOOP_MODES)}")
 
     output_dir = cfg["results"].get(f"crewai_{loop_mode}_dir", f"results/crewai_{loop_mode}")
-    jsonl_path = cfg["data"].get("jsonl_file", "data/ReviewCritique.jsonl")
+    reviews_path = cfg["data"]["reviews_file"]
 
-    papers: dict = {}
-    with open(jsonl_path) as f:
-        for i, line in enumerate(f, start=1):
-            papers[f"paper_{i:04d}"] = json.loads(line)
+    with open(reviews_path) as f:
+        papers: dict = json.load(f)
     print(f"  [INFO] {len(papers)} papers, loop_mode={loop_mode}")
 
     out_dir = Path(output_dir)

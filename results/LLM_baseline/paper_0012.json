@@ -1,91 +1,132 @@
 {
   "paper_id": "paper_0012",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 12.467,
+  "latency_seconds": 27.921,
   "token_usage": {
-    "input": 9027,
-    "output": 1009
+    "input": 9138,
+    "output": 1681
   },
   "structured": {
-    "summary": "This paper identifies the shortcomings of existing semantic similarity metrics used in textual adversarial attacks, particularly their inability to distinguish antonyms due to unsupervised training. It proposes a supervised Semantics-Preserving Encoder (SPE) based on multiple fastText classifiers to improve semantic preservation in adversarial examples, demonstrating superior performance through automatic and human evaluations across multiple datasets.",
+    "summary": "This paper proposes Semantics-Preserving Encoder (SPE), a supervised sentence embedding method designed to improve semantic similarity metrics in textual adversarial attacks. SPE aims to better distinguish semantic changes, especially antonym substitutions, thereby generating higher-quality adversarial examples that preserve meaning, as validated by human evaluations across multiple datasets.",
     "strengths": [
       {
-        "point": "Identification of a critical flaw in existing semantic similarity metrics related to antonym recognition.",
-        "evidence": "Section 3.1 and Table 1 illustrate how unsupervised encoders like USE and BERTScore fail to distinguish sentences with opposite meanings."
+        "point": "Identification of a key flaw in existing unsupervised sentence encoders (USE, BERTScore) regarding antonym recognition leading to poor semantic preservation in adversarial attacks.",
+        "evidence": "Section 1 Introduction and Section 3.1 Problem Formulation discuss how unsupervised training causes antonyms to be embedded closely, e.g., 'This movie is so good' vs 'This movie is so bad' in Table 1."
       },
       {
-        "point": "Introduction of a novel supervised sentence encoder (SPE) that combines multiple classifiers to better preserve semantics.",
-        "evidence": "Section 3.2 details the design of SPE using fastText classifiers trained on diverse annotated datasets."
+        "point": "Introduction of a novel supervised sentence encoder (SPE) that combines multiple classifiers trained on diverse annotated datasets to improve semantic similarity measurement.",
+        "evidence": "Section 3.2 Semantics-Preserving Encoder details the use of multiple fastText classifiers trained on NLI and downstream tasks, averaging embeddings to form SPE."
       },
       {
-        "point": "Comprehensive evaluation including both automatic metrics and extensive human annotation to assess semantic preservation.",
-        "evidence": "Section 4.2 describes the human evaluation methodology, and Section 5 presents results showing SPE's improved real attack success rate (rASR)."
+        "point": "Comprehensive evaluation including both automatic metrics and extensive human annotation to assess semantic preservation and attack quality.",
+        "evidence": "Section 4.2 Human Evaluation describes the use of 5 annotators scoring semantic similarity, leading to the proposed real attack success rate (rASR) metric."
       },
       {
-        "point": "Open sourcing of code, datasets, and human evaluations to promote reproducibility and benchmarking.",
-        "evidence": "Mentioned in the abstract and Section 1, with links provided."
+        "point": "Demonstration that SPE improves the real attack success rate (rASR) significantly over USE and BERTScore across four diverse datasets and two attack methods.",
+        "evidence": "Section 5 Results and Table 2 show SPE achieving more than 20% higher rASR than baselines with TextFooler and consistent improvements with TFAdjusted."
+      },
+      {
+        "point": "SPE offers computational efficiency advantages due to low-dimensional fastText classifiers compared to large embedding models like USE.",
+        "evidence": "Section 3.2 discusses SPE\u2019s reduced real-time complexity with 7 fastText classifiers having 10-dimensional embeddings versus USE\u2019s 512 dimensions."
+      },
+      {
+        "point": "Open sourcing of code, datasets, human evaluations, and test samples to promote reproducibility and benchmarking.",
+        "evidence": "Mentioned in Section 1 Introduction and Section 4.3 Datasets, with links provided to GitHub repository."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited exploration of alternative supervised models beyond fastText classifiers.",
-        "evidence": "Section 6 suggests future work could extend SPE to large pre-trained language models but does not provide experiments or analysis."
+        "point": "Lack of ablation study on the contribution of individual classifiers within SPE to overall performance.",
+        "evidence": "Section 3.2 describes combining seven classifiers but does not analyze which classifiers contribute most or whether all are necessary."
       },
       {
-        "point": "Potential trade-off between strictness of semantic similarity constraint and attack success rate is not deeply analyzed.",
-        "evidence": "Section 5 notes SPE is less strict yet maintains low ASR to rASR drop, but detailed ablation or threshold sensitivity analysis is missing."
+        "point": "No comparison with recent large pretrained language model embeddings fine-tuned for semantic similarity, which may challenge SPE\u2019s performance claims.",
+        "evidence": "Related Work (Section 2) mentions BERTScore and USE but does not compare with other supervised or fine-tuned transformer-based sentence embeddings."
       },
       {
-        "point": "The dimensionality of embeddings (10) is very low compared to baselines (512), raising questions about representational capacity.",
-        "evidence": "Section 3.2 and Appendix A.1 mention the choice of 10 dimensions without extensive justification or comparison."
+        "point": "The choice of cosine similarity threshold (\u03f5=0.95) is empirically set but lacks detailed justification or sensitivity analysis.",
+        "evidence": "Section 3.2 states the threshold was chosen empirically but does not provide experiments showing how varying \u03f5 affects results."
       },
       {
-        "point": "Evaluation focuses primarily on classification tasks; applicability to other NLP tasks or more complex adversarial scenarios is unclear.",
-        "evidence": "Datasets and experiments (Section 4.3 and 5) are limited to classification datasets such as hate speech and sentiment analysis."
+        "point": "Human evaluation uses a relatively coarse 4-point scale and binary thresholding at 2.5, which may oversimplify semantic similarity judgments.",
+        "evidence": "Section 4.2 describes averaging annotator scores and binarizing similarity but does not discuss inter-annotator agreement or alternative scales."
       },
       {
-        "point": "The paper does not discuss the potential impact of combining multiple classifiers on computational overhead in real-world settings.",
-        "evidence": "Section 3.2 claims faster execution but lacks detailed runtime benchmarks or scalability analysis."
+        "point": "The evaluation focuses on only two adversarial attacks (TextFooler and TFAdjusted), limiting generalizability to other attack methods.",
+        "evidence": "Section 4 Introduction and Section 5 Results only report experiments with these two attacks."
       },
       {
-        "point": "Human evaluation uses a relatively small number of annotators (5) and binary thresholding which may limit robustness of semantic similarity judgments.",
-        "evidence": "Section 4.2 describes the human evaluation protocol but does not report inter-annotator agreement or confidence intervals."
+        "point": "Limited discussion on potential limitations of SPE, such as handling polysemy, idiomatic expressions, or domain shifts beyond tested datasets.",
+        "evidence": "Section 6 Conclusion briefly mentions possible extensions but does not analyze failure modes or robustness beyond tested tasks."
       },
       {
-        "point": "The proposed new metric rASR, while motivated, lacks formal definition and comparison with existing metrics.",
-        "evidence": "Section 1 and 4.2 introduce rASR conceptually but do not provide a formal mathematical definition or detailed discussion."
+        "point": "Details on training data sizes, epochs, and hyperparameter tuning for the fastText classifiers are sparse, hindering reproducibility.",
+        "evidence": "Appendix A.1 provides some hyperparameters but lacks comprehensive training details such as dataset splits or training duration."
+      },
+      {
+        "point": "No quantitative comparison of SPE\u2019s embedding quality on standard semantic textual similarity benchmarks outside adversarial attack context.",
+        "evidence": "Experiments focus solely on adversarial attack datasets; no evaluation on general semantic similarity tasks like STS benchmarks."
+      },
+      {
+        "point": "The paper does not clarify how SPE handles out-of-vocabulary words or rare tokens during embedding generation.",
+        "evidence": "Section 3.2 and Appendix A.1 mention fastText but do not discuss OOV handling or impact on similarity computations."
+      },
+      {
+        "point": "The proposed rASR metric depends on costly human annotation, which may limit its practical applicability for large-scale evaluations.",
+        "evidence": "Section 4.2 acknowledges the high cost of human evaluation but does not propose automated proxies or scalable alternatives."
+      },
+      {
+        "point": "Some figures and tables (e.g., Table 1, Figure 2) are referenced but not fully described or visually included in the text, reducing clarity.",
+        "evidence": "Throughout Sections 1 and 3, references to Table 1 and Figure 2 are made but the paper excerpt does not provide these visuals or detailed captions."
+      },
+      {
+        "point": "The paper\u2019s writing contains several typographical and formatting errors that occasionally hinder readability.",
+        "evidence": "Examples include inconsistent spacing, misplaced line breaks, and some unclear sentences in Sections 1 and 3."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is SPE's performance to the choice and number of classifiers combined in the embedding?",
-        "motivation": "Understanding this would clarify the robustness and generalizability of SPE across different tasks and datasets."
+        "question": "Have you considered evaluating SPE embeddings on standard semantic textual similarity benchmarks outside adversarial attack tasks?",
+        "motivation": "This would help establish the general semantic quality of SPE beyond the adversarial attack context."
       },
       {
-        "question": "Have the authors considered fine-tuning large pre-trained language models in a supervised manner as an alternative to fastText classifiers for SPE?",
-        "motivation": "This could potentially improve semantic preservation further, and it would be useful to know if this was explored or planned."
+        "question": "Can you provide an ablation study showing the impact of each individual classifier in SPE on the final embedding quality and attack performance?",
+        "motivation": "Understanding which classifiers contribute most would clarify the design choices and potential simplifications."
       },
       {
-        "question": "What is the computational overhead of SPE compared to USE and BERTScore in large-scale or real-time adversarial attack scenarios?",
-        "motivation": "Practical adoption depends on efficiency; detailed runtime and resource usage comparisons would strengthen the paper."
+        "question": "How sensitive are your results to the choice of the cosine similarity threshold \u03f5, and could adaptive thresholds improve performance?",
+        "motivation": "Threshold selection critically affects attack success and semantic preservation; exploring this could strengthen claims."
       },
       {
-        "question": "Can the authors provide more details on the inter-annotator agreement and reliability of the human semantic similarity scores?",
-        "motivation": "This information is important to assess the validity and consistency of the human evaluation results."
+        "question": "How does SPE handle out-of-vocabulary or rare words during embedding computation, especially in noisy or domain-shifted text?",
+        "motivation": "Robustness to OOV tokens is important for practical deployment in diverse real-world scenarios."
+      },
+      {
+        "question": "Do you foresee integrating SPE with large pretrained transformer models fine-tuned on supervised tasks, and how would that impact computational efficiency?",
+        "motivation": "Exploring this could balance accuracy gains with efficiency trade-offs for future work."
+      },
+      {
+        "question": "Could you clarify the inter-annotator agreement statistics for the human evaluation and whether the 4-point scale sufficiently captures semantic similarity nuances?",
+        "motivation": "This information is important to assess the reliability and granularity of the human similarity judgments."
+      },
+      {
+        "question": "Have you tested SPE\u2019s effectiveness with other adversarial attack algorithms beyond TextFooler and TFAdjusted?",
+        "motivation": "Demonstrating generalizability across attacks would strengthen the practical impact of SPE."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited exploration of alternative supervised models beyond fastText classifiers. (Section 6 suggests future work could extend SPE to large pre-trained language models but does not provide experiments or analysis.)",
-    "point_002": "Potential trade-off between strictness of semantic similarity constraint and attack success rate is not deeply analyzed. (Section 5 notes SPE is less strict yet maintains low ASR to rASR drop, but detailed ablation or threshold sensitivity analysis is missing.)",
-    "point_003": "The dimensionality of embeddings (10) is very low compared to baselines (512), raising questions about representational capacity. (Section 3.2 and Appendix A.1 mention the choice of 10 dimensions without extensive justification or comparison.)",
-    "point_004": "Evaluation focuses primarily on classification tasks; applicability to other NLP tasks or more complex adversarial scenarios is unclear. (Datasets and experiments (Section 4.3 and 5) are limited to classification datasets such as hate speech and sentiment analysis.)",
-    "point_005": "The paper does not discuss the potential impact of combining multiple classifiers on computational overhead in real-world settings. (Section 3.2 claims faster execution but lacks detailed runtime benchmarks or scalability analysis.)",
-    "point_006": "Human evaluation uses a relatively small number of annotators (5) and binary thresholding which may limit robustness of semantic similarity judgments. (Section 4.2 describes the human evaluation protocol but does not report inter-annotator agreement or confidence intervals.)",
-    "point_007": "The proposed new metric rASR, while motivated, lacks formal definition and comparison with existing metrics. (Section 1 and 4.2 introduce rASR conceptually but do not provide a formal mathematical definition or detailed discussion.)",
-    "point_008": "How sensitive is SPE's performance to the choice and number of classifiers combined in the embedding? (Understanding this would clarify the robustness and generalizability of SPE across different tasks and datasets.)",
-    "point_009": "Have the authors considered fine-tuning large pre-trained language models in a supervised manner as an alternative to fastText classifiers for SPE? (This could potentially improve semantic preservation further, and it would be useful to know if this was explored or planned.)",
-    "point_010": "What is the computational overhead of SPE compared to USE and BERTScore in large-scale or real-time adversarial attack scenarios? (Practical adoption depends on efficiency; detailed runtime and resource usage comparisons would strengthen the paper.)",
-    "point_011": "Can the authors provide more details on the inter-annotator agreement and reliability of the human semantic similarity scores? (This information is important to assess the validity and consistency of the human evaluation results.)"
+    "point_001": "Lack of ablation study on the contribution of individual classifiers within SPE to overall performance.. Section 3.2 describes combining seven classifiers but does not analyze which classifiers contribute most or whether all are necessary",
+    "point_002": "No comparison with recent large pretrained language model embeddings fine-tuned for semantic similarity, which may challenge SPE\u2019s performance claims.. Related Work (Section 2) mentions BERTScore and USE but does not compare with other supervised or fine-tuned transformer-based sentence embeddings",
+    "point_003": "The choice of cosine similarity threshold (\u03f5=0.95) is empirically set but lacks detailed justification or sensitivity analysis.. Section 3.2 states the threshold was chosen empirically but does not provide experiments showing how varying \u03f5 affects results",
+    "point_004": "Human evaluation uses a relatively coarse 4-point scale and binary thresholding at 2.5, which may oversimplify semantic similarity judgments.. Section 4.2 describes averaging annotator scores and binarizing similarity but does not discuss inter-annotator agreement or alternative scales",
+    "point_005": "The evaluation focuses on only two adversarial attacks (TextFooler and TFAdjusted), limiting generalizability to other attack methods.. Section 4 Introduction and Section 5 Results only report experiments with these two attacks",
+    "point_006": "Limited discussion on potential limitations of SPE, such as handling polysemy, idiomatic expressions, or domain shifts beyond tested datasets.. Section 6 Conclusion briefly mentions possible extensions but does not analyze failure modes or robustness beyond tested tasks",
+    "point_007": "Details on training data sizes, epochs, and hyperparameter tuning for the fastText classifiers are sparse, hindering reproducibility.. Appendix A.1 provides some hyperparameters but lacks comprehensive training details such as dataset splits or training duration",
+    "point_008": "No quantitative comparison of SPE\u2019s embedding quality on standard semantic textual similarity benchmarks outside adversarial attack context.. Experiments focus solely on adversarial attack datasets; no evaluation on general semantic similarity tasks like STS benchmarks",
+    "point_009": "The paper does not clarify how SPE handles out-of-vocabulary words or rare tokens during embedding generation.. Section 3.2 and Appendix A.1 mention fastText but do not discuss OOV handling or impact on similarity computations",
+    "point_010": "The proposed rASR metric depends on costly human annotation, which may limit its practical applicability for large-scale evaluations.. Section 4.2 acknowledges the high cost of human evaluation but does not propose automated proxies or scalable alternatives",
+    "point_011": "Some figures and tables (e.g., Table 1, Figure 2) are referenced but not fully described or visually included in the text, reducing clarity.. Throughout Sections 1 and 3, references to Table 1 and Figure 2 are made but the paper excerpt does not provide these visuals or detailed captions",
+    "point_012": "The paper\u2019s writing contains several typographical and formatting errors that occasionally hinder readability.. Examples include inconsistent spacing, misplaced line breaks, and some unclear sentences in Sections 1 and 3"
   }
 }

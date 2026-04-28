@@ -1,86 +1,132 @@
 {
   "paper_id": "paper_0090",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 11.99,
+  "latency_seconds": 30.75,
   "token_usage": {
-    "input": 9763,
-    "output": 997
+    "input": 9874,
+    "output": 1660
   },
   "structured": {
-    "summary": "This paper proposes RECITation-augmented gEneration (RECITE), a novel two-step paradigm for closed-book question answering (CBQA) where large language models first recite relevant knowledge from their own memory before generating final answers. The approach improves factual accuracy without relying on external retrieval and demonstrates state-of-the-art performance on multiple CBQA datasets and models.",
+    "summary": "This paper proposes RECITation-augmented gEneration (RECITE), a two-step paradigm for closed-book question answering where large language models first recite relevant passages from their own memory before generating final answers. The approach is evaluated on three LLMs and three CBQA datasets, showing improved performance over standard prompting and chain-of-thought methods.",
     "strengths": [
       {
-        "point": "Novel paradigm introducing an intermediate recitation step to improve factual accuracy in closed-book QA.",
-        "evidence": "Section 1 and 3 describe the recite-and-answer scheme that decomposes QA into knowledge recitation and answer generation, mimicking human exam strategies."
+        "point": "Introduces a novel two-step recite-and-answer paradigm that decomposes knowledge-intensive QA into knowledge recitation and answer generation, leveraging LLMs' internal memory without external retrieval.",
+        "evidence": "Section 1 Introduction and Section 3 Learning to Recite for Closed-Book Question Answering"
       },
       {
-        "point": "Comprehensive empirical evaluation on multiple large language models and diverse CBQA benchmarks.",
-        "evidence": "Section 4 reports experiments on In-house LM, UL2, and OPT models across Natural Questions, TriviaQA, and HotpotQA datasets."
+        "point": "Demonstrates consistent performance improvements across multiple large language models (In-house LM, UL2, OPT) and diverse CBQA datasets (Natural Questions, TriviaQA, HotpotQA).",
+        "evidence": "Section 4.2.1 Prompt-based results and Table 1"
       },
       {
-        "point": "Demonstrates compatibility with self-consistency and multi-hop reasoning techniques.",
-        "evidence": "Section 3.1 details self-consistency ensemble and multiple-recite-and-answer schemes for multi-hop QA, with improved results in Section 4."
+        "point": "Proposes passage hint-based diversified recitation with fine-tuning to improve recitation diversity and factual accuracy, addressing sampling trade-offs.",
+        "evidence": "Section 3.2 Passage hint-based diversified recitation with fine-tuning and Section 4.2.2 Results of passage hint-based diversified recitation"
       },
       {
-        "point": "Proposes passage hint-based diversified recitation and fine-tuning to improve recitation quality and diversity.",
-        "evidence": "Section 3.2 introduces passage hint-based recitation and fine-tuning on synthetic question-passage pairs, leading to further performance gains (Section 4.2.2)."
+        "point": "Incorporates self-consistency ensemble decoding to improve robustness by sampling multiple recitations and majority voting on answers.",
+        "evidence": "Section 3.1 Prompt-based recite-and-answer for question-answering and Section 4.3.1 On the number of self-consistency paths"
+      },
+      {
+        "point": "Provides detailed error analysis identifying that the main bottleneck lies in recitation quality and answer aggregation, highlighting future improvement directions.",
+        "evidence": "Section 4.3.4 Error analysis and Table 5"
+      },
+      {
+        "point": "Evaluates robustness of recite-and-answer to few-shot exemplar selection and ordering, showing stable performance gains over standard prompting.",
+        "evidence": "Section 4.3.2 On the robustness of few-shot exemplars and Table 3"
+      },
+      {
+        "point": "Compares recitation-based context passages with retrieval-based and ground-truth passages, showing competitive performance without external corpus access.",
+        "evidence": "Section 4.3.3 Recitation vs. retrieval vs. ground-truth and Table 4"
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited analysis on the scalability and computational cost of the recite-and-answer approach.",
-        "evidence": "While Section 4.3.1 discusses the effect of number of self-consistency paths, the paper lacks detailed discussion on inference latency or resource requirements."
+        "point": "The paper lacks comparison with recent retrieval-augmented generation methods that combine retrieval and generation, such as RAG or Atlas, limiting understanding of relative gains.",
+        "evidence": "Related work mentions retrieval-augmented models (Section 2.1), but no direct experimental comparison is provided."
       },
       {
-        "point": "Dependence on large-scale LLMs and fine-tuning with synthetic data may limit applicability to smaller models or resource-constrained settings.",
-        "evidence": "Section 3.2 and experiments focus on large models (20B+ parameters) and require fine-tuning on generated data, which may not be feasible universally."
+        "point": "The fine-tuning procedure on synthetic question-hint-passage pairs is only described for the In-house LM; it is unclear if this approach generalizes or is applied to other models.",
+        "evidence": "Section 3.2 and Section 4.2.2 focus on In-house LM fine-tuning without reporting results for UL2 or OPT."
       },
       {
-        "point": "Recitation quality remains a bottleneck, with errors mainly due to incorrect or missing recited passages.",
-        "evidence": "Error analysis in Section 4.3.4 shows majority of errors stem from 'No Recit' and 'Hits@20-Path' categories, indicating recitation generation challenges."
+        "point": "The method relies on access to top-retrieved Wikipedia pages for generating synthetic training data, which contradicts the closed-book setting and may limit applicability.",
+        "evidence": "Section 3 mentions using top-retrieved Wikipedia pages for synthetic data generation; Section 4.1.1 describes this for Natural Questions."
       },
       {
-        "point": "Comparison with retrieval-augmented methods shows recitation is competitive but still underperforms ground-truth retrieval.",
-        "evidence": "Section 4.3.3 reports that BM25 retrieval outperforms recitation passages, and both lag behind ground-truth passages, indicating room for improvement."
+        "point": "The evaluation on TriviaQA and HotpotQA uses only the first 1,024 examples due to computational constraints, which may limit statistical significance and generalizability.",
+        "evidence": "Section 4.1.2 Experimental setup notes this limitation."
       },
       {
-        "point": "Potential risk of amplifying biases inherent in LLM weights since recitation is generated solely from model memory without external grounding.",
-        "evidence": "Ethics statement notes that RECITE may enhance existing biases compared to retrieval-augmented generation."
+        "point": "The paper does not provide ablation studies isolating the contributions of recitation sampling, self-consistency, and passage hint fine-tuning to overall performance gains.",
+        "evidence": "Section 4 reports combined results but lacks detailed ablations."
       },
       {
-        "point": "Limited exploration of other knowledge-intensive tasks beyond closed-book QA.",
-        "evidence": "Conclusion mentions future work on fact checking but current experiments focus exclusively on CBQA."
+        "point": "The prompts used for recitation and answering are only briefly described and relegated to the appendix, limiting reproducibility and clarity on prompt design choices.",
+        "evidence": "Section B Principles of prompt designs and Appendix A mention prompts but details are minimal."
+      },
+      {
+        "point": "The method's applicability to other knowledge-intensive NLP tasks beyond closed-book QA, such as fact-checking or summarization, is not empirically validated.",
+        "evidence": "Section 5 Conclusion mentions future work but no experiments beyond QA."
+      },
+      {
+        "point": "The paper acknowledges that updating time-sensitive knowledge requires costly fine-tuning, but does not propose or evaluate mechanisms to address this limitation.",
+        "evidence": "Section 5 Conclusion & Discussion"
+      },
+      {
+        "point": "The error analysis shows that a significant portion of errors stem from incorrect or missing recitations, but no strategies are proposed to improve recitation quality beyond passage hint fine-tuning.",
+        "evidence": "Section 4.3.4 Error analysis and Table 5"
+      },
+      {
+        "point": "The self-consistency ensemble uses plurality voting but does not explore more sophisticated answer aggregation methods that might improve final answer accuracy.",
+        "evidence": "Section 3.1 describes majority voting; no alternative aggregation methods are discussed."
+      },
+      {
+        "point": "The paper does not discuss the computational cost or latency implications of the two-step recite-and-answer approach compared to direct generation or retrieval-augmented methods.",
+        "evidence": "No mention of efficiency or inference time in experiments or discussion."
+      },
+      {
+        "point": "The method assumes that recited passages correspond to unique Wikipedia sections identified by passage hints, which may not hold for other corpora or domains, limiting generalizability.",
+        "evidence": "Section 3.2 Passage hint-based diversified recitation relies on Wikipedia section titles."
       }
     ],
     "questions": [
       {
-        "question": "How does the computational cost and inference latency of RECITE compare to retrieval-augmented methods in practical deployment?",
-        "motivation": "Understanding efficiency trade-offs is critical for real-world applications where latency and resource constraints matter."
+        "question": "Can the authors provide experimental comparisons between RECITE and state-of-the-art retrieval-augmented generation models such as RAG or Atlas on the same datasets?",
+        "motivation": "This would clarify the relative benefits of recitation-augmented generation versus retrieval-based methods."
       },
       {
-        "question": "Can the recitation-augmented approach be effectively adapted to smaller language models or low-resource settings without extensive fine-tuning?",
-        "motivation": "Assessing generalizability to less powerful models would broaden the impact and applicability of the method."
+        "question": "How sensitive is the recite-and-answer approach to the quality and coverage of the synthetic question-hint-passage fine-tuning data, and can it be applied without access to retrieved passages?",
+        "motivation": "Understanding this is important for applying RECITE in truly closed-book or low-resource settings."
       },
       {
-        "question": "Have the authors considered integrating external retrieval with recitation to combine benefits of both approaches?",
-        "motivation": "Hybrid methods might leverage external corpus grounding while maintaining the advantages of recitation for improved accuracy."
+        "question": "What are the computational costs and inference latency of the recite-and-answer scheme compared to direct answer generation and retrieval-augmented methods?",
+        "motivation": "Efficiency considerations are critical for practical deployment of such multi-step generation approaches."
       },
       {
-        "question": "What strategies could be employed to improve the quality and factual correctness of recited passages to reduce errors?",
-        "motivation": "Since recitation quality is a major bottleneck, exploring methods to enhance it would directly improve overall QA performance."
+        "question": "Have the authors considered or experimented with more advanced answer aggregation methods beyond majority voting in the self-consistency ensemble?",
+        "motivation": "Improved aggregation could potentially reduce errors from conflicting recitations."
+      },
+      {
+        "question": "Can the authors clarify the prompt design choices and provide more detailed examples or guidelines to facilitate reproducibility?",
+        "motivation": "Prompt engineering is key to performance and reproducibility in few-shot LLM methods."
+      },
+      {
+        "question": "Is the passage hint-based diversified recitation approach applicable to domains or corpora without well-structured section titles, and if not, how might it be adapted?",
+        "motivation": "This affects the generalizability of the method beyond Wikipedia-based QA."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited analysis on the scalability and computational cost of the recite-and-answer approach. (While Section 4.3.1 discusses the effect of number of self-consistency paths, the paper lacks detailed discussion on inference latency or resource requirements.)",
-    "point_002": "Dependence on large-scale LLMs and fine-tuning with synthetic data may limit applicability to smaller models or resource-constrained settings. (Section 3.2 and experiments focus on large models (20B+ parameters) and require fine-tuning on generated data, which may not be feasible universally.)",
-    "point_003": "Recitation quality remains a bottleneck, with errors mainly due to incorrect or missing recited passages. (Error analysis in Section 4.3.4 shows majority of errors stem from 'No Recit' and 'Hits@20-Path' categories, indicating recitation generation challenges.)",
-    "point_004": "Comparison with retrieval-augmented methods shows recitation is competitive but still underperforms ground-truth retrieval. (Section 4.3.3 reports that BM25 retrieval outperforms recitation passages, and both lag behind ground-truth passages, indicating room for improvement.)",
-    "point_005": "Potential risk of amplifying biases inherent in LLM weights since recitation is generated solely from model memory without external grounding. (Ethics statement notes that RECITE may enhance existing biases compared to retrieval-augmented generation.)",
-    "point_006": "Limited exploration of other knowledge-intensive tasks beyond closed-book QA. (Conclusion mentions future work on fact checking but current experiments focus exclusively on CBQA.)",
-    "point_007": "How does the computational cost and inference latency of RECITE compare to retrieval-augmented methods in practical deployment? (Understanding efficiency trade-offs is critical for real-world applications where latency and resource constraints matter.)",
-    "point_008": "Can the recitation-augmented approach be effectively adapted to smaller language models or low-resource settings without extensive fine-tuning? (Assessing generalizability to less powerful models would broaden the impact and applicability of the method.)",
-    "point_009": "Have the authors considered integrating external retrieval with recitation to combine benefits of both approaches? (Hybrid methods might leverage external corpus grounding while maintaining the advantages of recitation for improved accuracy.)",
-    "point_010": "What strategies could be employed to improve the quality and factual correctness of recited passages to reduce errors? (Since recitation quality is a major bottleneck, exploring methods to enhance it would directly improve overall QA performance.)"
+    "point_001": "The paper lacks comparison with recent retrieval-augmented generation methods that combine retrieval and generation, such as RAG or Atlas, limiting understanding of relative gains.. Related work mentions retrieval-augmented models (Section 2.1), but no direct experimental comparison is provided",
+    "point_002": "The fine-tuning procedure on synthetic question-hint-passage pairs is only described for the In-house LM; it is unclear if this approach generalizes or is applied to other models.. Section 3.2 and Section 4.2.2 focus on In-house LM fine-tuning without reporting results for UL2 or OPT",
+    "point_003": "The method relies on access to top-retrieved Wikipedia pages for generating synthetic training data, which contradicts the closed-book setting and may limit applicability.. Section 3 mentions using top-retrieved Wikipedia pages for synthetic data generation; Section 4.1.1 describes this for Natural Questions",
+    "point_004": "The evaluation on TriviaQA and HotpotQA uses only the first 1,024 examples due to computational constraints, which may limit statistical significance and generalizability.. Section 4.1.2 Experimental setup notes this limitation",
+    "point_005": "The paper does not provide ablation studies isolating the contributions of recitation sampling, self-consistency, and passage hint fine-tuning to overall performance gains.. Section 4 reports combined results but lacks detailed ablations",
+    "point_006": "The prompts used for recitation and answering are only briefly described and relegated to the appendix, limiting reproducibility and clarity on prompt design choices.. Section B Principles of prompt designs and Appendix A mention prompts but details are minimal",
+    "point_007": "The method's applicability to other knowledge-intensive NLP tasks beyond closed-book QA, such as fact-checking or summarization, is not empirically validated.. Section 5 Conclusion mentions future work but no experiments beyond QA",
+    "point_008": "The paper acknowledges that updating time-sensitive knowledge requires costly fine-tuning, but does not propose or evaluate mechanisms to address this limitation.. Section 5 Conclusion & Discussion",
+    "point_009": "The error analysis shows that a significant portion of errors stem from incorrect or missing recitations, but no strategies are proposed to improve recitation quality beyond passage hint fine-tuning.. Section 4.3.4 Error analysis and Table 5",
+    "point_010": "The self-consistency ensemble uses plurality voting but does not explore more sophisticated answer aggregation methods that might improve final answer accuracy.. Section 3.1 describes majority voting; no alternative aggregation methods are discussed",
+    "point_011": "The paper does not discuss the computational cost or latency implications of the two-step recite-and-answer approach compared to direct generation or retrieval-augmented methods.. No mention of efficiency or inference time in experiments or discussion",
+    "point_012": "The method assumes that recited passages correspond to unique Wikipedia sections identified by passage hints, which may not hold for other corpora or domains, limiting generalizability.. Section 3.2 Passage hint-based diversified recitation relies on Wikipedia section titles"
   }
 }

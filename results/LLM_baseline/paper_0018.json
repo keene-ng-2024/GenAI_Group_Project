@@ -1,91 +1,136 @@
 {
   "paper_id": "paper_0018",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 20.392,
+  "latency_seconds": 37.791,
   "token_usage": {
-    "input": 10610,
-    "output": 1154
+    "input": 10721,
+    "output": 1839
   },
   "structured": {
-    "summary": "This paper introduces WEBBRAIN, a novel NLP task focused on generating short, factually correct articles for factual queries by grounding generation on evidence retrieved from a large web corpus. The authors construct a large-scale dataset WebBrain-Raw from Wikipedia and its references, propose a retrieval-augmented generation framework ReGen with improved retriever and pre-training strategies, and demonstrate its superiority over baselines and GPT-3 on both automatic and human evaluations.",
+    "summary": "This paper introduces WEBBRAIN, a novel task of generating short, factually correct articles for factual queries by grounding generation on evidence retrieved from a large web corpus. The authors construct a large-scale dataset WebBrain-Raw from Wikipedia and its references, propose the ReGen framework combining improved retrieval (SPLADE-based) and generation (FiD+BART with warm-up pretraining), and demonstrate superior performance over baselines including GPT-3 on multiple automatic and human evaluation metrics.",
     "strengths": [
       {
-        "point": "Introduction of a novel and practical NLP task that aims to generate factually correct short articles grounded on web evidence, addressing hallucination issues in language models.",
-        "evidence": "Section 1 (Introduction) and Section 3.1 (Task Definition) clearly define the WEBBRAIN task and its motivation."
+        "point": "Introduction of a novel and challenging task that combines retrieval and generation to produce factually grounded short articles for factual queries.",
+        "evidence": "Section 1 (Introduction) and Section 3.1 (Task Definition) clearly define the WEBBRAIN task and its distinction from related tasks."
       },
       {
-        "point": "Construction of a large-scale, high-quality dataset WebBrain-Raw that is an order of magnitude larger than previous datasets, enabling extensive research on the task.",
-        "evidence": "Section 3.2 (Data Collection) and Table 1 describe the dataset construction from Wikipedia articles and crawlable references."
+        "point": "Construction of a large-scale, high-quality dataset WebBrain-Raw that is an order of magnitude larger than previous Wikipedia-based datasets, enabling robust training and evaluation.",
+        "evidence": "Section 3.2 (Data Collection) and Table 1 detail the dataset construction and its scale compared to prior datasets."
       },
       {
-        "point": "Design of the ReGen framework that integrates a state-of-the-art sparse lexical retriever (SPLADE) with a Fusion-in-Decoder generator, enhanced by topic consistency filtering and a warm-up pre-training stage.",
-        "evidence": "Section 4 details the architecture and training strategies of ReGen, including asymmetric sparsity and reference mark incorporation."
+        "point": "Proposal of the ReGen framework that integrates a SPLADE-based retriever with asymmetric sparsity and topic consistency filtering, and a FiD+BART generator with a novel warm-up pretraining stage for sentence-reference matching.",
+        "evidence": "Section 4 (Framework: ReGen) describes the design choices and innovations in both retriever and generator components."
       },
       {
-        "point": "Comprehensive experimental evaluation including comparisons with strong baselines, ablations on retrievers and number of references, and human evaluations demonstrating improved factuality and fluency.",
-        "evidence": "Section 5 presents extensive experiments, automatic metrics, human evaluation results, and comparison with GPT-3 zero-shot generation."
+        "point": "Comprehensive evaluation including multiple automatic metrics (BLEU, ROUGE, QAGS, Triple Score) and human evaluation on fluency, informativeness, and faithfulness, demonstrating ReGen's superiority over strong baselines including GPT-3.",
+        "evidence": "Section 5.2 (Overall Results), Table 3, Table 5, and Figure 4 provide detailed quantitative and qualitative comparisons."
+      },
+      {
+        "point": "Insightful analysis of the impact of retriever choice and number of retrieved references on generation quality and factuality, highlighting challenges and trade-offs in retrieval-augmented generation.",
+        "evidence": "Section 5.3 (Discussion), Tables 4, Figures 2 and 3 analyze retrieval effects and reference quantity."
+      },
+      {
+        "point": "Release of dataset and detailed supplementary materials including implementation details, human evaluation criteria, case studies, and system demonstration to support reproducibility and future research.",
+        "evidence": "Appendices A-F and mentions in Sections 3.2, 5.1, and E."
       }
     ],
     "weaknesses": [
       {
-        "point": "The retriever performance remains a bottleneck, with retrieval quality directly impacting generation factuality and overall system performance.",
-        "evidence": "Section 5.3 discusses that ReGen's performance with retrieved evidence is worse than with golden references, highlighting retrieval challenges."
+        "point": "Lack of ablation studies isolating the contributions of individual components of ReGen, such as the asymmetric sparsity in SPLADE, topic consistency filtering, and warm-up pretraining.",
+        "evidence": "Section 4 describes these components but Section 5 does not provide ablation experiments quantifying their separate impacts."
       },
       {
-        "point": "Reference mark accuracy in generated text is limited and not integrated into model training, reducing interpretability and factual grounding clarity.",
-        "evidence": "Appendix C describes a heuristic Reference mark-Enhanced Decoding strategy used only at inference without training integration."
+        "point": "The comparison with GPT-3 is limited to zero-shot generation with a simple prompt and does not explore few-shot or retrieval-augmented prompting, which may underestimate GPT-3's capabilities.",
+        "evidence": "Section 5.3 mentions using the prompt 'Introduce [X]:' for GPT-3 zero-shot generation without further prompt engineering or retrieval augmentation."
       },
       {
-        "point": "The generation is limited to short articles (first section of Wikipedia pages), leaving the challenge of generating longer, comprehensive articles unaddressed.",
-        "evidence": "Section 6 (Conclusion) and Appendix F (Limitations) acknowledge the current focus on short articles and the need for future work on long article generation."
+        "point": "The retrieval corpus is limited to crawlable Wikipedia references, which may not fully represent the diversity and noisiness of the open Web, potentially limiting generalizability.",
+        "evidence": "Section 3.2 states the corpus is constructed from Wikipedia references only; no experiments on broader or noisier web corpora are reported."
       },
       {
-        "point": "The evaluation metrics, while diverse, rely heavily on n-gram overlap and automatic factuality proxies, which may not fully capture factual correctness or citation accuracy.",
-        "evidence": "Section 5.1 describes the use of BLEU, ROUGE, QAGS, and Triple Score, but notes challenges in evaluating reference mark accuracy."
+        "point": "The method relies heavily on the quality of retrieved evidence, but the paper does not explore strategies to handle noisy or partially relevant retrieved documents during generation.",
+        "evidence": "Section 5.3 discusses that more references can introduce noise and degrade some metrics, but no mitigation strategies are proposed."
       },
       {
-        "point": "Limited discussion on the scalability and efficiency of the retrieval and generation pipeline when applied to the full web corpus beyond Wikipedia references.",
-        "evidence": "The paper focuses on Wikipedia and its references as the corpus; broader web-scale retrieval challenges are not deeply analyzed."
+        "point": "Reference mark-enhanced decoding (RED) is only applied at inference and not integrated into training, which may limit its effectiveness and the model\u2019s ability to accurately attribute claims.",
+        "evidence": "Appendix C describes RED as a post-hoc inference strategy without training integration."
       },
       {
-        "point": "The comparison with GPT-3 is limited to zero-shot prompting without retrieval augmentation, which may not fully reflect GPT-3's capabilities with external knowledge.",
-        "evidence": "Section 5.3 compares ReGen with GPT-3 zero-shot generation but does not explore retrieval-augmented GPT-3 or fine-tuning."
+        "point": "The paper does not provide detailed error analysis or qualitative examples of failure cases where ReGen generates hallucinations or incorrect facts despite retrieved evidence.",
+        "evidence": "Section D provides a positive case study but lacks discussion of typical errors or limitations in generated outputs."
       },
       {
-        "point": "The paper lacks detailed error analysis or qualitative examples illustrating common failure modes or hallucinations in generated articles.",
-        "evidence": "Only a brief case study is provided in Appendix D without extensive error analysis."
+        "point": "Implementation details such as hyperparameters for warm-up pretraining, training schedules, and hardware requirements are only briefly mentioned and could be insufficient for exact reproducibility.",
+        "evidence": "Appendix A provides some details but lacks full training curves, seed settings, or code release status."
+      },
+      {
+        "point": "The evaluation metrics focus on n-gram overlap and factuality proxies but do not include recent advances in factuality evaluation such as human fact verification or model-based factuality scorers.",
+        "evidence": "Section 5.1 lists BLEU, ROUGE, METEOR, CIDEr, QAGS, and Triple Score but no mention of newer factuality metrics or human fact-checking protocols."
+      },
+      {
+        "point": "The task formulation assumes that each generated sentence can be fully supported by a subset of retrieved evidence, which may be unrealistic for complex or implicit knowledge claims.",
+        "evidence": "Section 3.1 formalizes the assumption t \u2190 V\u03c4 for each sentence, but the paper does not discuss limitations of this assumption."
+      },
+      {
+        "point": "The paper does not discuss potential ethical considerations or risks related to automatic generation of Wikipedia-like articles, such as misinformation propagation or bias amplification.",
+        "evidence": "No mention of ethical implications or safeguards is found in the main text or appendices."
+      },
+      {
+        "point": "The generalizability of the approach to languages other than English or domains beyond Wikipedia-style factual queries is not evaluated or discussed.",
+        "evidence": "Dataset and experiments focus exclusively on English Wikipedia and references."
+      },
+      {
+        "point": "The paper does not clarify how the retrieval and generation modules interact during inference latency or computational cost, which is important for practical deployment.",
+        "evidence": "No runtime or efficiency analysis is provided in Section 5 or appendices."
       }
     ],
     "questions": [
       {
-        "question": "How does ReGen perform when scaling retrieval to a broader, less curated web corpus beyond Wikipedia references, and what are the challenges involved?",
-        "motivation": "Understanding scalability and generalization to open web data is crucial for practical deployment and assessing robustness."
+        "question": "Have the authors considered integrating the reference mark-enhanced decoding strategy into the training process to improve attribution accuracy?",
+        "motivation": "Training integration could enable the model to better learn to associate claims with sources, potentially improving factuality and interpretability."
       },
       {
-        "question": "Can the reference mark prediction be integrated into the training process to improve citation accuracy and interpretability of generated articles?",
-        "motivation": "Improving reference mark accuracy during training could enhance factual grounding and user trust in generated content."
+        "question": "Can the authors provide ablation results isolating the impact of asymmetric sparsity regularization and topic consistency filtering in the SPLADE retriever?",
+        "motivation": "Understanding the contribution of each component would clarify which design choices are most critical for retrieval quality."
       },
       {
-        "question": "Have the authors considered combining retrieval-augmented generation with large language models like GPT-3 or GPT-4 to leverage both parametric and non-parametric knowledge?",
-        "motivation": "Hybrid approaches may further improve factuality and fluency, and it would be valuable to compare or integrate such methods."
+        "question": "Did the authors experiment with few-shot or retrieval-augmented prompting for GPT-3 to provide a stronger baseline comparison?",
+        "motivation": "Stronger GPT-3 baselines would better contextualize the improvements of ReGen and clarify the benefits of explicit retrieval."
       },
       {
-        "question": "What strategies could be employed to mitigate noise and redundancy in retrieved references, especially when increasing the number of references for generation?",
-        "motivation": "Managing noise is critical as more references can degrade generation quality, as observed in experiments."
+        "question": "How does ReGen perform when retrieving from a broader, noisier web corpus beyond Wikipedia references?",
+        "motivation": "Evaluating on more realistic web data would test the model\u2019s robustness and generalizability."
+      },
+      {
+        "question": "What strategies could be employed to mitigate the negative impact of noisy or irrelevant retrieved references on generation quality?",
+        "motivation": "Handling imperfect retrieval is crucial for practical applications where retrieval is not perfect."
+      },
+      {
+        "question": "Could the authors provide more detailed error analysis or examples of failure cases where ReGen hallucinated or generated incorrect facts?",
+        "motivation": "Understanding failure modes is important for guiding future improvements and assessing reliability."
+      },
+      {
+        "question": "Are there plans to extend the dataset and approach to other languages or domains beyond English Wikipedia?",
+        "motivation": "Demonstrating cross-lingual or cross-domain applicability would increase the impact and usability of the approach."
+      },
+      {
+        "question": "Can the authors comment on the computational cost and inference latency of ReGen compared to baseline models?",
+        "motivation": "Efficiency considerations are important for real-world deployment of retrieval-augmented generation systems."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The retriever performance remains a bottleneck, with retrieval quality directly impacting generation factuality and overall system performance. (Section 5.3 discusses that ReGen's performance with retrieved evidence is worse than with golden references, highlighting retrieval challenges.)",
-    "point_002": "Reference mark accuracy in generated text is limited and not integrated into model training, reducing interpretability and factual grounding clarity. (Appendix C describes a heuristic Reference mark-Enhanced Decoding strategy used only at inference without training integration.)",
-    "point_003": "The generation is limited to short articles (first section of Wikipedia pages), leaving the challenge of generating longer, comprehensive articles unaddressed. (Section 6 (Conclusion) and Appendix F (Limitations) acknowledge the current focus on short articles and the need for future work on long article generation.)",
-    "point_004": "The evaluation metrics, while diverse, rely heavily on n-gram overlap and automatic factuality proxies, which may not fully capture factual correctness or citation accuracy. (Section 5.1 describes the use of BLEU, ROUGE, QAGS, and Triple Score, but notes challenges in evaluating reference mark accuracy.)",
-    "point_005": "Limited discussion on the scalability and efficiency of the retrieval and generation pipeline when applied to the full web corpus beyond Wikipedia references. (The paper focuses on Wikipedia and its references as the corpus; broader web-scale retrieval challenges are not deeply analyzed.)",
-    "point_006": "The comparison with GPT-3 is limited to zero-shot prompting without retrieval augmentation, which may not fully reflect GPT-3's capabilities with external knowledge. (Section 5.3 compares ReGen with GPT-3 zero-shot generation but does not explore retrieval-augmented GPT-3 or fine-tuning.)",
-    "point_007": "The paper lacks detailed error analysis or qualitative examples illustrating common failure modes or hallucinations in generated articles. (Only a brief case study is provided in Appendix D without extensive error analysis.)",
-    "point_008": "How does ReGen perform when scaling retrieval to a broader, less curated web corpus beyond Wikipedia references, and what are the challenges involved? (Understanding scalability and generalization to open web data is crucial for practical deployment and assessing robustness.)",
-    "point_009": "Can the reference mark prediction be integrated into the training process to improve citation accuracy and interpretability of generated articles? (Improving reference mark accuracy during training could enhance factual grounding and user trust in generated content.)",
-    "point_010": "Have the authors considered combining retrieval-augmented generation with large language models like GPT-3 or GPT-4 to leverage both parametric and non-parametric knowledge? (Hybrid approaches may further improve factuality and fluency, and it would be valuable to compare or integrate such methods.)",
-    "point_011": "What strategies could be employed to mitigate noise and redundancy in retrieved references, especially when increasing the number of references for generation? (Managing noise is critical as more references can degrade generation quality, as observed in experiments.)"
+    "point_001": "Lack of ablation studies isolating the contributions of individual components of ReGen, such as the asymmetric sparsity in SPLADE, topic consistency filtering, and warm-up pretraining.. Section 4 describes these components but Section 5 does not provide ablation experiments quantifying their separate impacts",
+    "point_002": "The comparison with GPT-3 is limited to zero-shot generation with a simple prompt and does not explore few-shot or retrieval-augmented prompting, which may underestimate GPT-3's capabilities.. Section 5.3 mentions using the prompt 'Introduce [X]:' for GPT-3 zero-shot generation without further prompt engineering or retrieval augmentation",
+    "point_003": "The retrieval corpus is limited to crawlable Wikipedia references, which may not fully represent the diversity and noisiness of the open Web, potentially limiting generalizability.. Section 3.2 states the corpus is constructed from Wikipedia references only; no experiments on broader or noisier web corpora are reported",
+    "point_004": "The method relies heavily on the quality of retrieved evidence, but the paper does not explore strategies to handle noisy or partially relevant retrieved documents during generation.. Section 5.3 discusses that more references can introduce noise and degrade some metrics, but no mitigation strategies are proposed",
+    "point_005": "Reference mark-enhanced decoding (RED) is only applied at inference and not integrated into training, which may limit its effectiveness and the model\u2019s ability to accurately attribute claims.. Appendix C describes RED as a post-hoc inference strategy without training integration",
+    "point_006": "The paper does not provide detailed error analysis or qualitative examples of failure cases where ReGen generates hallucinations or incorrect facts despite retrieved evidence.. Section D provides a positive case study but lacks discussion of typical errors or limitations in generated outputs",
+    "point_007": "Implementation details such as hyperparameters for warm-up pretraining, training schedules, and hardware requirements are only briefly mentioned and could be insufficient for exact reproducibility.. Appendix A provides some details but lacks full training curves, seed settings, or code release status",
+    "point_008": "The evaluation metrics focus on n-gram overlap and factuality proxies but do not include recent advances in factuality evaluation such as human fact verification or model-based factuality scorers.. Section 5.1 lists BLEU, ROUGE, METEOR, CIDEr, QAGS, and Triple Score but no mention of newer factuality metrics or human fact-checking protocols",
+    "point_009": "The task formulation assumes that each generated sentence can be fully supported by a subset of retrieved evidence, which may be unrealistic for complex or implicit knowledge claims.. Section 3.1 formalizes the assumption t \u2190 V\u03c4 for each sentence, but the paper does not discuss limitations of this assumption",
+    "point_010": "The paper does not discuss potential ethical considerations or risks related to automatic generation of Wikipedia-like articles, such as misinformation propagation or bias amplification.. No mention of ethical implications or safeguards is found in the main text or appendices",
+    "point_011": "The generalizability of the approach to languages other than English or domains beyond Wikipedia-style factual queries is not evaluated or discussed.. Dataset and experiments focus exclusively on English Wikipedia and references",
+    "point_012": "The paper does not clarify how the retrieval and generation modules interact during inference latency or computational cost, which is important for practical deployment.. No runtime or efficiency analysis is provided in Section 5 or appendices"
   }
 }

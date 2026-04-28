@@ -1,91 +1,127 @@
 {
   "paper_id": "paper_0053",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 13.489,
+  "latency_seconds": 21.35,
   "token_usage": {
-    "input": 9893,
-    "output": 925
+    "input": 10004,
+    "output": 1515
   },
   "structured": {
-    "summary": "This paper introduces ULF, a novel unsupervised method for correcting labeling function (LF) assignments in weak supervision using k-fold cross-validation. It proposes two variants, feature-based ULF and DeepULF, and extends existing cross-validation denoising methods to leverage LF-specific information, demonstrating improved weakly supervised learning without manual labels.",
+    "summary": "The paper proposes ULF, an unsupervised method for correcting labeling function (LF) to class assignments in weak supervision using k-fold cross-validation. It introduces two variants (feature-based and DeepULF) and extends existing cross-validation denoising methods to leverage LF-specific information, demonstrating improved weak label quality and classifier performance on multiple datasets without manual labels.",
     "strengths": [
       {
-        "point": "Novel approach to LF correction in weak supervision using cross-validation.",
-        "evidence": "Section 3 introduces ULF, which re-estimates LF-to-class assignments via cross-validation, a novel idea not previously applied in this context."
+        "point": "Novel approach to refine LF-to-class assignments rather than just correcting noisy labels, addressing systematic biases in weak supervision.",
+        "evidence": "Section 3.2 Overview and Section 3.4 Re-estimate Labeling Functions"
       },
       {
-        "point": "Two practical implementations covering both feature-based and deep learning models.",
-        "evidence": "Section 3.5 describes feature-based ULF and DeepULF, enabling applicability across different model types."
+        "point": "Introduction of LF-aware cross-validation splitting strategies (by LF and by signature) that leverage weak supervision structure.",
+        "evidence": "Section 3.3 Label Probabilities with Cross-Validation"
       },
       {
-        "point": "Extensive empirical evaluation on multiple datasets showing consistent improvements.",
-        "evidence": "Section 5 reports experiments on six datasets with both feature-based and deep models, demonstrating ULF's superior performance over baselines."
+        "point": "Comprehensive experimental evaluation on six diverse datasets including English and African languages, showing consistent improvements over baselines.",
+        "evidence": "Section 5 Experiments, Tables 1 and 2"
       },
       {
-        "point": "Extensions of existing cross-validation denoising methods adapted to weak supervision.",
-        "evidence": "Section 4 details Weakly Supervised CrossWeigh and Weakly Supervised Cleanlab, which leverage LF information for improved denoising."
+        "point": "Extension of existing cross-validation denoising methods (CrossWeigh and Cleanlab) to weak supervision by incorporating LF information.",
+        "evidence": "Section 4 WSCrossWeigh and WSCleanLab"
+      },
+      {
+        "point": "Provision of two implementations: a lightweight feature-based ULF and a more powerful DeepULF fine-tuning pre-trained language models.",
+        "evidence": "Section 3.5 Feature-based ULF vs DeepULF"
+      },
+      {
+        "point": "ULF can improve labels even for samples with no matched LFs, unlike many prior methods that discard such samples.",
+        "evidence": "Section 3.5 Feature-based ULF vs DeepULF and Section 6 Case Study"
+      },
+      {
+        "point": "Detailed case study illustrating how ULF adjusts LF-class assignments to correct systematic labeling errors.",
+        "evidence": "Section 6 Case Study, Figure 4"
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited discussion on computational complexity and scalability of ULF and DeepULF.",
-        "evidence": "Section D mentions training times but lacks detailed analysis of scalability or resource requirements."
+        "point": "The choice and impact of the balancing parameter p in Eq. 7 (combining initial and re-estimated LF-class matrices) is not thoroughly analyzed or ablated.",
+        "evidence": "Section 3.4 Re-estimate Labeling Functions discusses p but no ablation or sensitivity analysis is presented."
       },
       {
-        "point": "The method relies on the quality and diversity of initial labeling functions, which may limit applicability.",
-        "evidence": "Section 3.1 and 6 highlight that LF misassignments cause noise; if LFs are poor or sparse, correction may be limited."
+        "point": "The signature-based fold splitting (ULF sgn) performs best but the paper lacks detailed analysis on why LF-based splitting (ULF lfs) underperforms, especially given overlapping LF matches.",
+        "evidence": "Section 5 Experiments notes ULF lfs performs worse but explanation is brief and no further experiments are shown."
       },
       {
-        "point": "The impact of hyperparameter p balancing manual and re-estimated LF assignments is not deeply analyzed.",
-        "evidence": "Equation 7 and Section 3.4 introduce p but no ablation or sensitivity analysis is provided."
+        "point": "The DeepULF variant uses additional contrastive self-training (Cosine) but the contribution of this component versus ULF alone is not isolated in the results.",
+        "evidence": "Section 3.5 and Section 5 mention optional Cosine training but no ablation separating its effect is provided."
       },
       {
-        "point": "Handling of samples with no LF matches is heuristic and may affect performance.",
-        "evidence": "Section 3.5 discusses random label assignment and partial involvement in training, which could introduce noise."
+        "point": "Baselines such as Snorkel-DP and Cleanlab are reimplemented or adapted, but it is unclear if hyperparameter tuning and training protocols are fully matched, raising fairness concerns.",
+        "evidence": "Section 5 Experiments mentions PyTorch reimplementation of Cleanlab and use of Wrench for baselines but details on tuning are limited."
       },
       {
-        "point": "The paper does not compare against recent advanced weak supervision frameworks beyond Snorkel-DP.",
-        "evidence": "Baselines in Section 5 include Snorkel-DP but omit other recent generative or end-to-end weak supervision methods."
+        "point": "The method assumes that LF-class assignments are initially one-to-one and that LFs correspond to exactly one class, which may limit applicability to more complex or multi-label weak supervision scenarios.",
+        "evidence": "Section 3.1 Preliminaries states this assumption explicitly."
       },
       {
-        "point": "Limited qualitative analysis of failure cases or scenarios where ULF may not improve results.",
-        "evidence": "Section 6 provides positive case studies but lacks discussion of limitations or negative examples."
+        "point": "No discussion or experiments on how ULF performs when the number of LFs is very large or when LFs are highly noisy or conflicting beyond the tested datasets.",
+        "evidence": "Section 5 Experiments covers six datasets but no scalability or robustness analysis is presented."
       },
       {
-        "point": "The paper is dense and at times difficult to follow due to notation and presentation style.",
-        "evidence": "Sections 3 and 4 contain complex equations and algorithmic steps that could benefit from clearer exposition."
+        "point": "The computational cost is high, especially for DeepULF (up to 96 hours per dataset), which may limit practical usability.",
+        "evidence": "Section D Implementation Details reports training times."
+      },
+      {
+        "point": "The paper does not discuss limitations or failure cases where ULF might degrade label quality or fail to correct LF assignments.",
+        "evidence": "No explicit limitations or negative results are presented in Sections 5 or 7."
+      },
+      {
+        "point": "The method relies on confident predictions exceeding class-average thresholds, but the choice and stability of these thresholds are not deeply analyzed.",
+        "evidence": "Section 3.3 Label Probabilities with Cross-Validation defines thresholds but no ablation or sensitivity study is shown."
+      },
+      {
+        "point": "Reproducibility could be improved by providing more details on hyperparameter ranges, random seeds, and exact data splits used in experiments.",
+        "evidence": "Section D Implementation Details gives some info but key details like seeds and fold assignments are missing."
+      },
+      {
+        "point": "The paper's presentation is dense and at times difficult to follow, especially in the algorithm descriptions and equations, which could benefit from clearer notation and more intuitive explanations.",
+        "evidence": "Sections 3.3 and 3.4 contain complex equations with some formatting issues and dense text."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive is ULF to the choice of hyperparameter p controlling the balance between manual and re-estimated LF assignments?",
-        "motivation": "Understanding this sensitivity is important for practical deployment and tuning."
+        "question": "How sensitive is ULF's performance to the choice of the balancing parameter p in Eq. 7, and how should practitioners select it?",
+        "motivation": "Understanding this would help users tune ULF effectively and assess robustness."
       },
       {
-        "question": "Can ULF handle scenarios with very sparse or low-quality labeling functions, and how does performance degrade in such cases?",
-        "motivation": "Weak supervision often involves noisy or limited LFs; robustness to such conditions is critical."
+        "question": "Can ULF handle labeling functions that assign multiple classes or multi-label weak supervision scenarios, and if not, how might it be extended?",
+        "motivation": "Many real-world weak supervision setups involve overlapping or multi-class LFs."
       },
       {
-        "question": "Have the authors considered integrating ULF with generative weak supervision models to jointly learn LF accuracies and corrections?",
-        "motivation": "Combining LF correction with probabilistic modeling might further improve label quality."
+        "question": "What is the impact of the optional contrastive self-training (Cosine) in DeepULF on final performance, and can ULF work well without it?",
+        "motivation": "Clarifying this would isolate the contribution of ULF versus auxiliary training."
       },
       {
-        "question": "What are the computational and memory requirements of DeepULF compared to baseline methods, especially on large datasets?",
-        "motivation": "Resource efficiency affects applicability in real-world settings."
+        "question": "Have the authors evaluated ULF's scalability and effectiveness when the number of labeling functions is very large or when LFs are highly noisy?",
+        "motivation": "This affects applicability to large-scale or complex weak supervision tasks."
+      },
+      {
+        "question": "Could the authors provide more details on the hyperparameter tuning process and random seeds to facilitate reproducibility?",
+        "motivation": "This would enable others to replicate and build upon the work."
+      },
+      {
+        "question": "Are there scenarios or datasets where ULF fails to improve or even harms label quality, and if so, what are the characteristics of such cases?",
+        "motivation": "Understanding limitations is crucial for practical deployment."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited discussion on computational complexity and scalability of ULF and DeepULF. (Section D mentions training times but lacks detailed analysis of scalability or resource requirements.)",
-    "point_002": "The method relies on the quality and diversity of initial labeling functions, which may limit applicability. (Section 3.1 and 6 highlight that LF misassignments cause noise; if LFs are poor or sparse, correction may be limited.)",
-    "point_003": "The impact of hyperparameter p balancing manual and re-estimated LF assignments is not deeply analyzed. (Equation 7 and Section 3.4 introduce p but no ablation or sensitivity analysis is provided.)",
-    "point_004": "Handling of samples with no LF matches is heuristic and may affect performance. (Section 3.5 discusses random label assignment and partial involvement in training, which could introduce noise.)",
-    "point_005": "The paper does not compare against recent advanced weak supervision frameworks beyond Snorkel-DP. (Baselines in Section 5 include Snorkel-DP but omit other recent generative or end-to-end weak supervision methods.)",
-    "point_006": "Limited qualitative analysis of failure cases or scenarios where ULF may not improve results. (Section 6 provides positive case studies but lacks discussion of limitations or negative examples.)",
-    "point_007": "The paper is dense and at times difficult to follow due to notation and presentation style. (Sections 3 and 4 contain complex equations and algorithmic steps that could benefit from clearer exposition.)",
-    "point_008": "How sensitive is ULF to the choice of hyperparameter p controlling the balance between manual and re-estimated LF assignments? (Understanding this sensitivity is important for practical deployment and tuning.)",
-    "point_009": "Can ULF handle scenarios with very sparse or low-quality labeling functions, and how does performance degrade in such cases? (Weak supervision often involves noisy or limited LFs; robustness to such conditions is critical.)",
-    "point_010": "Have the authors considered integrating ULF with generative weak supervision models to jointly learn LF accuracies and corrections? (Combining LF correction with probabilistic modeling might further improve label quality.)",
-    "point_011": "What are the computational and memory requirements of DeepULF compared to baseline methods, especially on large datasets? (Resource efficiency affects applicability in real-world settings.)"
+    "point_001": "The choice and impact of the balancing parameter p in Eq. 7 (combining initial and re-estimated LF-class matrices) is not thoroughly analyzed or ablated.. Section 3.4 Re-estimate Labeling Functions discusses p but no ablation or sensitivity analysis is presented",
+    "point_002": "The signature-based fold splitting (ULF sgn) performs best but the paper lacks detailed analysis on why LF-based splitting (ULF lfs) underperforms, especially given overlapping LF matches.. Section 5 Experiments notes ULF lfs performs worse but explanation is brief and no further experiments are shown",
+    "point_003": "The DeepULF variant uses additional contrastive self-training (Cosine) but the contribution of this component versus ULF alone is not isolated in the results.. Section 3.5 and Section 5 mention optional Cosine training but no ablation separating its effect is provided",
+    "point_004": "Baselines such as Snorkel-DP and Cleanlab are reimplemented or adapted, but it is unclear if hyperparameter tuning and training protocols are fully matched, raising fairness concerns.. Section 5 Experiments mentions PyTorch reimplementation of Cleanlab and use of Wrench for baselines but details on tuning are limited",
+    "point_005": "The method assumes that LF-class assignments are initially one-to-one and that LFs correspond to exactly one class, which may limit applicability to more complex or multi-label weak supervision scenarios.. Section 3.1 Preliminaries states this assumption explicitly",
+    "point_006": "No discussion or experiments on how ULF performs when the number of LFs is very large or when LFs are highly noisy or conflicting beyond the tested datasets.. Section 5 Experiments covers six datasets but no scalability or robustness analysis is presented",
+    "point_007": "The computational cost is high, especially for DeepULF (up to 96 hours per dataset), which may limit practical usability.. Section D Implementation Details reports training times",
+    "point_008": "The paper does not discuss limitations or failure cases where ULF might degrade label quality or fail to correct LF assignments.. No explicit limitations or negative results are presented in Sections 5 or 7",
+    "point_009": "The method relies on confident predictions exceeding class-average thresholds, but the choice and stability of these thresholds are not deeply analyzed.. Section 3.3 Label Probabilities with Cross-Validation defines thresholds but no ablation or sensitivity study is shown",
+    "point_010": "Reproducibility could be improved by providing more details on hyperparameter ranges, random seeds, and exact data splits used in experiments.. Section D Implementation Details gives some info but key details like seeds and fold assignments are missing",
+    "point_011": "The paper's presentation is dense and at times difficult to follow, especially in the algorithm descriptions and equations, which could benefit from clearer notation and more intuitive explanations.. Sections 3.3 and 3.4 contain complex equations with some formatting issues and dense text"
   }
 }

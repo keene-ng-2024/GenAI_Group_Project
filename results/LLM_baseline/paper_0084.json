@@ -1,96 +1,144 @@
 {
   "paper_id": "paper_0084",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 14.613,
+  "latency_seconds": 26.138,
   "token_usage": {
-    "input": 8417,
-    "output": 1105
+    "input": 8528,
+    "output": 1898
   },
   "structured": {
-    "summary": "This paper proposes lightweight and accurate out-of-distribution (OOD) detection methods for conditional language models (CLMs) using input and output embeddings, demonstrating effectiveness on abstractive summarization and translation tasks. It further introduces selective generation by combining OOD scores with perplexity to abstain from low-quality outputs under distribution shift, supported by human evaluations and extensive experiments.",
+    "summary": "This paper proposes lightweight and accurate out-of-distribution (OOD) detection methods for conditional language models (CLMs) using embeddings from encoder-decoder Transformers, and demonstrates their effectiveness on abstractive summarization and translation tasks. It further introduces selective generation by combining OOD scores with perplexity to abstain from low-quality outputs under distribution shift.",
     "strengths": [
       {
-        "point": "Novel OOD detection method leveraging input and output embeddings with Mahalanobis distance and Relative Mahalanobis Distance (RMD) tailored for CLMs.",
-        "evidence": "Section 2.2 details the embedding-based OOD detection approach and its extension of RMD to conditional language models."
+        "point": "The paper identifies and empirically demonstrates that perplexity is a poor OOD detection metric for CLMs, motivating the need for alternative approaches.",
+        "evidence": "Section 2.1 and Figure 1 show overlapping perplexity distributions between in-domain and OOD datasets for summarization and translation."
       },
       {
-        "point": "Comprehensive empirical evaluation on two important conditional language generation tasks: abstractive summarization and machine translation.",
-        "evidence": "Section 3 describes experiments on PEGASUS for summarization and Transformer for translation with multiple in-domain and OOD datasets."
+        "point": "Proposes a novel extension of Relative Mahalanobis Distance (RMD) for CLMs by fitting separate Gaussian distributions on input and output embeddings and contrasting with background distributions.",
+        "evidence": "Section 2.2 details the method and Algorithm 1 and 2 provide procedural steps."
       },
       {
-        "point": "Demonstration that perplexity alone is insufficient for OOD detection and quality estimation, and that combining OOD scores with perplexity improves selective generation.",
-        "evidence": "Section 4.2 and 4.3 show perplexity's limitations and the benefits of combined scores for quality prediction and selective generation."
+        "point": "Demonstrates that embedding-based OOD scores (RMD and binary classifier logits) significantly outperform perplexity and other baselines such as NLI, COMET, and Prism on OOD detection tasks.",
+        "evidence": "Table 1 shows AUROC results with RMD and binary logits achieving >0.8 while baselines hover around 0.5-0.6."
       },
       {
-        "point": "Use of human evaluation to validate summarization quality and a novel Quality vs Abstention curve to assess selective generation performance.",
-        "evidence": "Section 4.1 and 4.4 describe human ratings collected via Mechanical Turk and the QA curve evaluation metric."
+        "point": "Introduces the concept of selective generation for CLMs, analogous to selective prediction in classification, to abstain from generating low-quality outputs under distribution shift.",
+        "evidence": "Section 4 introduces selective generation and evaluates it using Quality vs Abstention curves (Figure 5)."
+      },
+      {
+        "point": "Shows that combining OOD scores with perplexity improves correlation with human and automatic quality metrics, outperforming single scores and expensive external metrics like COMET.",
+        "evidence": "Section 4.3 and Table 2 report improved Kendall\u2019s tau correlations and Figure 5 shows better selective generation performance."
+      },
+      {
+        "point": "The proposed methods require negligible additional computation and do not need separate detection models, making them practical for deployment.",
+        "evidence": "Abstract and Section 2.2 emphasize the lightweight nature of the approach."
+      },
+      {
+        "point": "The paper provides human evaluation for summarization quality on multiple datasets, strengthening the validity of quality assessment beyond automatic metrics.",
+        "evidence": "Section 4.1 and Appendix A.3 describe Mechanical Turk evaluation setup and results."
+      },
+      {
+        "point": "The paper discusses the connection between the generative RMD approach and discriminative binary classifiers, providing theoretical insight.",
+        "evidence": "Section A.5 elaborates on the relationship between RMD and binary logistic regression."
       }
     ],
     "weaknesses": [
       {
-        "point": "Limited exploration of decoder-only architectures, which are prevalent in large language models.",
-        "evidence": "The method is demonstrated only on encoder-decoder Transformers; Section 6 mentions expectation but no experiments on decoder-only models."
+        "point": "The method relies on fitting Gaussian distributions on embeddings, but the paper does not analyze or justify the Gaussian assumption or explore alternative density estimators.",
+        "evidence": "Section 2.2 and Algorithms 1 and 2 describe Gaussian fitting without ablation or discussion of distributional assumptions."
       },
       {
-        "point": "The approach relies on fitting Gaussian distributions to embeddings, which may not capture complex multimodal embedding distributions.",
-        "evidence": "Section 2.2 fits single Gaussians to input and output embeddings; no discussion of limitations or alternatives for non-Gaussian distributions."
+        "point": "The background datasets used for fitting background Gaussians (C4 for summarization, ParaCrawl for translation) are large but their domain coverage and representativeness are not deeply analyzed.",
+        "evidence": "Section 2.2 and 3.1 mention background datasets but do not provide detailed characterization or ablation on background choice."
       },
       {
-        "point": "Background distributions are fitted using large datasets (C4, ParaCrawl) with decoded outputs, which may introduce noise or bias in background modeling.",
-        "evidence": "Section 2.2 describes fitting background output Gaussian using decoded outputs from large datasets without ground-truth."
+        "point": "The evaluation focuses on English summarization and English-French translation with encoder-decoder Transformers; generalization to other languages, tasks, or model architectures (e.g., decoder-only models) is claimed but not empirically validated.",
+        "evidence": "Section 6 discusses expected applicability beyond tested settings but no experiments are provided."
       },
       {
-        "point": "The binary classifier baseline is logistic regression on embeddings, which may be too simple compared to more complex discriminative models.",
-        "evidence": "Section 2.2 and experiments use logistic regression as a binary classifier without exploring more powerful classifiers."
+        "point": "The binary classifier baseline for OOD detection is trained on embeddings from in-domain and background data, but details on training procedure, hyperparameters, and data splits are sparse, limiting reproducibility.",
+        "evidence": "Section 2.2 and 3.1 mention logistic regression but lack implementation specifics."
       },
       {
-        "point": "Selective generation evaluation focuses on abstaining from low-quality outputs but does not explore downstream user impact or deployment scenarios in detail.",
-        "evidence": "Section 4 discusses selective generation and abstention but lacks analysis of practical deployment or user experience."
+        "point": "The paper does not compare with recent ensemble or Bayesian uncertainty methods for OOD detection in CLMs, which could provide stronger baselines despite higher computational cost.",
+        "evidence": "Section 5 mentions ensemble methods but excludes them from experiments without quantitative comparison."
       },
       {
-        "point": "The paper does not provide ablation studies isolating the contributions of input vs output embeddings or the effect of covariance estimation choices.",
-        "evidence": "Experiments report combined results but do not separately analyze input-only or output-only embeddings or covariance modeling."
+        "point": "The selective generation evaluation uses ROUGE-1 and BLEURT as quality metrics, but ROUGE is known to be limited for abstractive summarization and BLEURT may not fully capture translation quality nuances.",
+        "evidence": "Section 4.1 and 4.4 rely on these metrics; human evaluation is only done for summarization, not translation."
       },
       {
-        "point": "The method assumes availability of large background datasets representative of general domains, which may not be feasible in all applications.",
-        "evidence": "Section 2.2 relies on C4 and ParaCrawl for background Gaussian fitting; no discussion on applicability when such data is unavailable."
+        "point": "The paper does not provide ablation studies isolating the contributions of input vs output embeddings or the effect of combining them for OOD detection and selective generation.",
+        "evidence": "Section 3.2 notes input OOD scores work better for translation and output scores for summarization, but no detailed ablation is presented."
       },
       {
-        "point": "Human evaluation is limited to summarization and a relatively small sample size (100 examples per dataset), which may limit generalizability.",
-        "evidence": "Section 4.1 and Appendix A.3 describe human ratings on 100 examples per dataset."
+        "point": "The method requires access to ground-truth outputs for fitting the output embedding Gaussian, which may not be available in some real-world scenarios.",
+        "evidence": "Section 2.2 states ground-truth outputs are used for fitting N(\u03bc_w, \u03a3_w), but no discussion on handling missing ground-truth."
+      },
+      {
+        "point": "The human evaluation for summarization quality uses only 100 examples per dataset with 3 raters each, which may be insufficient for robust conclusions.",
+        "evidence": "Section 4.1 and Appendix A.3 describe the limited scale of human evaluation."
+      },
+      {
+        "point": "The paper does not discuss potential failure modes or limitations of the proposed OOD detection scores, such as sensitivity to embedding quality or domain shifts not captured by background data.",
+        "evidence": "No explicit limitations section; Section 6 briefly mentions future work but lacks critical analysis."
+      },
+      {
+        "point": "The visualization of OOD scores at sentence level (Appendix A.9) is only briefly mentioned without quantitative evaluation or integration into the main method.",
+        "evidence": "Appendix A.9 provides one example but no systematic analysis."
+      },
+      {
+        "point": "The paper does not clarify how the method scales with very large models or very long input/output sequences, which may affect embedding computation and Gaussian fitting.",
+        "evidence": "No discussion on computational scalability beyond 'lightweight' claims in Abstract and Section 2.2."
       }
     ],
     "questions": [
       {
-        "question": "How does the proposed OOD detection method perform on decoder-only language models such as GPT-style architectures?",
-        "motivation": "Decoder-only models are widely used in practice; evaluating applicability would broaden impact."
+        "question": "How sensitive is the OOD detection performance to the choice and size of the background dataset used for fitting the background Gaussian distributions?",
+        "motivation": "Understanding this sensitivity is important for practical deployment where background data may vary or be limited."
       },
       {
-        "question": "Have the authors considered modeling embedding distributions with more flexible models (e.g., mixture models) to better capture complex data distributions?",
-        "motivation": "Single Gaussian assumptions may limit detection accuracy in complex embedding spaces."
+        "question": "Can the method be adapted to scenarios where ground-truth outputs are unavailable for fitting output embedding distributions, such as zero-shot or unsupervised settings?",
+        "motivation": "This affects applicability to many real-world tasks where reference outputs are not accessible."
       },
       {
-        "question": "Can the authors provide more details or experiments on the sensitivity of the method to the choice and quality of the background dataset used for fitting background Gaussians?",
-        "motivation": "Background modeling is critical for RMD; understanding robustness to background data choice is important."
+        "question": "Have the authors considered or experimented with alternative density estimation techniques beyond Gaussian fitting, such as normalizing flows or kernel density estimation, for embedding distributions?",
+        "motivation": "Alternative methods might better capture complex embedding distributions and improve OOD detection."
       },
       {
-        "question": "Is it possible to extend the selective generation framework to provide calibrated confidence scores or uncertainty estimates for generated outputs?",
-        "motivation": "Confidence estimates would be valuable for downstream applications and user trust."
+        "question": "Could the authors provide more details on the training and hyperparameters of the binary logistic regression classifier used as an OOD detector?",
+        "motivation": "This is necessary for reproducibility and fair comparison."
+      },
+      {
+        "question": "How does the proposed method perform on other conditional generation tasks, such as dialogue generation or image captioning, especially with different model architectures?",
+        "motivation": "Empirical validation on diverse tasks would strengthen claims of generality."
+      },
+      {
+        "question": "Is there any degradation in OOD detection or selective generation performance when using larger or decoder-only models, such as GPT-style architectures?",
+        "motivation": "Many state-of-the-art CLMs use decoder-only architectures; applicability to these is important."
+      },
+      {
+        "question": "Can the authors comment on the computational overhead of embedding extraction and Gaussian fitting during training and inference, especially for large-scale deployment?",
+        "motivation": "Understanding runtime costs is critical for practical adoption."
+      },
+      {
+        "question": "Have the authors analyzed cases where the OOD detection fails or produces false positives/negatives, and what characteristics these examples have?",
+        "motivation": "Insights into failure modes can guide future improvements and robustness."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Limited exploration of decoder-only architectures, which are prevalent in large language models. (The method is demonstrated only on encoder-decoder Transformers; Section 6 mentions expectation but no experiments on decoder-only models.)",
-    "point_002": "The approach relies on fitting Gaussian distributions to embeddings, which may not capture complex multimodal embedding distributions. (Section 2.2 fits single Gaussians to input and output embeddings; no discussion of limitations or alternatives for non-Gaussian distributions.)",
-    "point_003": "Background distributions are fitted using large datasets (C4, ParaCrawl) with decoded outputs, which may introduce noise or bias in background modeling. (Section 2.2 describes fitting background output Gaussian using decoded outputs from large datasets without ground-truth.)",
-    "point_004": "The binary classifier baseline is logistic regression on embeddings, which may be too simple compared to more complex discriminative models. (Section 2.2 and experiments use logistic regression as a binary classifier without exploring more powerful classifiers.)",
-    "point_005": "Selective generation evaluation focuses on abstaining from low-quality outputs but does not explore downstream user impact or deployment scenarios in detail. (Section 4 discusses selective generation and abstention but lacks analysis of practical deployment or user experience.)",
-    "point_006": "The paper does not provide ablation studies isolating the contributions of input vs output embeddings or the effect of covariance estimation choices. (Experiments report combined results but do not separately analyze input-only or output-only embeddings or covariance modeling.)",
-    "point_007": "The method assumes availability of large background datasets representative of general domains, which may not be feasible in all applications. (Section 2.2 relies on C4 and ParaCrawl for background Gaussian fitting; no discussion on applicability when such data is unavailable.)",
-    "point_008": "Human evaluation is limited to summarization and a relatively small sample size (100 examples per dataset), which may limit generalizability. (Section 4.1 and Appendix A.3 describe human ratings on 100 examples per dataset.)",
-    "point_009": "How does the proposed OOD detection method perform on decoder-only language models such as GPT-style architectures? (Decoder-only models are widely used in practice; evaluating applicability would broaden impact.)",
-    "point_010": "Have the authors considered modeling embedding distributions with more flexible models (e.g., mixture models) to better capture complex data distributions? (Single Gaussian assumptions may limit detection accuracy in complex embedding spaces.)",
-    "point_011": "Can the authors provide more details or experiments on the sensitivity of the method to the choice and quality of the background dataset used for fitting background Gaussians? (Background modeling is critical for RMD; understanding robustness to background data choice is important.)",
-    "point_012": "Is it possible to extend the selective generation framework to provide calibrated confidence scores or uncertainty estimates for generated outputs? (Confidence estimates would be valuable for downstream applications and user trust.)"
+    "point_001": "The method relies on fitting Gaussian distributions on embeddings, but the paper does not analyze or justify the Gaussian assumption or explore alternative density estimators.. Section 2.2 and Algorithms 1 and 2 describe Gaussian fitting without ablation or discussion of distributional assumptions",
+    "point_002": "The background datasets used for fitting background Gaussians (C4 for summarization, ParaCrawl for translation) are large but their domain coverage and representativeness are not deeply analyzed.. Section 2.2 and 3.1 mention background datasets but do not provide detailed characterization or ablation on background choice",
+    "point_003": "The evaluation focuses on English summarization and English-French translation with encoder-decoder Transformers; generalization to other languages, tasks, or model architectures (e.g., decoder-only models) is claimed but not empirically validated.. Section 6 discusses expected applicability beyond tested settings but no experiments are provided",
+    "point_004": "The binary classifier baseline for OOD detection is trained on embeddings from in-domain and background data, but details on training procedure, hyperparameters, and data splits are sparse, limiting reproducibility.. Section 2.2 and 3.1 mention logistic regression but lack implementation specifics",
+    "point_005": "The paper does not compare with recent ensemble or Bayesian uncertainty methods for OOD detection in CLMs, which could provide stronger baselines despite higher computational cost.. Section 5 mentions ensemble methods but excludes them from experiments without quantitative comparison",
+    "point_006": "The selective generation evaluation uses ROUGE-1 and BLEURT as quality metrics, but ROUGE is known to be limited for abstractive summarization and BLEURT may not fully capture translation quality nuances.. Section 4.1 and 4.4 rely on these metrics; human evaluation is only done for summarization, not translation",
+    "point_007": "The paper does not provide ablation studies isolating the contributions of input vs output embeddings or the effect of combining them for OOD detection and selective generation.. Section 3.2 notes input OOD scores work better for translation and output scores for summarization, but no detailed ablation is presented",
+    "point_008": "The method requires access to ground-truth outputs for fitting the output embedding Gaussian, which may not be available in some real-world scenarios.. Section 2.2 states ground-truth outputs are used for fitting N(\u03bc_w, \u03a3_w), but no discussion on handling missing ground-truth",
+    "point_009": "The human evaluation for summarization quality uses only 100 examples per dataset with 3 raters each, which may be insufficient for robust conclusions.. Section 4.1 and Appendix A.3 describe the limited scale of human evaluation",
+    "point_010": "The paper does not discuss potential failure modes or limitations of the proposed OOD detection scores, such as sensitivity to embedding quality or domain shifts not captured by background data.. No explicit limitations section; Section 6 briefly mentions future work but lacks critical analysis",
+    "point_011": "The visualization of OOD scores at sentence level (Appendix A.9) is only briefly mentioned without quantitative evaluation or integration into the main method.. Appendix A.9 provides one example but no systematic analysis",
+    "point_012": "The paper does not clarify how the method scales with very large models or very long input/output sequences, which may affect embedding computation and Gaussian fitting.. No discussion on computational scalability beyond 'lightweight' claims in Abstract and Section 2.2"
   }
 }

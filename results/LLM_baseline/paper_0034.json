@@ -1,91 +1,132 @@
 {
   "paper_id": "paper_0034",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 15.852,
+  "latency_seconds": 122.557,
   "token_usage": {
-    "input": 10692,
-    "output": 987
+    "input": 10803,
+    "output": 1757
   },
   "structured": {
-    "summary": "This paper proposes a robust prefix-tuning framework for text classification that enhances the robustness of prefix-tuning against various adversarial text attacks while preserving its efficiency and modularity. The method leverages layerwise activations from correctly classified training data to construct canonical manifolds and tunes an additional batch-level prefix during inference to steer the model towards correct predictions.",
+    "summary": "This paper proposes a robust prefix-tuning framework for text classification that enhances adversarial robustness by tuning an additional batch-level prefix during inference to align layerwise activations with canonical manifolds derived from correctly classified training data. The method preserves the modularity and efficiency of prefix-tuning and is validated on three benchmarks against five textual attacks.",
     "strengths": [
       {
-        "point": "Addresses robustness of prefix-tuning without modifying pretrained model parameters or requiring large auxiliary models.",
-        "evidence": "Section 3 describes the framework that adds an extra batch-level prefix during inference without changing the original prefix or LM parameters."
+        "point": "The paper introduces a novel approach to improve robustness of prefix-tuning without modifying the pretrained language model parameters, preserving modularity and efficiency.",
+        "evidence": "Section 3 describes the robust prefix-tuning framework that adds an extra batch-level prefix during inference without changing the original prefix or LM parameters."
       },
       {
-        "point": "Extensive empirical evaluation on three benchmarks and five diverse adversarial attacks.",
-        "evidence": "Section 4 reports experiments on SST-2, AG\u2019s News, and SNLI datasets with attacks including PWWS, VIPER, SCPN, TextBugger, and UAT."
+        "point": "Comprehensive evaluation on three diverse text classification benchmarks with five different types of adversarial attacks demonstrates the effectiveness of the proposed method.",
+        "evidence": "Section 4 and Tables 1 and 2 show experiments on SST-2, AG\u2019s News, and SNLI with PWWS, VIPER, SCPN, TextBugger, and UAT attacks."
       },
       {
-        "point": "Demonstrates substantial robustness improvements over strong baselines including adversarial training and data augmentation.",
-        "evidence": "Tables 1 and 2 show consistent robustness gains and comparable clean accuracy compared to adversarial prefixtuning and adversarial data augmentation baselines."
+        "point": "The method achieves substantial robustness improvements while maintaining comparable clean accuracy, outperforming adversarial training baselines with less training time.",
+        "evidence": "Section 4.2 and Table 1 show that the proposed method improves robustness beyond adversarial prefix-tuning baselines and Figure 2 highlights training time efficiency."
       },
       {
-        "point": "Provides insightful interpretation of the method from an optimal control perspective.",
-        "evidence": "Section 6 formalizes prefix-tuning and the proposed robust prefix-tuning as optimal and closed-loop control problems, respectively."
+        "point": "The paper provides an insightful interpretation of prefix-tuning and the robust framework from the optimal control perspective, potentially inspiring future research.",
+        "evidence": "Section 6 and Appendix E discuss the connection between prefix-tuning and optimal control theory."
+      },
+      {
+        "point": "The analysis of attention maps offers qualitative understanding of how the robust prefix-tuning modifies model behavior under different attack types.",
+        "evidence": "Section 5 and Figures 4 and 5 visualize attention weights showing averaging attention for in-sentence attacks and ignoring distractions for UAT."
+      },
+      {
+        "point": "The framework is flexible and can be applied to other soft prompt-based tuning methods beyond prefix-tuning.",
+        "evidence": "Section 3 states applicability to other soft prompt-based tuning methods by recording activations and tuning additional soft prompts."
       }
     ],
     "weaknesses": [
       {
-        "point": "The additional prefix tuning at test time introduces extra computational overhead during inference.",
-        "evidence": "Section 4.2 and Appendix A mention on-the-fly tuning of an extra prefix for each test batch, which may slow down inference compared to standard prefix-tuning."
+        "point": "The choice of the number of bottom layers (N=3) for constructing canonical manifolds and tuning the extra prefix is not fully justified or systematically explored across all datasets and attacks.",
+        "evidence": "Section 4.4 studies tuning different layers only on SST-2 and suggests N=3 is best for UAT but does not extend this analysis to other datasets or attacks."
       },
       {
-        "point": "The choice of layers (bottom N layers) for constructing canonical manifolds and tuning is somewhat heuristic and dataset-dependent.",
-        "evidence": "Section 4.4 shows tuning bottom layers outperforms top layers but the optimal number N varies; no principled method for selecting N is provided."
+        "point": "The method requires on-the-fly tuning of an additional prefix during inference, which may introduce latency and computational overhead not fully quantified or discussed.",
+        "evidence": "Section 4.2 and Appendix A mention the extra prefix is tuned per batch at test time but only qualitatively state the overhead is negligible without detailed runtime analysis."
       },
       {
-        "point": "The method relies on collecting activations from correctly classified training samples, which may be sensitive to training data quality and distribution shifts.",
-        "evidence": "Section 3 constructs canonical manifolds from activations of correctly classified training data; robustness under domain shift is not studied."
+        "point": "The construction of canonical manifolds relies on correctly classified training samples, but the impact of noisy or mislabeled data on manifold quality and robustness is not addressed.",
+        "evidence": "Section 3 describes using activations from correctly classified training data but does not discuss robustness to imperfect training labels or domain shifts."
       },
       {
-        "point": "Limited discussion on scalability to very large models or longer prefixes.",
-        "evidence": "Experiments use GPT2-medium and prefix length 10; it is unclear how the approach scales to larger models or longer prefixes."
+        "point": "The evaluation focuses exclusively on text classification tasks and GPT2-medium; generalization to other NLP tasks or larger models remains untested.",
+        "evidence": "Experiments in Section 4 are limited to SST-2, AG\u2019s News, and SNLI with GPT2-medium; future work mentions extension to text generation but no experiments."
       },
       {
-        "point": "The approach is evaluated only on classification tasks; extension to generation tasks is left for future work.",
-        "evidence": "Section 7 mentions extending to text generation as future work."
+        "point": "Adversarial training baselines used for comparison are limited to word-level and sentence-level L2 perturbations; other strong adversarial defense methods are not compared.",
+        "evidence": "Section 4.2 and Appendix B.1 describe adversarial training baselines but note difficulty optimizing KL-divergence regularized adversarial training and do not compare with other recent robust tuning methods."
       },
       {
-        "point": "The method requires storing projection matrices for canonical manifolds, which adds some storage overhead.",
-        "evidence": "Appendix A notes saved projection matrices take 12 MB storage."
+        "point": "The paper lacks ablation studies on the impact of the number of PCA components retained in canonical manifolds or alternative manifold construction methods.",
+        "evidence": "Section 3 uses PCA for manifold construction but does not report experiments varying PCA dimensionality or comparing to other manifold learning techniques."
       },
       {
-        "point": "The robustness improvements are sometimes modest and vary across different attack types.",
-        "evidence": "Tables 1 and 2 show varying degrees of robustness gains depending on the attack, with some attacks showing smaller improvements."
+        "point": "Details on hyperparameter tuning for the extra prefix optimization during inference (e.g., learning rate, number of steps) are sparse and may affect reproducibility.",
+        "evidence": "Appendix A briefly mentions tuning initial learning rate and number of steps on the dev set but does not provide exact values or ranges used."
+      },
+      {
+        "point": "The method assumes batch-level tuning at test time, which may not be feasible in online or real-time settings where inputs arrive individually.",
+        "evidence": "Section 3 and Appendix A describe tuning extra prefix per test batch but do not discuss applicability to single-sample inference scenarios."
+      },
+      {
+        "point": "The paper does not discuss potential failure cases or limitations of the approach, such as attacks that may circumvent the canonical manifold alignment.",
+        "evidence": "No explicit limitations or failure modes are discussed in the main text or conclusion sections."
+      },
+      {
+        "point": "The comparison of robustness improvements across different attack types shows varying gains, but the paper does not analyze why some attacks are less mitigated.",
+        "evidence": "Section 4.3 and Table 2 show robustness improvements vary by attack type, with some decreases in robustness against UAT after adversarial data augmentation, but no detailed analysis is provided."
+      },
+      {
+        "point": "The paper does not provide code or detailed instructions for reproducing the manifold construction and extra prefix tuning steps, which may hinder reproducibility.",
+        "evidence": "Reproducibility statement mentions detailed settings in appendices but no public code release or pseudocode is provided."
+      },
+      {
+        "point": "The storage overhead of saving projection matrices for canonical manifolds (12M parameters) is mentioned but its impact on scalability to larger models or datasets is not discussed.",
+        "evidence": "Appendix A notes saved matrices take 12M storage but does not analyze scalability implications."
       }
     ],
     "questions": [
       {
-        "question": "How does the inference-time tuning overhead scale with batch size and prefix length, and is it practical for real-time applications?",
-        "motivation": "Understanding the computational cost at inference is critical for deployment scenarios where latency matters."
+        "question": "How sensitive is the robustness improvement to the choice of the number of layers (N) used for manifold construction and extra prefix tuning across different datasets and attack types?",
+        "motivation": "Understanding this sensitivity is important for applying the method effectively in diverse scenarios."
       },
       {
-        "question": "Have you evaluated the robustness of the method under domain shift or distributional changes where training activations may not represent test data well?",
-        "motivation": "Robustness methods should ideally generalize beyond the training distribution to be broadly useful."
+        "question": "Can the authors provide quantitative runtime and latency measurements for the on-the-fly extra prefix tuning during inference, especially for real-time or low-latency applications?",
+        "motivation": "This information is critical to assess the practicality of the method in deployment settings."
       },
       {
-        "question": "Can the canonical manifolds be updated incrementally or adapted online to handle evolving data distributions?",
-        "motivation": "Dynamic updating could improve robustness in non-stationary environments."
+        "question": "How does the method perform when the training data contains mislabeled or noisy samples used for constructing canonical manifolds?",
+        "motivation": "Robustness to imperfect training data is important for real-world applicability."
       },
       {
-        "question": "How sensitive is the method to the choice of the number of layers N used for manifold construction and tuning? Is there a way to automate this selection?",
-        "motivation": "Reducing hyperparameter tuning effort would improve usability and robustness across tasks."
+        "question": "Have the authors considered or tested the method on other NLP tasks such as sequence labeling or generation, and if so, what are the challenges?",
+        "motivation": "Evaluating generalizability beyond classification would strengthen the impact of the work."
+      },
+      {
+        "question": "Could alternative manifold learning techniques (e.g., autoencoders or nonlinear methods) improve the characterization of correct activations compared to PCA?",
+        "motivation": "Exploring different manifold constructions might yield better robustness or efficiency."
+      },
+      {
+        "question": "Is it possible to adapt the method for single-sample inference without batch-level tuning, and what modifications would be required?",
+        "motivation": "Single-sample inference is common in many applications, so this extension would increase usability."
+      },
+      {
+        "question": "What are the potential failure modes or adversarial strategies that could bypass the canonical manifold alignment defense?",
+        "motivation": "Understanding limitations helps guide future improvements and safe deployment."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The additional prefix tuning at test time introduces extra computational overhead during inference. (Section 4.2 and Appendix A mention on-the-fly tuning of an extra prefix for each test batch, which may slow down inference compared to standard prefix-tuning.)",
-    "point_002": "The choice of layers (bottom N layers) for constructing canonical manifolds and tuning is somewhat heuristic and dataset-dependent. (Section 4.4 shows tuning bottom layers outperforms top layers but the optimal number N varies; no principled method for selecting N is provided.)",
-    "point_003": "The method relies on collecting activations from correctly classified training samples, which may be sensitive to training data quality and distribution shifts. (Section 3 constructs canonical manifolds from activations of correctly classified training data; robustness under domain shift is not studied.)",
-    "point_004": "Limited discussion on scalability to very large models or longer prefixes. (Experiments use GPT2-medium and prefix length 10; it is unclear how the approach scales to larger models or longer prefixes.)",
-    "point_005": "The approach is evaluated only on classification tasks; extension to generation tasks is left for future work. (Section 7 mentions extending to text generation as future work.)",
-    "point_006": "The method requires storing projection matrices for canonical manifolds, which adds some storage overhead. (Appendix A notes saved projection matrices take 12 MB storage.)",
-    "point_007": "The robustness improvements are sometimes modest and vary across different attack types. (Tables 1 and 2 show varying degrees of robustness gains depending on the attack, with some attacks showing smaller improvements.)",
-    "point_008": "How does the inference-time tuning overhead scale with batch size and prefix length, and is it practical for real-time applications? (Understanding the computational cost at inference is critical for deployment scenarios where latency matters.)",
-    "point_009": "Have you evaluated the robustness of the method under domain shift or distributional changes where training activations may not represent test data well? (Robustness methods should ideally generalize beyond the training distribution to be broadly useful.)",
-    "point_010": "Can the canonical manifolds be updated incrementally or adapted online to handle evolving data distributions? (Dynamic updating could improve robustness in non-stationary environments.)",
-    "point_011": "How sensitive is the method to the choice of the number of layers N used for manifold construction and tuning? Is there a way to automate this selection? (Reducing hyperparameter tuning effort would improve usability and robustness across tasks.)"
+    "point_001": "The choice of the number of bottom layers (N=3) for constructing canonical manifolds and tuning the extra prefix is not fully justified or systematically explored across all datasets and attacks.. Section 4.4 studies tuning different layers only on SST-2 and suggests N=3 is best for UAT but does not extend this analysis to other datasets or attacks",
+    "point_002": "The method requires on-the-fly tuning of an additional prefix during inference, which may introduce latency and computational overhead not fully quantified or discussed.. Section 4.2 and Appendix A mention the extra prefix is tuned per batch at test time but only qualitatively state the overhead is negligible without detailed runtime analysis",
+    "point_003": "The construction of canonical manifolds relies on correctly classified training samples, but the impact of noisy or mislabeled data on manifold quality and robustness is not addressed.. Section 3 describes using activations from correctly classified training data but does not discuss robustness to imperfect training labels or domain shifts",
+    "point_004": "The evaluation focuses exclusively on text classification tasks and GPT2-medium; generalization to other NLP tasks or larger models remains untested.. Experiments in Section 4 are limited to SST-2, AG\u2019s News, and SNLI with GPT2-medium; future work mentions extension to text generation but no experiments",
+    "point_005": "Adversarial training baselines used for comparison are limited to word-level and sentence-level L2 perturbations; other strong adversarial defense methods are not compared.. Section 4.2 and Appendix B.1 describe adversarial training baselines but note difficulty optimizing KL-divergence regularized adversarial training and do not compare with other recent robust tuning methods",
+    "point_006": "The paper lacks ablation studies on the impact of the number of PCA components retained in canonical manifolds or alternative manifold construction methods.. Section 3 uses PCA for manifold construction but does not report experiments varying PCA dimensionality or comparing to other manifold learning techniques",
+    "point_007": "Details on hyperparameter tuning for the extra prefix optimization during inference (e.g., learning rate, number of steps) are sparse and may affect reproducibility.. Appendix A briefly mentions tuning initial learning rate and number of steps on the dev set but does not provide exact values or ranges used",
+    "point_008": "The method assumes batch-level tuning at test time, which may not be feasible in online or real-time settings where inputs arrive individually.. Section 3 and Appendix A describe tuning extra prefix per test batch but do not discuss applicability to single-sample inference scenarios",
+    "point_009": "The paper does not discuss potential failure cases or limitations of the approach, such as attacks that may circumvent the canonical manifold alignment.. No explicit limitations or failure modes are discussed in the main text or conclusion sections",
+    "point_010": "The comparison of robustness improvements across different attack types shows varying gains, but the paper does not analyze why some attacks are less mitigated.. Section 4.3 and Table 2 show robustness improvements vary by attack type, with some decreases in robustness against UAT after adversarial data augmentation, but no detailed analysis is provided",
+    "point_011": "The paper does not provide code or detailed instructions for reproducing the manifold construction and extra prefix tuning steps, which may hinder reproducibility.. Reproducibility statement mentions detailed settings in appendices but no public code release or pseudocode is provided",
+    "point_012": "The storage overhead of saving projection matrices for canonical manifolds (12M parameters) is mentioned but its impact on scalability to larger models or datasets is not discussed.. Appendix A notes saved matrices take 12M storage but does not analyze scalability implications"
   }
 }

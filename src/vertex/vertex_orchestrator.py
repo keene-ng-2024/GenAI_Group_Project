@@ -10,27 +10,20 @@ and integrates with the grounding verifier for evidence-based critique.
 from __future__ import annotations
 
 import json
+import re
 import time
-from pathlib import Path
-from typing import Dict, Any, List, Optional
-
+import sys
 import yaml
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from src.vertex.state import (
-    create_initial_state,
-    update_transcript,
-    update_token_usage,
-    increment_rounds,
-    should_early_stop,
-    get_latency_seconds,
-)
-from src.vertex.vertex_client import (
-    get_vertex_ai_client,
-    generate_content,
-    load_config,
-)
-from src.vertex.personas import AgentRole, BaseAgent, build_agents
-from src.vertex.grounding_verifier import verify_all_grounding
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
+
+from vertex_client import get_vertex_ai_client
+from personas import AgentRole
+from grounding_verifier import verify_all_grounding, should_stop_debate
 
 
 # ── Config ─────────────────────────────────────────────────────────────────────
@@ -43,15 +36,39 @@ def load_config(config_path: str = "config.yaml") -> dict:
 
 # ── Output parsing ─────────────────────────────────────────────────────────────
 
+_VALID_JSON_ESCAPES = set('"' + '\\' + '/' + 'bfnrtu')
+
+
+def _sanitize_json_escapes(text: str) -> str:
+    """Replace invalid JSON escape sequences (e.g. \\alpha → \\\\alpha) so
+    json.loads can parse strings containing LaTeX or other backslash sequences."""
+    result = []
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if ch == '\\' and i + 1 < len(text):
+            next_ch = text[i + 1]
+            if next_ch in _VALID_JSON_ESCAPES:
+                result.append(ch)
+                result.append(next_ch)
+                i += 2
+            else:
+                result.append('\\\\')
+                i += 1
+        else:
+            result.append(ch)
+            i += 1
+    return ''.join(result)
+
+
 def _parse_structured_output(raw: str) -> dict:
     """Parse the Summarizer's structured JSON output with fallbacks."""
     text = raw.strip()
 
-    # Strip markdown fences if present
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
+    # Strip markdown fences if present (handles ```json, ```, with/without trailing newline)
+    fence_match = re.match(r'^```(?:json)?\s*(.*?)\s*```\s*$', text, re.DOTALL)
+    if fence_match:
+        text = fence_match.group(1).strip()
 
     # Try direct parse first
     try:
@@ -59,14 +76,22 @@ def _parse_structured_output(raw: str) -> dict:
     except json.JSONDecodeError:
         pass
 
+    # Retry after sanitizing invalid escape sequences (e.g. LaTeX \alpha)
+    try:
+        return json.loads(_sanitize_json_escapes(text))
+    except json.JSONDecodeError:
+        pass
+
     # Fallback: extract the first JSON object with regex
-    import re
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if match:
         try:
             return json.loads(match.group())
         except json.JSONDecodeError:
-            pass
+            try:
+                return json.loads(_sanitize_json_escapes(match.group()))
+            except json.JSONDecodeError:
+                pass
 
     # Last resort: return an empty valid structure
     print("  [WARN] Failed to parse structured output, returning empty structure")
@@ -84,9 +109,9 @@ def _parse_structured_output(raw: str) -> dict:
     }
 
 
-def _flatten_to_critique_points(structured: dict) -> dict[str, str]:
+def _flatten_to_critique_points(structured: dict) -> Dict[str, str]:
     """Convert structured output to flat critique_points dict for scorer compat."""
-    points = {}
+    points: Dict[str, str] = {}
     idx = 1
     for item in structured.get("weaknesses", []):
         if isinstance(item, str):
@@ -102,10 +127,10 @@ def _flatten_to_critique_points(structured: dict) -> dict[str, str]:
     return points
 
 
-def _build_reviewer_scores_block(reviews: list[dict]) -> str:
+def _build_reviewer_scores_block(reviews: List[dict]) -> str:
     """Average the raw reviewer scores and format them as context for the Summarizer."""
     import numpy as np
-    
+
     score_keys = ["Correctness", "Technical Novelty And Significance",
                   "Empirical Novelty And Significance", "Recommendation", "Confidence"]
     averages = {}
@@ -133,7 +158,7 @@ def _build_reviewer_scores_block(reviews: list[dict]) -> str:
 
 class VertexAgent:
     """Agent wrapper for Vertex AI with state management."""
-    
+
     def __init__(
         self,
         name: str,
@@ -151,28 +176,27 @@ class VertexAgent:
         self.history: List[Dict[str, str]] = []
         self.total_input_tokens = 0
         self.total_output_tokens = 0
-    
+
     def chat(self, user_message: str) -> str:
         """Send a message and get a reply."""
         self.history.append({"role": "user", "content": user_message})
-        
-        response = generate_content(
-            client=self.client,
-            model=self.model,
-            messages=self.history,
-            config=self.config,
+
+        response = self.client.generate_content(
+            prompt=user_message,
+            system_instruction=self.system_prompt,
+            model_name=self.model,
+            temperature=self.config.get("temperature", 0.2),
+            max_tokens=self.config.get("max_tokens", 4096),
         )
-        
+
         text = response.get("text", "")
-        token_usage = response.get("token_usage", {})
-        
-        self.total_input_tokens += token_usage.get("input_tokens", 0)
-        self.total_output_tokens += token_usage.get("output_tokens", 0)
-        
+        self.total_input_tokens += response.get("input_tokens", 0)
+        self.total_output_tokens += response.get("output_tokens", 0)
+
         self.history.append({"role": "model", "content": text})
         return text
-    
-    def reset(self):
+
+    def reset(self) -> None:
         """Clear conversation history."""
         self.history.clear()
 
@@ -183,188 +207,249 @@ def run_pipeline(
     paper_id: str,
     paper_text: str,
     config: Optional[dict] = None,
+    mode: str = "dynamic",
 ) -> dict:
     """
-    Run the full Vertex AI multi-agent critique pipeline for one paper.
-    
+    Run the Vertex AI multi-agent critique pipeline for one paper.
+
     Args:
         paper_id: Unique identifier for the paper
         paper_text: Full paper text (may be truncated)
         config: Config dict loaded from config.yaml
-        
+        mode: Loop type — "noloop" | "fixed" | "dynamic"
+            noloop  — Reader → Critic → Summariser (no Auditor)
+            fixed   — Reader → Critic 1 → Auditor → Critic 2 → Summariser (exactly 1 round)
+            dynamic — Critic ↔ Auditor loop until satisfied or max_rounds (default)
+
     Returns:
         Critique result dict with structured output and metadata
     """
     if config is None:
         config = load_config()
-    
+
     vertex_config = config.get("vertex_ai", {})
     max_rounds = config["agent"].get("max_rounds", 5)
     early_stop_phrases = config["agent"].get("early_stop_phrases", [])
-    
-    # Build agents with Vertex AI models
+
     agents = {
         "reader": VertexAgent(
             name="Reader",
             role=AgentRole.READER,
             system_prompt=(
-                "You are a careful academic reader. "
-                "When given a paper (or section of a paper), produce a structured "
-                "summary with the following clearly labelled sections:\n\n"
-                "## Problem & Motivation\n"
-                "## Proposed Method\n"
-                "## Methods\n"
-                "## Results\n"
-                "## Claimed Contributions\n\n"
-                "Be factual and concise. Include specific numbers from experiments."
+                "You are a Reader agent. Read the following paper and produce a structured summary. Cover:\n"
+                "Problem & Motivation, Proposed Method, Results, Claimed Contributions."
             ),
-            model=vertex_config.get("reader_model", "gemini-1.5-flash"),
+            model=vertex_config.get("reader_model", "gemini-2.5-flash-lite"),
             config=config,
         ),
         "critic": VertexAgent(
             name="Critic",
             role=AgentRole.CRITIC,
-            system_prompt=(
-                "You are a rigorous peer reviewer for a top-tier ML/AI venue. "
-                "Given a paper summary, identify substantive weaknesses in: "
-                "novelty, methodology, evaluation, clarity, and reproducibility. "
-                "For each point give: (a) the issue, (b) why it matters, "
-                "(c) what evidence from the paper supports your concern. "
-                "Be specific and actionable."
-            ),
-            model=vertex_config.get("critic_model", "gemini-1.5-pro"),
+            system_prompt="You are a Critic agent reviewing an AI/ML research paper.",
+            model=vertex_config.get("critic_model", "gemini-2.5-flash"),
             config=config,
         ),
         "auditor": VertexAgent(
             name="Auditor",
             role=AgentRole.AUDITOR,
-            system_prompt=(
-                "You are a senior programme committee member auditing a peer review. "
-                "Your job is to challenge poorly-supported critique points: "
-                "ask for concrete evidence, flag over-interpretations, and identify "
-                "any points that are actually addressed in the paper. "
-                "Also highlight genuine issues the Critic may have missed. "
-                "Be constructive but demanding."
-            ),
-            model=vertex_config.get("auditor_model", "gemini-1.5-flash"),
+            system_prompt="You are an Auditor agent. Your job is to make the Critic's review stronger.",
+            model=vertex_config.get("auditor_model", "gemini-2.5-flash-lite"),
             config=config,
         ),
         "summarizer": VertexAgent(
             name="Summarizer",
             role=AgentRole.SUMMARIZER,
             system_prompt=(
-                "You are a senior editor. Given a debate between a Critic and Auditor "
-                "about a paper, synthesise their discussion into a final structured review.\n\n"
-                "Output ONLY valid JSON matching this exact schema:\n"
-                "{\n"
-                '  "summary": "<2-3 sentence paper summary>",\n'
-                '  "strengths": [\n'
-                '    {"point": "<strength>", "evidence": "<supporting evidence from paper>"}\n'
-                "  ],\n"
-                '  "weaknesses": [\n'
-                '    {"point": "<weakness>", "evidence": "<supporting evidence from paper>"}\n'
-                "  ],\n"
-                '  "questions": [\n'
-                '    {"question": "<question for authors>", "motivation": "<why this matters>"}\n'
-                "  ],\n"
-                '  "scores": {\n'
-                '    "correctness": <int 1-5>,\n'
-                '    "novelty": <int 1-5>,\n'
-                '    "recommendation": "<accept|borderline|reject>",\n'
-                '    "confidence": <int 1-5>\n'
-                "  }\n"
-                "}\n\n"
-                "Rules:\n"
-                "- Include 3-8 strengths and 3-8 weaknesses (deduplicated).\n"
-                "- Include 2-5 questions for the authors.\n"
-                "- Base scores on the reviewer score context provided and the debate.\n"
-                "- Output nothing except the JSON object. No markdown fences, no commentary."
+                "You are a Summariser agent. Consolidate the critique into a final structured review.\n"
+                "Output ONLY valid JSON, no other text, no markdown code fences."
             ),
-            model=vertex_config.get("summariser_model", "gemini-1.5-pro"),
+            model=vertex_config.get("summariser_model", "gemini-2.5-flash"),
             config=config,
         ),
     }
-    
+
     start_time = time.perf_counter()
     transcript: List[Dict[str, Any]] = []
-    
+
     def log(role: str, content: str) -> None:
         transcript.append({"role": role, "content": content, "timestamp": time.time()})
         print(f"\n    [{role}]\n{content[:300]}{'...' if len(content) > 300 else ''}")
-    
+
     # ── Step 1: Reader summarises ──────────────────────────────────────────────
     print(f"\n  [ROUND 0] Reading paper …")
-    summary = agents["reader"].chat(f"Please summarise the following paper:\n\n{paper_text}")
+    summary = agents["reader"].chat(f"Paper:\n{paper_text}")
     log("Reader", summary)
-    
-    # Update token usage
     transcript[-1]["input_tokens"] = agents["reader"].total_input_tokens
     transcript[-1]["output_tokens"] = agents["reader"].total_output_tokens
-    
+
     # ── Step 2: Critic generates initial critique ──────────────────────────────
     print(f"\n  [ROUND 0] Critic generating initial points …")
-    critique = agents["critic"].chat(
-        f"Here is the paper summary:\n\n{summary}\n\nNow list your critique points."
+    critic_round1_user = (
+        f"Paper summary:\n{summary}\n\n"
+        "Generate 12-15 specific critique points.\n\n"
+        "For each point you MUST:\n"
+        "- Be concrete and specific, not generic\n"
+        "- Reference specific sections, tables, or claims from the paper\n"
+        "- Focus on ONE issue per point\n\n"
+        "Cover ALL of these dimensions:\n"
+        "- Novelty: what prior work is missing or inadequately compared?\n"
+        "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
+        "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
+        "- Reproducibility: what implementation details are missing?\n"
+        "- Clarity: what is confusing or poorly explained in the paper?\n"
+        "- Limitations: what does the method fail to address or acknowledge?\n"
+        "- Generalisability: does it work beyond the tested settings?\n\n"
+        "IMPORTANT: Only critique what is actually in the paper.\n"
+        "Do NOT invent references, section numbers, or claims not explicitly stated."
     )
+    critique = agents["critic"].chat(critic_round1_user)
     log("Critic (initial)", critique)
-    
-    # ── Steps 3–4: Auditor ↔ Critic debate ────────────────────────────────────
+
+    # ── Steps 3–4: Auditor ↔ Critic debate (mode-controlled) ─────────────────
     rounds_done = 0
-    for round_num in range(1, max_rounds + 1):
+
+    auditor_user_template = (
+        f"Paper summary:\n{summary}\n\n"
+        "Critic response:\n{critique}\n\n"
+        "For each critique point:\n"
+        "1. Is it specific enough or too generic? Push for concrete details.\n"
+        "2. Is it supported by evidence from the paper?\n"
+        "3. What important issues did the Critic completely miss?\n\n"
+        "Be aggressive — a weak vague point is worse than no point.\n"
+        "Explicitly list 3-5 issues the Critic missed.\n\n"
+        "Do NOT suggest ethical implications or bias points unless\n"
+        "the paper explicitly makes claims in these areas."
+    )
+
+    critic_revise_template = (
+        f"Original paper summary:\n{summary}\n\n"
+        "Your original critique:\n{critique}\n\n"
+        "Auditor feedback:\n{audit_feedback}\n\n"
+        "Now produce an improved critique that:\n"
+        "- Fixes all weak or vague points the Auditor flagged\n"
+        "- Adds the missing issues the Auditor identified\n"
+        "- Keeps all strong original points\n"
+        "- Generates 12-15 total points\n\n"
+        "For each point you MUST:\n"
+        "- Be concrete and specific, not generic\n"
+        "- Reference specific sections, tables, or claims from the paper\n"
+        "- Focus on ONE issue per point\n\n"
+        "Cover ALL of these dimensions:\n"
+        "- Novelty: what prior work is missing or inadequately compared?\n"
+        "- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?\n"
+        "- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?\n"
+        "- Reproducibility: what implementation details are missing?\n"
+        "- Clarity: what is confusing or poorly explained in the paper?\n"
+        "- Limitations: what does the method fail to address or acknowledge?\n"
+        "- Generalisability: does it work beyond the tested settings?"
+    )
+
+    if mode == "noloop":
+        # No Auditor — go straight to Summariser with initial critique
+        print(f"  [MODE] noloop — skipping Auditor/Critic debate")
+
+    elif mode == "fixed":
+        # Exactly 1 round, no early-stop check
+        print(f"  [MODE] fixed — running exactly 1 Auditor + Critic revision")
+        round_num = 1
         print(f"\n  [ROUND {round_num}] Auditor auditing …")
         audit_feedback = agents["auditor"].chat(
-            f"Paper summary:\n{summary}\n\n"
-            f"Critic's points:\n{critique}\n\n"
-            "Challenge weak points and identify anything important that was missed."
+            auditor_user_template.format(critique=critique)
         )
         log(f"Auditor (round {round_num})", audit_feedback)
-        
-        rounds_done = round_num
-        
-        # Check early stopping
-        if should_early_stop(audit_feedback, early_stop_phrases):
-            print(f"  [STOP] Auditor satisfied after round {round_num}.")
-            break
-        
+        rounds_done = 1
+
         print(f"  [ROUND {round_num}] Critic revising …")
         critique = agents["critic"].chat(
-            f"The Auditor has challenged some of your points:\n\n{audit_feedback}\n\n"
-            "Revise or defend your critique points accordingly."
+            critic_revise_template.format(critique=critique, audit_feedback=audit_feedback)
         )
         log(f"Critic (round {round_num})", critique)
-    
+
+    else:
+        # dynamic — Critic ↔ Auditor loop until satisfied or max_rounds
+        print(f"  [MODE] dynamic — up to {max_rounds} rounds with early stopping")
+        for round_num in range(1, max_rounds + 1):
+            print(f"\n  [ROUND {round_num}] Auditor auditing …")
+            audit_feedback = agents["auditor"].chat(
+                auditor_user_template.format(critique=critique)
+            )
+            log(f"Auditor (round {round_num})", audit_feedback)
+            rounds_done = round_num
+
+            if should_stop_debate(audit_feedback, early_stop_phrases):
+                print(f"  [STOP] Auditor satisfied after round {round_num}.")
+                break
+
+            print(f"  [ROUND {round_num}] Critic revising …")
+            critique = agents["critic"].chat(
+                critic_revise_template.format(critique=critique, audit_feedback=audit_feedback)
+            )
+            log(f"Critic (round {round_num})", critique)
+
     # ── Step 5: Summarizer consolidates ────────────────────────────────────────
     print(f"\n  [SUMMARISE] Consolidating debate …")
-    
-    # Build context: reviewer scores + full debate transcript
+
     reviewer_scores_block = _build_reviewer_scores_block([])
     full_debate = "\n\n".join(
         f"=== {entry['role']} ===\n{entry['content']}" for entry in transcript
     )
     if reviewer_scores_block:
         full_debate = reviewer_scores_block + "\n\n" + full_debate
-    
+
     raw_summary = agents["summarizer"].chat(
-        f"Here is the full debate transcript:\n\n{full_debate}\n\n"
-        "Produce the final structured review JSON."
+        f"Critic2 output:\n{critique}\n\n"
+        f"Reader summary:\n{summary}\n\n"
+        "Output in this exact JSON format:\n"
+        "{\n"
+        '  "summary": "2-3 sentence paper summary",\n'
+        '  "strengths": [\n'
+        '    {"point": "strength point", "evidence": "evidence from paper"},\n'
+        '    {"point": "strength point", "evidence": "evidence from paper"}\n'
+        "  ],\n"
+        '  "weaknesses": [\n'
+        '    {"point": "weakness point", "evidence": "evidence from paper"},\n'
+        '    {"point": "weakness point", "evidence": "evidence from paper"}\n'
+        "  ],\n"
+        '  "questions": [\n'
+        '    {"question": "open question", "motivation": "why this matters"},\n'
+        '    {"question": "open question", "motivation": "why this matters"}\n'
+        "  ],\n"
+        '  "scores": {\n'
+        '    "correctness": 3,\n'
+        '    "novelty": 3,\n'
+        '    "recommendation": "borderline",\n'
+        '    "confidence": 3\n'
+        "  }\n"
+        "}"
     )
     log("Summarizer", raw_summary)
-    
-    # Parse structured output
+
     structured = _parse_structured_output(raw_summary)
     critique_points = _flatten_to_critique_points(structured)
-    
-    # Calculate latency and token usage
+
     latency_seconds = round(time.perf_counter() - start_time, 2)
     total_input = sum(a.total_input_tokens for a in agents.values())
     total_output = sum(a.total_output_tokens for a in agents.values())
-    
-    # Verify grounding
-    grounding_scores = verify_all_grounding(raw_summary, {"full_text": paper_text}, config)
-    
+
+    # Pass structured weaknesses directly to grounding verifier (not raw JSON text)
+    # Skip grounding for noloop/fixed to conserve quota — it's supplementary metadata
+    if mode == "dynamic":
+        grounding_scores = verify_all_grounding(
+            structured.get("weaknesses", []), {"full_text": paper_text}, config
+        )
+    else:
+        grounding_scores = {
+            "avg_confidence": None,
+            "grounding_rate": None,
+            "points_verified": 0,
+            "points_unsupported": 0,
+            "skipped": True,
+        }
+
     return {
         "paper_id": paper_id,
-        "model": vertex_config.get("critic_model", "gemini-1.5-pro"),
+        "platform": f"vertexai_{mode}" if mode != "dynamic" else "vertexai",
+        "model": vertex_config.get("critic_model", "gemini-2.5-flash"),
         "rounds": rounds_done,
         "latency_seconds": latency_seconds,
         "token_usage": {"input": total_input, "output": total_output},
@@ -385,50 +470,47 @@ def run_all_papers(
     reviews_path: str,
     output_dir: str,
     config: Optional[dict] = None,
+    mode: str = "dynamic",
 ) -> None:
-    """
-    Run the Vertex AI critique pipeline for all papers.
-    
-    Args:
-        reviews_path: Path to reviews_parsed.json
-        output_dir: Output directory for results
-        config: Config dict loaded from config.yaml
-    """
+    """Run the Vertex AI critique pipeline for all papers."""
     if config is None:
         config = load_config()
-    
+
     with open(reviews_path) as f:
         all_papers: dict = json.load(f)
-    
+
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    
+
     for paper_id, paper in all_papers.items():
         out_file = out_dir / f"{paper_id}.json"
         if out_file.exists():
             print(f"  [SKIP] {paper_id}")
             continue
-        
+
         print(f"\n{'='*60}\n  [PAPER] {paper_id} — {paper.get('title', '')[:50]}\n{'='*60}")
-        
+
         try:
             result = run_pipeline(
                 paper_id=paper_id,
-                paper_text=paper.get("body_text", paper.get("full_text", "")),
+                paper_text=paper.get("full_text", ""),
                 config=config,
+                mode=mode,
             )
         except Exception as exc:
             print(f"\n  [ERROR] {paper_id} failed: {exc}")
             continue
-        
+
         with open(out_file, "w") as f:
             json.dump(result, f, indent=2)
-        
+
         n_points = len(result["critique_points"])
         print(f"\n  [SAVED] {n_points} weakness points → {out_file}")
         print(f"  [COST]  {result['token_usage']['input']:,} in / "
               f"{result['token_usage']['output']:,} out tokens  "
               f"({result['latency_seconds']}s)")
+        # Pause between papers to let quota recover
+        time.sleep(15)
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
@@ -438,5 +520,5 @@ if __name__ == "__main__":
     run_all_papers(
         reviews_path=cfg["data"]["reviews_file"],
         output_dir=cfg["results"]["vertexai_dir"],
-        cfg=cfg,
+        config=cfg,
     )

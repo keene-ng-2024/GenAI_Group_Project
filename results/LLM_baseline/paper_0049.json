@@ -1,91 +1,122 @@
 {
   "paper_id": "paper_0049",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 25.792,
+  "latency_seconds": 23.137,
   "token_usage": {
-    "input": 8497,
-    "output": 1048
+    "input": 8608,
+    "output": 1606
   },
   "structured": {
-    "summary": "This paper introduces P-Adapters, lightweight models that adapt natural language prompts into continuous prompts to robustly extract factual information from frozen large language models (LLMs). The approach improves precision and consistency of factual extraction across diverse and out-of-distribution prompts without requiring additional annotations, and is compared against Mixture of Experts (MoE) models and oracle baselines.",
+    "summary": "This paper proposes P-Adapters, lightweight models inserted between the embedding layer and first attention layer of frozen LLMs, to robustly extract factual information from language models given diverse natural language prompts. The approach improves precision and consistency over baselines without requiring additional annotations, and is evaluated on multiple out-of-distribution settings.",
     "strengths": [
       {
-        "point": "Addresses the important problem of prompt variability affecting factual extraction from LLMs.",
-        "evidence": "Introduction and motivation sections highlight the inconsistency of LLM predictions across semantically equivalent prompts and the need for robustness."
+        "point": "The paper addresses the important problem of prompt variability affecting factual extraction from LLMs, proposing a novel and lightweight P-Adapter architecture that does not require fine-tuning the LLM or additional annotations at inference time.",
+        "evidence": "Introduction and Section 4.2 describe the P-Adapter design and motivation for requiring only (prompt, object) pairs at training and no extra annotations at inference."
       },
       {
-        "point": "Proposes a novel, lightweight method (P-Adapters) that operates between embedding and attention layers without fine-tuning the LLM.",
-        "evidence": "Section 4.2 describes P-Adapters as models that modify embeddings before the first attention layer, requiring only (prompt, object) pairs for training."
+        "point": "Comprehensive evaluation on multiple out-of-distribution settings (OOD Prompts, OOD Objects, OOD Keyboard Errors) demonstrates robustness of P-Adapters beyond in-domain data.",
+        "evidence": "Section 4.1 details the four evaluation settings; Section 5 discusses results showing consistent improvements across these challenging OOD scenarios."
       },
       {
-        "point": "Comprehensive evaluation on multiple out-of-distribution settings including unseen prompts, entity distributions, and typographical errors.",
-        "evidence": "Section 4.1 and 5 detail evaluations on OOD Prompts, OOD Objects, and OOD Keyboard Errors, demonstrating robustness."
+        "point": "The paper provides insightful ablations showing the importance of preserving the subject token embeddings in the prompt for successful factual extraction.",
+        "evidence": "Section 5 discusses experiments replacing subject and [MASK] embeddings, demonstrating that keeping subject embeddings unmodified significantly improves precision."
       },
       {
-        "point": "Thorough ablation studies investigating the importance of preserving subject embeddings in the prompt.",
-        "evidence": "Section 5 discusses experiments showing that keeping the subject token embeddings unmodified significantly improves performance."
+        "point": "Comparison with Mixture of Experts (MoE) and Oracle models highlights the trade-off between requiring additional annotations and performance gains, positioning P-Adapters as a practical alternative.",
+        "evidence": "Section 4.2 and Section 5 compare P-Adapters with MoE and Oracle models, showing P-Adapters perform comparably without needing relation or subject annotations."
+      },
+      {
+        "point": "The paper clearly defines terminology distinguishing natural language prompts, continuous prompts, and embeddings, aiding reader understanding of the method.",
+        "evidence": "Section 3 Terminology provides precise definitions of prompt types and embeddings."
+      },
+      {
+        "point": "The proposed interpolation technique between P-Adapter outputs and original embeddings to improve performance without extra annotations is a clever and practical solution.",
+        "evidence": "Section 5 describes the interpolation approach with hyperparameter \u03b1 and shows improved results without needing subject token indices."
+      },
+      {
+        "point": "The paper situates its contributions well within related work on prompting and factual knowledge extraction, acknowledging limitations of prior approaches.",
+        "evidence": "Section 2 Related Work discusses prior prompting methods, challenges with consistency, and overfitting to object distributions."
       }
     ],
     "weaknesses": [
       {
-        "point": "Overall precision remains modest, with oracle models achieving only about 50% precision on in-domain data and much lower on OOD objects.",
-        "evidence": "Section 6 notes that even the oracle achieves only 50% precision on ID objects and about 25% on OOD objects, indicating fundamental limitations."
+        "point": "The paper lacks a detailed analysis of why the P-Adapters still achieve relatively low absolute precision (around 50% or less) even in the best case, limiting practical utility.",
+        "evidence": "Section 6 Discussion notes that the Oracle achieves only ~50% precision on ID objects and ~25% on OOD objects, but does not deeply analyze causes or potential remedies."
       },
       {
-        "point": "P-Adapters require knowledge of the subject token position or interpolation hyperparameters to achieve best performance, which may conflict with the goal of requiring no additional annotations.",
-        "evidence": "Section 5 shows that replacing subject embeddings or interpolating with original embeddings improves results but requires subject token indices."
+        "point": "The evaluation focuses exclusively on masked language models (BERT, RoBERTa) and does not assess applicability to autoregressive LLMs, limiting generalizability claims.",
+        "evidence": "Section 4.2 specifies experiments only on BERT Base, BERT Large, and RoBERTa Large; no experiments on GPT-style or decoder-only models are presented."
       },
       {
-        "point": "The paper focuses on BERT and RoBERTa models but does not evaluate on larger or more recent LLMs, limiting generalizability.",
-        "evidence": "Experiments are conducted on BERT Base, BERT Large, and RoBERTa Large only, as described in Section 4.2."
+        "point": "The paper does not provide ablations or analysis on the impact of prompt length or complexity on P-Adapter performance, which could affect real-world usage.",
+        "evidence": "While Section 4.1 mentions prompt template pools, no experiments vary prompt length or syntactic complexity to assess robustness."
       },
       {
-        "point": "The Mixture of Experts baseline requires additional annotations, making direct comparison with P-Adapters somewhat uneven.",
-        "evidence": "Section 4.2 and 6 discuss that MoE models need relation and subject annotations, which P-Adapters avoid."
+        "point": "The MoE model uses a single predicted relation to select an expert prompt rather than a weighted mixture, which is a simplification that may limit its performance and comparison fairness.",
+        "evidence": "Section 4.2 states the MoE uses a single prompt from the predicted relation instead of a weighted combination, but does not justify this design choice or explore alternatives."
       },
       {
-        "point": "Limited discussion on computational overhead or inference latency introduced by P-Adapters.",
-        "evidence": "The paper does not provide runtime or efficiency analysis of P-Adapters compared to baseline prompting."
+        "point": "The paper does not report runtime or computational overhead introduced by P-Adapters, leaving unclear their efficiency and scalability in practice.",
+        "evidence": "No mention of inference speed, parameter counts, or memory overhead is found in Sections 4 or 5."
       },
       {
-        "point": "The approach does not address other challenges of LLM factual extraction such as source attribution or updating outdated knowledge.",
-        "evidence": "Section 2 acknowledges these challenges but focuses solely on consistency and robustness."
+        "point": "The method requires knowledge of the [MASK] token position in the prompt, but the paper does not discuss how this requirement generalizes to more complex or multi-mask prompts.",
+        "evidence": "Section 5 discusses preserving the [MASK] embedding but does not address scenarios with multiple masks or different masking strategies."
       },
       {
-        "point": "The paper could benefit from clearer explanation and visualization of the P-Adapter architectures and their integration with LLMs.",
-        "evidence": "While Figure 1 and 2 are mentioned, the text-heavy description may be hard to follow without more detailed diagrams."
+        "point": "The paper does not provide qualitative examples of prompts and model outputs, which would help illustrate the nature of errors and improvements.",
+        "evidence": "No example predictions or failure cases are shown in the main text or appendix."
+      },
+      {
+        "point": "The training details are somewhat sparse, lacking information on training time, hardware used, or convergence behavior, which hinders reproducibility.",
+        "evidence": "Section 4.2 briefly lists hyperparameters but omits details on epochs, training duration, or computational resources."
+      },
+      {
+        "point": "The interpolation hyperparameter \u03b1 is selected empirically without discussion of sensitivity or how it might be tuned in practice.",
+        "evidence": "Section 5 reports testing \u03b1 values but does not analyze robustness to this choice or provide guidance for new datasets."
+      },
+      {
+        "point": "The paper does not discuss potential ethical risks of improved factual extraction, such as amplifying biases or privacy concerns beyond a brief ethics statement.",
+        "evidence": "Section 8 Ethics Statement mentions risks but does not analyze or propose mitigation strategies."
       }
     ],
     "questions": [
       {
-        "question": "How sensitive are P-Adapters to the choice of hyperparameters, especially the interpolation factor \u03b1, across different LLM architectures?",
-        "motivation": "Understanding hyperparameter robustness is important for practical deployment and generalization."
+        "question": "Have the authors considered applying P-Adapters to autoregressive LLMs (e.g., GPT-style models), and if so, how might the method adapt to such architectures?",
+        "motivation": "Demonstrating applicability beyond masked LMs would strengthen claims of generalizability and practical impact."
       },
       {
-        "question": "Can P-Adapters be extended or adapted to larger, generative LLMs such as GPT-3 or PaLM, and if so, how would their performance and training requirements change?",
-        "motivation": "Evaluating applicability to state-of-the-art models would increase impact and relevance."
+        "question": "Can the authors provide qualitative examples of prompts where P-Adapters significantly improve predictions or fail, to better understand model behavior?",
+        "motivation": "Examples would clarify the nature of improvements and guide future refinements."
       },
       {
-        "question": "Have the authors considered combining P-Adapters with retrieval-augmented methods to improve precision and address limitations in factual knowledge coverage?",
-        "motivation": "Hybrid approaches might overcome the modest precision ceiling observed."
+        "question": "How sensitive is the interpolation hyperparameter \u03b1 to dataset or prompt variations, and can it be tuned without labeled data?",
+        "motivation": "Understanding \u03b1\u2019s robustness is important for deploying P-Adapters in new domains without extensive tuning."
       },
       {
-        "question": "What is the computational overhead introduced by P-Adapters during inference, and how does it compare to baseline prompting in terms of latency and resource usage?",
-        "motivation": "Efficiency is critical for real-world applications where prompt adaptation must be fast."
+        "question": "What is the computational overhead of P-Adapters at inference time compared to baseline prompting, and is it feasible for real-time applications?",
+        "motivation": "Efficiency considerations affect practical adoption."
+      },
+      {
+        "question": "Could the authors elaborate on how P-Adapters handle prompts with multiple [MASK] tokens or more complex query structures?",
+        "motivation": "Many real-world queries may involve multiple missing tokens; understanding limitations here is important."
+      },
+      {
+        "question": "Is it possible to extend P-Adapters to incorporate external knowledge or context dynamically, to improve factual accuracy beyond pretraining?",
+        "motivation": "Combining P-Adapters with retrieval or knowledge integration could address current precision limitations."
       }
     ]
   },
   "critique_points": {
-    "point_001": "Overall precision remains modest, with oracle models achieving only about 50% precision on in-domain data and much lower on OOD objects. (Section 6 notes that even the oracle achieves only 50% precision on ID objects and about 25% on OOD objects, indicating fundamental limitations.)",
-    "point_002": "P-Adapters require knowledge of the subject token position or interpolation hyperparameters to achieve best performance, which may conflict with the goal of requiring no additional annotations. (Section 5 shows that replacing subject embeddings or interpolating with original embeddings improves results but requires subject token indices.)",
-    "point_003": "The paper focuses on BERT and RoBERTa models but does not evaluate on larger or more recent LLMs, limiting generalizability. (Experiments are conducted on BERT Base, BERT Large, and RoBERTa Large only, as described in Section 4.2.)",
-    "point_004": "The Mixture of Experts baseline requires additional annotations, making direct comparison with P-Adapters somewhat uneven. (Section 4.2 and 6 discuss that MoE models need relation and subject annotations, which P-Adapters avoid.)",
-    "point_005": "Limited discussion on computational overhead or inference latency introduced by P-Adapters. (The paper does not provide runtime or efficiency analysis of P-Adapters compared to baseline prompting.)",
-    "point_006": "The approach does not address other challenges of LLM factual extraction such as source attribution or updating outdated knowledge. (Section 2 acknowledges these challenges but focuses solely on consistency and robustness.)",
-    "point_007": "The paper could benefit from clearer explanation and visualization of the P-Adapter architectures and their integration with LLMs. (While Figure 1 and 2 are mentioned, the text-heavy description may be hard to follow without more detailed diagrams.)",
-    "point_008": "How sensitive are P-Adapters to the choice of hyperparameters, especially the interpolation factor \u03b1, across different LLM architectures? (Understanding hyperparameter robustness is important for practical deployment and generalization.)",
-    "point_009": "Can P-Adapters be extended or adapted to larger, generative LLMs such as GPT-3 or PaLM, and if so, how would their performance and training requirements change? (Evaluating applicability to state-of-the-art models would increase impact and relevance.)",
-    "point_010": "Have the authors considered combining P-Adapters with retrieval-augmented methods to improve precision and address limitations in factual knowledge coverage? (Hybrid approaches might overcome the modest precision ceiling observed.)",
-    "point_011": "What is the computational overhead introduced by P-Adapters during inference, and how does it compare to baseline prompting in terms of latency and resource usage? (Efficiency is critical for real-world applications where prompt adaptation must be fast.)"
+    "point_001": "The paper lacks a detailed analysis of why the P-Adapters still achieve relatively low absolute precision (around 50% or less) even in the best case, limiting practical utility.. Section 6 Discussion notes that the Oracle achieves only ~50% precision on ID objects and ~25% on OOD objects, but does not deeply analyze causes or potential remedies",
+    "point_002": "The evaluation focuses exclusively on masked language models (BERT, RoBERTa) and does not assess applicability to autoregressive LLMs, limiting generalizability claims.. Section 4.2 specifies experiments only on BERT Base, BERT Large, and RoBERTa Large; no experiments on GPT-style or decoder-only models are presented",
+    "point_003": "The paper does not provide ablations or analysis on the impact of prompt length or complexity on P-Adapter performance, which could affect real-world usage.. While Section 4.1 mentions prompt template pools, no experiments vary prompt length or syntactic complexity to assess robustness",
+    "point_004": "The MoE model uses a single predicted relation to select an expert prompt rather than a weighted mixture, which is a simplification that may limit its performance and comparison fairness.. Section 4.2 states the MoE uses a single prompt from the predicted relation instead of a weighted combination, but does not justify this design choice or explore alternatives",
+    "point_005": "The paper does not report runtime or computational overhead introduced by P-Adapters, leaving unclear their efficiency and scalability in practice.. No mention of inference speed, parameter counts, or memory overhead is found in Sections 4 or 5",
+    "point_006": "The method requires knowledge of the [MASK] token position in the prompt, but the paper does not discuss how this requirement generalizes to more complex or multi-mask prompts.. Section 5 discusses preserving the [MASK] embedding but does not address scenarios with multiple masks or different masking strategies",
+    "point_007": "The paper does not provide qualitative examples of prompts and model outputs, which would help illustrate the nature of errors and improvements.. No example predictions or failure cases are shown in the main text or appendix",
+    "point_008": "The training details are somewhat sparse, lacking information on training time, hardware used, or convergence behavior, which hinders reproducibility.. Section 4.2 briefly lists hyperparameters but omits details on epochs, training duration, or computational resources",
+    "point_009": "The interpolation hyperparameter \u03b1 is selected empirically without discussion of sensitivity or how it might be tuned in practice.. Section 5 reports testing \u03b1 values but does not analyze robustness to this choice or provide guidance for new datasets",
+    "point_010": "The paper does not discuss potential ethical risks of improved factual extraction, such as amplifying biases or privacy concerns beyond a brief ethics statement.. Section 8 Ethics Statement mentions risks but does not analyze or propose mitigation strategies"
   }
 }

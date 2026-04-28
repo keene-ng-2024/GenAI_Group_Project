@@ -1,91 +1,132 @@
 {
   "paper_id": "paper_0023",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 16.285,
+  "latency_seconds": 29.943,
   "token_usage": {
-    "input": 5761,
-    "output": 1032
+    "input": 5872,
+    "output": 1601
   },
   "structured": {
-    "summary": "This paper proposes LaSA, a novel method to incorporate span-level information into pre-trained language models (PrLMs) during fine-tuning by leveraging a pre-sampled n-gram dictionary for sentence segmentation and hierarchical CNNs to aggregate token representations. The approach improves performance on various GLUE benchmark tasks without requiring expensive span-level pre-training.",
+    "summary": "The paper proposes LaSA, a novel method to incorporate span-level information into pre-trained language models during fine-tuning by segmenting sentences using a pre-sampled n-gram dictionary and aggregating token representations via hierarchical CNNs. This approach aims to improve natural language understanding tasks adaptively and efficiently without costly span-level pre-training.",
     "strengths": [
       {
-        "point": "Introduces a flexible and computationally efficient method to incorporate span-level information during fine-tuning rather than pre-training.",
-        "evidence": "Section 1 and 3 describe the motivation and methodology of LaSA, emphasizing fine-tuning adaptation with a pre-sampled n-gram dictionary and hierarchical CNNs."
+        "point": "Introduces a lightweight and adaptive method to incorporate span-level information during fine-tuning rather than pre-training, addressing resource and flexibility limitations of prior work.",
+        "evidence": "Abstract and Introduction sections emphasize the novelty of integrating span-level info during fine-tuning instead of pre-training."
       },
       {
-        "point": "Demonstrates consistent performance improvements across multiple NLU tasks on the GLUE benchmark and SNLI dataset.",
-        "evidence": "Section 4.4 and Tables 1-3 show that LaSA improves over BERT baselines and compares favorably to SpanBERT and SemBERT."
+        "point": "Uses a simple, resource-efficient segmentation approach based on a pre-sampled n-gram dictionary, avoiding complex and costly parsing tools like SRL or dependency parsing.",
+        "evidence": "Section 3.1 Sentence Segmentation discusses the use of a pre-sampled n-gram dictionary for segmentation instead of SRL or dependency parsing."
       },
       {
-        "point": "Ablation studies validate the importance of the specific segmentation and hierarchical CNN architecture.",
-        "evidence": "Section 5.1 and 5.2 present ablation experiments showing that random segmentation and alternative encoder architectures perform worse than the proposed method."
+        "point": "Demonstrates consistent performance improvements over BERT baselines across a wide range of GLUE benchmark tasks and SNLI, showing broad applicability.",
+        "evidence": "Section 4.4 Results and Tables 1-3 show improvements on multiple GLUE datasets and SNLI."
       },
       {
-        "point": "The method avoids reliance on external parsers or semantic role labelers, improving simplicity and adaptability.",
-        "evidence": "Section 3.1 and 4.3 explain the use of a pre-sampled n-gram dictionary instead of SRL or dependency parsing."
+        "point": "Compares favorably to SpanBERT, showing better average gains and more consistent improvements across tasks without requiring expensive pre-training.",
+        "evidence": "Section 4.4 and Table 2 compare LaSA to SpanBERT, highlighting LaSA\u2019s superior and more consistent gains."
+      },
+      {
+        "point": "Provides ablation studies that isolate the contributions of hierarchical CNN structure and segmentation quality, confirming the importance of the proposed segmentation.",
+        "evidence": "Section 5.1 Ablation Study and Table 4 demonstrate the impact of segmentation and hierarchical CNN."
+      },
+      {
+        "point": "Analyzes the effect of dictionary size on segmentation granularity and downstream performance, providing insights into hyperparameter choices.",
+        "evidence": "Section 5.3 Size of n-gram dictionary and Figure 3 and 4 discuss dictionary size impact."
+      },
+      {
+        "point": "Employs a hierarchical CNN architecture for span and sentence encoding, justified by experiments comparing alternative encoder architectures.",
+        "evidence": "Section 5.2 Encoder Architecture and Table 5 show comparisons of CNN and attention-based encoders."
       }
     ],
     "weaknesses": [
       {
-        "point": "The segmentation relies on a large pre-sampled n-gram dictionary, which may not generalize well to domains or languages outside the training corpus.",
-        "evidence": "Section 3.1 and 5.3 discuss dictionary construction from WikiText-103 and its impact on segmentation and performance."
+        "point": "Lacks comparison to more recent or diverse span-level integration methods beyond SpanBERT and SemBERT, missing broader context on novelty.",
+        "evidence": "Related work and experiments primarily compare only to SpanBERT and SemBERT (Section 2.2, 4.4)."
       },
       {
-        "point": "The hierarchical CNN architecture design choices are somewhat ad hoc and lack exploration of alternative architectures such as transformers or recurrent networks.",
-        "evidence": "Section 5.2 compares only CNN and self-attentive modules but does not explore more recent or diverse architectures."
+        "point": "The segmentation dictionary is fixed and pre-sampled from WikiText-103, but the impact of domain mismatch or dictionary quality on downstream tasks is not explored.",
+        "evidence": "Section 3.1 and 5.3 describe dictionary construction but do not analyze domain adaptation or dictionary robustness."
       },
       {
-        "point": "The method concatenates span-level and [CLS] token representations but does not explore more sophisticated fusion strategies.",
-        "evidence": "Section 3.2 describes simple concatenation without ablation on fusion methods."
+        "point": "The choice of hyperparameters r (max spans) and l (max tokens per span) is not justified or systematically tuned, raising questions about sensitivity.",
+        "evidence": "Section 4.3 Setup states fixed values for r=16 and l in {64,128} without further analysis."
       },
       {
-        "point": "The paper lacks analysis on computational overhead introduced by the hierarchical CNN and segmentation during fine-tuning.",
-        "evidence": "No explicit discussion or measurement of runtime or memory costs is provided in experiments."
+        "point": "The method concatenates the span-level representation with the [CLS] token representation but does not explore alternative fusion strategies or their impact.",
+        "evidence": "Section 3.2 Sentence Encoder Architecture describes concatenation but no ablation on fusion methods."
       },
       {
-        "point": "Limited discussion on how the method handles very long sentences or sentences with complex syntactic structures.",
-        "evidence": "Section 3.2 mentions fixed maximum span and token numbers but does not analyze effects on long or complex inputs."
+        "point": "Random segmentation baseline improves performance to some extent, suggesting that hierarchical CNN alone contributes; the paper could better quantify the unique contribution of segmentation.",
+        "evidence": "Section 5.1 Ablation Study and Table 4 show random segmentation also helps, but detailed analysis is limited."
       },
       {
-        "point": "The comparison to SpanBERT and SemBERT is limited to GLUE and SNLI; broader evaluation on other span-sensitive tasks like QA or NER is missing.",
-        "evidence": "Experiments focus on GLUE and SNLI datasets only, as described in Section 4."
+        "point": "No runtime or computational cost analysis is provided to quantify the efficiency gains compared to span-level pre-training methods.",
+        "evidence": "Claims about efficiency are made in Abstract and Section 4.4 but no empirical cost or speed benchmarks are reported."
       },
       {
-        "point": "The method depends on hyperparameters such as max span number and max tokens per span, but sensitivity analysis is limited.",
-        "evidence": "Section 4.3 mentions hyperparameters r and l but does not provide detailed tuning or sensitivity results."
+        "point": "The method is only evaluated on English datasets; generalizability to other languages or multilingual settings is not discussed or tested.",
+        "evidence": "All datasets used (GLUE, SNLI) are English-only; no mention of multilingual experiments."
+      },
+      {
+        "point": "The paper does not discuss limitations related to the fixed n-gram dictionary potentially missing meaningful spans or introducing noisy spans.",
+        "evidence": "Section 5.3 hints at dictionary size trade-offs but no explicit discussion of limitations or failure cases."
+      },
+      {
+        "point": "Implementation details such as training time, hardware used, and code availability are missing, hindering reproducibility.",
+        "evidence": "Section 4.3 Setup provides some hyperparameters but no details on training infrastructure or code release."
+      },
+      {
+        "point": "The paper does not clarify how padding and truncation are handled when spans exceed max token length l or max span number r, which may affect performance.",
+        "evidence": "Section 4.3 mentions padding and tail but lacks detailed explanation."
+      },
+      {
+        "point": "The method relies on a hierarchical CNN which may limit capturing long-range dependencies within spans or sentences compared to attention-based models.",
+        "evidence": "Section 5.2 compares CNN and attention but does not discuss potential limitations of CNN encoders."
+      },
+      {
+        "point": "The paper does not provide qualitative analysis or examples illustrating how span-level representations improve interpretability or model behavior.",
+        "evidence": "No qualitative results or case studies are presented."
       }
     ],
     "questions": [
       {
-        "question": "How does LaSA perform on tasks that explicitly require span-level predictions, such as question answering or named entity recognition?",
-        "motivation": "Evaluating on such tasks would demonstrate the method's effectiveness beyond sentence-level classification and inference."
+        "question": "Have you considered or tested the impact of using domain-specific or dynamically learned n-gram dictionaries for segmentation instead of a fixed pre-sampled dictionary?",
+        "motivation": "This could improve adaptability and performance on domain-specific tasks or languages."
       },
       {
-        "question": "Can the authors provide runtime and memory overhead comparisons between LaSA and baseline fine-tuning to assess practical deployment costs?",
-        "motivation": "Understanding computational trade-offs is important for real-world applicability."
+        "question": "Can you provide more details on how padding and truncation are handled when the number of spans or tokens per span exceeds the set maximums (r and l)?",
+        "motivation": "Understanding this is important for reproducibility and assessing potential information loss."
       },
       {
-        "question": "Have the authors considered alternative fusion methods beyond concatenation for combining span-level and token-level representations?",
-        "motivation": "More sophisticated fusion could potentially yield better integration of multi-granularity information."
+        "question": "Did you experiment with alternative fusion methods beyond concatenation for combining span-level and [CLS] token representations, such as attention or gating mechanisms?",
+        "motivation": "Different fusion strategies might yield better integration of multi-granularity information."
       },
       {
-        "question": "How sensitive is the model performance to the choice of n-gram dictionary size and segmentation hyperparameters across diverse datasets?",
-        "motivation": "Robustness to these hyperparameters affects the method's generalizability and ease of use."
+        "question": "Could you share any runtime or computational cost comparisons between LaSA and span-level pre-training methods like SpanBERT?",
+        "motivation": "Quantifying efficiency gains would strengthen claims about resource savings."
+      },
+      {
+        "question": "How does LaSA perform on languages other than English, especially those with different morphological or syntactic characteristics?",
+        "motivation": "Evaluating generalizability beyond English is important for broader applicability."
+      },
+      {
+        "question": "Is the code and pre-sampled n-gram dictionary publicly available to facilitate reproduction and further research?",
+        "motivation": "Availability of code and resources is critical for reproducibility and adoption."
       }
     ]
   },
   "critique_points": {
-    "point_001": "The segmentation relies on a large pre-sampled n-gram dictionary, which may not generalize well to domains or languages outside the training corpus. (Section 3.1 and 5.3 discuss dictionary construction from WikiText-103 and its impact on segmentation and performance.)",
-    "point_002": "The hierarchical CNN architecture design choices are somewhat ad hoc and lack exploration of alternative architectures such as transformers or recurrent networks. (Section 5.2 compares only CNN and self-attentive modules but does not explore more recent or diverse architectures.)",
-    "point_003": "The method concatenates span-level and [CLS] token representations but does not explore more sophisticated fusion strategies. (Section 3.2 describes simple concatenation without ablation on fusion methods.)",
-    "point_004": "The paper lacks analysis on computational overhead introduced by the hierarchical CNN and segmentation during fine-tuning. (No explicit discussion or measurement of runtime or memory costs is provided in experiments.)",
-    "point_005": "Limited discussion on how the method handles very long sentences or sentences with complex syntactic structures. (Section 3.2 mentions fixed maximum span and token numbers but does not analyze effects on long or complex inputs.)",
-    "point_006": "The comparison to SpanBERT and SemBERT is limited to GLUE and SNLI; broader evaluation on other span-sensitive tasks like QA or NER is missing. (Experiments focus on GLUE and SNLI datasets only, as described in Section 4.)",
-    "point_007": "The method depends on hyperparameters such as max span number and max tokens per span, but sensitivity analysis is limited. (Section 4.3 mentions hyperparameters r and l but does not provide detailed tuning or sensitivity results.)",
-    "point_008": "How does LaSA perform on tasks that explicitly require span-level predictions, such as question answering or named entity recognition? (Evaluating on such tasks would demonstrate the method's effectiveness beyond sentence-level classification and inference.)",
-    "point_009": "Can the authors provide runtime and memory overhead comparisons between LaSA and baseline fine-tuning to assess practical deployment costs? (Understanding computational trade-offs is important for real-world applicability.)",
-    "point_010": "Have the authors considered alternative fusion methods beyond concatenation for combining span-level and token-level representations? (More sophisticated fusion could potentially yield better integration of multi-granularity information.)",
-    "point_011": "How sensitive is the model performance to the choice of n-gram dictionary size and segmentation hyperparameters across diverse datasets? (Robustness to these hyperparameters affects the method's generalizability and ease of use.)"
+    "point_001": "Lacks comparison to more recent or diverse span-level integration methods beyond SpanBERT and SemBERT, missing broader context on novelty.. Related work and experiments primarily compare only to SpanBERT and SemBERT (Section 2.2, 4.4)",
+    "point_002": "The segmentation dictionary is fixed and pre-sampled from WikiText-103, but the impact of domain mismatch or dictionary quality on downstream tasks is not explored.. Section 3.1 and 5.3 describe dictionary construction but do not analyze domain adaptation or dictionary robustness",
+    "point_003": "The choice of hyperparameters r (max spans) and l (max tokens per span) is not justified or systematically tuned, raising questions about sensitivity.. Section 4.3 Setup states fixed values for r=16 and l in {64,128} without further analysis",
+    "point_004": "The method concatenates the span-level representation with the [CLS] token representation but does not explore alternative fusion strategies or their impact.. Section 3.2 Sentence Encoder Architecture describes concatenation but no ablation on fusion methods",
+    "point_005": "Random segmentation baseline improves performance to some extent, suggesting that hierarchical CNN alone contributes; the paper could better quantify the unique contribution of segmentation.. Section 5.1 Ablation Study and Table 4 show random segmentation also helps, but detailed analysis is limited",
+    "point_006": "No runtime or computational cost analysis is provided to quantify the efficiency gains compared to span-level pre-training methods.. Claims about efficiency are made in Abstract and Section 4.4 but no empirical cost or speed benchmarks are reported",
+    "point_007": "The method is only evaluated on English datasets; generalizability to other languages or multilingual settings is not discussed or tested.. All datasets used (GLUE, SNLI) are English-only; no mention of multilingual experiments",
+    "point_008": "The paper does not discuss limitations related to the fixed n-gram dictionary potentially missing meaningful spans or introducing noisy spans.. Section 5.3 hints at dictionary size trade-offs but no explicit discussion of limitations or failure cases",
+    "point_009": "Implementation details such as training time, hardware used, and code availability are missing, hindering reproducibility.. Section 4.3 Setup provides some hyperparameters but no details on training infrastructure or code release",
+    "point_010": "The paper does not clarify how padding and truncation are handled when spans exceed max token length l or max span number r, which may affect performance.. Section 4.3 mentions padding and tail but lacks detailed explanation",
+    "point_011": "The method relies on a hierarchical CNN which may limit capturing long-range dependencies within spans or sentences compared to attention-based models.. Section 5.2 compares CNN and attention but does not discuss potential limitations of CNN encoders",
+    "point_012": "The paper does not provide qualitative analysis or examples illustrating how span-level representations improve interpretability or model behavior.. No qualitative results or case studies are presented"
   }
 }

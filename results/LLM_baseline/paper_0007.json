@@ -1,91 +1,132 @@
 {
   "paper_id": "paper_0007",
   "model": "gpt-4.1-mini",
-  "latency_seconds": 15.904,
+  "latency_seconds": 18.733,
   "token_usage": {
-    "input": 10352,
-    "output": 947
+    "input": 10463,
+    "output": 1585
   },
   "structured": {
-    "summary": "This paper proposes Contextualized Generative Retrieval (CGR), a novel generative retrieval model that leverages contextualized token embeddings as decoder vocab embeddings to combine the benefits of parametric and non-parametric information for document retrieval. The approach outperforms existing generative retrieval models on multiple benchmarks by effectively utilizing contextualized embeddings and contrastive learning.",
+    "summary": "The paper proposes Contextualized Generative Retrieval (CGR), a generative retrieval model that uses contextualized token embeddings as decoder vocab embeddings to combine parametric and non-parametric information, improving retrieval performance on document retrieval tasks over prior generative retrieval models.",
     "strengths": [
       {
-        "point": "Innovative combination of parametric and non-parametric spaces in generative retrieval.",
-        "evidence": "Section 3 describes how CGR uses contextualized embeddings as decoder vocab embeddings, enabling interaction in both parametric and non-parametric spaces."
+        "point": "Innovative integration of contextualized embeddings as decoder vocab embeddings to leverage both parametric and non-parametric information.",
+        "evidence": "Section 3 describes the core idea of using contextualized embedding matrices for the decoder, combining benefits of generative and bi-encoder approaches."
       },
       {
-        "point": "Significant empirical performance improvements over strong baselines.",
-        "evidence": "Section 5.2 reports 6% average improvement on KILT datasets and over 2x improvement on NQ-320k compared to GENRE and DSI."
+        "point": "Demonstrated significant performance improvements over strong baselines such as GENRE and DSI on multiple datasets.",
+        "evidence": "Section 5.2 and Tables 1 and 2 show CGR achieving 6% higher R-precision on KILT datasets and 2\u00d7 higher Hits@1 on NQ-320k compared to GENRE and DSI."
       },
       {
-        "point": "Comprehensive ablation studies and analyses to understand model components.",
-        "evidence": "Sections 5.2 and Appendix C provide detailed experiments comparing CGR variants, effects of contrastive learning, clustering, and contextualized embeddings."
+        "point": "Comprehensive ablation studies and analysis of model variants (CGR Base, Async, Contra) and clustering effects.",
+        "evidence": "Sections 4 and 5.2, and Appendix C provide detailed experiments on asynchronous embedding updates, contrastive learning, and clustering size impact."
       },
       {
-        "point": "Effective use of contrastive learning to improve embedding space quality.",
-        "evidence": "Section 4.3 and experimental results in Section 5.2 show CGR Contra variant achieves the best performance by first training with contrastive loss."
+        "point": "Clear demonstration that incorporating document content into contextualized embeddings improves retrieval performance.",
+        "evidence": "Section 5.2 and Table 3 compare CGR Base with and without document content in embeddings, showing performance gains."
+      },
+      {
+        "point": "Use of contrastive learning to improve embedding space uniformity and retrieval performance.",
+        "evidence": "Section 4.3 and Table 6 show that CGR Contra variant trained with contrastive loss outperforms other variants."
+      },
+      {
+        "point": "Qualitative analysis of contextualized embeddings showing meaningful clustering by token context.",
+        "evidence": "Appendix C.5 provides clustering examples illustrating how embeddings capture different semantic contexts."
       }
     ],
     "weaknesses": [
       {
-        "point": "High computational and storage cost due to large contextualized embedding matrices.",
-        "evidence": "Section 4.4 discusses the need for clustering to reduce storage from 148GB to manageable sizes, indicating scalability concerns."
+        "point": "Limited comparison with recent semi-parametric retrieval models that also combine parametric and non-parametric information, such as RAG or RETRO.",
+        "evidence": "Section 2 mentions these models but does not include empirical comparisons or detailed discussion of differences."
       },
       {
-        "point": "Dependence on pre-extracted contextualized embeddings may limit adaptability during training.",
-        "evidence": "Section 4.1 mentions EMB is frozen in CGR Base, and asynchronous updates in CGR Async add complexity."
+        "point": "The clustering hyperparameter k=5 is fixed without exploration of adaptive or token-specific clustering strategies.",
+        "evidence": "Section 4.4 and Appendix C.3 fix k=5 and note performance drops for other values but do not explore more flexible clustering."
       },
       {
-        "point": "Limited evaluation on full KILT dataset due to resource constraints.",
-        "evidence": "Section 5.1 notes CGR was trained on subsets of KILT, and full dataset training was not performed unlike GENRE."
+        "point": "The asynchronous update frequency N in CGR Async is fixed at 20 epochs without thorough justification or exploration of trade-offs.",
+        "evidence": "Section 4.2 and Appendix C.1 mention N=20 and some analysis but do not deeply explore impact on training efficiency or final performance."
       },
       {
-        "point": "Potential complexity in managing multiple token IDs per token in decoder vocabulary.",
-        "evidence": "Section 3 explains that multiple contextualized embeddings per token require assigning multiple token IDs, which may complicate decoding."
+        "point": "The method requires storing a large contextualized embedding matrix, which may limit scalability to larger corpora.",
+        "evidence": "Section 4.4 and Appendix C.3 discuss storage footprint but do not address potential scalability issues or memory optimization techniques."
       },
       {
-        "point": "Lack of discussion on inference latency and efficiency compared to bi-encoder models.",
-        "evidence": "While storage footprint is discussed, the paper does not provide detailed analysis of inference speed or computational overhead."
+        "point": "The evaluation focuses primarily on Wikipedia-based datasets; generalizability to other domains or corpora is not studied.",
+        "evidence": "Experiments in Section 5 use KILT and NQ-320k datasets, all Wikipedia-based, with no cross-domain experiments."
       },
       {
-        "point": "Unclear how well the approach generalizes to other retrieval tasks beyond document title retrieval.",
-        "evidence": "Experiments focus on document retrieval with titles as targets; applicability to other retrieval formats is not explored."
+        "point": "The zero-shot evaluation on unseen datasets is limited to KILT datasets; broader zero-shot or transfer learning evaluations are missing.",
+        "evidence": "Section 5.2 and Table 4 show zero-shot on 9 KILT datasets but no evaluation on completely different domains or tasks."
       },
       {
-        "point": "The method relies on constrained beam search with prefix trees, which may limit flexibility.",
-        "evidence": "Appendix A.1 describes constrained beam search to ensure generated sequences are in corpus, potentially restricting generation diversity."
+        "point": "Details on how token IDs are assigned for multiple contextualized embeddings per token in the decoder are sparse and could affect reproducibility.",
+        "evidence": "Section 3 mentions assigning different token IDs for decoder embeddings but lacks detailed algorithmic description."
+      },
+      {
+        "point": "The paper does not discuss inference latency or computational overhead introduced by using contextualized embeddings and clustering.",
+        "evidence": "No timing or efficiency metrics are reported in Section 5 or Appendices."
+      },
+      {
+        "point": "The constrained beam search adaptation for multiple token IDs per token is briefly described but lacks detailed explanation or ablation.",
+        "evidence": "Appendix A.1 describes prefix tree construction with multiple token IDs but does not analyze its impact on search efficiency or accuracy."
+      },
+      {
+        "point": "The impact of vocabulary size increase due to multiple embeddings per token on model size and training stability is not analyzed.",
+        "evidence": "Section 4.4 notes increase in embedding matrix size but does not discuss effects on training dynamics or parameter efficiency."
+      },
+      {
+        "point": "The paper does not clarify whether the EMB and RET models share parameters or how tightly coupled they are beyond asynchronous updates.",
+        "evidence": "Section 4.2 and 4.3 describe EMB replacement and initialization but do not discuss parameter sharing or joint training strategies."
+      },
+      {
+        "point": "The contrastive learning step uses all other embeddings as negatives, which may be computationally expensive; no discussion on negative sampling or efficiency.",
+        "evidence": "Section 4.3 and Appendix C.2 describe contrastive loss over full embedding matrix negatives but do not address computational cost."
       }
     ],
     "questions": [
       {
-        "question": "How does CGR perform in terms of inference latency and computational cost compared to bi-encoder and vanilla generative retrieval models?",
-        "motivation": "Understanding efficiency is critical for practical deployment of retrieval systems."
+        "question": "Have you considered or experimented with applying CGR to non-Wikipedia corpora or other domains to test generalizability?",
+        "motivation": "Demonstrating effectiveness beyond Wikipedia-based datasets would strengthen claims about broad applicability."
       },
       {
-        "question": "Can the approach be extended to retrieval tasks where targets are not fixed sequences like titles, e.g., passage retrieval or open-domain QA?",
-        "motivation": "Evaluating generalizability would broaden the impact of the method."
+        "question": "Can you provide more details on the token ID assignment mechanism for multiple contextualized embeddings per token in the decoder and its impact on training and inference?",
+        "motivation": "Understanding this is critical for reproducibility and for assessing potential limitations or complexities introduced."
       },
       {
-        "question": "How sensitive is the model performance to the choice of clustering parameter k and frequency of EMB updates in CGR Async?",
-        "motivation": "Clarifying hyperparameter effects would help practitioners optimize the model."
+        "question": "What is the inference latency and computational overhead of CGR compared to baseline generative retrieval models, especially considering the larger embedding matrix and constrained beam search modifications?",
+        "motivation": "Efficiency is important for practical deployment and may affect the trade-offs of using CGR."
       },
       {
-        "question": "Is it possible to jointly train EMB and RET end-to-end to improve coherency without incurring prohibitive computational costs?",
-        "motivation": "Joint training might enhance embedding alignment and retrieval accuracy."
+        "question": "Did you explore adaptive or token-specific clustering strategies beyond fixed k=5 to balance expressiveness and search space size?",
+        "motivation": "Such strategies might improve performance or efficiency and understanding their impact would be valuable."
+      },
+      {
+        "question": "How sensitive is CGR performance to the frequency of EMB updates in CGR Async, and what are the trade-offs between update frequency, training cost, and final accuracy?",
+        "motivation": "Clarifying this would help practitioners optimize training schedules."
+      },
+      {
+        "question": "Have you considered integrating negative sampling strategies or approximations to reduce the computational cost of contrastive learning over the full embedding matrix?",
+        "motivation": "This could improve training efficiency and scalability."
+      },
+      {
+        "question": "Is there any parameter sharing or joint training between EMB and RET beyond asynchronous replacement, and have you considered end-to-end training?",
+        "motivation": "Joint training might improve coherence and performance."
       }
     ]
   },
   "critique_points": {
-    "point_001": "High computational and storage cost due to large contextualized embedding matrices. (Section 4.4 discusses the need for clustering to reduce storage from 148GB to manageable sizes, indicating scalability concerns.)",
-    "point_002": "Dependence on pre-extracted contextualized embeddings may limit adaptability during training. (Section 4.1 mentions EMB is frozen in CGR Base, and asynchronous updates in CGR Async add complexity.)",
-    "point_003": "Limited evaluation on full KILT dataset due to resource constraints. (Section 5.1 notes CGR was trained on subsets of KILT, and full dataset training was not performed unlike GENRE.)",
-    "point_004": "Potential complexity in managing multiple token IDs per token in decoder vocabulary. (Section 3 explains that multiple contextualized embeddings per token require assigning multiple token IDs, which may complicate decoding.)",
-    "point_005": "Lack of discussion on inference latency and efficiency compared to bi-encoder models. (While storage footprint is discussed, the paper does not provide detailed analysis of inference speed or computational overhead.)",
-    "point_006": "Unclear how well the approach generalizes to other retrieval tasks beyond document title retrieval. (Experiments focus on document retrieval with titles as targets; applicability to other retrieval formats is not explored.)",
-    "point_007": "The method relies on constrained beam search with prefix trees, which may limit flexibility. (Appendix A.1 describes constrained beam search to ensure generated sequences are in corpus, potentially restricting generation diversity.)",
-    "point_008": "How does CGR perform in terms of inference latency and computational cost compared to bi-encoder and vanilla generative retrieval models? (Understanding efficiency is critical for practical deployment of retrieval systems.)",
-    "point_009": "Can the approach be extended to retrieval tasks where targets are not fixed sequences like titles, e.g., passage retrieval or open-domain QA? (Evaluating generalizability would broaden the impact of the method.)",
-    "point_010": "How sensitive is the model performance to the choice of clustering parameter k and frequency of EMB updates in CGR Async? (Clarifying hyperparameter effects would help practitioners optimize the model.)",
-    "point_011": "Is it possible to jointly train EMB and RET end-to-end to improve coherency without incurring prohibitive computational costs? (Joint training might enhance embedding alignment and retrieval accuracy.)"
+    "point_001": "Limited comparison with recent semi-parametric retrieval models that also combine parametric and non-parametric information, such as RAG or RETRO.. Section 2 mentions these models but does not include empirical comparisons or detailed discussion of differences",
+    "point_002": "The clustering hyperparameter k=5 is fixed without exploration of adaptive or token-specific clustering strategies.. Section 4.4 and Appendix C.3 fix k=5 and note performance drops for other values but do not explore more flexible clustering",
+    "point_003": "The asynchronous update frequency N in CGR Async is fixed at 20 epochs without thorough justification or exploration of trade-offs.. Section 4.2 and Appendix C.1 mention N=20 and some analysis but do not deeply explore impact on training efficiency or final performance",
+    "point_004": "The method requires storing a large contextualized embedding matrix, which may limit scalability to larger corpora.. Section 4.4 and Appendix C.3 discuss storage footprint but do not address potential scalability issues or memory optimization techniques",
+    "point_005": "The evaluation focuses primarily on Wikipedia-based datasets; generalizability to other domains or corpora is not studied.. Experiments in Section 5 use KILT and NQ-320k datasets, all Wikipedia-based, with no cross-domain experiments",
+    "point_006": "The zero-shot evaluation on unseen datasets is limited to KILT datasets; broader zero-shot or transfer learning evaluations are missing.. Section 5.2 and Table 4 show zero-shot on 9 KILT datasets but no evaluation on completely different domains or tasks",
+    "point_007": "Details on how token IDs are assigned for multiple contextualized embeddings per token in the decoder are sparse and could affect reproducibility.. Section 3 mentions assigning different token IDs for decoder embeddings but lacks detailed algorithmic description",
+    "point_008": "The paper does not discuss inference latency or computational overhead introduced by using contextualized embeddings and clustering.. No timing or efficiency metrics are reported in Section 5 or Appendices",
+    "point_009": "The constrained beam search adaptation for multiple token IDs per token is briefly described but lacks detailed explanation or ablation.. Appendix A.1 describes prefix tree construction with multiple token IDs but does not analyze its impact on search efficiency or accuracy",
+    "point_010": "The impact of vocabulary size increase due to multiple embeddings per token on model size and training stability is not analyzed.. Section 4.4 notes increase in embedding matrix size but does not discuss effects on training dynamics or parameter efficiency",
+    "point_011": "The paper does not clarify whether the EMB and RET models share parameters or how tightly coupled they are beyond asynchronous updates.. Section 4.2 and 4.3 describe EMB replacement and initialization but do not discuss parameter sharing or joint training strategies",
+    "point_012": "The contrastive learning step uses all other embeddings as negatives, which may be computationally expensive; no discussion on negative sampling or efficiency.. Section 4.3 and Appendix C.2 describe contrastive loss over full embedding matrix negatives but do not address computational cost"
   }
 }

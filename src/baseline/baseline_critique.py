@@ -34,6 +34,7 @@ from __future__ import annotations
 import json
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import openai
@@ -54,28 +55,12 @@ def load_config(config_path: str = "config.yaml") -> dict:
 
 SYSTEM_PROMPT = """\
 You are an expert peer reviewer for machine learning and AI conferences.
-Given a paper's title and abstract (and optionally its full text), produce a
-thorough, structured peer review.
-
-Output ONLY valid JSON matching this exact schema:
-{
-  "summary": "<1-2 sentence overview of the paper>",
-  "strengths": [
-    {"point": "<strength>", "evidence": "<where in the paper>"}
-  ],
-  "weaknesses": [
-    {"point": "<weakness or limitation>", "evidence": "<where in the paper>"}
-  ],
-  "questions": [
-    {"question": "<question for the authors>", "motivation": "<why it matters>"}
-  ]
-}
-
-Aim for 2-4 strengths, 4-8 weaknesses, and 2-4 questions.
-All fields are required. Output only the JSON object, no extra text.
+You will read a paper and produce a structured peer review in a single pass,
+performing the roles of Reader, Critic, and Summariser internally.
 """
 
 USER_TEMPLATE = """\
+Paper:
 Title: {title}
 
 Abstract:
@@ -83,7 +68,40 @@ Abstract:
 
 {full_text_section}
 
-Produce a structured peer review JSON of this paper.
+First, read and understand the paper. Then generate 12-15 specific critique points.
+
+For each point you MUST:
+- Be concrete and specific, not generic
+- Reference specific sections, tables, or claims from the paper
+- Focus on ONE issue per point
+
+Cover ALL of these dimensions:
+- Novelty: what prior work is missing or inadequately compared?
+- Methodology: are there hidden assumptions, missing ablations, or design choices not justified?
+- Evaluation: are baselines fair? are comparisons apples-to-apples? are metrics sufficient?
+- Reproducibility: what implementation details are missing?
+- Clarity: what is confusing or poorly explained in the paper?
+- Limitations: what does the method fail to address or acknowledge?
+- Generalisability: does it work beyond the tested settings?
+
+IMPORTANT: Only critique what is actually in the paper.
+Do NOT invent references, section numbers, or claims not explicitly stated.
+
+Output ONLY valid JSON matching this exact schema:
+{{
+  "summary": "<1-2 sentence overview of the paper>",
+  "strengths": [
+    {{"point": "<strength>", "evidence": "<where in the paper>"}}
+  ],
+  "weaknesses": [
+    {{"point": "<weakness or limitation>", "evidence": "<where in the paper>"}}
+  ],
+  "questions": [
+    {{"question": "<question for the authors>", "motivation": "<why it matters>"}}
+  ]
+}}
+
+Output only the JSON object, no extra text.
 """
 
 
@@ -98,6 +116,7 @@ def format_user_message(title: str, abstract: str, full_text: str = "",
         abstract=abstract,
         full_text_section=full_text_section,
     )
+
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -126,14 +145,7 @@ def _flatten_to_critique_points(structured: dict) -> dict[str, str]:
     for item in structured.get("weaknesses", []):
         text = item.get("point", "")
         evidence = item.get("evidence", "")
-        combined = f"{text} ({evidence})" if evidence else text
-        if combined:
-            points[f"point_{idx:03d}"] = combined
-            idx += 1
-    for item in structured.get("questions", []):
-        text = item.get("question", "")
-        motivation = item.get("motivation", "")
-        combined = f"{text} ({motivation})" if motivation else text
+        combined = f"{text}. {evidence}".strip(" .") if evidence else text
         if combined:
             points[f"point_{idx:03d}"] = combined
             idx += 1
@@ -184,53 +196,55 @@ def critique_paper(
 
 # ── Main pipeline ──────────────────────────────────────────────────────────────
 
-def run_baseline(reviews_path: str, output_dir: str, cfg: dict) -> None:
-    all_papers: dict = {}
+def _process_paper(paper_id: str, paper: dict, out_dir: Path, cfg: dict) -> None:
+    out_file = out_dir / f"{paper_id}.json"
+    if out_file.exists():
+        print(f"  [SKIP] {paper_id}")
+        return
+    print(f"  [RUN ] {paper_id} …")
+    try:
+        result = critique_paper(
+            paper_id=paper_id,
+            title=paper.get("title", paper_id),
+            abstract=paper.get("abstract", ""),
+            full_text=paper.get("body_text", paper.get("full_text", "")),
+            cfg=cfg,
+        )
+    except Exception as exc:
+        print(f"  [ERROR] {paper_id} failed: {exc}")
+        return
+    with open(out_file, "w") as f:
+        json.dump(result, f, indent=2)
+    print(f"         → {len(result['critique_points'])} points  "
+          f"({result['latency_seconds']}s, "
+          f"{result['token_usage']['input']}+{result['token_usage']['output']} tokens)")
+
+
+def run_baseline(reviews_path: str, output_dir: str, cfg: dict, workers: int = 5) -> None:
     with open(reviews_path) as f:
-        for i, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line:
-                continue
-            row = json.loads(line)
-            paper_id = f"paper_{i:04d}"
-            all_papers[paper_id] = row
+        all_papers: dict = json.load(f)
 
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    for paper_id, paper in all_papers.items():
-        out_file = out_dir / f"{paper_id}.json"
-        if out_file.exists():
-            print(f"  [SKIP] {paper_id}")
-            continue
-
-        print(f"  [RUN ] {paper_id} …")
-        try:
-            result = critique_paper(
-                paper_id=paper_id,
-                title=paper.get("title", paper_id),
-                abstract=paper.get("abstract", ""),
-                full_text=paper.get("body_text", paper.get("full_text", "")),
-                cfg=cfg,
-            )
-        except Exception as exc:
-            print(f"  [ERROR] {paper_id} failed: {exc}")
-            continue
-
-        with open(out_file, "w") as f:
-            json.dump(result, f, indent=2)
-
-        print(f"         → {len(result['critique_points'])} points  "
-              f"({result['latency_seconds']}s, "
-              f"{result['token_usage']['input']}+{result['token_usage']['output']} tokens)")
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {
+            executor.submit(_process_paper, paper_id, paper, out_dir, cfg): paper_id
+            for paper_id, paper in all_papers.items()
+        }
+        for future in as_completed(futures):
+            future.result()  # surface any uncaught exceptions
 
 
 # ── CLI ────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
+    import sys
     cfg = load_config()
+    workers = int(sys.argv[1]) if len(sys.argv) > 1 else 5
     run_baseline(
-        reviews_path=cfg["data"]["jsonl_file"],
+        reviews_path=cfg["data"]["reviews_file"],
         output_dir=cfg["results"]["baseline_dir"],
         cfg=cfg,
+        workers=workers,
     )

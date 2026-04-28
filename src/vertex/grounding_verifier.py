@@ -12,10 +12,16 @@ This module provides:
 from __future__ import annotations
 
 import re
-from typing import Dict, Any, List, Optional
+import yaml
+from typing import Dict, Any, List, Optional, Union
 from dataclasses import dataclass
 
-from src.vertex.vertex_client import get_vertex_ai_client, generate_content, load_config
+from vertex_client import get_vertex_ai_client
+
+
+def load_config(config_path: str = "config.yaml") -> dict:
+    with open(config_path) as f:
+        return yaml.safe_load(f)
 
 
 # ── Data structures ────────────────────────────────────────────────────────────
@@ -51,20 +57,20 @@ def verify_grounding(
         config = load_config()
     
     vertex_config = config.get("vertex_ai", {})
-    model = vertex_config.get("grounding_verifier", {}).get("model", "gemini-1.5-flash")
+    model = vertex_config.get("grounding_verifier", {}).get("model", "gemini-2.5-flash-lite")
     max_tokens = vertex_config.get("grounding_verifier", {}).get("max_tokens", 1024)
     
     point = critique_point.get("point", "")
     evidence = critique_point.get("evidence", "")
     
-    # Build prompt for grounding verification
+    paper_section_truncated = paper_section[:2000]
     prompt = f"""Analyze whether the critique point is supported by the provided paper section.
 
 Critique Point: {point}
 Claimed Evidence: {evidence}
 
 Paper Section:
-{paper_section[:2000]}  # Truncate for efficiency
+{paper_section_truncated}
 
 Please evaluate:
 1. Is the claimed evidence actually present in the paper section?
@@ -82,11 +88,10 @@ Respond with JSON:
     client = get_vertex_ai_client(config=config)
     
     try:
-        response = generate_content(
-            client=client,
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            config=config,
+        response = client.generate_content(
+            prompt=prompt,
+            model_name=model,
+            max_tokens=max_tokens,
         )
         
         # Parse response
@@ -155,26 +160,40 @@ def _fallback_parse_verification(text: str) -> Dict[str, Any]:
 # ── Batch verification ───────────────────────────────────────────────────────
 
 def verify_all_grounding(
-    critique_text: str,
+    critique_input: Any,
     paper: Dict[str, Any],
     config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
-    Verify grounding for all critique points in a critique text.
-    
+    Verify grounding for all critique points.
+
     Args:
-        critique_text: Full critique text with multiple points
+        critique_input: Either a list of weakness dicts ({"point": ..., "evidence": ...})
+                        from the structured Summarizer output, or a raw text string
+                        (falls back to line-based extraction for backward compat).
         paper: Paper dict with full_text
         config: Config dict with vertex_ai settings
-        
+
     Returns:
         Dict with aggregate grounding scores
     """
     if config is None:
         config = load_config()
-    
-    # Extract individual critique points (simplified extraction)
-    critique_points = _extract_critique_points(critique_text)
+
+    # Fast path: structured weaknesses list passed directly
+    if isinstance(critique_input, list):
+        critique_points = []
+        for item in critique_input:
+            if isinstance(item, dict):
+                critique_points.append({
+                    "point": item.get("point", ""),
+                    "evidence": item.get("evidence", ""),
+                })
+            elif isinstance(item, str):
+                critique_points.append({"point": item, "evidence": ""})
+    else:
+        # Legacy: raw text — extract via line-based heuristic
+        critique_points = _extract_critique_points(str(critique_input))
     
     total_confidence = 0.0
     supported_count = 0
@@ -182,7 +201,7 @@ def verify_all_grounding(
     
     for point in critique_points:
         # Find relevant paper section (simplified: use full text)
-        paper_section = paper.get("body_text", paper.get("full_text", ""))[:5000]
+        paper_section = paper.get("full_text", "")[:5000]
         
         result = verify_grounding(point, paper_section, config)
         
